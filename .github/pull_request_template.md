@@ -1,47 +1,19 @@
-**Type of PR:**
+## Описание изменений
+<!-- Опишите, что именно вы изменили и зачем. Если есть связанные задачи или баги, укажите их здесь -->
 
-- [ ] Feature
-- [ ] Bugfix
-- [ ] Hotfix
-- [ ] Refactoring
-- [ ] Documentation
-- [ ] Infrastructure
+## Связанная задача (issue)
+<!-- Укажите номер задачи, например: Fixes #123, Closes #456 -->
+Fixes #
 
-## Changes Introduced ✨
+## Тип изменений
+<!-- Отметьте нужные варианты, убрав пробел в скобках [ ] и поставив x: [x] -->
+- [ ] 🐛 Исправление бага (неразрушающее изменение, которое исправляет проблему)
+- [ ] ✨ Новая функция (неразрушающее изменение, добавляющее функционал)
+- [ ] 📚 Обновление документации
+- [ ] 🎨 Рефакторинг кода
+- [ ] ✅ Добавление/обновление тестов
+- [ ] 🔧 Изменения в конфигурации/инфраструктуре
 
-- Implemented: [feature name] (mention addition functionality if relevant)
-- Integrated with CommerceTools API (mention endpoints if relevant)
-- Refactored: [Component/Module] (explain reasoning if significant)
-- Fixed: [Bug description] (include error references if applicable)
-- Updated: [Documentation/Configuration] (specify locations)
 
-## Screenshots/GIFs (if applicable) 📸
-
-[Screenshot](url)
-
-## Deploy Status
-
-[//]: # 'TODO добавить'
-
-## Coverage Status
-
-![Coverage](../badges/coverage-jest%20coverage.svg)
-
-## Checklist ✅
-
-### Mandatory Requirements
-
-- [ ] Meets all task criteria (RSS-ECOMM-X_XX)
-- [ ] No console errors (except API requests)
-- [ ] 30%+ test coverage
-
-### Self-Check ✅
-
-- [ ] Reviewers have been requested
-- [ ] Comprehensive PR description provided
-- [ ] Completed self-code review
-- [ ] Documentation updated (if relevant)
-
-### Technical Compliance
-
-- [ ] All package.json scripts functional
+## Скриншоты (если применимо)
+<!-- Для UI-изменений добавьте скриншоты "до" и "после" -->
