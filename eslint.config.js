@@ -217,5 +217,8 @@ export default defineConfig(
       '@angular-eslint/template/eqeqeq': 'error',
       '@angular-eslint/template/prefer-self-closing-tags': 'warn',
     },
+  }, 
+  {
+    ignores: ['**/node_modules/**', '**/dist/**', '**/*.js', '.angular/**'],
   }]
 );
