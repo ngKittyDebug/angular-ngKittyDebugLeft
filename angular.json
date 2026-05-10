@@ -7,7 +7,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "my-app": {
+    "ng-kitty-debug-left": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -69,10 +69,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "my-app:build:production"
+              "buildTarget": "ng-kitty-debug-left:build:production"
             },
             "development": {
-              "buildTarget": "my-app:build:development"
+              "buildTarget": "ng-kitty-debug-left:build:development"
             }
           },
           "defaultConfiguration": "development"
