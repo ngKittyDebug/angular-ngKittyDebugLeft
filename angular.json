@@ -11,12 +11,27 @@
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
+          "inlineStyle": false,
+          "inlineTemplate": false,
+          "type": "component",
           "style": "scss"
+        },
+        "@schematics/angular:directive": {
+          "type": "directive"
+        },
+        "@schematics/angular:pipe": {
+          "typeSeparator": "."
+        },
+        "@schematics/angular:service": {
+          "type": "service"
+        },
+        "@schematics/angular:resolver": {
+          "typeSeparator": "."
         }
       },
       "root": "",
       "sourceRoot": "src",
-      "prefix": "app",
+      "prefix": "left-paw",
       "architect": {
         "build": {
           "builder": "@angular/build:application",
@@ -78,7 +93,11 @@
           "defaultConfiguration": "development"
         },
         "test": {
-          "builder": "@angular/build:unit-test"
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "tsConfig": "tsconfig.spec.json",
+            "coverageExclude": ["**/**/*.html"]
+          }
         },
         "lint": {
           "builder": "@angular-eslint/builder:lint",

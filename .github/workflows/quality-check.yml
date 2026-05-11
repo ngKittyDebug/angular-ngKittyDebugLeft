@@ -1,7 +1,10 @@
 name: quality-check
 on:
   push:
-    branches: ['dev', 'main']
+    branches: ['develop', 'main']
+  pull_request:
+    branches: ['develop', 'main']
+
 jobs:
   test-and-build:
     runs-on: ${{ matrix.os }}
