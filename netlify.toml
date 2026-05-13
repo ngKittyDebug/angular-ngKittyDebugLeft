@@ -1,6 +1,5 @@
 [build]
-  base = "frontend"
-  command = "npm run build"
+  command = "pnpm build"
   publish = "dist/ng-kitty-debug-left/browser"
 
 [[redirects]]
