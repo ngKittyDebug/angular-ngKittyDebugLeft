@@ -1,0 +1,82 @@
+name: telegram message
+
+on:
+  pull_request:
+    types: [opened, reopened, closed, ready_for_review]
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      # 🔹 PR открыт
+      - name: Send PR Opened
+        if: github.event.action == 'opened' && github.event.pull_request.draft == false
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: html
+          message: |
+            🚀 <b>Открыт новый Pull Request</b>
+            📝 <b>Название:</b> ${{ github.event.pull_request.title }}
+            👤 <b>Автор:</b> <a href="https://github.com/${{ github.event.pull_request.user.login }}">${{ github.event.pull_request.user.login }}</a>
+            🌿 <b>Ветки:</b> <code>${{ github.event.pull_request.head.ref }}</code> → <code>${{ github.event.pull_request.base.ref }}</code>
+            🔗 <b>PR:</b> <a href="${{ github.event.pull_request.html_url }}">#${{ github.event.pull_request.number }}</a>
+            ⏰ <b>Создан:</b> ${{ github.event.pull_request.created_at }}
+
+      # 🔹 PR переоткрыт
+      - name: Send PR Reopened
+        if: github.event.action == 'reopened'
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: html
+          message: |
+            🔄 <b>PR переоткрыт</b>
+            📝 <b>Название:</b> ${{ github.event.pull_request.title }}
+            👤 <b>Автор:</b> <a href="https://github.com/${{ github.event.pull_request.user.login }}">${{ github.event.pull_request.user.login }}</a>
+            🔗 <b>PR:</b> <a href="${{ github.event.pull_request.html_url }}">#${{ github.event.pull_request.number }}</a>
+
+      # 🔹 PR готов к ревью
+      - name: Send Ready for Review
+        if: github.event.action == 'ready_for_review'
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: html
+          message: |
+            ✨ <b>PR готов к ревью</b>
+            📝 <b>Название:</b> ${{ github.event.pull_request.title }}
+            👤 <b>Автор:</b> <a href="https://github.com/${{ github.event.pull_request.user.login }}">${{ github.event.pull_request.user.login }}</a>
+            🔗 <b>PR:</b> <a href="${{ github.event.pull_request.html_url }}">#${{ github.event.pull_request.number }}</a>
+
+      # 🔹 PR слит (merged)
+      - name: Send PR Merged
+        if: github.event.action == 'closed' && github.event.pull_request.merged == true
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: html
+          message: |
+            ✅ <b>PR успешно слит</b> 🎉
+            📝 <b>Название:</b> ${{ github.event.pull_request.title }}
+            👤 <b>Автор:</b> <a href="https://github.com/${{ github.event.pull_request.user.login }}">${{ github.event.pull_request.user.login }}</a>
+            🔗 <b>PR:</b> <a href="${{ github.event.pull_request.html_url }}">#${{ github.event.pull_request.number }}</a>
+
+      # 🔹 PR закрыт без слияния
+      - name: Send PR Closed
+        if: github.event.action == 'closed' && github.event.pull_request.merged == false
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: html
+          message: |
+            ❌ <b>PR закрыт без слияния</b>
+            📝 <b>Название:</b> ${{ github.event.pull_request.title }}
+            👤 <b>Автор:</b> <a href="https://github.com/${{ github.event.pull_request.user.login }}">${{ github.event.pull_request.user.login }}</a>
+            🔗 <b>PR:</b> <a href="${{ github.event.pull_request.html_url }}">#${{ github.event.pull_request.number }}</a>

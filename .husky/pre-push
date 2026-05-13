@@ -1,0 +1,3 @@
+pnpm exec validate-branch-name
+pnpm lint
+pnpm test
