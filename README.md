@@ -1,59 +1,91 @@
-# MyApp
+# 🐾 PokeDex (ngKittyDebugLeftPaw)
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.7.
+## 📖 Описание проекта
 
-## Development server
+<!-- TODO: Заполнить описание проекта -->
 
-To start a local development server, run:
+[Здесь будет подробное описание проекта PokeDex, его целей и основного функционала]
 
-```bash
-ng serve
-```
+---
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## 👥 Деплой проекта
 
-## Code scaffolding
+[![Netlify Status](https://api.netlify.com/api/v1/badges/2776e1f4-4a75-4121-8dd9-6a63800e367b/deploy-status)](https://ngkittydebugleftpaw.netlify.app)
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+---
 
-```bash
-ng generate component component-name
-```
+## 👥 Команда
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Наша команда состоит из трех человек:
 
-```bash
-ng generate --help
-```
+1. **[AlexGorSer](https://github.com/AlexGorSer)** — ~~Мимо-крокодил~~ Backend developer / Team Lead
+2. **[pavelkuvsh1noff](https://github.com/pavelkuvsh1noff)** — Frontend developer
+3. **[Oksi2510](https://github.com/Oksi2510)** — Design/ Frontend developer
 
-## Building
+---
 
-To build the project run:
+## 🛠 Технологический стек
 
-```bash
-ng build
-```
+Проект использует современные технологии и инструменты для обеспечения высокой производительности и качества кода:
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+- **Фреймворк:** Angular (v21)
+- **Стейт-менеджмент:** NgRx (@ngrx/store)
+- **UI Библиотека:** Taiga UI (v5)
+- **Язык программирования:** TypeScript (~5.9)
+- **Тестирование:** Vitest
+- **Реактивность:** RxJS
+- **Линтеры и форматеры:** ESLint, Prettier, Stylelint
+- **Git Hooks:** Husky, commitlint, lint-staged (используются строгие правила Conventional Commits и валидация имен веток)
 
-## Running unit tests
+---
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+## 📋 Требования к окружению
 
-```bash
-ng test
-```
+Для успешного запуска проекта локально, убедитесь, что у вас установлены:
 
-## Running end-to-end tests
+- **Node.js:** v24.14.0 (указано в `.nvmrc`)
+- **Менеджер пакетов:** pnpm v10.30.0
 
-For end-to-end (e2e) testing, run:
+---
 
-```bash
-ng e2e
-```
+## 🚀 Как запустить проект
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+1. **Клонируйте репозиторий:**
 
-## Additional Resources
+   ```bash
+   git clone https://github.com/ngKittyDebug/angular-ngKittyDebugLeft
+   cd angular-ngKittyDebugLeft
+   ```
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+2. **Установите зависимости:**
+   Используйте `pnpm` для установки всех необходимых пакетов:
+
+   ```bash
+   pnpm install --frozen-lockfile
+   ```
+
+3. **Запустите сервер для разработки:**
+   ```bash
+   pnpm start
+   ```
+   После этого приложение будет доступно в браузере по адресу `http://localhost:4200/`. Приложение будет автоматически перезагружаться при изменении исходных файлов кода.
+
+---
+
+## 📜 Основные команды (Скрипты)
+
+В проекте настроены следующие полезные команды. Вы можете запускать их через `pnpm <команда>`:
+
+| Команда           | Описание                                                                           |
+| :---------------- | :--------------------------------------------------------------------------------- |
+| `pnpm start`      | Запускает локальный dev-сервер (`ng serve`).                                       |
+| `pnpm build`      | Собирает проект для production.                                                    |
+| `pnpm watch`      | Запускает сборку в режиме отслеживания изменений (development).                    |
+| `pnpm test`       | Запускает unit-тесты (через Vitest).                                               |
+| `pnpm test:cov`   | Запускает тесты с генерацией отчета о покрытии кода (coverage).                    |
+| `pnpm lint`       | Запускает проверку кода с помощью линтеров.                                        |
+| `pnpm lint:fix`   | Автоматически исправляет ошибки, найденные ESLint.                                 |
+| `pnpm format`     | Проверяет форматирование всех файлов с помощью Prettier.                           |
+| `pnpm format:fix` | Автоматически форматирует код во всех файлах с помощью Prettier.                   |
+| `pnpm typecheck`  | Выполняет строгую проверку типов TypeScript (`tsc -b --noEmit`).                   |
+| `pnpm ci`         | Команда для установки зависимостей в CI/CD среде (использует `--frozen-lockfile`). |
