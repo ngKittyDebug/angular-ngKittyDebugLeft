@@ -1,1 +1,34 @@
-/* You can add global styles to this file, and also import other style files */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  letter-spacing: 0.03em;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+.t-root-content {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  height: 100%;
+}
+
+.root-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+}
+.vorobey_slop {
+  height: 70%;
+  width: 80%;
+}
