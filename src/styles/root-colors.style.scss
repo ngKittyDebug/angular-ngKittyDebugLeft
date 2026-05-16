@@ -1,0 +1,57 @@
+:root {
+  /* Цвет для HP (здоровье) - зеленый градиент */
+  --stat-hp-start: #22c55e;
+  --stat-hp-end: #10b981;
+
+  /* Цвет для Attack (атака) - красно-оранжевый градиент */
+  --stat-attack-start: #ef4444;
+  --stat-attack-end: #f97316;
+
+  /* Цвет для Defense (защита) - сине-голубой градиент */
+  --stat-defense-start: #3b82f6;
+  --stat-defense-end: #06b6d4;
+
+  /* Цвет для Speed (скорость) - желто-янтарный градиент */
+  --stat-speed-start: #eab308;
+  --stat-speed-end: #f59e0b;
+
+  /* Fire type - огонь (оранжево-красный) */
+  --type-fire-start: #f97316;
+  --type-fire-end: #ef4444;
+
+  /* Water type - вода (сине-голубой) */
+  --type-water-start: #3b82f6;
+  --type-water-end: #06b6d4;
+
+  /* Grass type - трава (зеленый) */
+  --type-grass-start: #22c55e;
+  --type-grass-end: #10b981;
+
+  /* Electric type - электричество (желтый) */
+  --type-electric-start: #facc15;
+  --type-electric-end: #eab308;
+
+  /* Psychic type - психика (розово-фиолетовый) */
+  --type-psychic-start: #ec4899;
+  --type-psychic-end: #a855f7;
+
+  /* Ice type - лед (голубой) */
+  --type-ice-start: #22d3ee;
+  --type-ice-end: #3b82f6;
+
+  /* Dragon type - дракон (индиго-фиолетовый) */
+  --type-dragon-start: #4f46e5;
+  --type-dragon-end: #7c3aed;
+
+  /* Dark type - тьма (серый) */
+  --type-dark-start: #374151;
+  --type-dark-end: #1f2937;
+
+  /* Fairy type - фея (розовый) */
+  --type-fairy-start: #f472b6;
+  --type-fairy-end: #ec4899;
+
+  /* Normal type - обычный (серый) */
+  --type-normal-start: #9ca3af;
+  --type-normal-end: #6b7280;
+}
