@@ -8,4 +8,6 @@ import { TuiButton } from '@taiga-ui/core';
   styleUrl: './not-found-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class NotFoundPageComponent {}
+export class NotFoundPageComponent {
+  protected imageUrl = 'images/gif/not-found.gif';
+}
