@@ -1,13 +1,30 @@
+@use 'utility/mixins';
+
 :host {
   display: block;
   width: 100%;
   padding: 0.75rem 1rem;
   margin: 0 auto;
+  background: var(--gradient-bg);
+  border-bottom: 1px solid var(--border);
 }
 
 .header_component {
   display: flex;
   flex-direction: row;
+  justify-content: space-between;
+
+  .nav_container {
+    @include mixins.center_content;
+
+    gap: calc(0.25rem * 6);
+
+    .nav_link {
+      color: color-mix(in oklab, var(--tui-text-primary) 60%, transparent);
+      gap: calc(0.25rem * 2);
+      @include mixins.center_content;
+    }
+  }
 }
 
 .icon_wrapper {

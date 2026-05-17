@@ -1,7 +1,16 @@
+@let itemsList = navListItems();
+
 <header class="header_component">
   <a href="#" tuiLink class="icon_wrapper">
-    <img [src]="pokeDexIcoSrc()" alt="pokedex_icon" class="pokedex_icon" />
+    <img [src]="pokeDexIcoSrc" alt="pokedex_icon" class="pokedex_icon" />
     <h1>PokeDex</h1>
   </a>
-  <nav></nav>
+  <nav class="nav_container">
+    @for (item of itemsList; track item.label) {
+      <a [href]="item.link" tuiLink class="nav_link">
+        <tui-icon [icon]="item.icon" />
+        <span>{{ item.label }}</span>
+      </a>
+    }
+  </nav>
 </header>

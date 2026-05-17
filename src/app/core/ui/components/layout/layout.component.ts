@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { HeaderComponent } from './header/header.component';
 import { RouterOutlet } from '@angular/router';
+import { NAV_LIST_ITEMS } from './header/constans/nav-list';
 
 @Component({
   selector: 'left-paw-layout',
@@ -9,4 +10,6 @@ import { RouterOutlet } from '@angular/router';
   styleUrl: './layout.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LayoutComponent {}
+export class LayoutComponent {
+  protected readonly navListItems = NAV_LIST_ITEMS;
+}
