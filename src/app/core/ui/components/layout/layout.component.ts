@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { HeaderComponent } from './header/header.component';
 import { RouterOutlet } from '@angular/router';
-import { NAV_LIST_ITEMS } from './header/constans/nav-list';
+import { NAV_LIST_ITEMS } from './constans/nav-list';
 
 @Component({
   selector: 'left-paw-layout',

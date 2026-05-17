@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { TuiButton, TuiIcon, TuiLink } from '@taiga-ui/core';
-import type { NavListItem } from './model/nav-list-items';
+import type { NavListItem } from '../model/nav-list-items';
 
 const POKEMON_ICON_SRC = 'images/svg/pokeball.svg';
 
