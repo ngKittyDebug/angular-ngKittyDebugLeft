@@ -13,26 +13,26 @@
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+}
 
-  .nav_container {
+.nav_container {
+  @include mixins.center_content;
+
+  gap: calc(0.25rem * 6);
+
+  .nav_link {
     @include mixins.center_content;
 
-    gap: calc(0.25rem * 6);
+    color: color-mix(in oklab, var(--tui-text-primary) 60%, transparent);
+    gap: calc(0.25rem * 2);
+  }
 
-    .nav_link {
-      @include mixins.center_content;
+  .nav_link:hover {
+    color: var(--primary);
+  }
 
-      color: color-mix(in oklab, var(--tui-text-primary) 60%, transparent);
-      gap: calc(0.25rem * 2);
-    }
-
-    .nav_link:hover {
-      color: var(--primary);
-    }
-
-    .active_link {
-      color: var(--primary);
-    }
+  .active_link {
+    color: var(--primary);
   }
 }
 
@@ -61,4 +61,10 @@
 
 .pokedex_icon {
   width: 2.5rem;
+}
+
+@media (max-width: 768px) {
+  .nav_container {
+    display: none;
+  }
 }
