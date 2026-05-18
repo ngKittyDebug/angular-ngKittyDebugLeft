@@ -1,0 +1,18 @@
+<div class="not-found-container">
+  <h1 class="not-found-heading">Entry Not Found in Database</h1>
+  <p class="not-found-text">
+    This number has not been added to the Pokédex yet or is temporarily hidden. Refresh the data, or
+    return to the main catalog.
+  </p>
+  <img class="not-found-image" [src]="imageUrl" alt="poke ball 404" />
+  <a
+    class="not-found-button"
+    tuiButton
+    size="m"
+    appearance="brand-accent"
+    routerLink="/"
+    iconStart="@tui.house"
+  >
+    Back to Catalog
+  </a>
+</div>
