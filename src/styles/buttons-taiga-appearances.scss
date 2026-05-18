@@ -1,0 +1,25 @@
+button[tuiButton][data-appearance='brand-accent'],
+a[tuiButton][data-appearance='brand-accent'] {
+  background: var(--gradient-primary);
+  color: var(--primary-foreground);
+  box-shadow: var(--glow-primary);
+  transition: all 0.2s ease;
+
+  @media (hover: hover) {
+    &:hover {
+      box-shadow: var(--glow-primary-light);
+      transform: scale(1.05);
+    }
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  &:disabled {
+    filter: none;
+    box-shadow: none;
+    transform: none;
+    cursor: not-allowed;
+  }
+}
