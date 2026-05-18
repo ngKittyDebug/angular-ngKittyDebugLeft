@@ -1,0 +1,109 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  padding: 0 5rem;
+  max-width: 100vw;
+  overflow: hidden;
+}
+.heading {
+  text-align: center;
+}
+.team-list {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0;
+  gap: 1rem;
+}
+.team-card {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 calc(33.333% - 1rem);
+  box-sizing: border-box;
+  overflow: hidden;
+  padding: 1rem;
+  background-color: var(--pokemon-card);
+  color: var(--pokemon-card-foreground);
+  border-radius: 20px;
+  border: solid 2px var(--sidebar-border);
+}
+.name {
+  font-size: 1.5rem;
+  margin: 0;
+}
+.position {
+  margin: 1rem 0;
+}
+.img-wrapper {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background-color: white;
+  overflow: hidden;
+  border-radius: 15px;
+  margin-top: auto;
+  object-fit: cover;
+
+  & img {
+    width: 100%;
+    height: auto;
+  }
+}
+.description {
+  background-color: var(--primary);
+  border-radius: 20px;
+  border: solid 2px var(--border);
+  padding: 1rem;
+  color: #e0e7ff;
+}
+.accordion {
+  background-color: var(--sidebar);
+}
+.accordion_content {
+  background-color: var(--sidebar-accent);
+}
+.features {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  color: #e0e7ff;
+}
+.feature {
+  text-wrap: nowrap;
+  display: inline-block;
+  background-color: var(--stat-defense-start);
+  border: solid 2px var(--border);
+  border-radius: 15px;
+  margin: 1rem;
+  padding: 0.5rem;
+  text-shadow: #000000 1px 0 10px;
+}
+.bg-green {
+  background-color: var(--type-grass-start);
+}
+.bg-orange {
+  background-color: var(--stat-speed-end);
+}
+.bg-red {
+  background-color: var(--stat-attack-start);
+}
+.bg-pink {
+  background-color: var(--type-fairy-start);
+}
+@media (max-width: 550px) {
+  .team-list {
+    flex-direction: column;
+  }
+  .team-card {
+    width: 100%;
+  }
+  .wrapper {
+    padding: 0 15px;
+  }
+  .heading {
+    text-wrap: wrap;
+  }
+  .feature {
+    text-wrap: wrap;
+    text-align: center;
+  }
+}
