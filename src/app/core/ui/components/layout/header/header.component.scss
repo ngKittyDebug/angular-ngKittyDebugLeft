@@ -7,6 +7,8 @@
   margin: 0 auto;
   background: var(--gradient-bg);
   border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0px;
 }
 
 .header_component {
