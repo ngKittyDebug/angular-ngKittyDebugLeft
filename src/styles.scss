@@ -1,7 +1,8 @@
-@use './styles/buttons-taiga-appearances.scss';
+@use './styles/utility/mixins';
 @use './styles/root-colors.style.scss';
 @use './styles/dark-style.scss';
 @use './styles/light-style.scss';
+@use './styles/buttons-taiga-appearances.scss';
 
 * {
   box-sizing: border-box;
@@ -26,15 +27,10 @@ body {
 }
 
 .root-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  width: 100vw;
-  height: 100vh;
-}
+  @include mixins.center_content;
 
-.vorobey_slop {
-  height: 70%;
-  width: 80%;
+  padding: 0 2rem;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100vh;
 }
