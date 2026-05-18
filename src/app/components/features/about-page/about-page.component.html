@@ -1,27 +1,27 @@
 <div class="wrapper">
-  <h1>PokeDex (ngKittyDebugLeftPaw)</h1>
+  <h1 class="heading">PokeDex (ngKittyDebugLeftPaw)</h1>
   <ul class="team-list">
-    <li class="team-card">
+    <div class="team-card">
       <h3 class="name">Pavel</h3>
       <p class="position">frontend developer</p>
       <div class="img-wrapper">
-        <img src="" alt="Pavel" />
+        <img src="images/team/PavelCat.jpg" alt="Pavel" />
       </div>
-    </li>
-    <li class="team-card">
+    </div>
+    <div class="team-card">
       <h3 class="name">Alex</h3>
       <p class="position">Backend / Frontend developer</p>
       <div class="img-wrapper">
-        <img src="" alt="Alex" />
+        <img src="images/team/AlexCat.jpg" alt="Alex" />
       </div>
-    </li>
-    <li class="team-card">
+    </div>
+    <div class="team-card">
       <h3 class="name">Oksana</h3>
       <p class="position">Design / Frontend developer</p>
       <div class="img-wrapper">
-        <img src="" alt="Oksana" />
+        <img src="images/team/OksanaCat.jpg" alt="Oksana" />
       </div>
-    </li>
+    </div>
   </ul>
   <div class="description">
     <p>
@@ -36,17 +36,17 @@
     </p>
   </div>
   <ul class="features">
-    <li class="feature">просмотр каталога покемонов;</li>
-    <li class="feature">поиск и фильтрация</li>
-    <li class="feature">просмотр подробной информации</li>
-    <li class="feature">добавление покемонов в избранное</li>
-    <li class="feature">адаптивный современный интерфейс</li>
-    <li class="feature">плавные UI-анимации и интерактивные элементы</li>
+    <div class="feature bg-green">просмотр каталога покемонов</div>
+    <div class="feature">поиск и фильтрация</div>
+    <div class="feature bg-pink">просмотр подробной информации</div>
+    <div class="feature">добавление покемонов в избранное</div>
+    <div class="feature bg-red">адаптивный современный интерфейс</div>
+    <div class="feature bg-orange">плавные UI-анимации и интерактивные элементы</div>
   </ul>
-  <tui-accordion>
-    @for (item of data | keyvalue; track item) {
-      <button [tuiAccordion]="$index === 1">{{ item.key }}</button>
-      <tui-expand>{{ item.value }}</tui-expand>
+  <tui-accordion class="accordion">
+    @for (item of AccordionData | keyvalue; track item) {
+      <button [tuiAccordion]="$index === 0">{{ item.key }}</button>
+      <tui-expand class="accordion_content">{{ item.value }}</tui-expand>
     }
   </tui-accordion>
 </div>
