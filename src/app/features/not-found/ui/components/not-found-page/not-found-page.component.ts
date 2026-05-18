@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TuiButton } from '@taiga-ui/core';
 
+const NOT_FOUND_GIF_URL = 'images/gif/not-found.gif';
+
 @Component({
   selector: 'left-paw-not-found-page',
   imports: [TuiButton, RouterLink],
@@ -10,5 +12,5 @@ import { TuiButton } from '@taiga-ui/core';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NotFoundPageComponent {
-  protected imageUrl = 'images/gif/not-found.gif';
+  protected imageUrl = NOT_FOUND_GIF_URL;
 }
