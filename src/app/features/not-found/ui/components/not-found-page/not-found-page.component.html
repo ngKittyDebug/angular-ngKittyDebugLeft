@@ -5,7 +5,14 @@
     return to the main catalog.
   </p>
   <img class="not-found-image" [src]="imageUrl" alt="poke ball 404" />
-  <button class="not-found-button" tuiButton type="button" size="m" iconStart="@tui.house">
+  <a
+    class="not-found-button"
+    tuiButton
+    size="m"
+    appearance="textfield"
+    routerLink="/"
+    iconStart="@tui.house"
+  >
     Back to Catalog
-  </button>
+  </a>
 </div>

@@ -23,9 +23,11 @@
   color: var(--tui-text-primary);
 }
 
+.not-found-heading {
+  margin: 0;
+}
+
 .not-found-text {
-  text-align: center;
-  color: var(--tui-text-primary);
   max-width: 480px;
 }
 
