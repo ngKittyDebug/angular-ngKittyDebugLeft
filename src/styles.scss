@@ -1,0 +1,36 @@
+@use './styles/utility/mixins';
+@use './styles/root-colors.style.scss';
+@use './styles/dark-style.scss';
+@use './styles/light-style.scss';
+@use './styles/buttons-taiga-appearances.scss';
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  letter-spacing: 0.03em;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+.t-root-content {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  height: 100%;
+}
+
+.root-wrapper {
+  @include mixins.center_content;
+
+  padding: 0 2rem;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100vh;
+}

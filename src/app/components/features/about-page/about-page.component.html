@@ -1,0 +1,52 @@
+<div class="wrapper">
+  <h1 class="heading">PokeDex (ngKittyDebugLeftPaw)</h1>
+  <ul class="team-list">
+    <div class="team-card">
+      <h3 class="name">Pavel</h3>
+      <p class="position">frontend developer</p>
+      <div class="img-wrapper">
+        <img src="images/team/PavelCat.jpg" alt="Pavel" />
+      </div>
+    </div>
+    <div class="team-card">
+      <h3 class="name">Alex</h3>
+      <p class="position">Backend / Frontend developer</p>
+      <div class="img-wrapper">
+        <img src="images/team/AlexCat.jpg" alt="Alex" />
+      </div>
+    </div>
+    <div class="team-card">
+      <h3 class="name">Oksana</h3>
+      <p class="position">Design / Frontend developer</p>
+      <div class="img-wrapper">
+        <img src="images/team/OksanaCat.jpg" alt="Oksana" />
+      </div>
+    </div>
+  </ul>
+  <div class="description">
+    <p>
+      PokeDex — интерактивный каталог покемонов, созданный в рамках командного проекта курса
+      <span>Angular</span>
+      от
+      <span>The Rolling Scopes School</span>
+    </p>
+    <p>
+      Проект сочетает современный интерфейс, удобную навигацию и элементы коллекционирования,
+      позволяя пользователям исследовать мир покемонов в более живом и интерактивном формате.
+    </p>
+  </div>
+  <ul class="features">
+    <div class="feature bg-green">просмотр каталога покемонов</div>
+    <div class="feature">поиск и фильтрация</div>
+    <div class="feature bg-pink">просмотр подробной информации</div>
+    <div class="feature">добавление покемонов в избранное</div>
+    <div class="feature bg-red">адаптивный современный интерфейс</div>
+    <div class="feature bg-orange">плавные UI-анимации и интерактивные элементы</div>
+  </ul>
+  <tui-accordion class="accordion">
+    @for (item of AccordionData | keyvalue; track item) {
+      <button [tuiAccordion]="$index === 0">{{ item.key }}</button>
+      <tui-expand class="accordion_content">{{ item.value }}</tui-expand>
+    }
+  </tui-accordion>
+</div>

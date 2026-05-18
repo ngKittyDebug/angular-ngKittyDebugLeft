@@ -1,0 +1,8 @@
+[build]
+  command = "pnpm build"
+  publish = "dist/ng-kitty-debug-left/browser"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
