@@ -3,3 +3,19 @@
   align-items: center;
   justify-content: center;
 }
+
+@mixin flex_content(
+  $display: flex,
+  $direction: row,
+  $flex_wrap: wrap,
+  $align_items: center,
+  $justify_content: center,
+  $gap: 0px
+) {
+  display: $display;
+  flex-direction: $direction;
+  flex-wrap: $flex_wrap;
+  align-items: $align_items;
+  justify-content: $justify_content;
+  gap: $gap;
+}
