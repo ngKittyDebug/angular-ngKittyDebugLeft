@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { KeyValuePipe } from '@angular/common';
 import { TuiAccordion } from '@taiga-ui/kit';
-import { accordionData } from './constants/accordion-canstants';
+import { accordionData } from './constants/accordion-constants';
 
 @Component({
   selector: 'left-paw-about-page',
