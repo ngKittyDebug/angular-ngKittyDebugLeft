@@ -7,6 +7,6 @@ export const routes: Routes = [
       import('./core/ui/components/layout/layout.component').then((m) => m.LayoutComponent),
 
     //Сюда мы будем прописывать все роуты, наш главный компонент это LayoutComponent, в нем будут жить наши Header and Footer компоненты
-    children: [],
+    loadChildren: () => import('./features/features.routes').then((m) => m.ChildrenRouts),
   },
 ];
