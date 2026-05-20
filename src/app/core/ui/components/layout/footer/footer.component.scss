@@ -1,3 +1,30 @@
+@use 'utility/mixins';
+
 :host {
   display: block;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  margin: 0 auto;
+  background: var(--gradient-bg);
+  border-top: 1px solid var(--border);
+}
+
+.footer_container {
+  @include mixins.center_content;
+  justify-content: space-around;
+
+  a {
+    color: color-mix(in oklab, var(--tui-text-primary) 60%, transparent);
+  }
+  a:hover {
+    color: var(--primary);
+  }
+}
+
+.footer_project {
+  @include mixins.center_content;
+}
+
+.footer_github {
+  @include mixins.center_content;
 }
