@@ -2,12 +2,12 @@
 @use 'screens-width';
 
 :host {
-  @include mixins.flex_content($direction: column, $gap: 5px);
+  @include mixins.flex_container_function($direction: column, $gap: 5px);
   min-height: 100vh;
 }
 
 .not-found-container {
-  @include mixins.flex_content($direction: column, $gap: 10px);
+  @include mixins.flex_container_function($direction: column, $gap: 10px);
   max-width: 600px;
   padding: 0 10px;
 }
