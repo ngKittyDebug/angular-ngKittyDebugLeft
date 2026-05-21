@@ -1,4 +1,5 @@
 @use 'utility/mixins';
+@use 'screens-width';
 
 :host {
   @include mixins.flex_content($direction: column, $gap: 5px);
@@ -19,14 +20,14 @@
 
 .not-found-heading {
   margin: 0;
-  @media (max-width: 550px) {
+  @include mixins.respond-to(screens-width.$screen-small, 'max') {
     font-size: 1.5em;
   }
 }
 
 .not-found-text {
   max-width: 480px;
-  @media (max-width: 550px) {
+  @include mixins.respond-to(screens-width.$screen-small, 'max') {
     font-size: 0.8em;
   }
 }
@@ -42,7 +43,7 @@
 .not-found-button {
   max-width: 480px;
   width: 100%;
-  @media (max-width: 550px) {
+  @include mixins.respond-to(screens-width.$screen-small, 'max') {
     font-size: 0.8em;
   }
 }

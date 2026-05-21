@@ -19,3 +19,9 @@
   justify-content: $justify_content;
   gap: $gap;
 }
+
+@mixin respond_to($width, $type: 'min') {
+  @media (#{$type}-width: $width) {
+    @content;
+  }
+}
