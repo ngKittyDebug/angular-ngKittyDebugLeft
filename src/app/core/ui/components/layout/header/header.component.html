@@ -1,6 +1,6 @@
 @let itemsList = navListItems();
 
-<header class="header_component">
+<header *transloco="let t" class="header_component">
   <a href="#" tuiLink class="icon_wrapper">
     <img [src]="pokeDexIcoSrc" alt="pokedex_icon" class="pokedex_icon" />
     <h1>PokeDex</h1>
@@ -17,7 +17,14 @@
     <button tuiButton size="xs" appearance="textfield" tuiIconButton iconStart="@tui.moon">
       theme
     </button>
-    <button tuiButton size="xs" appearance="textfield" tuiIconButton iconStart="@tui.languages">
+    <button
+      tuiButton
+      size="xs"
+      appearance="textfield"
+      tuiIconButton
+      iconStart="@tui.languages"
+      (click)="language.languageSwitch()"
+    >
       language
     </button>
   </div>
