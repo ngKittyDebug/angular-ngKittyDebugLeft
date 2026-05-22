@@ -19,7 +19,7 @@
       size="xs"
       appearance="textfield"
       tuiIconButton
-      iconStart="@tui.moon"
+      [iconStart]="themeService.themeIcon()"
       (click)="themeService.toggleTheme()"
     >
       theme
