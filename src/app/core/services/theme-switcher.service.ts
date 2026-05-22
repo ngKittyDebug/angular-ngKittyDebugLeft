@@ -1,11 +1,7 @@
-import { computed, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable } from '@angular/core';
+import { TUI_DARK_MODE } from '@taiga-ui/core';
 
-export type AppTheme = 'light' | 'dark';
-
-const AppThemeNames = {
-  light: 'light',
-  dark: 'dark',
-} as const;
+export type AppThemeIcon = 'light' | 'dark';
 
 const AppThemeIcons = {
   light: '@tui.sun',
@@ -16,18 +12,13 @@ const AppThemeIcons = {
   providedIn: 'root',
 })
 export class ThemeSwitcherService {
-  public readonly currentTheme = signal<AppTheme>(AppThemeNames.dark);
+  private readonly darkMode = inject(TUI_DARK_MODE);
 
   public readonly themeIcon = computed(() => {
-    return this.currentTheme() === AppThemeNames.light ? AppThemeIcons.light : AppThemeIcons.dark;
+    return this.darkMode() ? AppThemeIcons.dark : AppThemeIcons.light;
   });
 
   public toggleTheme(): void {
-    this.currentTheme.update((theme) => {
-      const nextTheme: AppTheme =
-        theme === AppThemeNames.light ? AppThemeNames.dark : AppThemeNames.light;
-
-      return nextTheme;
-    });
+    this.darkMode.set(!this.darkMode());
   }
 }

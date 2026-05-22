@@ -1,7 +1,7 @@
 import { TuiRoot } from '@taiga-ui/core';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { ThemeSwitcherService } from '@core/services/theme-switcher.service';
+import { TUI_DARK_MODE } from '@taiga-ui/core';
 
 @Component({
   selector: 'left-paw-app-root',
@@ -11,5 +11,5 @@ import { ThemeSwitcherService } from '@core/services/theme-switcher.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent {
-  protected readonly themeService = inject(ThemeSwitcherService);
+  protected readonly darkMode = inject(TUI_DARK_MODE);
 }
