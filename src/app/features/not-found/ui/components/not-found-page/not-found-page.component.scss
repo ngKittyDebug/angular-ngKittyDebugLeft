@@ -1,19 +1,14 @@
+@use 'utility/mixins';
+@use 'screens-width';
+
 :host {
+  @include mixins.flex_container_function($direction: column, $gap: 5px);
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
 }
 
 .not-found-container {
-  display: flex;
-  flex-direction: column;
+  @include mixins.flex_container_function($direction: column, $gap: 10px);
   max-width: 600px;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
   padding: 0 10px;
 }
 
@@ -25,10 +20,16 @@
 
 .not-found-heading {
   margin: 0;
+  @include mixins.respond-to(screens-width.$screen-small, 'max') {
+    font-size: 1.5em;
+  }
 }
 
 .not-found-text {
   max-width: 480px;
+  @include mixins.respond-to(screens-width.$screen-small, 'max') {
+    font-size: 0.8em;
+  }
 }
 
 .not-found-image {
@@ -42,4 +43,7 @@
 .not-found-button {
   max-width: 480px;
   width: 100%;
+  @include mixins.respond-to(screens-width.$screen-small, 'max') {
+    font-size: 0.8em;
+  }
 }
