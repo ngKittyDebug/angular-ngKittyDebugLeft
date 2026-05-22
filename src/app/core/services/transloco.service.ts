@@ -6,6 +6,7 @@ import { TranslocoService } from '@jsverse/transloco';
 })
 export class LanguageSwitcher {
   private translocoService = inject(TranslocoService);
+  private readonly currentLanguage = this.translocoService.activeLang;
 
   private availableLangs = this.translocoService.getAvailableLangs();
   protected languages = this.availableLangs.map((lang) => {
@@ -20,7 +21,7 @@ export class LanguageSwitcher {
     this.translocoService.setActiveLang(lang);
   }
   public languageSwitch() {
-    if (this.translocoService.activeLang() === 'en') {
+    if (this.currentLanguage() === 'en') {
       this.switchLanguage('ru');
     } else {
       this.switchLanguage('en');
