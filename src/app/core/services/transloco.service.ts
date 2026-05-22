@@ -8,9 +8,13 @@ export class LanguageSwitcher {
   private translocoService = inject(TranslocoService);
 
   private availableLangs = this.translocoService.getAvailableLangs();
-  protected languages = this.availableLangs.map((lang) =>
-    typeof lang === 'string' ? lang : lang.id,
-  );
+  protected languages = this.availableLangs.map((lang) => {
+    if (typeof lang === 'string') {
+      return lang;
+    } else {
+      return lang.id;
+    }
+  });
 
   public switchLanguage(lang: string) {
     this.translocoService.setActiveLang(lang);
