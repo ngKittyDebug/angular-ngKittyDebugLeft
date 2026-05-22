@@ -3,3 +3,25 @@
   align-items: center;
   justify-content: center;
 }
+
+@mixin flex_container_function(
+  $display: flex,
+  $direction: row,
+  $flex_wrap: wrap,
+  $align_items: center,
+  $justify_content: center,
+  $gap: 0px
+) {
+  display: $display;
+  flex-direction: $direction;
+  flex-wrap: $flex_wrap;
+  align-items: $align_items;
+  justify-content: $justify_content;
+  gap: $gap;
+}
+
+@mixin respond_to($width, $type: 'min') {
+  @media (#{$type}-width: $width) {
+    @content;
+  }
+}
