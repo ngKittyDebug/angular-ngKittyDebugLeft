@@ -12,10 +12,18 @@ describe('ThemeSwitcherService', () => {
         matches: false,
         media: query,
         onchange: null,
-        addListener: () => {},
-        removeListener: () => {},
-        addEventListener: () => {},
-        removeEventListener: () => {},
+        addListener: () => {
+          /* empty */
+        },
+        removeListener: () => {
+          /* empty */
+        },
+        addEventListener: () => {
+          /* empty */
+        },
+        removeEventListener: () => {
+          /* empty */
+        },
         dispatchEvent: () => false,
       }),
     });
