@@ -1,0 +1,14 @@
+{
+  "pavel": {
+    "name": "Pavel",
+    "position": "Frontend developer"
+  },
+  "alex": {
+    "name": "Alex",
+    "position": "Backend / Frontend developer"
+  },
+  "oksana": {
+    "name": "Oksana",
+    "position": "Frontend developer / Designer"
+  }
+}
