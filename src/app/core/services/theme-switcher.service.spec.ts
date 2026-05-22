@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { ThemeSwithcerService } from './theme-swithcer.service';
+import { ThemeSwitcherService } from './theme-switcher.service';
 
-describe('ThemeSwithcerService', () => {
-  let service: ThemeSwithcerService;
+describe('ThemeSwitcherService', () => {
+  let service: ThemeSwitcherService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(ThemeSwithcerService);
+    service = TestBed.inject(ThemeSwitcherService);
   });
 
   it('should be created', () => {

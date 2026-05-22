@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { TuiButton, TuiIcon, TuiLink } from '@taiga-ui/core';
 import type { NavListItem } from '../model/nav-list-items';
+import { ThemeSwitcherService } from '@core/services/theme-switcher.service';
 
 const POKEMON_ICON_SRC = 'images/svg/pokeball.svg';
 
@@ -13,5 +14,6 @@ const POKEMON_ICON_SRC = 'images/svg/pokeball.svg';
 })
 export class HeaderComponent {
   public readonly navListItems = input<NavListItem[]>([]);
+  protected readonly themeService = inject(ThemeSwitcherService);
   protected readonly pokeDexIcoSrc = POKEMON_ICON_SRC;
 }

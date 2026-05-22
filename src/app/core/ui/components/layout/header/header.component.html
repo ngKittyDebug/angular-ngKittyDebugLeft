@@ -14,7 +14,14 @@
     }
   </nav>
   <div class="settings_buttons_container">
-    <button tuiButton size="xs" appearance="textfield" tuiIconButton iconStart="@tui.moon">
+    <button
+      tuiButton
+      size="xs"
+      appearance="textfield"
+      tuiIconButton
+      iconStart="@tui.moon"
+      (click)="themeService.toggleTheme()"
+    >
       theme
     </button>
     <button tuiButton size="xs" appearance="textfield" tuiIconButton iconStart="@tui.languages">
