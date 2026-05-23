@@ -1,14 +1,46 @@
 {
-  "pavel": {
-    "name": "Pavel",
-    "position": "Frontend developer"
+  "pavelkuvsh1noff": {
+    "name": "Pavel"
   },
-  "alex": {
-    "name": "Alex",
-    "position": "Backend / Frontend developer"
+  "alexgorser": {
+    "name": "Alex"
   },
-  "oksana": {
-    "name": "Oksana",
-    "position": "Frontend developer / Designer"
+  "oksi2510": {
+    "name": "Oksana"
+  },
+  "description": {
+    "partOne": "PokeDex is an interactive Pokémon catalog created as part of a team course project",
+    "partTwo": "from",
+    "partThree": "The project combines a modern interface, convenient navigation, and collection elements, allowing users to explore the Pokémon world in a more lively and interactive format."
+  },
+  "feature": {
+    "one": "browse the Pokémon catalog",
+    "two": "search and filtering",
+    "three": "view detailed information",
+    "four": "add Pokémon to favorites",
+    "five": "responsive modern interface",
+    "six": "smooth UI animations and interactive elements"
+  },
+  "accordion": {
+    "technologies": {
+      "title": "technologies",
+      "value": "The primary framework used was Angular v21 with a standalone architecture and a modern approach to application development. For state management, NgRx (@ngrx/store) was used, enabling centralized data storage and simplifying application state handling. The user interface was implemented using Taiga UI v5, which accelerated development and ensured a consistent component design. The main programming language was TypeScript ~5.9, with strict typing enabled. RxJS was used for a reactive approach to data and event handling."
+    },
+    "testing": {
+      "title": "Testing",
+      "value": "Vitest was used for testing. It was applied to verify component logic, services, and individual utility functions."
+    },
+    "codeQuality": {
+      "title": "Code Quality",
+      "value": "ESLint, Prettier, and Stylelint were used to maintain code quality. ESLint helped detect potential errors and enforce a consistent TypeScript code style, Prettier handled automatic code formatting, and Stylelint was used for SCSS/CSS validation"
+    },
+    "gitWorkflow": {
+      "title": "Git Workflow",
+      "value": "The project used Husky, commitlint, and lint-staged to automate the Git workflow. Husky ran git hooks before commits, commitlint ensured compliance with Conventional Commits, and lint-staged allowed running checks only on modified files."
+    },
+    "rules": {
+      "title": "Rules",
+      "value": "The team followed the Conventional Commits standard for consistent commit history formatting. Branch naming validation and automated pre-commit checks were also configured, helping maintain project stability and quality."
+    }
   }
 }
