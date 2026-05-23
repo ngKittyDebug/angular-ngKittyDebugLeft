@@ -8,6 +8,28 @@ describe('AppComponent', () => {
   let fixture: ComponentFixture<AppComponent>;
 
   beforeEach(async () => {
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: (query: string) => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: () => {
+          /* empty */
+        },
+        removeListener: () => {
+          /* empty */
+        },
+        addEventListener: () => {
+          /* empty */
+        },
+        removeEventListener: () => {
+          /* empty */
+        },
+        dispatchEvent: () => false,
+      }),
+    });
+
     TestBed.overrideComponent(AppComponent, {
       add: {
         imports: [TuiRootComponentMock],
@@ -20,6 +42,7 @@ describe('AppComponent', () => {
     await TestBed.configureTestingModule({
       imports: [AppComponent],
     }).compileComponents();
+
     fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
   });
