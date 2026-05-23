@@ -1,1 +1,6 @@
-{}
+{
+  "catalog": "Catalog",
+  "pokemon": "Pokemon",
+  "profile": "Profile",
+  "settings": "Settings"
+}

@@ -1,21 +1,21 @@
 export const NAV_LIST_ITEMS = [
   {
-    label: 'Catalog',
+    label: 'header.catalog',
     icon: '@tui.panel-top-bottom-dashed',
     link: '#',
   },
   {
-    label: 'My Pokémon',
+    label: 'header.pokemon',
     icon: '@tui.sparkles',
     link: '#',
   },
   {
-    label: 'Profile',
+    label: 'header.profile',
     icon: '@tui.user',
     link: '#',
   },
   {
-    label: 'Settings',
+    label: 'header.settings',
     icon: '@tui.settings',
     link: '#',
   },
