@@ -4,21 +4,21 @@ export const accordionData = [
     value: `about.accordion.technologies.value`,
   },
   {
-    title: 'about.accordion.testing.title',
+    title: `about.accordion.testing.title`,
     value: `about.accordion.testing.value`,
   },
   {
-    title: 'about.accordion.codeQuality.title',
+    title: `about.accordion.codeQuality.title`,
     value: `about.accordion.codeQuality.value`,
   },
 
   {
-    title: 'about.accordion.gitWorkflow.title',
+    title: `about.accordion.gitWorkflow.title`,
     value: `about.accordion.gitWorkflow.value`,
   },
 
   {
-    title: 'about.accordion.rules.title',
+    title: `about.accordion.rules.title`,
     value: `about.accordion.rules.value`,
   },
 ];

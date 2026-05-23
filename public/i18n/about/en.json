@@ -14,16 +14,16 @@
     "partThree": "The project combines a modern interface, convenient navigation, and collection elements, allowing users to explore the Pokémon world in a more lively and interactive format."
   },
   "feature": {
-    "one": "browse the Pokémon catalog",
-    "two": "search and filtering",
-    "three": "view detailed information",
-    "four": "add Pokémon to favorites",
-    "five": "responsive modern interface",
-    "six": "smooth UI animations and interactive elements"
+    "one": "Browse the Pokémon catalog",
+    "two": "Search and filtering",
+    "three": "View detailed information",
+    "four": "Add Pokémon to favorites",
+    "five": "Responsive modern interface",
+    "six": "Smooth UI animations and interactive elements"
   },
   "accordion": {
     "technologies": {
-      "title": "technologies",
+      "title": "Technologies",
       "value": "The primary framework used was Angular v21 with a standalone architecture and a modern approach to application development. For state management, NgRx (@ngrx/store) was used, enabling centralized data storage and simplifying application state handling. The user interface was implemented using Taiga UI v5, which accelerated development and ensured a consistent component design. The main programming language was TypeScript ~5.9, with strict typing enabled. RxJS was used for a reactive approach to data and event handling."
     },
     "testing": {
@@ -32,7 +32,7 @@
     },
     "codeQuality": {
       "title": "Code Quality",
-      "value": "ESLint, Prettier, and Stylelint were used to maintain code quality. ESLint helped detect potential errors and enforce a consistent TypeScript code style, Prettier handled automatic code formatting, and Stylelint was used for SCSS/CSS validation"
+      "value": "ESLint, Prettier, and Stylelint were used to maintain code quality. ESLint helped detect potential errors and enforce a consistent TypeScript code style, Prettier handled automatic code formatting, and Stylelint was used for SCSS/CSS validation."
     },
     "gitWorkflow": {
       "title": "Git Workflow",
