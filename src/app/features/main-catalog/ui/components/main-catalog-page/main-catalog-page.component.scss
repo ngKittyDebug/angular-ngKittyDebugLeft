@@ -1,0 +1,9 @@
+@use 'utility/mixins';
+
+:host {
+  width: 100%;
+}
+
+.catalog-container {
+  @include mixins.flex_container_function($gap: 10px);
+}
