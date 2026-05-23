@@ -22,14 +22,14 @@
 
 @mixin grid_container_function(
   $display: grid,
-  $grid_template_areas: none,
-  $grid_template_rows: none,
-  $grid_template_columns: none,
-  $grid_auto_flow: row,
-  $justify_content: normal,
-  $justify_items: stretch,
-  $align_items: normal,
-  $gap: 0px 0px
+  $grid_template_areas: null,
+  $grid_template_rows: null,
+  $grid_template_columns: null,
+  $grid_auto_flow: null,
+  $justify_content: null,
+  $justify_items: null,
+  $align_items: null,
+  $gap: null
 ) {
   display: $display;
   grid-template-areas: $grid_template_areas;
