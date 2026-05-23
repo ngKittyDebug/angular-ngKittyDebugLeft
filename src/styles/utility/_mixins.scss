@@ -20,6 +20,28 @@
   gap: $gap;
 }
 
+@mixin grid_container_function(
+  $display: grid,
+  $grid_template_areas: none,
+  $grid_template_rows: none,
+  $grid_template_columns: none,
+  $grid_auto_flow: row,
+  $justify_content: normal,
+  $justify_items: stretch,
+  $align_items: normal,
+  $gap: 0px 0px
+) {
+  display: $display;
+  grid-template-areas: $grid_template_areas;
+  grid-template-rows: $grid_template_rows;
+  grid-template-columns: $grid_template_columns;
+  grid-auto-flow: $grid_auto_flow;
+  justify-content: $justify_content;
+  justify-items: $justify_items;
+  align-items: $align_items;
+  gap: $gap;
+}
+
 @mixin respond_to($width, $type: 'min') {
   @media (#{$type}-width: $width) {
     @content;
