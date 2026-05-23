@@ -5,5 +5,26 @@ export const authRoutes: Routes = [
     path: 'auth',
     loadComponent: () =>
       import('./ui/components/auth-page/auth-page.component').then((m) => m.AuthPageComponent),
+    children: [
+      {
+        path: '',
+        redirectTo: 'signup',
+        pathMatch: 'full',
+      },
+      {
+        path: 'login',
+        loadComponent: () =>
+          import('./ui/components/auth-page/login-form/login-form.component').then(
+            (m) => m.LoginFormComponent,
+          ),
+      },
+      {
+        path: 'signup',
+        loadComponent: () =>
+          import('./ui/components/auth-page/signup-form/signup-form.component').then(
+            (m) => m.SignupFormComponent,
+          ),
+      },
+    ],
   },
 ];
