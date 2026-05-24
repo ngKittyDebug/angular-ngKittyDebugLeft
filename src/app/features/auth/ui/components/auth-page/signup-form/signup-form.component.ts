@@ -45,38 +45,3 @@ export class SignupFormComponent {
 
   protected loginRouterPath = '../login';
 }
-
-/* 
-
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { TuiAppearance, TuiButton, TuiError, TuiLabel, TuiTextfield } from '@taiga-ui/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { TuiForm } from '@taiga-ui/layout';
-import { RouterLink } from '@angular/router';
-import { TuiTextarea } from '@taiga-ui/kit';
-
-@Component({
-  selector: 'left-paw-signup-form',
-  imports: [TuiForm, TuiLabel, TuiAppearance, TuiButton, TuiTextarea, TuiTextfield, TuiError, TuiError,  RouterLink, ReactiveFormsModule],
-  templateUrl: './signup-form.component.html',
-  styleUrl: './signup-form.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-})
-export class SignupFormComponent {
-  private fb = inject(FormBuilder);
-
-  public registrationForm = this.fb.group(
-    {
-      username: ['', [Validators.required]],
-      email: ['', [Validators.required]],
-      password: ['', [Validators.required]],
-      passwordRepeat: ['', [Validators.required]],
-    },
-  );
-
-  protected loginRouterPath = '../login';
-}
-
-
-
-*/

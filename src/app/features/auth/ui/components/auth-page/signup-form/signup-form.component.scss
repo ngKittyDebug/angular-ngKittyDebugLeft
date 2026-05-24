@@ -2,17 +2,20 @@
 @use 'screens-width';
 
 :host {
-  @include mixins.flex_container_function($direction: column, $gap: 10px);
+  @include mixins.flex_container_function($direction: column);
   border-radius: 20px;
-  // background: var(--gradient-bg);
+  background: var(--gradient-bg);
   width: 100%;
   max-width: 32rem;
-  padding: 10px;
+  padding: 10px 20px;
+  * {
+    margin: 0;
+  }
 }
 
-// .signup__form {
-//   width: 100%;
-// }
+.signup__form {
+  width: 100%;
+}
 
 .signup__inputs {
   @include mixins.flex_container_function($direction: column, $gap: 10px);
@@ -21,4 +24,13 @@
 
 .signup__title-wrapper {
   @include mixins.flex_container_function($direction: column, $gap: 10px);
+}
+
+.signup__form_button {
+  width: 100%;
+}
+
+.signup__form_link {
+  text-decoration: none;
+  color: var(--primary);
 }
