@@ -1,14 +1,15 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { RouterLink, RouterOutlet } from '@angular/router';
+import { RouterOutlet } from '@angular/router';
+
+const POKEMON_ICON_SRC = 'images/svg/pokeball.svg';
 
 @Component({
   selector: 'left-paw-auth-page',
-  imports: [RouterOutlet, RouterLink],
+  imports: [RouterOutlet],
   templateUrl: './auth-page.component.html',
   styleUrl: './auth-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AuthPageComponent {
-  protected loginRouterPath = 'login';
-  protected signupRouterPath = 'signup';
+  protected readonly pokeDexIcoSrc = POKEMON_ICON_SRC;
 }

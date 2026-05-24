@@ -1,4 +1,5 @@
-<p>auth-page works!</p>
-<a [routerLink]="loginRouterPath" tuiLink class="nav_link">Log In</a>
-<a [routerLink]="signupRouterPath" tuiLink class="nav_link">Sign Up</a>
+<figure class="auth__logo">
+  <img class="auth__logo_image" [src]="pokeDexIcoSrc" alt="Poke Ball" />
+  <figcaption class="auth__logo_text">PokeDex</figcaption>
+</figure>
 <router-outlet />
