@@ -11,5 +11,5 @@ const POKEMON_ICON_SRC = 'images/svg/pokeball.svg';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AuthPageComponent {
-  protected readonly pokeDexIcoSrc = POKEMON_ICON_SRC;
+  protected readonly pokeDexLogoSrc = POKEMON_ICON_SRC;
 }

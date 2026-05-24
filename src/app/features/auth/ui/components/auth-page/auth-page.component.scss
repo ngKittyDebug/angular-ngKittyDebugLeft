@@ -2,9 +2,8 @@
 @use 'screens-width';
 
 :host {
-  @include mixins.flex_container_function($direction: column, $gap: 10px);
-  border-radius: 20px;
-  background: var(--gradient-bg);
+  @include mixins.flex_container_function($direction: column);
+  width: 100%;
 }
 
 .auth__logo {
