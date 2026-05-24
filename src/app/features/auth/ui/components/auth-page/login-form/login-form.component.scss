@@ -1,3 +1,36 @@
+@use 'utility/mixins';
+@use 'screens-width';
+
 :host {
-  display: block;
+  @include mixins.flex_container_function($direction: column);
+  border-radius: 20px;
+  background: var(--gradient-bg);
+  width: 100%;
+  max-width: 32rem;
+  padding: 10px 20px;
+  * {
+    margin: 0;
+  }
+}
+
+.login__form {
+  width: 100%;
+}
+
+.login__inputs {
+  @include mixins.flex_container_function($direction: column, $gap: 10px);
+  width: 100%;
+}
+
+.login__title-wrapper {
+  @include mixins.flex_container_function($direction: column, $gap: 10px);
+}
+
+.login__form_button {
+  width: 100%;
+}
+
+.login__form_link {
+  text-decoration: none;
+  color: var(--primary);
 }

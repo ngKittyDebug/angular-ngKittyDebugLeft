@@ -1,13 +1,32 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { TuiButton, TuiError, TuiInput, TuiLabel, TuiTextfieldComponent } from '@taiga-ui/core';
+import { TuiForm } from '@taiga-ui/layout';
 
 @Component({
   selector: 'left-paw-login-form',
-  imports: [RouterLink],
+  imports: [
+    RouterLink,
+    ReactiveFormsModule,
+    TuiTextfieldComponent,
+    TuiButton,
+    TuiInput,
+    TuiLabel,
+    TuiForm,
+    TuiError,
+  ],
   templateUrl: './login-form.component.html',
   styleUrl: './login-form.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LoginFormComponent {
-  protected signupRouterPath = '../signup';
+  private fb = inject(FormBuilder);
+
+  public readonly loginForm = this.fb.nonNullable.group({
+    username: ['', Validators.required],
+    password: ['', Validators.required],
+  });
+
+  protected loginRouterPath = '../signup';
 }

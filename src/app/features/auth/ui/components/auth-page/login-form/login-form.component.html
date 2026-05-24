@@ -1,9 +1,37 @@
-<p>Sign in to access your PokeDex</p>
-<form>
-  <p>
-    Don't have an account?<a [routerLink]="signupRouterPath" tuiLink class="nav_link"
-      >Create account</a
-    >
-  </p>
+<form tuiAppearance="floating" tuiForm="m" class="login__form" [formGroup]="loginForm">
+  <div class="login__title-wrapper">
+    <h2 class="login__title" tuiTitle>Begin your journey</h2>
+    <p class="login__subtitle" tuiSubtitle>Register to start tracking your collection</p>
+  </div>
+  <tui-textfield iconStart="@tui.user">
+    <label tuiLabel for="username">Name</label>
+    <input
+      formControlName="username"
+      placeholder="john"
+      tuiInput
+      autocomplete="username"
+      type="text"
+      id="username"
+    />
+  </tui-textfield>
+  <tui-error />
+  <tui-textfield iconStart="@tui.lock">
+    <label tuiLabel for="password">Password</label>
+    <input
+      formControlName="password"
+      placeholder="333333Qq"
+      tuiInput
+      autocomplete="current-password"
+      type="password"
+      id="password"
+    />
+  </tui-textfield>
+  <tui-error />
+  <button class="login__form_button" tuiButton type="submit">Submit</button>
+  <div class="login__title-wrapper">
+    <p class="login__form_text">
+      Don't have an account?
+      <a [routerLink]="loginRouterPath" tuiLink class="login__form_link">Create account</a>
+    </p>
+  </div>
 </form>
-<p>By signing in, you agree to catch them all responsibly.</p>
