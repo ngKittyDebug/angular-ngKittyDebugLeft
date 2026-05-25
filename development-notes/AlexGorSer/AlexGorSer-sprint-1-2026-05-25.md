@@ -82,7 +82,7 @@
 | ![Assignees](./assets/AlexGorSer-sprint-1-2026-05-25/image-8.png) | ![Выбор исполнителя](./assets/AlexGorSer-sprint-1-2026-05-25/image-9.png) |
 
 ### 🏷️ Labels
-![Labels]./assets/AlexGorSer-sprint-1-2026-05-25/(image-10.png)
+![Labels](./assets/AlexGorSer-sprint-1-2026-05-25/image-10.png)
 
 Здесь выбираем лейблы: к чему относится эта таска — к новым фичам, к документации, к какому спринту и т.д.  
 Например, я ставлю лейбл текущего спринта.
