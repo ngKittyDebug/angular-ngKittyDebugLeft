@@ -31,4 +31,14 @@ export class LoginFormComponent {
   });
 
   protected loginRouterPath = '../signup';
+
+  protected submit(): void {
+    if (this.loginForm.invalid) {
+      return;
+    }
+
+    const formData = this.loginForm.getRawValue();
+
+    localStorage.setItem('loginFormData', JSON.stringify(formData));
+  }
 }

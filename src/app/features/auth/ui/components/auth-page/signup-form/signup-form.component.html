@@ -4,6 +4,7 @@
   tuiForm="m"
   class="signup__form"
   [formGroup]="registrationForm"
+  (ngSubmit)="submit()"
 >
   <div class="signup__title-wrapper">
     <h2 class="signup__title" tuiTitle>{{ t('auth.signup.heading') }}</h2>

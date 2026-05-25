@@ -4,6 +4,7 @@
   tuiForm="m"
   class="login__form"
   [formGroup]="loginForm"
+  (ngSubmit)="submit()"
 >
   <div class="login__title-wrapper">
     <h2 class="login__title" tuiTitle>{{ t('auth.login.heading') }}</h2>

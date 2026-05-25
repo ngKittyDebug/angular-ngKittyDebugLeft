@@ -33,4 +33,13 @@ export class SignupFormComponent {
   });
 
   protected loginRouterPath = '../login';
+
+  protected submit(): void {
+    if (this.registrationForm.invalid) {
+      return;
+    }
+    const formData = this.registrationForm.getRawValue();
+
+    localStorage.setItem('registrationFormData', JSON.stringify(formData));
+  }
 }
