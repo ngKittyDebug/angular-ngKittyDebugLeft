@@ -101,7 +101,7 @@
 | ![Создание лейбла](./assets/AlexGorSer-sprint-1-2026-05-25/image-12.png) | ![Описание лейбла](./assets/AlexGorSer-sprint-1-2026-05-25/image-13.png) |
 
 ### 🧩 Type
-![Type](./assets/AlexGorSer-sprint-1-2026-05-25/mage-14.png)
+![Type](./assets/AlexGorSer-sprint-1-2026-05-25/image-14.png)
 
 Тип таски помогает понять, чем нужно будет заниматься: фиксить багулины ~~подметать полы~~ или добавлять новый функционал.
 
