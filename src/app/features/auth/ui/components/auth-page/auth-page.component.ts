@@ -1,12 +1,12 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoDirective } from '@jsverse/transloco';
 
 const POKEMON_ICON_SRC = 'images/svg/pokeball.svg';
 
 @Component({
   selector: 'left-paw-auth-page',
-  imports: [RouterOutlet, TranslocoPipe],
+  imports: [RouterOutlet, TranslocoDirective],
   templateUrl: './auth-page.component.html',
   styleUrl: './auth-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

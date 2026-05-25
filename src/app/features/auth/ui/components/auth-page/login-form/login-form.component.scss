@@ -3,11 +3,11 @@
 
 :host {
   @include mixins.flex_container_function($direction: column);
-  border-radius: 20px;
+  border-radius: 1.6rem;
   background: var(--gradient-bg);
   width: 100%;
   max-width: 32rem;
-  padding: 10px 20px;
+  padding: 0.8rem 1.6rem;
   * {
     margin: 0;
   }
@@ -18,12 +18,17 @@
 }
 
 .login__inputs {
-  @include mixins.flex_container_function($direction: column, $gap: 10px);
+  @include mixins.flex_container_function($direction: column, $gap: 0.8rem);
+  width: 100%;
+  margin: 1.2rem 0;
+}
+
+.login__textfield {
   width: 100%;
 }
 
 .login__title-wrapper {
-  @include mixins.flex_container_function($direction: column, $gap: 10px);
+  @include mixins.flex_container_function($direction: column, $gap: 0.8rem);
 }
 
 .login__form_button {

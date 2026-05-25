@@ -8,7 +8,7 @@
     "password": "Пароль",
     "passwordRepeat": "Повторите пароль",
     "button": "Регистрация",
-    "endingText": "Уже есть аккаунт?",
+    "endingText": "Уже есть аккаунт? ",
     "signupLink": "Войти"
   },
   "login": {

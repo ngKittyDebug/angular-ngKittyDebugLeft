@@ -1,6 +1,8 @@
-<figure class="auth__logo">
-  <img class="auth__logo_image" [src]="pokeDexLogoSrc" alt="Poke Ball" />
-  <figcaption class="auth__logo_text">PokeDex</figcaption>
-</figure>
-<router-outlet />
-<p>{{ 'auth.authMessage' | transloco }}</p>
+<ng-container *transloco="let t">
+  <figure class="auth__logo">
+    <img class="auth__logo_image" [src]="pokeDexLogoSrc" alt="Poke Ball" />
+    <figcaption class="auth__logo_text">PokeDex</figcaption>
+  </figure>
+  <router-outlet />
+  <p>{{ t('auth.authMessage') }}</p>
+</ng-container>

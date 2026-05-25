@@ -10,31 +10,39 @@
     <h2 class="login__title" tuiTitle>{{ t('auth.login.heading') }}</h2>
     <p class="login__subtitle" tuiSubtitle>{{ t('auth.login.subheading') }}</p>
   </div>
-  <tui-textfield iconStart="@tui.user">
-    <label tuiLabel for="username">{{ t('auth.login.username') }}</label>
-    <input
-      formControlName="username"
-      placeholder="john"
-      tuiInput
-      autocomplete="username"
-      type="text"
-      id="username"
-    />
-  </tui-textfield>
-  <tui-error />
-  <tui-textfield iconStart="@tui.lock">
-    <label tuiLabel for="password">{{ t('auth.login.password') }}</label>
-    <input
-      formControlName="password"
-      placeholder="333333Qq"
-      tuiInput
-      autocomplete="current-password"
-      type="password"
-      id="password"
-    />
-  </tui-textfield>
-  <tui-error />
-  <button class="login__form_button" tuiButton appearance="brand-accent" type="submit">
+  <div class="login__inputs">
+    <tui-textfield class="login__textfield" iconStart="@tui.user">
+      <label tuiLabel for="username">{{ t('auth.login.username') }}</label>
+      <input
+        formControlName="username"
+        placeholder="John"
+        tuiInput
+        autocomplete="username"
+        type="text"
+        id="username"
+      />
+    </tui-textfield>
+    <tui-error />
+    <tui-textfield class="login__textfield" iconStart="@tui.lock">
+      <label tuiLabel for="password">{{ t('auth.login.password') }}</label>
+      <input
+        formControlName="password"
+        placeholder="333333Qq"
+        tuiInput
+        autocomplete="current-password"
+        type="password"
+        id="password"
+      />
+    </tui-textfield>
+    <tui-error />
+  </div>
+  <button
+    class="login__form_button"
+    tuiButton
+    appearance="brand-accent"
+    type="submit"
+    [disabled]="loginForm.invalid"
+  >
     {{ t('auth.login.button') }}
   </button>
   <div class="login__title-wrapper">
