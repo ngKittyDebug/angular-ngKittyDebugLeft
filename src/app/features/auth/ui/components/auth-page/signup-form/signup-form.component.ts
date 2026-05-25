@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { TranslocoDirective } from '@jsverse/transloco';
 import { TuiButton, TuiError, TuiInput, TuiLabel, TuiTextfieldComponent } from '@taiga-ui/core';
 import { TuiForm } from '@taiga-ui/layout';
 
@@ -15,6 +16,7 @@ import { TuiForm } from '@taiga-ui/layout';
     TuiLabel,
     TuiForm,
     TuiError,
+    TranslocoDirective,
   ],
   templateUrl: './signup-form.component.html',
   styleUrl: './signup-form.component.scss',

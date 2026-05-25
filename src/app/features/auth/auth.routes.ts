@@ -19,6 +19,7 @@ export const authRoutes: Routes = [
           import('./ui/components/auth-page/login-form/login-form.component').then(
             (m) => m.LoginFormComponent,
           ),
+        providers: [provideTranslocoScope('auth')],
       },
       {
         path: 'signup',
@@ -26,6 +27,7 @@ export const authRoutes: Routes = [
           import('./ui/components/auth-page/signup-form/signup-form.component').then(
             (m) => m.SignupFormComponent,
           ),
+        providers: [provideTranslocoScope('auth')],
       },
     ],
   },

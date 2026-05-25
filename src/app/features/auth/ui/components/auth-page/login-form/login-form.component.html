@@ -1,10 +1,16 @@
-<form tuiAppearance="floating" tuiForm="m" class="login__form" [formGroup]="loginForm">
+<form
+  *transloco="let t"
+  tuiAppearance="floating"
+  tuiForm="m"
+  class="login__form"
+  [formGroup]="loginForm"
+>
   <div class="login__title-wrapper">
-    <h2 class="login__title" tuiTitle>Begin your journey</h2>
-    <p class="login__subtitle" tuiSubtitle>Register to start tracking your collection</p>
+    <h2 class="login__title" tuiTitle>{{ t('auth.login.heading') }}</h2>
+    <p class="login__subtitle" tuiSubtitle>{{ t('auth.login.subheading') }}</p>
   </div>
   <tui-textfield iconStart="@tui.user">
-    <label tuiLabel for="username">Name</label>
+    <label tuiLabel for="username">{{ t('auth.login.username') }}</label>
     <input
       formControlName="username"
       placeholder="john"
@@ -16,7 +22,7 @@
   </tui-textfield>
   <tui-error />
   <tui-textfield iconStart="@tui.lock">
-    <label tuiLabel for="password">Password</label>
+    <label tuiLabel for="password">{{ t('auth.login.password') }}</label>
     <input
       formControlName="password"
       placeholder="333333Qq"
@@ -27,11 +33,13 @@
     />
   </tui-textfield>
   <tui-error />
-  <button class="login__form_button" tuiButton type="submit">Submit</button>
+  <button class="login__form_button" tuiButton type="submit">{{ t('auth.login.button') }}</button>
   <div class="login__title-wrapper">
     <p class="login__form_text">
-      Don't have an account?
-      <a [routerLink]="loginRouterPath" tuiLink class="login__form_link">Create account</a>
+      {{ t('auth.login.endingText') }}
+      <a [routerLink]="loginRouterPath" tuiLink class="login__form_link">{{
+        t('auth.login.loginLink')
+      }}</a>
     </p>
   </div>
 </form>

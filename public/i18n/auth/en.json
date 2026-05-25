@@ -1,3 +1,23 @@
 {
-  "auth_message": "Your adventure begins here. Gotta catch them all!"
+  "authMessage": "Your adventure begins here. Gotta catch them all!",
+  "signup": {
+    "heading": "Begin your journey",
+    "subheading": "Register to start tracking your collection",
+    "username": "User name",
+    "email": "Email",
+    "password": "Password",
+    "passwordRepeat": "Repeat password",
+    "button": "Register",
+    "endingText": "Already have an account? ",
+    "signupLink": "Log In"
+  },
+  "login": {
+    "heading": "Welcome back",
+    "subheading": "Enter your credentials to continue",
+    "username": "User name",
+    "password": "Password",
+    "button": "Login",
+    "endingText": "Don't have an account? ",
+    "loginLink": "Sign Up"
+  }
 }

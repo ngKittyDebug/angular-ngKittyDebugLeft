@@ -1,10 +1,16 @@
-<form tuiAppearance="floating" tuiForm="m" class="signup__form" [formGroup]="registrationForm">
+<form
+  *transloco="let t"
+  tuiAppearance="floating"
+  tuiForm="m"
+  class="signup__form"
+  [formGroup]="registrationForm"
+>
   <div class="signup__title-wrapper">
-    <h2 class="signup__title" tuiTitle>Begin your journey</h2>
-    <p class="signup__subtitle" tuiSubtitle>Register to start tracking your collection</p>
+    <h2 class="signup__title" tuiTitle>{{ t('auth.signup.heading') }}</h2>
+    <p class="signup__subtitle" tuiSubtitle>{{ t('auth.signup.subheading') }}</p>
   </div>
   <tui-textfield iconStart="@tui.user">
-    <label tuiLabel for="username">Name</label>
+    <label tuiLabel for="username">{{ t('auth.signup.username') }}</label>
     <input
       formControlName="username"
       placeholder="john"
@@ -16,7 +22,7 @@
   </tui-textfield>
   <tui-error />
   <tui-textfield iconStart="@tui.mail">
-    <label tuiLabel for="email">Email</label>
+    <label tuiLabel for="email">{{ t('auth.signup.email') }}</label>
     <input
       formControlName="email"
       placeholder="john@wick.com"
@@ -28,7 +34,7 @@
   </tui-textfield>
   <tui-error />
   <tui-textfield iconStart="@tui.lock">
-    <label tuiLabel for="password">Password</label>
+    <label tuiLabel for="password">{{ t('auth.signup.password') }}</label>
     <input
       formControlName="password"
       placeholder="333333Qq"
@@ -40,7 +46,7 @@
   </tui-textfield>
   <tui-error />
   <tui-textfield iconStart="@tui.lock">
-    <label tuiLabel for="passwordRepeat">Repeat password</label>
+    <label tuiLabel for="passwordRepeat">{{ t('auth.signup.passwordRepeat') }}</label>
     <input
       formControlName="passwordRepeat"
       placeholder="333333Qq"
@@ -51,12 +57,13 @@
     />
   </tui-textfield>
   <tui-error />
-  <button class="signup__form_button" tuiButton type="submit">Submit</button>
+  <button class="signup__form_button" tuiButton type="submit">{{ t('auth.signup.button') }}</button>
   <div class="signup__title-wrapper">
     <p class="signup__form_text">
-      Already have an account?<a [routerLink]="loginRouterPath" tuiLink class="signup__form_link"
-        >Log In</a
-      >
+      {{ t('auth.signup.endingText')
+      }}<a [routerLink]="loginRouterPath" tuiLink class="signup__form_link">{{
+        t('auth.signup.signupLink')
+      }}</a>
     </p>
   </div>
 </form>
