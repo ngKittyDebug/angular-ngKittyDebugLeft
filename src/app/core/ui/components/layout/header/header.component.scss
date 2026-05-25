@@ -47,6 +47,9 @@
     padding: 1rem;
     border-radius: 1.25rem;
   }
+  .language_btn {
+    width: 4rem;
+  }
 }
 .icon_wrapper {
   @include mixins.center_content;

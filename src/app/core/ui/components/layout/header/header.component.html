@@ -25,14 +25,18 @@
       theme
     </button>
     <button
+      class="language_btn"
       tuiButton
       size="xs"
       appearance="textfield"
-      tuiIconButton
       iconStart="@tui.languages"
-      (click)="language.languageSwitch()"
+      tuiButtonSelect
+      type="button"
+      [(ngModel)]="value"
+      (ngModelChange)="language.languageSwitch(value)"
     >
-      language
+      {{ value }}
+      <tui-data-list-wrapper *tuiDropdown [items]="language.languages" />
     </button>
   </div>
 </header>

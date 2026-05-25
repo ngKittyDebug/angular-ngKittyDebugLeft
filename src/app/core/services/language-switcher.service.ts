@@ -4,13 +4,13 @@ import { TranslocoService } from '@jsverse/transloco';
 @Injectable({
   providedIn: 'root',
 })
-export class LanguageSwitcher {
+export class LanguageSwitcherService {
   private readonly translocoService = inject(TranslocoService);
   private readonly availableLangs = this.translocoService.getAvailableLangs();
 
-  private readonly currentLanguage = this.translocoService.activeLang;
+  public readonly currentLanguage = this.translocoService.activeLang;
 
-  protected languages = this.availableLangs.map((lang) => {
+  public readonly languages = this.availableLangs.map((lang) => {
     if (typeof lang === 'string') {
       return lang;
     } else {
@@ -18,11 +18,7 @@ export class LanguageSwitcher {
     }
   });
 
-  public languageSwitch() {
-    if (this.currentLanguage() === 'en') {
-      this.translocoService.setActiveLang('ru');
-    } else {
-      this.translocoService.setActiveLang('en');
-    }
+  public languageSwitch(lang: string) {
+    this.translocoService.setActiveLang(lang);
   }
 }
