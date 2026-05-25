@@ -1,10 +1,12 @@
 import type { Routes } from '@angular/router';
+import { provideTranslocoScope } from '@jsverse/transloco';
 
 export const authRoutes: Routes = [
   {
     path: 'auth',
     loadComponent: () =>
       import('./ui/components/auth-page/auth-page.component').then((m) => m.AuthPageComponent),
+    providers: [provideTranslocoScope('auth')],
     children: [
       {
         path: '',
