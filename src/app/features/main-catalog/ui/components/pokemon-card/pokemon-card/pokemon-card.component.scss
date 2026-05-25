@@ -1,6 +1,8 @@
 :host {
   display: block;
-  background-color: #777777;
-  width: 300px;
-  height: 400px;
+  background: var(--gradient-bg);
+  width: 18.75rem;
+  height: 25rem;
+  border-radius: 1.6rem;
+  border: 1px solid var(--border);
 }
