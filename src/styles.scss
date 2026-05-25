@@ -14,7 +14,25 @@ body {
   margin: 0;
   min-height: 100%;
   letter-spacing: 0.03em;
+  cursor:
+    url('./../public/images/cursor/cursor-pokeball.png') 0 0,
+    auto; // покемоновый обычный курсор
 }
+
+// покемоновый pointer курсор
+a,
+button,
+[tuiButton],
+[tuiLink],
+tui-button,
+tui-link,
+.tui-island,
+[role='button'] {
+  cursor:
+    url('./../public/images/cursor/cursor-pokeball-pointer.png') 16 0,
+    pointer !important;
+}
+// конец покемонового pointer курсора
 
 body {
   overflow-x: hidden;
