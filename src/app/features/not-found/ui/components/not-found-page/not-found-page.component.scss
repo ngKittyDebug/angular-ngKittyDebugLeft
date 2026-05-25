@@ -3,7 +3,6 @@
 
 :host {
   @include mixins.flex_container_function($direction: column, $gap: 5px);
-  min-height: 100vh;
 }
 
 .not-found-container {
