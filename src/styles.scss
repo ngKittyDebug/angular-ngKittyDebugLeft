@@ -29,9 +29,8 @@ body {
 
 .root-wrapper {
   @include mixins.center_content;
-
   padding: 0 2rem;
   flex-direction: column;
   width: 100%;
-  min-height: 100vh;
+  flex: 1 0 auto;
 }
