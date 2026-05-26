@@ -18,7 +18,7 @@
 }
 
 .login__inputs {
-  @include mixins.flex_container_function($direction: column, $gap: 0.8rem);
+  @include mixins.flex_container_function($direction: column, $flex_wrap: nowrap, $gap: 0.8rem);
   width: 100%;
   margin: 1.2rem 0;
 }
@@ -31,8 +31,20 @@
   @include mixins.flex_container_function($direction: column, $gap: 0.8rem);
 }
 
+.login__title {
+  text-align: center;
+}
+
+.login__subtitle {
+  text-align: center;
+}
+
 .login__form_button {
   width: 100%;
+}
+
+.login__form_text {
+  text-align: center;
 }
 
 .login__form_link {

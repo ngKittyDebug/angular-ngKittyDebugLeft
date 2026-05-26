@@ -18,7 +18,7 @@
 }
 
 .signup__inputs {
-  @include mixins.flex_container_function($direction: column, $gap: 0.8rem);
+  @include mixins.flex_container_function($direction: column, $flex_wrap: nowrap, $gap: 0.8rem);
   width: 100%;
   margin: 1.2rem 0;
 }
@@ -31,8 +31,20 @@
   @include mixins.flex_container_function($direction: column, $gap: 0.8rem);
 }
 
+.signup__title {
+  text-align: center;
+}
+
+.signup__subtitle {
+  text-align: center;
+}
+
 .signup__form_button {
   width: 100%;
+}
+
+.signup__form_text {
+  text-align: center;
 }
 
 .signup__form_link {
