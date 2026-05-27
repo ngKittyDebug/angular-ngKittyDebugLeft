@@ -1,0 +1,46 @@
+name: deploy-partykit
+
+on:
+  push:
+    branches: ['develop']
+    paths:
+      - 'partykit-server/**'
+      - 'shared-game/**'
+      - '.github/workflows/deploy-partykit.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-partykit
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.30.0
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Typecheck partykit-server
+        run: pnpm --filter @ng-kitty/partykit-server typecheck
+
+      - name: Test partykit-server
+        run: pnpm --filter @ng-kitty/partykit-server test
+
+      - name: Deploy to PartyKit
+        run: pnpm deploy:party
+        env:
+          PARTYKIT_LOGIN: ${{ secrets.PARTYKIT_LOGIN }}
+          PARTYKIT_TOKEN: ${{ secrets.PARTYKIT_TOKEN }}
