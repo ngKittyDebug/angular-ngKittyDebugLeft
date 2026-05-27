@@ -26,6 +26,7 @@ export class PokemonCardComponent implements OnInit {
 
       this.pokemonCardData.set(result);
       console.log(this.pokemonCardData());
+      console.log(this.pokemonCardData()?.types);
     } catch (error) {
       console.error('Ошибка при загрузке:', error);
     }

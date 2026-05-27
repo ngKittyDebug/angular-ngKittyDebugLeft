@@ -105,4 +105,34 @@
 
   /* Фоновый градиент страницы (темный с фиолетовыми оттенками) */
   --gradient-bg: linear-gradient(135deg, #030014 0%, #0f0a1e 50%, #1a0f2e 100%);
+
+  /* Фоновый градиент карточек */
+  --gradient-card: radial-gradient(
+    circle,
+    rgba(124, 58, 237, 0.9) 0%,
+    rgba(255, 255, 255, 0) 80%,
+    rgba(255, 255, 255, 0) 100%
+  );
+
+  /* Цвета типов в приложении */
+  --type-normal: #a8a878;
+  --type-fighting: #c03028;
+  --type-flying: #a890f0;
+  --type-poison: #a040a0;
+  --type-ground: #e0c068;
+  --type-rock: #b8a038;
+  --type-bug: #a8b820;
+  --type-ghost: #705898;
+  --type-steel: #b8b8d0;
+  --type-fire: #f08030;
+  --type-water: #6890f0;
+  --type-grass: #78c850;
+  --type-electric: #f8d030;
+  --type-psychic: #f85888;
+  --type-ice: #98d8d8;
+  --type-dragon: #7038f8;
+  --type-dark: #705848;
+  --type-fairy: #ee99ac;
+  --type-stellar: #76b8f0;
+  --type-unknown: #686868;
 }

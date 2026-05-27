@@ -1,1 +1,18 @@
-<p>{{ pokemonName() }}</p>
+<figure class="card__cover">
+  <img
+    class="card__image"
+    [src]="pokemonCardData()?.sprites?.other?.['official-artwork']?.front_default"
+    [alt]="pokemonCardData()?.name"
+  />
+  <figcaption class="card__information">
+    <div class="card__line">
+      <p class="card__name">{{ pokemonCardData()?.name }}</p>
+      <p class="card__id">#{{ pokemonCardData()?.id }}</p>
+    </div>
+    <div class="card__line-left">
+      @for (item of pokemonCardData()?.types; track item) {
+        <p className="card__type card__type-{{ item.type.name }}">{{ item.type.name }}</p>
+      }
+    </div>
+  </figcaption>
+</figure>

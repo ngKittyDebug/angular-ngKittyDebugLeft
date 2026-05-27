@@ -1,3 +1,10 @@
+@use 'utility/mixins';
+@use 'screens-width';
+
+$types:
+  normal, fighting, flying, poison, ground, rock, bug, ghost, steel, fire, water, grass, electric,
+  psychic, ice, dragon, dark, fairy, stellar, unknown;
+
 :host {
   display: block;
   background: var(--gradient-bg);
@@ -5,4 +12,49 @@
   height: 25rem;
   border-radius: 1.6rem;
   border: 1px solid var(--border);
+  * {
+    margin: 0;
+  }
+}
+
+.card__cover {
+  @include mixins.flex_container_function($direction: column, $gap: 1rem);
+  width: 100%;
+}
+
+.card__image {
+  width: 16rem;
+  border-radius: 1.6rem;
+  background: var(--gradient-card);
+}
+
+.card__information {
+  @include mixins.flex_container_function($direction: column, $gap: 1rem);
+  width: 100%;
+  padding: 0 1rem;
+}
+
+.card__line {
+  @include mixins.flex_container_function($justify_content: space-between, $gap: 1rem);
+  width: 100%;
+  &-left {
+    @include mixins.flex_container_function($justify_content: left, $gap: 1rem);
+    width: 100%;
+  }
+}
+
+.card__name {
+  font-weight: bold;
+}
+
+.card__type {
+  padding: 0.2rem 0.75rem;
+  color: var(--accent-foreground);
+  border-radius: 1.5rem;
+
+  @each $type in $types {
+    &-#{$type} {
+      background-color: var(--type-#{$type});
+    }
+  }
 }
