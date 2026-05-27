@@ -5,13 +5,15 @@ $types:
   normal, fighting, flying, poison, ground, rock, bug, ghost, steel, fire, water, grass, electric,
   psychic, ice, dragon, dark, fairy, stellar, unknown;
 
+$stats: hp, attack, defense;
+
 :host {
   display: block;
   background: var(--gradient-bg);
   width: 18.75rem;
-  height: 25rem;
   border-radius: 1.6rem;
   border: 1px solid var(--border);
+  padding: 1rem 0 1.5rem;
   * {
     margin: 0;
   }
@@ -41,20 +43,41 @@ $types:
     @include mixins.flex_container_function($justify_content: left, $gap: 1rem);
     width: 100%;
   }
+  &-stats {
+    @include mixins.grid_container_function($grid_template_columns: 1fr 10rem auto);
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+  }
 }
 
 .card__name {
   font-weight: bold;
+  &::first-letter {
+    text-transform: uppercase;
+  }
 }
 
 .card__type {
   padding: 0.2rem 0.75rem;
   color: var(--accent-foreground);
   border-radius: 1.5rem;
-
+  text-transform: uppercase;
   @each $type in $types {
     &-#{$type} {
-      background-color: var(--type-#{$type});
+      background: linear-gradient(to right, var(--type-#{$type}-start), var(--type-#{$type}-end));
+    }
+  }
+}
+
+.stats__name {
+  text-transform: uppercase;
+}
+
+.stats__bar {
+  @each $stat in $stats {
+    &-#{$stat} {
+      color: var(--stat-#{$stat}-start);
     }
   }
 }

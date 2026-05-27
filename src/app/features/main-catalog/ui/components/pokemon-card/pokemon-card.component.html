@@ -6,7 +6,7 @@
   />
   <figcaption class="card__information">
     <div class="card__line">
-      <p class="card__name">{{ pokemonCardData()?.name }}</p>
+      <h3 class="card__name">{{ pokemonCardData()?.name }}</h3>
       <p class="card__id">#{{ pokemonCardData()?.id }}</p>
     </div>
     <div class="card__line-left">
@@ -14,5 +14,17 @@
         <p className="card__type card__type-{{ item.type.name }}">{{ item.type.name }}</p>
       }
     </div>
+    @for (item of pokemonLimitedStats(); track item) {
+      <div class="card__line-stats">
+        <p class="stats__name">{{ item.stat.name }}</p>
+        <progress
+          class="stats__bar stats__bar-{{ item.stat.name }}"
+          max="300"
+          tuiProgressBar
+          [value]="item.base_stat"
+        ></progress>
+        <p class="stats__value">{{ item.base_stat }}</p>
+      </div>
+    }
   </figcaption>
 </figure>
