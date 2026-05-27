@@ -1,0 +1,29 @@
+@use 'utility/mixins';
+@use 'screens-width';
+
+:host {
+  @include mixins.flex_container_function($direction: column, $gap: 1rem);
+  width: 100%;
+  * {
+    margin: 0;
+  }
+}
+
+.auth__logo {
+  @include mixins.flex_container_function($gap: 1rem);
+}
+
+.auth__logo_image {
+  width: 2.5rem;
+}
+
+.auth__logo_text {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 0 0;
+  color: var(--primary);
+}
+
+.auth__text {
+  text-align: center;
+}
