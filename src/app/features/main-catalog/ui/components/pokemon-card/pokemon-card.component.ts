@@ -20,7 +20,6 @@ export class PokemonCardComponent implements OnInit {
   });
 
   public async ngOnInit() {
-    console.log('boom');
     try {
       const response = await fetch(`/mocks/${this.pokemonName()}.json`);
 
@@ -31,12 +30,6 @@ export class PokemonCardComponent implements OnInit {
       const result: PokemonDetailApiData = (await response.json()) as PokemonDetailApiData;
 
       this.pokemonCardData.set(result);
-      console.log(this.pokemonCardData());
-      console.log(this.pokemonLimitedStats());
-      // console.log(this.pokemonCardData()?.stats);
-      // console.log(this.pokemonCardData()?.stats[0]);
-      // console.log(this.pokemonCardData()?.stats[0].base_stat);
-      // console.log(this.pokemonCardData()?.stats[0].stat.name);
     } catch (error) {
       console.error('Ошибка при загрузке:', error);
     }
