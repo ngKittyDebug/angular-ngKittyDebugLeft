@@ -13,9 +13,15 @@ $stats: hp, attack, defense;
   width: 18.75rem;
   border-radius: 1.6rem;
   border: 1px solid var(--border);
+  transition: all 0.3s;
   padding: 1rem 0 1.5rem;
   * {
     margin: 0;
+  }
+  &:hover {
+    border: solid 2px var(--sidebar-primary);
+    transform: scale(1.05);
+    box-shadow: 10px 10px 10px 0px var(--sidebar-ring);
   }
 }
 
