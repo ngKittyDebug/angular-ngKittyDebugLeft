@@ -11,7 +11,7 @@ import { TuiProgress } from '@taiga-ui/kit';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PokemonCardComponent implements OnInit {
-  public readonly pokemonName = input<string>('pokemon');
+  public readonly pokemonName = input.required<string>();
   protected readonly pokemonCardData = signal<PokemonDetailApiData | null>(null);
   protected readonly pokemonLimitedStats = computed(() => {
     const data = this.pokemonCardData();
