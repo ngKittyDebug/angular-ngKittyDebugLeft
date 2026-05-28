@@ -10,11 +10,13 @@
       <p class="card__id">#{{ pokemonCardData()?.id }}</p>
     </div>
     <div class="card__line-left">
-      @for (item of pokemonCardData()?.types; track item) {
-        <p className="card__type card__type-{{ item.type.name }}">{{ item.type.name }}</p>
+      @for (item of pokemonCardData()?.types; track item.type.name) {
+        <span className="card__type card__type-{{ item.type.name }}" tuiBadge>{{
+          item.type.name
+        }}</span>
       }
     </div>
-    @for (item of pokemonLimitedStats(); track item) {
+    @for (item of pokemonLimitedStats(); track item.stat.name) {
       <div class="card__line-stats">
         <p class="stats__name">{{ item.stat.name }}</p>
         <progress

@@ -10,47 +10,47 @@ $stats: hp, attack, defense;
 :host {
   display: block;
   background: var(--gradient-bg);
-  width: 18.75rem;
+  width: 13.75rem;
   border-radius: 1.6rem;
   border: 1px solid var(--border);
   transition: all 0.3s;
-  padding: 1rem 0 1.5rem;
+  padding: 0.75rem 0 1rem;
   * {
     margin: 0;
   }
   &:hover {
-    border: solid 2px var(--sidebar-primary);
+    border: 1px solid var(--sidebar-primary);
     transform: scale(1.05);
     box-shadow: 10px 10px 10px 0px var(--sidebar-ring);
   }
 }
 
 .card__cover {
-  @include mixins.flex_container_function($direction: column, $gap: 1rem);
+  @include mixins.flex_container_function($direction: column, $gap: 0.5rem);
   width: 100%;
 }
 
 .card__image {
-  width: 16rem;
-  border-radius: 1.6rem;
+  width: 11rem;
+  border-radius: 1rem;
   background: var(--gradient-card);
 }
 
 .card__information {
-  @include mixins.flex_container_function($direction: column, $gap: 1rem);
+  @include mixins.flex_container_function($direction: column, $gap: 0.5rem);
   width: 100%;
-  padding: 0 1rem;
+  padding: 0 0.75rem;
 }
 
 .card__line {
-  @include mixins.flex_container_function($justify_content: space-between, $gap: 1rem);
+  @include mixins.flex_container_function($justify_content: space-between, $gap: 0.5rem);
   width: 100%;
   &-left {
-    @include mixins.flex_container_function($justify_content: left, $gap: 1rem);
+    @include mixins.flex_container_function($justify_content: left, $gap: 0.5rem);
     width: 100%;
   }
   &-stats {
-    @include mixins.grid_container_function($grid_template_columns: 1fr 10rem auto);
+    @include mixins.grid_container_function($grid_template_columns: 1fr 5rem auto);
     align-items: center;
     gap: 1rem;
     width: 100%;
@@ -65,9 +65,7 @@ $stats: hp, attack, defense;
 }
 
 .card__type {
-  padding: 0.2rem 0.75rem;
   color: var(--accent-foreground);
-  border-radius: 1.5rem;
   text-transform: uppercase;
   @each $type in $types {
     &-#{$type} {

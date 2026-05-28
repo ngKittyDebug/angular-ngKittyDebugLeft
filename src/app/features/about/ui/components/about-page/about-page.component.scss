@@ -1,34 +1,50 @@
+@use 'src/styles/utility/_mixins.scss' as *;
+@use 'src/styles/_screens-width.scss' as *;
+
 .wrapper {
-  display: flex;
-  flex-direction: column;
+  @include flex_container_function($direction: column, $gap: 5rem);
+
   padding: 0 5rem;
   max-width: 100vw;
   overflow: hidden;
+  margin: 5rem 0;
 }
 .heading {
   text-align: center;
+  margin: 0;
 }
 .team-list {
+  @include flex_container_function($justify_content: space-between, $gap: 2rem, $flex_wrap: nowrap);
+
   width: 100%;
-  display: flex;
-  justify-content: space-between;
   padding: 0;
-  gap: 1rem;
+  margin: 0;
 }
 .team-card {
-  display: flex;
-  flex-direction: column;
+  @include flex_container_function($direction: column);
+
   flex: 1 1 calc(33.333% - 1rem);
   box-sizing: border-box;
   overflow: hidden;
   padding: 1rem;
   background-color: var(--pokemon-card);
   color: var(--pokemon-card-foreground);
-  border-radius: 20px;
+  border-radius: 2rem;
   border: solid 2px var(--sidebar-border);
+  transition: all 0.3s;
+  position: relative;
+
+  &:hover {
+    border: solid 2px var(--sidebar-primary);
+    transform: scale(1.1);
+    box-shadow: 10px 10px 10px 0px var(--sidebar-ring);
+    .img-wrapper {
+      box-shadow: 0px 0px 10px 0px var(--sidebar-primary);
+    }
+  }
 }
 .name {
-  font-size: 1.5rem;
+  @include font_function($size: 1.5rem);
   margin: 0;
 }
 .position {
@@ -37,11 +53,12 @@
 .img-wrapper {
   width: 100%;
   aspect-ratio: 1 / 1;
-  background-color: white;
   overflow: hidden;
-  border-radius: 15px;
+  border-radius: 1.5rem;
   margin-top: auto;
   object-fit: cover;
+  border: solid 1px var(--sidebar-border);
+  transition: all 0.3s;
 
   & img {
     width: 100%;
@@ -49,47 +66,88 @@
   }
 }
 .description {
-  background-color: var(--primary);
-  border-radius: 20px;
+  background-color: var(--sidebar-accent);
+  border-radius: 1.5rem;
   border: solid 2px var(--border);
   padding: 1rem;
-  color: #e0e7ff;
+  margin-top: 0;
+  & span {
+    @include font_function($size: 1.5rem, $weight: 700);
+    color: var(--primary);
+  }
+}
+.angular {
+  @include font_function($weight: 700, $size: 1.2rem);
+  color: var(--angular);
+  text-decoration: none;
+  transition: all 0.3s;
+  &:hover {
+    text-shadow: 0 0 2px var(--rs);
+    text-decoration: underline;
+  }
+}
+.rs {
+  @include font_function($weight: 700, $size: 1.2rem);
+
+  color: var(--rs);
+  text-decoration: none;
+  text-shadow: 1px 1px 2px var(--angular);
+  transition: all 0.3s;
+  &:hover {
+    text-shadow: 1px 1px 3px var(--angular);
+    text-decoration: underline;
+  }
 }
 .accordion {
   background-color: var(--sidebar);
+  margin-top: 0;
 }
 .accordion_content {
   background-color: var(--sidebar-accent);
 }
 .features {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  color: #e0e7ff;
+  @include flex_container_function($justify_content: center, $flex_wrap: wrap);
+
+  margin: 0;
+  padding: 0;
 }
 .feature {
   text-wrap: nowrap;
   display: inline-block;
-  background-color: var(--stat-defense-start);
-  border: solid 2px var(--border);
-  border-radius: 15px;
+  background-color: var(--border);
+  border: solid 2px var(--primary);
+  border-radius: 1rem;
   margin: 1rem;
   padding: 0.5rem;
-  text-shadow: #000000 1px 0 10px;
+  box-shadow:
+    0 0 10px 0 var(--primary),
+    inset 0 0 10px 0 var(--primary);
 }
 .bg-green {
-  background-color: var(--type-grass-start);
+  border: solid 2px var(--type-grass-start);
+  box-shadow:
+    inset 0 0 10px 0 var(--type-grass-start),
+    0 0 10px 0 var(--type-grass-start);
 }
 .bg-orange {
-  background-color: var(--stat-speed-end);
+  border: solid 2px var(--stat-speed-end);
+  box-shadow:
+    inset 0 0 10px 0 var(--stat-speed-end),
+    0 0 10px 0 var(--stat-speed-end);
 }
 .bg-red {
-  background-color: var(--stat-attack-start);
+  border: solid 2px var(--stat-attack-start);
+  box-shadow:
+    inset 0 0 10px 0 var(--stat-attack-start),
+    0 0 10px 0 var(--stat-attack-start);
 }
 .bg-pink {
-  background-color: var(--type-fairy-start);
+  border: solid 2px var(--type-fairy-start);
+  box-shadow:
+    inset 0 0 10px 0 var(--type-fairy-start),
+    0 0 10px 0 var(--type-fairy-start);
 }
-@media (max-width: 550px) {
+@include respond_to($screen-small, max) {
   .team-list {
     flex-direction: column;
   }
@@ -97,7 +155,7 @@
     width: 100%;
   }
   .wrapper {
-    padding: 0 15px;
+    padding: 0 1rem;
   }
   .heading {
     text-wrap: wrap;

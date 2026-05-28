@@ -1,11 +1,11 @@
 import type { OnInit } from '@angular/core';
 import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
 import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
-import { TuiProgress } from '@taiga-ui/kit';
+import { TuiBadge, TuiProgress } from '@taiga-ui/kit';
 
 @Component({
   selector: 'left-paw-pokemon-card',
-  imports: [TuiProgress],
+  imports: [TuiProgress, TuiBadge],
   templateUrl: './pokemon-card.component.html',
   styleUrl: './pokemon-card.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -30,6 +30,8 @@ export class PokemonCardComponent implements OnInit {
       const result: PokemonDetailApiData = (await response.json()) as PokemonDetailApiData;
 
       this.pokemonCardData.set(result);
+
+      console.log(this.pokemonCardData());
     } catch (error) {
       console.error('Ошибка при загрузке:', error);
     }
