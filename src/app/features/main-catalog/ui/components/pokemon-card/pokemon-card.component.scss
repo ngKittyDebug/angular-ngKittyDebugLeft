@@ -17,6 +17,7 @@ $stats: hp, attack, defense;
   padding: 0.75rem 0 1rem;
   * {
     margin: 0;
+    @include mixins.font_function($size: 0.75rem);
   }
   &:hover {
     border: 1px solid var(--sidebar-primary);
@@ -31,7 +32,7 @@ $stats: hp, attack, defense;
 }
 
 .card__image {
-  width: 11rem;
+  width: 10rem;
   border-radius: 1rem;
   background: var(--gradient-card);
 }
@@ -50,7 +51,7 @@ $stats: hp, attack, defense;
     width: 100%;
   }
   &-stats {
-    @include mixins.grid_container_function($grid_template_columns: 1fr 5rem auto);
+    @include mixins.grid_container_function($grid_template_columns: 1fr 6rem auto);
     align-items: center;
     gap: 1rem;
     width: 100%;
@@ -58,7 +59,7 @@ $stats: hp, attack, defense;
 }
 
 .card__name {
-  font-weight: bold;
+  @include mixins.font_function($weight: bold, $size: 1rem);
   &::first-letter {
     text-transform: uppercase;
   }
