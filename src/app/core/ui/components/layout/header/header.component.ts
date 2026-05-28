@@ -6,6 +6,8 @@ import { provideTranslocoScope, TranslocoDirective } from '@jsverse/transloco';
 import { ThemeSwitcherService } from '@core/services/theme-switcher.service';
 import { TuiButtonSelect, TuiDataListWrapper } from '@taiga-ui/kit';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
+import { WindowsSizeContentDirective } from '@shared/decorators/windows-size-content.directive';
 
 const POKEMON_ICON_SRC = 'images/svg/pokeball.svg';
 
@@ -21,6 +23,8 @@ const POKEMON_ICON_SRC = 'images/svg/pokeball.svg';
     TuiButtonSelect,
     TuiDataListWrapper,
     TuiDropdown,
+    RouterLink,
+    WindowsSizeContentDirective,
   ],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss',

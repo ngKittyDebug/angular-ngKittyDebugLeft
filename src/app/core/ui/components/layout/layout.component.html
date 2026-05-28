@@ -2,4 +2,15 @@
 <main class="root-wrapper">
   <router-outlet />
 </main>
-<left-paw-footer />
+
+<div *leftPawWindowsSizeContent="'Tablet'">
+  <nav tuiTabBar *transloco="let t">
+    @for (item of navListItems; track item.label) {
+      <a routerLink="item.link" tuiLink class="nav_link" tuiTabBarItem [icon]="item.icon">
+        <span>{{ t(item.label) }}</span>
+      </a>
+    }
+  </nav>
+</div>
+
+<left-paw-footer *leftPawWindowsSizeContent="'Web'" />

@@ -5,14 +5,17 @@
     <img [src]="pokeDexIcoSrc" alt="pokedex_icon" class="pokedex_icon" />
     <h1>PokeDex</h1>
   </a>
-  <nav class="nav_container">
-    @for (item of itemsList; track item.label) {
-      <a [href]="item.link" tuiLink class="nav_link">
-        <tui-icon [icon]="item.icon" />
-        <span>{{ t(item.label) }}</span>
-      </a>
-    }
-  </nav>
+  <div *leftPawWindowsSizeContent="'Web'" class="nav_container">
+    <nav class="nav_container">
+      @for (item of itemsList; track item.label) {
+        <a routerLink="item.link" tuiLink class="nav_link">
+          <tui-icon [icon]="item.icon" />
+          <span>{{ t(item.label) }}</span>
+        </a>
+      }
+    </nav>
+  </div>
+
   <div class="settings_buttons_container">
     <button
       tuiButton
