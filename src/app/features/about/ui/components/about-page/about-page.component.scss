@@ -14,7 +14,7 @@
   margin: 0;
 }
 .team-list {
-  @include flex_container_function($justify_content: space-between, $gap: 2rem);
+  @include flex_container_function($justify_content: space-between, $gap: 2rem, $flex_wrap: nowrap);
 
   width: 100%;
   padding: 0;

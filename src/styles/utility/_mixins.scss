@@ -7,7 +7,7 @@
 @mixin flex_container_function(
   $display: flex,
   $direction: row,
-  $flex_wrap: nowrap,
+  $flex_wrap: wrap,
   $align_items: center,
   $justify_content: center,
   $gap: 0px
