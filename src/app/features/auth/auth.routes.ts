@@ -1,0 +1,34 @@
+import type { Routes } from '@angular/router';
+import { provideTranslocoScope } from '@jsverse/transloco';
+
+export const authRoutes: Routes = [
+  {
+    path: 'auth',
+    loadComponent: () =>
+      import('./ui/components/auth-page/auth-page.component').then((m) => m.AuthPageComponent),
+    providers: [provideTranslocoScope('auth')],
+    children: [
+      {
+        path: '',
+        redirectTo: 'signup',
+        pathMatch: 'full',
+      },
+      {
+        path: 'login',
+        loadComponent: () =>
+          import('./ui/components/auth-page/login-form/login-form.component').then(
+            (m) => m.LoginFormComponent,
+          ),
+        providers: [provideTranslocoScope('auth')],
+      },
+      {
+        path: 'signup',
+        loadComponent: () =>
+          import('./ui/components/auth-page/signup-form/signup-form.component').then(
+            (m) => m.SignupFormComponent,
+          ),
+        providers: [provideTranslocoScope('auth')],
+      },
+    ],
+  },
+];
