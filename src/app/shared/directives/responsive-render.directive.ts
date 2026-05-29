@@ -23,11 +23,9 @@ export class ResponsiveRenderDirective {
         takeUntilDestroyed(),
       )
       .subscribe((matches) => {
+        this.viewContainerRef.clear();
         if (matches) {
-          this.viewContainerRef.clear();
           this.viewContainerRef.createEmbeddedView(this.templateRef);
-        } else {
-          this.viewContainerRef.clear();
         }
       });
   }
