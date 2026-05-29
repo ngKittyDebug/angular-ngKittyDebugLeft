@@ -1,5 +1,5 @@
 import type { OnInit } from '@angular/core';
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
 import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
 import type { PokemonSpeciesApiData } from '@shared/models/pokemon-species-api-data-interface';
 import { TuiBadge } from '@taiga-ui/kit';
@@ -15,6 +15,16 @@ export class PokemonProfilePageComponent implements OnInit {
   public readonly pokemonEndpoint = 'bulbasaur';
   protected readonly pokemonProfileData = signal<PokemonDetailApiData | null>(null);
   protected readonly pokemonProfileDataSpecies = signal<PokemonSpeciesApiData | null>(null);
+  protected readonly pokemonWeight = computed(() => {
+    const weight = Number(this.pokemonProfileData()?.weight) / 10;
+
+    return weight;
+  });
+  protected readonly pokemonHeight = computed(() => {
+    const height = Number(this.pokemonProfileData()?.height) / 10;
+
+    return height;
+  });
 
   public async ngOnInit() {
     try {

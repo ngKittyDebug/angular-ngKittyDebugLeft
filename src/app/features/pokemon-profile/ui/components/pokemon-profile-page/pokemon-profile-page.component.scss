@@ -1,3 +1,26 @@
+@use 'utility/mixins';
+@use 'screens-width';
+
 :host {
-  display: block;
+  // @include mixins.flex_container_function($direction: column, $gap: 0.75rem);
+  * {
+    margin: 0;
+  }
+}
+
+.profile_pokemon__intro {
+  background-color: red;
+  width: 100%;
+  display: flex;
+  @include mixins.flex_container_function($gap: 0.75rem);
+}
+
+.profile_pokemon__image {
+  width: 400px;
+  height: 400px;
+}
+
+.profile_pokemon__intro_information {
+  max-width: 400px;
+  @include mixins.flex_container_function($direction: column, $gap: 0.75rem);
 }
