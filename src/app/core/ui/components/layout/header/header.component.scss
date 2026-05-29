@@ -51,6 +51,9 @@
     padding: 1rem;
     border-radius: 1.25rem;
   }
+  .language_btn {
+    width: 4rem;
+  }
 }
 .icon_wrapper {
   @include mixins.center_content;
@@ -67,10 +70,4 @@
 
 .pokedex_icon {
   width: 2.5rem;
-}
-
-@media (max-width: 768px) {
-  .nav_container {
-    display: none;
-  }
 }

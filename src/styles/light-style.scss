@@ -3,9 +3,12 @@
   --tui-background-base: #f8fafc;
   --tui-text-primary: #1e293b;
   --tui-text-action-hover: #7c3aed;
+  --tui-background-base-alt: var(--gradient-bg);
+
   /* --- КАРТОЧКИ И КОНТЕЙНЕРЫ --- */
 
   /* Фон карточек (полупрозрачный белый) */
+
   --pokemon-card: rgba(255, 255, 255, 0.9);
 
   /* Цвет текста внутри карточек */
