@@ -7,7 +7,7 @@ import { ThemeSwitcherService } from '@core/services/theme-switcher.service';
 import { TuiButtonSelect, TuiDataListWrapper } from '@taiga-ui/kit';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { ResponseDirective } from '@shared/directives/response.directive';
+import { ResponsiveRenderDirective } from '@shared/directives/responsive-render.directive';
 import { TABLE_BREAKPOINT } from '../constants/breakpoints';
 
 const POKEMON_ICON_SRC = 'images/svg/pokeball.svg';
@@ -25,7 +25,7 @@ const POKEMON_ICON_SRC = 'images/svg/pokeball.svg';
     TuiDataListWrapper,
     TuiDropdown,
     RouterLink,
-    ResponseDirective,
+    ResponsiveRenderDirective,
   ],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss',

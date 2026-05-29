@@ -5,7 +5,7 @@ import { NAV_LIST_ITEMS } from './constants/nav-list';
 import { FooterComponent } from './footer/footer.component';
 import { TuiTabBar } from '@taiga-ui/addon-mobile';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { ResponseDirective } from '@shared/directives/response.directive';
+import { ResponsiveRenderDirective } from '@shared/directives/responsive-render.directive';
 import { TABLE_BREAKPOINT } from './constants/breakpoints';
 
 @Component({
@@ -17,7 +17,7 @@ import { TABLE_BREAKPOINT } from './constants/breakpoints';
     FooterComponent,
     TuiTabBar,
     TranslocoDirective,
-    ResponseDirective,
+    ResponsiveRenderDirective,
   ],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss',

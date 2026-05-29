@@ -4,15 +4,15 @@ import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { map, switchMap } from 'rxjs';
 
 @Directive({
-  selector: '[leftPawWindowsSizeContent]',
+  selector: '[leftPawResponsiveRender]',
 })
-export class ResponseDirective {
+export class ResponsiveRenderDirective {
   private breakpointObserver = inject(BreakpointObserver);
   private viewContainerRef = inject(ViewContainerRef);
   private templateRef = inject(TemplateRef<unknown>);
 
   public readonly breakpointName = input.required<string>({
-    alias: 'leftPawWindowsSizeContent',
+    alias: 'leftPawResponsiveRender',
   });
 
   constructor() {

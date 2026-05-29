@@ -5,7 +5,7 @@
     <img [src]="pokeDexIcoSrc" alt="pokedex_icon" class="pokedex_icon" />
     <h1>PokeDex</h1>
   </a>
-  <div *leftPawWindowsSizeContent="`(min-width:${tableBreakpoint}px)`" class="nav_container">
+  <div *leftPawResponsiveRender="`(min-width:${tableBreakpoint}px)`" class="nav_container">
     <nav class="nav_container">
       @for (item of itemsList; track item.label) {
         <a routerLink="item.link" tuiLink class="nav_link">
