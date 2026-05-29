@@ -2,7 +2,7 @@
 @use 'screens-width';
 
 :host {
-  max-width: 1600px;
+  max-width: screens-width.$screen-xx-large;
   width: 100%;
 }
 
