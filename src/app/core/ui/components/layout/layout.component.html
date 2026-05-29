@@ -3,7 +3,7 @@
   <router-outlet />
 </main>
 
-<div *leftPawWindowsSizeContent="'Tablet'">
+<div *leftPawWindowsSizeContent="`(max-width:${tableBreakpoint}px)`">
   <nav tuiTabBar *transloco="let t">
     @for (item of navListItems; track item.label) {
       <a routerLink="item.link" tuiLink class="nav_link" tuiTabBarItem [icon]="item.icon">
@@ -13,4 +13,4 @@
   </nav>
 </div>
 
-<left-paw-footer *leftPawWindowsSizeContent="'Web'" />
+<left-paw-footer *leftPawWindowsSizeContent="`(min-width:${tableBreakpoint}px)`" />

@@ -7,7 +7,8 @@ import { ThemeSwitcherService } from '@core/services/theme-switcher.service';
 import { TuiButtonSelect, TuiDataListWrapper } from '@taiga-ui/kit';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { WindowsSizeContentDirective } from '@shared/decorators/windows-size-content.directive';
+import { ResponseDirective } from '@shared/directives/response.directive';
+import { TABLE_BREAKPOINT } from '../constants/breacpoints';
 
 const POKEMON_ICON_SRC = 'images/svg/pokeball.svg';
 
@@ -24,7 +25,7 @@ const POKEMON_ICON_SRC = 'images/svg/pokeball.svg';
     TuiDataListWrapper,
     TuiDropdown,
     RouterLink,
-    WindowsSizeContentDirective,
+    ResponseDirective,
   ],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss',
@@ -33,6 +34,8 @@ const POKEMON_ICON_SRC = 'images/svg/pokeball.svg';
 })
 export class HeaderComponent {
   public readonly navListItems = input<NavListItem[]>([]);
+
+  protected readonly tableBreakpoint = TABLE_BREAKPOINT;
 
   protected readonly themeService = inject(ThemeSwitcherService);
   protected readonly language = inject(LanguageSwitcherService);

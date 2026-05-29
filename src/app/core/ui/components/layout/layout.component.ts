@@ -5,7 +5,8 @@ import { NAV_LIST_ITEMS } from './constants/nav-list';
 import { FooterComponent } from './footer/footer.component';
 import { TuiTabBar } from '@taiga-ui/addon-mobile';
 import { provideTranslocoScope, TranslocoDirective } from '@jsverse/transloco';
-import { WindowsSizeContentDirective } from '@shared/decorators/windows-size-content.directive';
+import { ResponseDirective } from '@shared/directives/response.directive';
+import { TABLE_BREAKPOINT } from './constants/breacpoints';
 
 @Component({
   selector: 'left-paw-layout',
@@ -16,7 +17,7 @@ import { WindowsSizeContentDirective } from '@shared/decorators/windows-size-con
     FooterComponent,
     TuiTabBar,
     TranslocoDirective,
-    WindowsSizeContentDirective,
+    ResponseDirective,
   ],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss',
@@ -24,5 +25,6 @@ import { WindowsSizeContentDirective } from '@shared/decorators/windows-size-con
   providers: [provideTranslocoScope('header')],
 })
 export class LayoutComponent {
+  protected readonly tableBreakpoint = TABLE_BREAKPOINT;
   protected readonly navListItems = NAV_LIST_ITEMS;
 }
