@@ -4,9 +4,9 @@ import { RouterLink, RouterOutlet } from '@angular/router';
 import { NAV_LIST_ITEMS } from './constants/nav-list';
 import { FooterComponent } from './footer/footer.component';
 import { TuiTabBar } from '@taiga-ui/addon-mobile';
-import { provideTranslocoScope, TranslocoDirective } from '@jsverse/transloco';
+import { TranslocoDirective } from '@jsverse/transloco';
 import { ResponseDirective } from '@shared/directives/response.directive';
-import { TABLE_BREAKPOINT } from './constants/breacpoints';
+import { TABLE_BREAKPOINT } from './constants/breakpoints';
 
 @Component({
   selector: 'left-paw-layout',
@@ -22,7 +22,6 @@ import { TABLE_BREAKPOINT } from './constants/breacpoints';
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [provideTranslocoScope('header')],
 })
 export class LayoutComponent {
   protected readonly tableBreakpoint = TABLE_BREAKPOINT;

@@ -8,7 +8,7 @@ import { TuiButtonSelect, TuiDataListWrapper } from '@taiga-ui/kit';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ResponseDirective } from '@shared/directives/response.directive';
-import { TABLE_BREAKPOINT } from '../constants/breacpoints';
+import { TABLE_BREAKPOINT } from '../constants/breakpoints';
 
 const POKEMON_ICON_SRC = 'images/svg/pokeball.svg';
 
