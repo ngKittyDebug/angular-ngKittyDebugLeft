@@ -14,13 +14,19 @@
   margin: 0;
 }
 .team-list {
-  @include flex_container_function($justify_content: space-between, $gap: 2rem, $flex_wrap: nowrap);
+  @include flex_container_function(
+    $justify_content: space-between,
+    $align_items: stretch,
+    $gap: 2rem,
+    $flex_wrap: nowrap
+  );
 
   width: 100%;
   padding: 0;
   margin: 0;
 }
 .team-card {
+  text-decoration: none;
   @include flex_container_function($direction: column);
 
   flex: 1 1 calc(33.333% - 1rem);
@@ -147,10 +153,36 @@
     inset 0 0 10px 0 var(--type-fairy-start),
     0 0 10px 0 var(--type-fairy-start);
 }
-@include respond_to($screen-small, max) {
+@include respond_to($screen-large, max) {
+  .name {
+    font-size: 1.2rem;
+  }
+  .position {
+    font-size: 0.7rem;
+  }
+}
+
+@include respond_to($screen-medium, max) {
+  .wrapper {
+    padding: 0 2rem;
+    margin: 2rem 0;
+    gap: 2rem;
+  }
   .team-list {
     flex-direction: column;
+    padding: 0 1rem;
   }
+  .team-card {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+  }
+  .img-wrapper {
+    margin-left: 1rem;
+    max-width: 8rem;
+  }
+}
+@include respond_to($screen-small, max) {
   .team-card {
     width: 100%;
   }
