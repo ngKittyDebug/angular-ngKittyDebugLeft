@@ -1,1 +1,23 @@
-<p>pokemon-profile-page works!</p>
+<figure class="profile_pokemon__intro">
+  <img
+    class="profile_pokemon__image"
+    [src]="pokemonProfileData()?.sprites?.other?.['official-artwork']?.front_default"
+    [alt]="pokemonProfileData()?.name"
+  />
+  <figcaption class="profile_pokemon__information">
+    <div class="card__line">
+      <h3 class="card__name">{{ pokemonProfileData()?.name }}</h3>
+      <p class="card__id">#{{ pokemonProfileData()?.id }}</p>
+    </div>
+    <div class="card__line-left">
+      @for (item of pokemonProfileData()?.types; track item.type.name) {
+        <span className="card__type card__type-{{ item.type.name }}" tuiBadge>{{
+          item.type.name
+        }}</span>
+      }
+    </div>
+    <p>{{ pokemonProfileDataSpecies()?.flavor_text_entries?.[0]?.flavor_text }}</p>
+    <button>Add to favorites</button>
+    <button>Catch</button>
+  </figcaption>
+</figure>
