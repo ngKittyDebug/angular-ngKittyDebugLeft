@@ -1,7 +1,7 @@
 <left-paw-catalog-filter />
 <div class="catalog-container">
   @for (item of catalogPageMocks.results; track item) {
-    <left-paw-pokemon-card />
+    <left-paw-pokemon-card [pokemonName]="item.name" />
   }
 </div>
 <left-paw-catalog-pagination />

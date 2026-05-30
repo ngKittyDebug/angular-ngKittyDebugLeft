@@ -1,0 +1,88 @@
+@use 'utility/mixins';
+@use 'screens-width';
+
+$types:
+  normal, fighting, flying, poison, ground, rock, bug, ghost, steel, fire, water, grass, electric,
+  psychic, ice, dragon, dark, fairy, stellar, unknown;
+
+$stats: hp, attack, defense;
+
+:host {
+  display: block;
+  background: var(--gradient-bg);
+  width: 13.75rem;
+  border-radius: 1.6rem;
+  border: 1px solid var(--border);
+  transition: all 0.3s;
+  padding: 0.75rem 0 1rem;
+  * {
+    margin: 0;
+    @include mixins.font_function($size: 0.75rem);
+  }
+  &:hover {
+    border: 1px solid var(--sidebar-primary);
+    transform: scale(1.05);
+    box-shadow: 10px 10px 10px 0px var(--sidebar-ring);
+  }
+}
+
+.card__cover {
+  @include mixins.flex_container_function($direction: column, $gap: 0.5rem);
+  width: 100%;
+}
+
+.card__image {
+  width: 10rem;
+  border-radius: 1rem;
+  background: var(--gradient-card);
+}
+
+.card__information {
+  @include mixins.flex_container_function($direction: column, $gap: 0.5rem);
+  width: 100%;
+  padding: 0 0.75rem;
+}
+
+.card__line {
+  @include mixins.flex_container_function($justify_content: space-between, $gap: 0.5rem);
+  width: 100%;
+  &-left {
+    @include mixins.flex_container_function($justify_content: left, $gap: 0.5rem);
+    width: 100%;
+  }
+  &-stats {
+    @include mixins.grid_container_function($grid_template_columns: 1fr 6rem auto);
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+  }
+}
+
+.card__name {
+  @include mixins.font_function($weight: bold, $size: 1rem);
+  &::first-letter {
+    text-transform: uppercase;
+  }
+}
+
+.card__type {
+  color: var(--accent-foreground);
+  text-transform: uppercase;
+  @each $type in $types {
+    &-#{$type} {
+      background: linear-gradient(to right, var(--type-#{$type}-start), var(--type-#{$type}-end));
+    }
+  }
+}
+
+.stats__name {
+  text-transform: uppercase;
+}
+
+.stats__bar {
+  @each $stat in $stats {
+    &-#{$stat} {
+      color: var(--stat-#{$stat}-start);
+    }
+  }
+}
