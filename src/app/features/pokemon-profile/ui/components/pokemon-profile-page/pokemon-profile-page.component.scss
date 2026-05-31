@@ -1,26 +1,72 @@
 @use 'utility/mixins';
 @use 'screens-width';
 
+$types:
+  normal, fighting, flying, poison, ground, rock, bug, ghost, steel, fire, water, grass, electric,
+  psychic, ice, dragon, dark, fairy, stellar, unknown;
+
 :host {
   // @include mixins.flex_container_function($direction: column, $gap: 0.75rem);
+  background: var(--gradient-bg);
+  border-radius: 1.6rem;
+  border: 1px solid var(--border);
+  transition: all 0.3s;
+  padding: 1rem;
   * {
     margin: 0;
   }
 }
 
 .profile_pokemon__intro {
-  background-color: red;
   width: 100%;
   display: flex;
-  @include mixins.flex_container_function($gap: 0.75rem);
+  @include mixins.flex_container_function($gap: 1rem);
 }
 
 .profile_pokemon__image {
-  width: 400px;
-  height: 400px;
+  width: 25rem;
+  height: 25rem;
 }
 
 .profile_pokemon__intro_information {
-  max-width: 400px;
-  @include mixins.flex_container_function($direction: column, $gap: 0.75rem);
+  max-width: 25rem;
+  @include mixins.flex_container_function($direction: column, $align_items: left, $gap: 0.75rem);
+}
+
+.profile__line {
+  @include mixins.flex_container_function($direction: row, $gap: 0.75rem);
+  &-left {
+    @include mixins.flex_container_function(
+      $direction: row,
+      $justify_content: start,
+      $gap: 0.75rem
+    );
+  }
+}
+
+.profile__name {
+  @include mixins.font_function($weight: bold, $size: 1.5rem);
+  &::first-letter {
+    text-transform: uppercase;
+  }
+}
+
+.profile__type {
+  color: var(--accent-foreground);
+  text-transform: uppercase;
+  @each $type in $types {
+    &-#{$type} {
+      background: linear-gradient(to right, var(--type-#{$type}-start), var(--type-#{$type}-end));
+    }
+  }
+}
+
+.profile__param {
+  &-name {
+    @include mixins.font_function($weight: bold);
+  }
+}
+
+.profile__button {
+  width: 100%;
 }

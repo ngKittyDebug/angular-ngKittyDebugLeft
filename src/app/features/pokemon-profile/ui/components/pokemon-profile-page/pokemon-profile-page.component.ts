@@ -2,11 +2,12 @@ import type { OnInit } from '@angular/core';
 import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
 import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
 import type { PokemonSpeciesApiData } from '@shared/models/pokemon-species-api-data-interface';
+import { TuiButton } from '@taiga-ui/core';
 import { TuiBadge } from '@taiga-ui/kit';
 
 @Component({
   selector: 'left-paw-pokemon-profile-page',
-  imports: [TuiBadge],
+  imports: [TuiBadge, TuiButton],
   templateUrl: './pokemon-profile-page.component.html',
   styleUrl: './pokemon-profile-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

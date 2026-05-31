@@ -5,11 +5,11 @@
     [alt]="pokemonProfileData()?.name"
   />
   <figcaption class="profile_pokemon__intro_information">
-    <div class="profile__line">
+    <div class="profile__line-left">
       <h2 class="profile__name">{{ pokemonProfileData()?.name }}</h2>
       <p class="profile__id">#{{ pokemonProfileData()?.id }}</p>
     </div>
-    <div class="profile__line">
+    <div class="profile__line-left">
       @for (item of pokemonProfileData()?.types; track item.type.name) {
         <span className="profile__type profile__type-{{ item.type.name }}" tuiBadge>{{
           item.type.name
@@ -17,11 +17,17 @@
       }
     </div>
     <p>{{ pokemonProfileDataSpecies()?.flavor_text_entries?.[0]?.flavor_text }}</p>
-    <div class="profile__line">
-      <p>Weight: {{ pokemonWeight() }} kg</p>
-      <p>Height: {{ pokemonHeight() }} m</p>
+    <div class="profile__line-left">
+      <p class="profile__param">
+        <span class="profile__param-name">Weight:</span> {{ pokemonWeight() }} kg
+      </p>
+      <p class="profile__param">
+        <span class="profile__param-name">Height:</span> {{ pokemonHeight() }} m
+      </p>
     </div>
-    <button>Add to favorites</button>
-    <button>Catch</button>
+    <button class="profile__button" tuiButton size="m" appearance="brand-accent">
+      Add to favorites
+    </button>
+    <button class="profile__button" tuiButton size="m" appearance="brand-accent">Catch</button>
   </figcaption>
 </figure>
