@@ -5,12 +5,10 @@ $types:
   normal, fighting, flying, poison, ground, rock, bug, ghost, steel, fire, water, grass, electric,
   psychic, ice, dragon, dark, fairy, stellar, unknown;
 
+$stats: hp, attack, defense, special-attack, special-defense, speed;
+
 :host {
-  // @include mixins.flex_container_function($direction: column, $gap: 0.75rem);
-  background: var(--gradient-bg);
-  border-radius: 1.6rem;
-  border: 1px solid var(--border);
-  transition: all 0.3s;
+  @include mixins.flex_container_function($direction: column, $gap: 1rem);
   padding: 1rem;
   * {
     margin: 0;
@@ -19,13 +17,17 @@ $types:
 
 .profile_pokemon__intro {
   width: 100%;
-  display: flex;
   @include mixins.flex_container_function($gap: 1rem);
+  background: var(--gradient-bg);
+  border-radius: 1.6rem;
+  border: 1px solid var(--border);
+  transition: all 0.3s;
+  padding: 1rem;
 }
 
 .profile_pokemon__image {
-  width: 25rem;
-  height: 25rem;
+  width: 23rem;
+  height: 23rem;
 }
 
 .profile_pokemon__intro_information {
@@ -41,6 +43,12 @@ $types:
       $justify_content: start,
       $gap: 0.75rem
     );
+  }
+  &-stats {
+    @include mixins.grid_container_function($grid_template_columns: 1fr auto 13rem);
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
   }
 }
 
@@ -69,4 +77,29 @@ $types:
 
 .profile__button {
   width: 100%;
+}
+
+.profile__pokemon_stats {
+  width: 25rem;
+  height: 23rem;
+  @include mixins.flex_container_function($direction: column, $align-items: start, $gap: 1rem);
+  background: var(--gradient-bg);
+  border-radius: 1.6rem;
+  border: 1px solid var(--border);
+  transition: all 0.3s;
+  padding: 1rem;
+}
+
+.profile__pokemon_stats_items {
+  @include mixins.flex_container_function($direction: column, $gap: 0.5rem);
+  padding: 0 0 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.profile_stats__bar {
+  @each $stat in $stats {
+    &-#{$stat} {
+      color: var(--stat-#{$stat}-start);
+    }
+  }
 }

@@ -31,3 +31,24 @@
     <button class="profile__button" tuiButton size="m" appearance="brand-accent">Catch</button>
   </figcaption>
 </figure>
+<section class="profile__pokemon_stats">
+  <h3 class="profile__pokemon_sec_heading">Base Stats</h3>
+  <div class="profile__pokemon_stats_items">
+    @for (item of pokemonProfileData()?.stats; track item.stat.name) {
+      <div class="profile__line-stats">
+        <p class="profile_stats__name">{{ item.stat.name }}</p>
+        <p class="profile_stats__value">{{ item.base_stat }}</p>
+        <progress
+          class="profile_stats__bar profile_stats__bar-{{ item.stat.name }}"
+          max="300"
+          tuiProgressBar
+          [value]="item.base_stat"
+        ></progress>
+      </div>
+    }
+  </div>
+  <div class="profile__line-stats">
+    <p class="profile_stats__name">Total:</p>
+    <p class="profile_stats__value">{{ pokemonTotalStats() }}</p>
+  </div>
+</section>

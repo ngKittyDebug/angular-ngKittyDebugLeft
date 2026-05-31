@@ -3,11 +3,11 @@ import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/c
 import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
 import type { PokemonSpeciesApiData } from '@shared/models/pokemon-species-api-data-interface';
 import { TuiButton } from '@taiga-ui/core';
-import { TuiBadge } from '@taiga-ui/kit';
+import { TuiBadge, TuiProgress } from '@taiga-ui/kit';
 
 @Component({
   selector: 'left-paw-pokemon-profile-page',
-  imports: [TuiBadge, TuiButton],
+  imports: [TuiBadge, TuiButton, TuiProgress],
   templateUrl: './pokemon-profile-page.component.html',
   styleUrl: './pokemon-profile-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -25,6 +25,9 @@ export class PokemonProfilePageComponent implements OnInit {
     const height = Number(this.pokemonProfileData()?.height) / 10;
 
     return height;
+  });
+  protected readonly pokemonTotalStats = computed(() => {
+    return this.pokemonProfileData()?.stats.reduce((sum, entry) => sum + (entry.base_stat ?? 0), 0);
   });
 
   public async ngOnInit() {
@@ -45,6 +48,7 @@ export class PokemonProfilePageComponent implements OnInit {
 
       console.log(this.pokemonProfileData());
       console.log(this.pokemonProfileDataSpecies());
+      console.log(this.pokemonTotalStats());
     } catch (error) {
       console.error('Ошибка при загрузке:', error);
     }
