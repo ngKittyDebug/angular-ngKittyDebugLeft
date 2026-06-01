@@ -74,7 +74,7 @@ export default class FeedingRoom implements Party.Server {
         break;
       }
       case 'click': {
-        this.handleClick(sender.id, message.itemId);
+        this.handleClick(sender.id, message.itemId, message.nudgeX);
         break;
       }
     }
@@ -171,7 +171,7 @@ export default class FeedingRoom implements Party.Server {
     }
   }
 
-  private handleClick(connectionId: string, itemId: string): void {
+  private handleClick(connectionId: string, itemId: string, nudgeX?: number): void {
     const sessionToken = this.connectionToSession.get(connectionId);
 
     if (sessionToken === undefined) {
@@ -186,7 +186,7 @@ export default class FeedingRoom implements Party.Server {
       return;
     }
 
-    const result = applyClick(this.currentState(), sessionToken, itemId);
+    const result = applyClick(this.currentState(), sessionToken, itemId, nudgeX);
 
     if (result.events.length === 0) {
       return;

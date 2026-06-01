@@ -1,6 +1,6 @@
 export type Stage = 1 | 2 | 3;
 export type Line = 'bulbasaur' | 'caterpie' | 'charmander' | 'magikarp' | 'pidgey' | 'squirtle';
-export type ItemType = 'food' | 'rotten' | 'rock' | 'rareCandy';
+export type ItemType = 'food' | 'rotten' | 'rock' | 'rareCandy' | 'bomb';
 export type PlayerStatus = 'alive' | 'disconnected';
 
 export interface Player {
@@ -56,13 +56,33 @@ export interface FaintedEvent {
   playerId: string;
 }
 
+// A bomb was juggled by a click: it moved horizontally to `x` (no mass change). Clients snap the item there immediately.
+export interface ItemNudgedEvent {
+  type: 'itemNudged';
+  itemId: string;
+  x: number;
+}
+
+// A bomb exploded at (x, y) over `radius`; `playerIds` are everyone caught in the blast (incl. the owner).
+// `itemId` is the bomb itself — clients drop it immediately so its sprite doesn't linger until the next snapshot.
+export interface DetonatedEvent {
+  type: 'detonated';
+  itemId: string;
+  x: number;
+  y: number;
+  radius: number;
+  playerIds: string[];
+}
+
 // Gameplay events emitted by the engine (apply-click/apply-tick) — single source; ServerMessage reuses them.
-export type GameEvent = EatenEvent | EvolvedEvent | FaintedEvent;
+export type GameEvent = EatenEvent | EvolvedEvent | FaintedEvent | ItemNudgedEvent | DetonatedEvent;
 
 export type ClientMessage =
   | { type: 'identify'; sessionToken: string }
   | { type: 'join'; name: string; line: Line }
-  | { type: 'click'; itemId: string }
+  // `nudgeX` is the bomb-bat input: the signed horizontal displacement (normalized 0..1) the player wants,
+  // computed client-side from a fixed pixel step and the tapped side. Server caps/clamps it. Ignored for non-bomb items.
+  | { type: 'click'; itemId: string; nudgeX?: number }
   | { type: 'leave' };
 
 export type ServerMessage =

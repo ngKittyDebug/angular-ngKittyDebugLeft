@@ -72,6 +72,12 @@ describe('FloatingTextComponent', () => {
     expect(element.querySelector('.floating-text__delta')).toBeNull();
   });
 
+  it('omits the delta node for a zero delta (e.g. a rock click)', () => {
+    const element = createFixture({ text: 'A rock?', delta: 0 }).nativeElement as HTMLElement;
+
+    expect(element.querySelector('.floating-text__delta')).toBeNull();
+  });
+
   it('reflects the tone as a host class', () => {
     const host = createFixture({ text: 'Hang on!', tone: 'warning' }).nativeElement as HTMLElement;
 

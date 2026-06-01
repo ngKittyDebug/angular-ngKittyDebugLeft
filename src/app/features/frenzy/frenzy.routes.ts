@@ -8,6 +8,7 @@ import { AudioEngineService } from './data/services/sound/audio-engine.service';
 import { BadEatSoundService } from './data/services/sound/bad-eat-sound.service';
 import { EatSoundService } from './data/services/sound/eat-sound.service';
 import { EvolveSoundService } from './data/services/sound/evolve-sound.service';
+import { ExplosionSoundService } from './data/services/sound/explosion-sound.service';
 import { RockSoundService } from './data/services/sound/rock-sound.service';
 import { SoundSettingsService } from './data/services/sound/sound-settings.service';
 import { FrenzyStatsStore } from './data/store/frenzy-stats.store';
@@ -33,6 +34,7 @@ export const frenzyRoutes: Routes = [
       BadEatSoundService,
       EatSoundService,
       EvolveSoundService,
+      ExplosionSoundService,
       RockSoundService,
       SoundSettingsService,
     ],

@@ -5,17 +5,20 @@ import { GAME } from '@game/frenzy/constants';
 import type { Player, ServerMessage } from '@game/frenzy/types';
 
 import { isSad } from '../logic/is-sad';
+import type { Blast } from '../models/blast';
 import type { FloatingMessage, FloatingTone } from '../models/floating-message';
 import { FrenzyStore } from '../store/frenzy.store';
 import { FrenzySocketService } from './frenzy-socket.service';
 import { BadEatSoundService } from './sound/bad-eat-sound.service';
 import { EatSoundService } from './sound/eat-sound.service';
 import { EvolveSoundService } from './sound/evolve-sound.service';
+import { ExplosionSoundService } from './sound/explosion-sound.service';
 import { RockSoundService } from './sound/rock-sound.service';
 import { SoundSettingsService } from './sound/sound-settings.service';
 import { type SoundEffect } from '../models/sound-effect';
 
 type EatenMessage = Extract<ServerMessage, { type: 'eaten' }>;
+type DetonatedMessage = Extract<ServerMessage, { type: 'detonated' }>;
 type StatusKind = 'evolved' | 'happy' | 'sad' | 'dying' | 'appeared' | 'died' | 'poke';
 
 interface StatusConfig {
@@ -28,6 +31,10 @@ interface StatusConfig {
 const EVOLUTION_ANIMATION_MS = 1500;
 const FLOATING_TEXT_TTL_MS = 1000;
 const FLOATING_TEXT_PHRASE_COUNT = 5;
+// Shockwave ring lifetime — matches the scene's blast CSS animation.
+const BLAST_TTL_MS = 700;
+// Bomb damage floats linger a touch longer than eat floats so the "−25" hit reads amid the explosion.
+const BOMB_FLOAT_TTL_MS = 1400;
 // Lift status floats to the sprite's top edge: player `y` is the sprite centre, sprite is 96px tall,
 // so half (48px) reaches the top border + a small gap so the text clears the head.
 const STATUS_SPRITE_TOP_OFFSET_PX = 60;
@@ -54,12 +61,14 @@ export class FrenzyEffectsService {
   private readonly badEatSound = inject(BadEatSoundService);
   private readonly eatSound = inject(EatSoundService);
   private readonly evolveSound = inject(EvolveSoundService);
+  private readonly explosionSound = inject(ExplosionSoundService);
   private readonly rockSound = inject(RockSoundService);
   private readonly soundSettings = inject(SoundSettingsService);
   private readonly socket = inject(FrenzySocketService);
   private readonly store = inject(FrenzyStore);
   private readonly _evolvingPlayers = signal<ReadonlyMap<string, number>>(new Map());
   private readonly _floatingMessages = signal<readonly FloatingMessage[]>([]);
+  private readonly _blasts = signal<readonly Blast[]>([]);
   private readonly lastKnownPlayers = new Map<string, { x: number; y: number; name: string }>();
   // Item on-screen position captured at click time, keyed by itemId, consumed by the matching `eaten`.
   private readonly eatPositions = new Map<string, { x: number; y: number }>();
@@ -70,6 +79,7 @@ export class FrenzyEffectsService {
 
   public readonly evolvingPlayers = this._evolvingPlayers.asReadonly();
   public readonly floatingMessages = this._floatingMessages.asReadonly();
+  public readonly blasts = this._blasts.asReadonly();
 
   public constructor() {
     this.socket.messages$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((message) => {
@@ -101,6 +111,10 @@ export class FrenzyEffectsService {
         if (this.isMine(message.playerId)) {
           this.playSound(this.eatenSoundFor(message));
         }
+      }
+
+      if (message.type === 'detonated') {
+        this.pushDetonation(message);
       }
     });
 
@@ -296,6 +310,60 @@ export class FrenzyEffectsService {
 
     this._floatingMessages.update((current) => [...current, entry]);
     setTimeout(() => this.remove(entry.id), FLOATING_TEXT_TTL_MS);
+  }
+
+  // A bomb exploded: boom for everyone, a shockwave ring at the blast point, and a "−25" float over each hit Pokémon.
+  private pushDetonation(message: DetonatedMessage): void {
+    this.playSound(this.explosionSound);
+
+    const blast: Blast = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      x: message.x,
+      y: message.y,
+      radius: message.radius,
+    };
+
+    this._blasts.update((current) => [...current, blast]);
+    setTimeout(() => this.removeBlast(blast.id), BLAST_TTL_MS);
+
+    for (const playerId of message.playerIds) {
+      const position = this.positionOf(playerId);
+
+      if (position === undefined) {
+        continue;
+      }
+
+      const index = Math.floor(Math.random() * FLOATING_TEXT_PHRASE_COUNT);
+      const entry: FloatingMessage = {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        x: position.x,
+        y: position.y,
+        tone: 'negative',
+        textKey: `floatingText.bomb.${index}`,
+        durationMs: BOMB_FLOAT_TTL_MS,
+        icon: '@tui.bomb',
+        delta: GAME.bomb.damage,
+        topOffsetPx: STATUS_SPRITE_TOP_OFFSET_PX,
+      };
+
+      this._floatingMessages.update((current) => [...current, entry]);
+      setTimeout(() => this.remove(entry.id), BOMB_FLOAT_TTL_MS);
+    }
+  }
+
+  // Live snapshot position if the Pokémon is still around, else its last-known spot (it may have just fainted).
+  private positionOf(playerId: string): { x: number; y: number } | undefined {
+    const player = this.store.state()?.players.find((candidate) => candidate.id === playerId);
+
+    if (player !== undefined) {
+      return { x: player.x, y: player.y };
+    }
+
+    return this.lastKnownPlayers.get(playerId);
+  }
+
+  private removeBlast(id: string): void {
+    this._blasts.update((current) => current.filter((blast) => blast.id !== id));
   }
 
   private remove(id: string): void {

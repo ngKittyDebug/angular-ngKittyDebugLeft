@@ -11,6 +11,10 @@ export interface MassDelta {
 export interface ItemInteraction {
   massDeltas: MassDelta[];
   consumed: boolean;
+  /** Horizontal shift (normalized) to apply to the item instead of eating it — used by the bomb's juggle click. */
+  nudgeX?: number;
+  /** When set, the engine reports this as a `detonated` blast (bomb) rather than an `eaten`/silent landing. */
+  explodes?: boolean;
 }
 
 /**
@@ -21,7 +25,8 @@ export interface ItemInteraction {
  * Effects may target the grabber or other players, so collateral interactions are expressible.
  */
 export interface ItemBehavior {
-  onClick(item: Item, clickerId: string, state: ServerState): ItemInteraction;
+  // `nudgeX` is the player's bomb-bat input — a signed normalized displacement; ignored by items that aren't juggled.
+  onClick(item: Item, clickerId: string, state: ServerState, nudgeX?: number): ItemInteraction;
   onLand?(item: Item, state: ServerState): ItemInteraction;
   onCollide?(item: Item, player: Player, state: ServerState): ItemInteraction;
 }
@@ -48,11 +53,54 @@ const rockBehavior: ItemBehavior = {
   }),
 };
 
+// The blast: every alive Pokémon within the radius takes damage, the owner included (friendly fire).
+// `explodes` tells the engine to report a `detonated` event (not `eaten`), whether triggered by land or collision.
+function bombBlast(item: Item, state: ServerState): ItemInteraction {
+  const radiusSquared = GAME.bomb.blastRadius * GAME.bomb.blastRadius;
+  const massDeltas: MassDelta[] = [];
+
+  for (const player of state.players) {
+    if (player.status !== 'alive') {
+      continue;
+    }
+
+    const dx = player.x - item.x;
+    const dy = player.y - item.y;
+
+    if (dx * dx + dy * dy <= radiusSquared) {
+      massDeltas.push({ playerId: player.id, amount: GAME.bomb.damage });
+    }
+  }
+
+  return { massDeltas, consumed: true, explodes: true };
+}
+
+// Bomb: a click doesn't eat it — it bats it sideways by the player's chosen displacement (a fixed pixel step
+// the client converts to normalized units, signed by which side of the sprite was tapped), capped for safety.
+// Fallback when no displacement is supplied: away from the nearest edge. Position clamp lives in applyClick.
+const bombBehavior: ItemBehavior = {
+  onClick: (item, _clickerId, _state, nudgeX) => {
+    if (nudgeX !== undefined && Number.isFinite(nudgeX) && nudgeX !== 0) {
+      const capped = Math.max(-GAME.bomb.maxNudge, Math.min(GAME.bomb.maxNudge, nudgeX));
+
+      return { massDeltas: [], consumed: false, nudgeX: capped };
+    }
+
+    const direction = item.x < 0.5 ? 1 : -1;
+
+    return { massDeltas: [], consumed: false, nudgeX: direction * GAME.bomb.nudgeStep };
+  },
+  // Detonates the moment it touches a Pokémon mid-air, or when it hits the floor — same area blast either way.
+  onCollide: (item, _player, state) => bombBlast(item, state),
+  onLand: (item, state) => bombBlast(item, state),
+};
+
 const ITEM_BEHAVIORS: Record<ItemType, ItemBehavior> = {
   food: eatBehavior,
   rotten: eatBehavior,
   rock: rockBehavior,
   rareCandy: eatBehavior,
+  bomb: bombBehavior,
 };
 
 export function getItemBehavior(type: ItemType): ItemBehavior {

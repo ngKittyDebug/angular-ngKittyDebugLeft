@@ -76,6 +76,13 @@
         "2": "Power up!",
         "3": "Boom!",
         "4": "Level up!"
+      },
+      "bomb": {
+        "0": "Boom!",
+        "1": "Kaboom!",
+        "2": "Ouch!",
+        "3": "Blast!",
+        "4": "Yikes!"
       }
     },
     "statusMessage": {

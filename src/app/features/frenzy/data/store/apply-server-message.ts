@@ -63,6 +63,36 @@ export function applyServerMessage(
       };
     }
 
+    case 'itemNudged': {
+      if (previous === null) {
+        return previous;
+      }
+
+      return {
+        ...previous,
+        items: previous.items.map((item) => {
+          if (item.id !== message.itemId) {
+            return item;
+          }
+
+          return { ...item, x: message.x };
+        }),
+      };
+    }
+
+    case 'detonated': {
+      if (previous === null) {
+        return previous;
+      }
+
+      // Drop the bomb itself right away so its sprite doesn't linger until the next snapshot. FX + sound live
+      // in the effects service; damaged-but-alive masses reconcile on the next snapshot, faints via their events.
+      return {
+        ...previous,
+        items: previous.items.filter((item) => item.id !== message.itemId),
+      };
+    }
+
     case 'rejoined': {
       return previous;
     }

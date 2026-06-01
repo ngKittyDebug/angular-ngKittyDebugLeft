@@ -174,6 +174,41 @@ describe('applyTick', () => {
     expect(events).toEqual([]);
   });
 
+  it('detonates a bomb on landing: damages Pokémon in range (owner included), removes it, emits detonated', () => {
+    const victim: Player = { ...PLAYER, x: 0.5, y: 0.95 };
+    const bomb = makeItem({ type: 'bomb', x: 0.5, y: 0.99, vy: GAME.fallSpeed.bomb });
+
+    const { state: next, events } = applyTick(stateWith([victim], [bomb]), 0.5, false);
+
+    expect(next.items).toHaveLength(0);
+    expect(next.players[0].mass).toBe(PLAYER.mass + GAME.bomb.damage);
+    expect(events).toContainEqual(
+      expect.objectContaining({
+        type: 'detonated',
+        radius: GAME.bomb.blastRadius,
+        playerIds: ['p1'],
+      }),
+    );
+  });
+
+  it('detonates a bomb that bumps a Pokémon mid-air (detonated, not eaten; blasts the area)', () => {
+    const hit: Player = { ...PLAYER, id: 'hit', x: 0.5, y: 0.6 };
+    const bystander: Player = { ...PLAYER, id: 'bystander', x: 0.55, y: 0.6 };
+    const bomb = makeItem({ type: 'bomb', x: 0.5, y: 0.6, vy: GAME.fallSpeed.bomb });
+
+    const { state: next, events } = applyTick(stateWith([hit, bystander], [bomb]), 0.1, false);
+
+    expect(next.items).toHaveLength(0);
+    expect(next.players.find((player) => player.id === 'hit')?.mass).toBe(
+      PLAYER.mass + GAME.bomb.damage,
+    );
+    expect(next.players.find((player) => player.id === 'bystander')?.mass).toBe(
+      PLAYER.mass + GAME.bomb.damage,
+    );
+    expect(events.some((event) => event.type === 'eaten')).toBe(false);
+    expect(events).toContainEqual(expect.objectContaining({ type: 'detonated' }));
+  });
+
   it('emits fainted when a rock collision drops mass to zero', () => {
     const frail: Player = { ...PLAYER, mass: 10, x: 0.5, y: 0.6 };
     const rock = makeItem({ type: 'rock', x: 0.5, y: 0.6, vy: 0 });

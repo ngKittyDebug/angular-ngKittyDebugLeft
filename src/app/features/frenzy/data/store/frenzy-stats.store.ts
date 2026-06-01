@@ -26,8 +26,9 @@ interface FrenzyStatsState {
   startedAt: number | null;
 }
 
+// `bomb` is never eaten (it explodes, it isn't grabbed), so its count stays 0 and the fainted breakdown skips it.
 function emptyCounts(): EatenCounts {
-  return { food: 0, rotten: 0, rock: 0, rareCandy: 0 };
+  return { food: 0, rotten: 0, rock: 0, rareCandy: 0, bomb: 0 };
 }
 
 const initialState: FrenzyStatsState = {

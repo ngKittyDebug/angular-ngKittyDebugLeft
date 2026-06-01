@@ -47,7 +47,7 @@ describe('FrenzyStatsStore', () => {
     messages$.next(eaten('t1', 'rareCandy', 150));
     messages$.next(eaten('t1', 'rareCandy', 140));
 
-    expect(store.eatenByType()).toEqual({ food: 2, rotten: 0, rock: 0, rareCandy: 2 });
+    expect(store.eatenByType()).toEqual({ food: 2, rotten: 0, rock: 0, rareCandy: 2, bomb: 0 });
     expect(store.totalEaten()).toBe(4);
     expect(store.maxMass()).toBe(150);
   });

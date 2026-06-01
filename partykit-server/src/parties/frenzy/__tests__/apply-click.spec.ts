@@ -113,6 +113,17 @@ describe('applyClick', () => {
     expect(events.some((event) => event.type === 'evolved')).toBe(false);
   });
 
+  it('batting a bomb slides it by the supplied displacement without eating it or changing mass', () => {
+    const state = stateWith([PLAYER], [makeItem({ type: 'bomb', x: 0.5 })]);
+
+    const { state: next, events } = applyClick(state, PLAYER.id, 'i1', -0.1);
+
+    expect(next.items).toHaveLength(1);
+    expect(next.items[0].x).toBeCloseTo(0.4, 5);
+    expect(next.players[0].mass).toBe(100);
+    expect(events).toEqual([{ type: 'itemNudged', itemId: 'i1', x: expect.closeTo(0.4, 5) }]);
+  });
+
   it('rock leaves mass unchanged but still removes item', () => {
     const state = stateWith([PLAYER], [makeItem({ type: 'rock' })]);
 

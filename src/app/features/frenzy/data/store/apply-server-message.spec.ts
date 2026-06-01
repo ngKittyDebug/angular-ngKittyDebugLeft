@@ -20,6 +20,11 @@ const PLAYER: Player = {
 };
 
 const SNAPSHOT_STATE: ServerState = { players: [PLAYER], items: [], tick: 0 };
+const BOMB_STATE: ServerState = {
+  players: [PLAYER],
+  items: [{ id: 'b1', type: 'bomb', x: 0.3, y: 0.4, vy: 0.08 }],
+  tick: 0,
+};
 
 describe('applyServerMessage', () => {
   it('replaces state on snapshot', () => {
@@ -57,6 +62,25 @@ describe('applyServerMessage', () => {
     });
 
     expect(next?.players[0].stage).toBe(2);
+  });
+
+  it('snaps the item x on itemNudged (bomb juggle)', () => {
+    const next = applyServerMessage(BOMB_STATE, { type: 'itemNudged', itemId: 'b1', x: 0.45 });
+
+    expect(next?.items[0].x).toBe(0.45);
+  });
+
+  it('drops the bomb item on detonated', () => {
+    const next = applyServerMessage(BOMB_STATE, {
+      type: 'detonated',
+      itemId: 'b1',
+      x: 0.45,
+      y: 1,
+      radius: 0.18,
+      playerIds: ['t1'],
+    });
+
+    expect(next?.items).toHaveLength(0);
   });
 
   it('returns previous on rejoined and roomFull (no-op in reducer)', () => {

@@ -36,7 +36,14 @@ export function parseClientMessage(raw: string): ClientMessage | null {
         : null;
     }
     case 'click': {
-      return isNonEmptyString(data.itemId) ? { type: 'click', itemId: data.itemId } : null;
+      if (!isNonEmptyString(data.itemId)) {
+        return null;
+      }
+
+      const nudgeX =
+        typeof data.nudgeX === 'number' && Number.isFinite(data.nudgeX) ? data.nudgeX : undefined;
+
+      return { type: 'click', itemId: data.itemId, nudgeX };
     }
     case 'leave': {
       return { type: 'leave' };

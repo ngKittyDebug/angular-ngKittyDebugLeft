@@ -59,6 +59,18 @@ describe('parseClientMessage', () => {
     expect(parseClientMessage(JSON.stringify({ type: 'click', itemId: '' }))).toBeNull();
   });
 
+  it('parses click with a numeric nudgeX (bomb bat input)', () => {
+    expect(
+      parseClientMessage(JSON.stringify({ type: 'click', itemId: 'i1', nudgeX: -0.12 })),
+    ).toEqual({ type: 'click', itemId: 'i1', nudgeX: -0.12 });
+  });
+
+  it('drops a non-numeric nudgeX', () => {
+    expect(
+      parseClientMessage(JSON.stringify({ type: 'click', itemId: 'i1', nudgeX: 'left' })),
+    ).toEqual({ type: 'click', itemId: 'i1' });
+  });
+
   it('parses leave', () => {
     expect(parseClientMessage(JSON.stringify({ type: 'leave' }))).toEqual({ type: 'leave' });
   });

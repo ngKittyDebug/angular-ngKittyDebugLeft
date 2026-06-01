@@ -72,3 +72,75 @@ describe('item behaviors', () => {
     });
   });
 });
+
+describe('bomb behavior', () => {
+  // y = 1: the bomb explodes once it reaches the floor, so blast tests place it there.
+  function bombAt(x: number): Item {
+    return { ...item('bomb'), x, y: 1 };
+  }
+
+  function playerAt(id: string, x: number, y: number, status: Player['status'] = 'alive'): Player {
+    return { ...PLAYER, id, x, y, status };
+  }
+
+  it('a click bats the bomb by the supplied displacement and never eats it', () => {
+    const interaction = getItemBehavior('bomb').onClick(bombAt(0.5), 'p1', EMPTY_STATE, -0.1);
+
+    expect(interaction).toEqual({ massDeltas: [], consumed: false, nudgeX: -0.1 });
+  });
+
+  it('caps an oversized bat displacement', () => {
+    const interaction = getItemBehavior('bomb').onClick(bombAt(0.5), 'p1', EMPTY_STATE, 1);
+
+    expect(interaction.nudgeX).toBe(GAME.bomb.maxNudge);
+  });
+
+  it('without a displacement, a click bats the bomb away from the nearest edge (fallback)', () => {
+    const fromLeft = getItemBehavior('bomb').onClick(bombAt(0.3), 'p1', EMPTY_STATE);
+    const fromRight = getItemBehavior('bomb').onClick(bombAt(0.7), 'p1', EMPTY_STATE);
+
+    expect(fromLeft.nudgeX).toBe(GAME.bomb.nudgeStep);
+    expect(fromRight.nudgeX).toBe(-GAME.bomb.nudgeStep);
+  });
+
+  it('explodes on landing and damages every alive Pokémon in range, owner included', () => {
+    const owner = playerAt('owner', 0.5, 1);
+    const nearby = playerAt('near', 0.6, 0.95);
+    const faraway = playerAt('far', 0.1, 0.5);
+    const offline = playerAt('offline', 0.5, 1, 'disconnected');
+    const state: ServerState = {
+      players: [owner, nearby, faraway, offline],
+      items: [],
+      tick: 0,
+    };
+
+    const interaction = getItemBehavior('bomb').onLand?.(bombAt(0.5), state);
+
+    expect(interaction?.consumed).toBe(true);
+    expect(interaction?.explodes).toBe(true);
+    expect(interaction?.massDeltas).toEqual([
+      { playerId: 'owner', amount: GAME.bomb.damage },
+      { playerId: 'near', amount: GAME.bomb.damage },
+    ]);
+  });
+
+  it('also detonates on mid-air collision — same area blast, not a one-on-one hit', () => {
+    const touched = playerAt('touched', 0.5, 0.6);
+    const bystander = playerAt('bystander', 0.6, 0.6);
+    const faraway = playerAt('far', 0.1, 0.6);
+    const state: ServerState = { players: [touched, bystander, faraway], items: [], tick: 0 };
+
+    const interaction = getItemBehavior('bomb').onCollide?.(
+      { ...item('bomb'), x: 0.5, y: 0.6 },
+      touched,
+      state,
+    );
+
+    expect(interaction?.consumed).toBe(true);
+    expect(interaction?.explodes).toBe(true);
+    expect(interaction?.massDeltas).toEqual([
+      { playerId: 'touched', amount: GAME.bomb.damage },
+      { playerId: 'bystander', amount: GAME.bomb.damage },
+    ]);
+  });
+});

@@ -31,7 +31,8 @@ export class FloatingTextComponent {
   protected readonly deltaLabel = computed(() => {
     const value = this.delta();
 
-    if (value === undefined) {
+    // Only show a number for an actual gain or loss — a zero-delta hit (e.g. clicking a rock) shows just its text.
+    if (value === undefined || value === 0) {
       return null;
     }
 

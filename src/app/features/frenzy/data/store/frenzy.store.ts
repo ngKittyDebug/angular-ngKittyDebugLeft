@@ -72,8 +72,8 @@ export const FrenzyStore = signalStore(
   }),
   withMethods(
     (store, socket = inject(FrenzySocketService), sessionTokens = inject(SessionTokenService)) => ({
-      click(itemId: string): void {
-        socket.send({ type: 'click', itemId });
+      click(itemId: string, nudgeX?: number): void {
+        socket.send({ type: 'click', itemId, nudgeX });
       },
       connect(roomId = 'feeding-frenzy'): void {
         const token = sessionTokens.getOrCreateToken();

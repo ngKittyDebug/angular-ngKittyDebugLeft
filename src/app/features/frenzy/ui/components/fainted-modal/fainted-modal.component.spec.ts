@@ -7,7 +7,7 @@ import type { FaintedStats } from '../../../data/models/fainted-stats';
 import { FaintedModalComponent } from './fainted-modal.component';
 
 const STATS: FaintedStats = {
-  eatenByType: { food: 4, rotten: 1, rock: 0, rareCandy: 2 },
+  eatenByType: { food: 4, rotten: 1, rock: 0, rareCandy: 2, bomb: 0 },
   lifespanSeconds: 42,
   maxMass: 230,
   maxStage: 2,

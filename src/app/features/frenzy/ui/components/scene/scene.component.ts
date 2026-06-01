@@ -16,6 +16,7 @@ import { GAME } from '@game/frenzy/constants';
 import type { Item, Line, Player, Stage } from '@game/frenzy/types';
 
 import { isSad } from '../../../data/logic/is-sad';
+import type { Blast } from '../../../data/models/blast';
 import type { FloatingMessage } from '../../../data/models/floating-message';
 import { spriteHeightFor } from '../../constants/sprite-registry';
 import { ScenePositionDirective } from '../../directives/scene-position.directive';
@@ -30,6 +31,10 @@ const MAX_VISUAL_MASS = GAME.thresholds.stage3;
 
 // How long a click bubble-burst lives before it is removed (ms). Matches the CSS animation.
 const BURST_LIFETIME_MS = 1000;
+
+// Fixed pixel distance the bomb is batted per click — converted to normalized units against the scene width,
+// so a juggle feels the same on any screen size rather than scaling with it.
+const BOMB_NUDGE_PX = 72;
 
 interface RenderedPlayer {
   facingRight: boolean;
@@ -52,6 +57,9 @@ interface RenderedItem {
   type: Item['type'];
   x: number;
   y: number;
+  landed: boolean;
+  spinDurationMs: number;
+  spinReverse: boolean;
 }
 
 interface BubbleBurst {
@@ -65,6 +73,8 @@ export interface ItemClick {
   /** Item's current on-screen (extrapolated) normalized position at click time — for the eat float. */
   x: number;
   y: number;
+  /** Bomb bat input: signed normalized horizontal displacement (fixed pixel step ÷ scene width). Undefined for non-bomb items. */
+  nudgeX?: number;
 }
 
 interface ItemBaseline {
@@ -80,6 +90,26 @@ interface PlayerBaseline {
   vx: number;
   vy: number;
   clientStartTime: number;
+}
+
+// Falling items tumble: each gets a steady spin whose speed and direction are derived from its id, so the
+// value is stable across frames (the CSS animation isn't restarted) yet varies item to item.
+const ITEM_SPIN_MIN_MS = 2500;
+const ITEM_SPIN_MAX_MS = 6000;
+
+function spinFor(id: string): { durationMs: number; reverse: boolean } {
+  let hash = 0;
+
+  for (const character of id) {
+    hash = (hash * 31 + character.charCodeAt(0)) | 0;
+  }
+
+  const magnitude = Math.abs(hash);
+
+  return {
+    durationMs: ITEM_SPIN_MIN_MS + (magnitude % (ITEM_SPIN_MAX_MS - ITEM_SPIN_MIN_MS)),
+    reverse: (magnitude & 1) === 1,
+  };
 }
 
 // Closed-form reflective ("ping-pong") drift along one axis: mirrors the server's bounce so the
@@ -147,6 +177,7 @@ export class SceneComponent {
   private readonly burstTimers = new Set<ReturnType<typeof setTimeout>>();
   private burstCounter = 0;
 
+  public readonly blasts = input<readonly Blast[]>([]);
   public readonly evolvingPlayers = input<ReadonlyMap<string, number>>(new Map());
   public readonly floatingMessages = input<readonly FloatingMessage[]>([]);
   public readonly itemClick = output<ItemClick>();
@@ -169,13 +200,19 @@ export class SceneComponent {
       for (const item of items) {
         currentIds.add(item.id);
 
-        if (!this.itemBaselines.has(item.id)) {
+        const baseline = this.itemBaselines.get(item.id);
+
+        if (baseline === undefined) {
           this.itemBaselines.set(item.id, {
             x: item.x,
             y0: item.y,
             vy: item.vy,
             clientStartTime: now,
           });
+        } else if (baseline.x !== item.x) {
+          // A nudge (bomb juggle) moved the item sideways — snap the baseline so it tracks the click
+          // instantly, without waiting for a snapshot. Vertical fall (y0/vy/clientStartTime) keeps going.
+          baseline.x = item.x;
         }
       }
 
@@ -218,8 +255,11 @@ export class SceneComponent {
     });
   }
 
-  protected onItemClick(item: RenderedItem): void {
-    this.itemClick.emit({ itemId: item.id, x: item.x, y: item.y });
+  protected onItemClick(item: RenderedItem, event: MouseEvent): void {
+    // Bomb is batted: tapping the left half of the sprite knocks it right, the right half knocks it left.
+    const nudgeX = item.type === 'bomb' ? this.batNudge(event) : undefined;
+
+    this.itemClick.emit({ itemId: item.id, x: item.x, y: item.y, nudgeX });
   }
 
   protected onSelfPoke(): void {
@@ -248,6 +288,23 @@ export class SceneComponent {
     }, BURST_LIFETIME_MS);
 
     this.burstTimers.add(timer);
+  }
+
+  // Signed normalized bat displacement: a fixed pixel step (BOMB_NUDGE_PX) converted to scene-width units,
+  // pushed right when the click landed left of the item's centre and left otherwise. Undefined if the scene
+  // can't be measured (server then falls back to its own step).
+  private batNudge(event: MouseEvent): number | undefined {
+    const button = event.currentTarget as HTMLElement;
+    const bounds = button.getBoundingClientRect();
+    const centerX = bounds.left + bounds.width / 2;
+    const direction = event.clientX < centerX ? 1 : -1;
+    const sceneWidth = button.closest('.scene')?.getBoundingClientRect().width ?? 0;
+
+    if (sceneWidth <= 0) {
+      return undefined;
+    }
+
+    return (direction * BOMB_NUDGE_PX) / sceneWidth;
   }
 
   // Reset a player's baseline only when the server actually moved it (new snapshot position/velocity).
@@ -322,12 +379,18 @@ export class SceneComponent {
       const y0 = baseline?.y0 ?? item.y;
       const vy = baseline?.vy ?? item.vy;
       const elapsed = baseline === undefined ? 0 : (now - baseline.clientStartTime) / 1000;
+      const y = Math.min(1, y0 + vy * elapsed);
+      const spin = spinFor(item.id);
 
       return {
         id: item.id,
         type: item.type,
         x,
-        y: Math.min(1, y0 + vy * elapsed),
+        y,
+        // Reached the floor (rendered or server-rested) → freeze the tumble.
+        landed: y >= 1 || item.restMs !== undefined,
+        spinDurationMs: spin.durationMs,
+        spinReverse: spin.reverse,
       };
     });
   }

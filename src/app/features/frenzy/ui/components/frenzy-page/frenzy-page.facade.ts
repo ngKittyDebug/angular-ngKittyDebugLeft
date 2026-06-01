@@ -33,6 +33,7 @@ export class FrenzyPageFacade {
     return Math.max(0, GAME.cooldownAfterFaintedMs - (this.nowMs() - faintedAt));
   });
 
+  public readonly blasts = this.effects.blasts;
   public readonly cooldownSeconds = computed(() => Math.ceil(this.cooldownLeftMs() / 1000));
   public readonly disconnectedCount = this.store.disconnectedCount;
   public readonly evolvingPlayers = this.effects.evolvingPlayers;
@@ -86,7 +87,7 @@ export class FrenzyPageFacade {
 
   public click(event: ItemClick): void {
     this.effects.rememberEatPosition(event.itemId, event.x, event.y);
-    this.store.click(event.itemId);
+    this.store.click(event.itemId, event.nudgeX);
   }
 
   public connect(): void {

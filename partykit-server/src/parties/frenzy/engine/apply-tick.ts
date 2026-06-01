@@ -1,12 +1,26 @@
 import { GAME } from '@game/frenzy/constants';
-import type { GameEvent, Item, Player, ServerState } from '@game/frenzy/types';
+import type { DetonatedEvent, GameEvent, Item, Player, ServerState } from '@game/frenzy/types';
 
 import { applyMassDeltas } from './apply-mass-deltas';
 import { getItemBehavior } from './item-behaviors';
+import type { MassDelta } from './item-behaviors';
 
 export interface TickResult {
   state: ServerState;
   events: GameEvent[];
+}
+
+// A bomb blast as a client-facing event: FX + sound for everyone. The damaged-but-alive masses reconcile on
+// the next snapshot; faints arrive as their own events from applyMassDeltas.
+function detonated(item: Item, massDeltas: readonly MassDelta[]): DetonatedEvent {
+  return {
+    type: 'detonated',
+    itemId: item.id,
+    x: item.x,
+    y: item.y,
+    radius: GAME.bomb.blastRadius,
+    playerIds: massDeltas.map((delta) => delta.playerId),
+  };
 }
 
 // Closest alive Pokémon whose centre is within the collision radius of the item (squared compare, no sqrt).
@@ -48,8 +62,11 @@ export function applyTick(
     const y = item.y + item.vy * deltaSeconds;
 
     if (y >= 1) {
-      // Reached the floor: settle, stop falling, start the rest timer.
-      return { ...item, y: 1, vy: 0, restMs: GAME.itemRestMs };
+      // Reached the floor: settle and stop falling. Explosives detonate on contact (restMs 0 → handled and
+      // removed this same tick by the onLand pass below); everything else rests, still edible, then expires.
+      const restMs = getItemBehavior(item.type).onLand === undefined ? GAME.itemRestMs : 0;
+
+      return { ...item, y: 1, vy: 0, restMs };
     }
 
     return { ...item, y };
@@ -110,20 +127,27 @@ export function applyTick(
 
     const interaction = onCollide(item, target, working);
     const resolved = applyMassDeltas(working, interaction.massDeltas);
-    const newMass = resolved.state.players.find((player) => player.id === target.id)?.mass ?? 0;
 
     working = resolved.state;
 
-    events.push({
-      type: 'eaten',
-      itemId: item.id,
-      itemType: item.type,
-      playerId: target.id,
-      newMass,
-      delta: newMass - target.mass,
-      x: item.x,
-      y: item.y,
-    });
+    if (interaction.explodes) {
+      // A bomb that bumps a Pokémon detonates over the whole area — not a one-on-one "eat".
+      events.push(detonated(item, interaction.massDeltas));
+    } else {
+      const newMass = resolved.state.players.find((player) => player.id === target.id)?.mass ?? 0;
+
+      events.push({
+        type: 'eaten',
+        itemId: item.id,
+        itemType: item.type,
+        playerId: target.id,
+        newMass,
+        delta: newMass - target.mass,
+        x: item.x,
+        y: item.y,
+      });
+    }
+
     events.push(...resolved.events);
 
     if (interaction.consumed) {
@@ -142,9 +166,15 @@ export function applyTick(
       continue;
     }
 
-    const resolved = applyMassDeltas(working, onLand(item, working).massDeltas);
+    const interaction = onLand(item, working);
+    const resolved = applyMassDeltas(working, interaction.massDeltas);
 
     working = resolved.state;
+
+    if (interaction.explodes) {
+      events.push(detonated(item, interaction.massDeltas));
+    }
+
     events.push(...resolved.events);
   }
 

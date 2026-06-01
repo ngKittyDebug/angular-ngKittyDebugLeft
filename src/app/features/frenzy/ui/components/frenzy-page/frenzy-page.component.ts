@@ -30,6 +30,7 @@ import { FrenzyPageFacade } from './frenzy-page.facade';
 export class FrenzyPageComponent implements OnInit {
   protected readonly facade = inject(FrenzyPageFacade);
 
+  protected readonly blasts = this.facade.blasts;
   protected readonly cooldownSeconds = this.facade.cooldownSeconds;
   protected readonly disconnectedCount = this.facade.disconnectedCount;
   protected readonly evolvingPlayers = this.facade.evolvingPlayers;

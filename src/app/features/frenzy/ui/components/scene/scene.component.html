@@ -1,6 +1,7 @@
 <div
   *transloco="let t; prefix: 'frenzy.scene'"
   class="scene"
+  [class.scene--shaking]="blasts().length > 0"
   role="region"
   aria-label="Feeding frenzy scene"
   (pointerdown)="onScenePointerDown($event)"
@@ -12,9 +13,17 @@
       class="scene__item"
       type="button"
       [leftPawScenePosition]="{ x: item.x, y: item.y }"
-      (click)="onItemClick(item)"
+      (click)="onItemClick(item, $event)"
     >
-      <img class="scene__item-sprite" [src]="item.type | itemSprite" alt="" />
+      <img
+        class="scene__item-sprite"
+        [class.scene__item-sprite--spin]="item.type !== 'bomb'"
+        [style.animation-duration.ms]="item.spinDurationMs"
+        [style.animation-direction]="item.spinReverse ? 'reverse' : 'normal'"
+        [style.animation-play-state]="item.landed ? 'paused' : 'running'"
+        [src]="item.type | itemSprite"
+        alt=""
+      />
     </button>
   }
 
@@ -86,5 +95,14 @@
 
   @for (burst of bursts(); track burst.id) {
     <left-paw-bubble-burst [leftPawScenePosition]="{ x: burst.x, y: burst.y }" />
+  }
+
+  @for (blast of blasts(); track blast.id) {
+    <div
+      class="scene__blast"
+      aria-hidden="true"
+      [leftPawScenePosition]="{ x: blast.x, y: blast.y }"
+      [style.width.%]="blast.radius * 200"
+    ></div>
   }
 </div>
