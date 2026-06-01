@@ -16,6 +16,19 @@
         }}</span>
       }
     </div>
+    <div class="profile__line-left">
+      @for (item of pokemonProfileData()?.abilities; track item.ability?.name) {
+        <span
+          [class]="
+            item.is_hidden
+              ? 'profile__ability profile__ability-hidden'
+              : 'profile__ability profile__ability-visible'
+          "
+          tuiBadge
+          >{{ item.ability?.name }}</span
+        >
+      }
+    </div>
     <p>{{ pokemonProfileDataSpecies()?.flavor_text_entries?.[0]?.flavor_text }}</p>
     <div class="profile__line-left">
       <p class="profile__param">
@@ -32,7 +45,7 @@
   </figcaption>
 </figure>
 <section class="profile__pokemon_stats">
-  <h3 class="profile__pokemon_sec_heading">Base Stats</h3>
+  <h3 class="profile__pokemon_sec_heading">Battle Stats</h3>
   <div class="profile__pokemon_stats_items">
     @for (item of pokemonProfileData()?.stats; track item.stat.name) {
       <div class="profile__line-stats">

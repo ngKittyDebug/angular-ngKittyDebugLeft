@@ -69,6 +69,17 @@ $stats: hp, attack, defense, special-attack, special-defense, speed;
   }
 }
 
+.profile__ability {
+  color: var(--accent-foreground);
+  text-transform: uppercase;
+  &.profile__ability-hidden {
+    background: linear-gradient(to right, var(--ability-hidden-start), var(--ability-hidden-end));
+  }
+  &.profile__ability-visible {
+    background: linear-gradient(to right, var(--ability-visible-start), var(--ability-visible-end));
+  }
+}
+
 .profile__param {
   &-name {
     @include mixins.font_function($weight: bold);
