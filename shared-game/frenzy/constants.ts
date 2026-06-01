@@ -1,0 +1,62 @@
+/**
+ * Single source of game tunables for Feeding Frenzy.
+ * Contract shared by the server (authoritative) and the client (render/UI) — imported by both via `@game/frenzy/constants`.
+ * Coordinates are normalized (0..1): the client multiplies them by the viewport size.
+ */
+export const GAME = {
+  /** Starting mass of a fresh Pokémon (stage 1). Baseline for evolution thresholds and decay. */
+  startingMass: 100,
+  /** Mass removed per decay step (not per game tick — a step happens once every `decayIntervalMs`). */
+  decayPerTick: 2,
+  /** Decay period, ms. Every interval the mass of all alive Pokémon drops by `decayPerTick`. */
+  decayIntervalMs: 3000,
+  /** Server game-loop frequency, ticks/sec. Moves items and schedules decay/snapshots. */
+  tickRateHz: 10,
+  /** Every Nth tick the server broadcasts a full snapshot to heal drift; between snapshots clients rely on delta events. At 10 Hz, 10 ≈ one snapshot/sec. */
+  snapshotEveryNTicks: 10,
+  /** Mass thresholds for evolution: `stage2` — transition 1→2, `stage3` — 2→3. */
+  thresholds: { stage2: 200, stage3: 500 },
+  /** Mass delta when an item is eaten, by type: + food/candy, − rotten, 0 for rock. */
+  itemEffects: { food: 10, rotten: -15, rock: 0, rareCandy: 30 },
+  /** Collision between falling/resting items and drifting Pokémon (resolved in applyTick). */
+  collision: {
+    /** Normalized hit radius (0..1). An item resolves against the closest alive Pokémon within this distance. Single radius — the scene isn't square, so it's approximate and intentionally generous. */
+    radius: 0.08,
+    /** Mass removed when a rock bonks a Pokémon (collision only; clicking a rock still does nothing). */
+    rockDamage: -15,
+  },
+  /** Relative spawn weights per item type (not percentages — normalized by the sum of weights). */
+  spawnWeights: { food: 70, rotten: 15, rock: 25, rareCandy: 5 },
+  /** `[min, max]` ms between item spawns at `spawnReferencePlayers`; the actual interval is picked randomly within the range, then scaled by active-player count. */
+  spawnIntervalMsRange: [700, 1300],
+  /** Active-player count at which the spawn interval matches `spawnIntervalMsRange` as-is. The interval scales by `spawnReferencePlayers / activePlayers`, so per capita food income stays ~constant. */
+  spawnReferencePlayers: 3,
+  /** Item fall speed by type, normalized scene-height units per second (1 = full height). 0.15 ≈ 6.7 s to cross; rock is heavier so it falls a bit faster. */
+  fallSpeed: { food: 0.15, rotten: 0.15, rock: 0.2, rareCandy: 0.15 },
+  /** How long an item lies on the floor (still edible) after landing before it disappears, ms. */
+  itemRestMs: 3000,
+  /** `[min, max]` horizontal spawn position of an item (normalized 0..1), inset from the scene edges. */
+  itemSpawnXRange: [0.05, 0.95],
+  /** Rectangular zone (normalized 0..1) Pokémon spawn and drift within — the lower ~2/3 of the scene, inset so sprites stay fully visible. They bounce off all four edges. */
+  playerDriftZone: { minX: 0.08, maxX: 0.92, minY: 0.4, maxY: 0.92 },
+  /** Pokémon drift speed, normalized units per second (applied to both axes via a random initial angle). Slow on purpose. */
+  playerDriftSpeed: 0.03,
+  /** Minimum 2D distance kept between Pokémon when picking a spawn point (best-effort). */
+  playerSpawnMinDistance: 0.12,
+  /** How many random points to try before falling back to the last one when the scene is crowded. */
+  playerSpawnMaxAttempts: 12,
+  /** Grace period after disconnect, ms: the Pokémon stays in the room (greyed out, decay continues) and may rejoin on reconnection; purged afterward. */
+  graceMs: 15_000,
+  /** Delay after fainting, ms, during which the "Pick a new one" button is disabled (anti-instant-respawn farming). */
+  cooldownAfterFaintedMs: 3_000,
+  /** Mass below which the client shows a low-mass warning. */
+  lowMassWarningThreshold: 6,
+  /** Hard cap of players in a room; beyond it `onConnect` sends `roomFull` and closes the connection. */
+  maxPlayers: 20,
+  /** Hard cap of simultaneous connections (incl. multi-tab and not-yet-joined spectators); bounds idle/non-joining connects that `maxPlayers` alone does not. */
+  maxConnections: 60,
+  /** Sliding click rate-limit window, ms. */
+  clickRateLimitWindowMs: 1000,
+  /** Max clicks allowed within `clickRateLimitWindowMs`; beyond it the click is ignored (anti-spam/autoclicker). */
+  clickRateLimitMax: 10,
+} as const;
