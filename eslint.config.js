@@ -20,6 +20,7 @@ export default defineConfig(
       parser: tseslint.parser,
       parserOptions: {
         projectService: true,
+        tsconfigRootDir: import.meta.dirname,
       },
     },
     extends: [
@@ -136,6 +137,7 @@ export default defineConfig(
           fixture: 'off',
           token: 'off',
           facade: 'off',
+          store: 'off',
         },
       ],
       'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
@@ -220,6 +222,13 @@ export default defineConfig(
     },
   }, 
   {
-    ignores: ['**/node_modules/**', '**/dist/**', '**/*.js', '.angular/**'],
+    ignores: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/*.js',
+      '.angular/**',
+      '.planning/**',
+      'partykit-server/**',
+    ],
   }]
 );

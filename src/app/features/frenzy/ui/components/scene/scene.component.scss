@@ -1,0 +1,144 @@
+.scene {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--scene-bg, var(--gradient-bg));
+  touch-action: manipulation;
+  user-select: none;
+
+  &__player {
+    position: absolute;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    align-items: center;
+    // Position (left/top) is driven per-frame by rAF extrapolation — no CSS transition, like items.
+    // translateZ(0) promotes its own layer so per-frame repositioning repaints cleanly (no flicker).
+    transform: translate(-50%, -50%) translateZ(0);
+    backface-visibility: hidden;
+    pointer-events: none;
+  }
+
+  &__poke {
+    padding: 0;
+    background: none;
+    border: none;
+    line-height: 0;
+    cursor: pointer;
+    // Re-enable clicks on top of the players layer (`.scene__player` is `pointer-events: none`).
+    pointer-events: auto;
+  }
+
+  &__sprite {
+    // Animated BW sprites are non-square; height drives the size (per evolution stage, set via the
+    // `--scene-sprite-height` custom property on `.scene__player`) and width follows the aspect ratio.
+    // No `image-rendering: pixelated` here — these detailed sprites read cleaner with smooth scaling.
+    width: auto;
+    height: var(--scene-sprite-height, 96px);
+    transition:
+      filter 0.4s ease,
+      transform 0.2s ease;
+  }
+
+  // Horizontal flip wrapper: kept separate from `&__sprite` so the flip doesn't fight the sprite's
+  // own transform (evolve pulse / hover). Flip is instant — a transition would squash through 0 width.
+  &__sprite-flip {
+    display: inline-block;
+    line-height: 0;
+  }
+
+  &__sprite-flip--right {
+    transform: scaleX(-1);
+  }
+
+  &__sprite--sad {
+    filter: saturate(0.6) brightness(0.85);
+  }
+
+  &__sprite--evolving {
+    animation: scene-evolve-pulse 1.5s ease-out;
+  }
+
+  &__label {
+    padding: 0.125rem 0.5rem;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 0.25rem;
+    color: #f5f5f5;
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+
+  &__player--me &__label {
+    background: #4caf50;
+    color: #0a0a0a;
+    font-weight: 600;
+  }
+
+  &__player--disconnected {
+    opacity: 0.5;
+    filter: grayscale(1);
+  }
+
+  // Vertical health bar for other players, pinned to the right side of the 96px sprite.
+  &__mass-bar {
+    position: absolute;
+    top: 48px;
+    left: calc(50% + 58px);
+    width: 72px;
+    transform: translate(-50%, -50%) rotate(-90deg);
+    transform-origin: center;
+  }
+
+  &__item {
+    position: absolute;
+    z-index: 1;
+    // Anchor by the bottom edge (translateY -100%) so `y` is the item's foot: it stays fully visible
+    // while falling and lies wholly on the floor (y = 1) without needing its height in scene units.
+    transform: translate(-50%, -100%);
+    padding: 12px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.08s ease;
+    outline: none;
+    user-select: none;
+  }
+
+  &__item:hover,
+  &__item:focus-visible {
+    transform: translate(-50%, -100%) scale(1.1);
+  }
+
+  &__item:active {
+    transform: translate(-50%, -100%) scale(0.95);
+  }
+
+  &__item-sprite {
+    display: block;
+    // Integer multiple of the 30px source (×2) so `pixelated` upscaling stays even — a fractional
+    // scale (e.g. 56px) makes nearest-neighbour shimmer/comb during the fall.
+    width: 60px;
+    height: 60px;
+    image-rendering: pixelated;
+    pointer-events: none;
+  }
+}
+
+@keyframes scene-evolve-pulse {
+  0% {
+    filter: brightness(1) drop-shadow(0 0 0 rgba(255, 255, 200, 0));
+    transform: scale(1);
+  }
+
+  35% {
+    filter: brightness(2.2) drop-shadow(0 0 24px rgba(255, 240, 150, 1));
+    transform: scale(1.3);
+  }
+
+  100% {
+    filter: brightness(1) drop-shadow(0 0 0 rgba(255, 255, 200, 0));
+    transform: scale(1);
+  }
+}

@@ -1,0 +1,55 @@
+/* =============================================================================
+   Bubble burst — one-shot click feedback. Centered on the click point (the
+   parent sets left/top via [leftPawScenePosition]); dots fan out and rise.
+   Per-dot spread/size/timing comes as inline CSS variables from the component.
+   Tint reuses `--aq-bubble` from aquarium-theme.scss to stay theme-aware.
+   ========================================================================== */
+
+:host {
+  position: absolute;
+  z-index: 2; // pops above the actors (z-index:1) for a moment
+  display: block;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.bubble-burst {
+  position: relative;
+  display: block;
+}
+
+.bubble-burst__dot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 32% 28%,
+    rgba(255, 255, 255, 0.95),
+    var(--aq-bubble, rgba(255, 255, 255, 0.85)) 45%,
+    rgba(255, 255, 255, 0.05) 72%
+  );
+  box-shadow: inset 0 0 3px rgba(255, 255, 255, 0.5);
+  opacity: 0;
+  animation: bubble-burst-pop 0.9s ease-out forwards;
+}
+
+@keyframes bubble-burst-pop {
+  0% {
+    transform: translate(0, 0) scale(0.3);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(var(--bx, 0), var(--by, -24px)) scale(1);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bubble-burst__dot {
+    animation: none;
+  }
+}

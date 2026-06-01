@@ -1,0 +1,179 @@
+/* =============================================================================
+   Aquarium decor — layout and keyframes only. Per-element variety (position,
+   size, timing) is supplied as inline CSS variables from the component, so this
+   file stays small and the elements distribute across the whole floor.
+   Palette vars (`--aq-*`, `--scene-bg`) come from aquarium-theme.scss.
+   ========================================================================== */
+
+:host {
+  position: absolute;
+  inset: 0;
+  z-index: 0; // behind .scene__item / .scene__player (which we lift to z-index:1)
+  display: block;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.aq {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+/* ---------- Floor glow ---------- */
+.aq__floor {
+  position: absolute;
+  inset: 0;
+  background: var(--aq-floor);
+}
+
+/* ---------- Light rays (caustics) ---------- */
+.aq__rays {
+  position: absolute;
+  inset: -25% -10% auto -10%;
+  height: 145%;
+  mix-blend-mode: screen;
+}
+
+.aq__ray {
+  position: absolute;
+  top: -10%;
+  height: 130%;
+  transform-origin: top center;
+  filter: blur(10px);
+  background: linear-gradient(to bottom, var(--aq-ray) 0%, rgba(255, 255, 255, 0) 78%);
+  animation: aq-ray-sway 9s ease-in-out infinite alternate;
+}
+
+@keyframes aq-ray-sway {
+  0% {
+    transform: rotate(var(--rot, 8deg)) translateX(-6%) scaleY(0.96);
+    opacity: 0.3;
+  }
+  100% {
+    transform: rotate(calc(var(--rot, 8deg) + 4deg)) translateX(6%) scaleY(1.04);
+    opacity: 0.8;
+  }
+}
+
+/* ---------- Plankton / drifting particles ---------- */
+.aq__plankton {
+  position: absolute;
+  inset: 0;
+}
+
+.aq__mote {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--aq-plankton);
+  box-shadow: 0 0 6px var(--aq-glow);
+  animation: aq-mote-drift 16s ease-in-out infinite alternate;
+}
+
+@keyframes aq-mote-drift {
+  0% {
+    transform: translate(0, 0);
+    opacity: 0.15;
+  }
+  50% {
+    opacity: var(--peak, 0.8);
+  }
+  100% {
+    transform: translate(var(--dx, 18px), var(--dy, -22px));
+    opacity: 0.25;
+  }
+}
+
+/* ---------- Bottom plants (kelp + coral) ---------- */
+.aq__plants {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2%;
+  height: 46%;
+}
+
+.aq__plant {
+  position: absolute;
+  bottom: 0;
+  transform-origin: 50% 100%;
+  animation: aq-plant-sway 6s ease-in-out infinite alternate;
+}
+
+.aq__blade {
+  display: block;
+  width: 34px;
+  height: var(--h, 120px);
+  fill: currentColor;
+}
+
+.aq__blade--coral {
+  opacity: 0.92;
+}
+
+@keyframes aq-plant-sway {
+  0% {
+    transform: rotate(var(--rot, -4deg));
+  }
+  100% {
+    transform: rotate(calc(var(--rot, -4deg) * -1));
+  }
+}
+
+/* ---------- Bubbles ---------- */
+.aq__bubbles {
+  position: absolute;
+  inset: 0;
+}
+
+.aq__bubble {
+  position: absolute;
+  bottom: -8%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 32% 28%,
+    rgba(255, 255, 255, 0.95),
+    var(--aq-bubble) 45%,
+    rgba(255, 255, 255, 0.05) 72%
+  );
+  box-shadow: inset 0 0 4px rgba(255, 255, 255, 0.4);
+  opacity: 0;
+  animation: aq-bubble-rise 9s linear infinite;
+}
+
+@keyframes aq-bubble-rise {
+  0% {
+    transform: translate(0, 0) scale(0.6);
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.9;
+  }
+  50% {
+    transform: translate(var(--drift, 12px), -52vh) scale(1);
+  }
+  88% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(calc(var(--drift, 12px) * -1), -108%) scale(1.05);
+    opacity: 0;
+  }
+}
+
+/* ---------- Vignette ---------- */
+.aq__vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 90% at 50% 38%, rgba(0, 0, 0, 0) 52%, var(--aq-vignette) 100%);
+}
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .aq__ray,
+  .aq__mote,
+  .aq__plant,
+  .aq__bubble {
+    animation: none;
+  }
+}

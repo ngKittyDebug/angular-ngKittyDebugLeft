@@ -1,0 +1,9 @@
+// Theme-aware "glass" pill for Feeding Frenzy HUD widgets floating over the game scene.
+// Replaces the per-widget hardcoded dark `rgba(10, 16, 28, .78)` so the chrome follows
+// the active Taiga theme (readable on both the light and dark scene gradients).
+@mixin hud_pill {
+  background: color-mix(in srgb, var(--tui-background-elevation-2) 82%, transparent);
+  border: 1px solid var(--tui-border-normal);
+  color: var(--tui-text-primary);
+  backdrop-filter: blur(4px);
+}

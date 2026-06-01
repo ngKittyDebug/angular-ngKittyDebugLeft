@@ -6,6 +6,6 @@
     "outDir": "./out-tsc/app",
     "types": []
   },
-  "include": ["src/**/*.ts", "transloco.config.ts"],
+  "include": ["src/**/*.ts", "shared-game/**/*.ts", "transloco.config.ts"],
   "exclude": ["src/**/*.spec.ts"]
 }

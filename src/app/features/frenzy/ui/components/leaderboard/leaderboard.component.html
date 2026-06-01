@@ -1,0 +1,74 @@
+@if (compact()) {
+  @if (rows().length > 1) {
+    @if (leader(); as top) {
+      <div
+        *transloco="let t; prefix: 'frenzy.leaderboard'"
+        class="leaderboard__pill"
+        [attr.aria-label]="t('ariaLabel')"
+      >
+        <tui-icon icon="@tui.crown" class="leaderboard__crown" />
+        <span tuiAvatar class="leaderboard__avatar" size="xs">
+          <img [src]="top.line | pokemonSprite: top.stage" alt="" />
+        </span>
+        <span class="leaderboard__pill-stats">
+          <span class="leaderboard__pill-name" [class.leaderboard__pill-name--me]="top.isMe">{{
+            top.name
+          }}</span>
+          <span class="leaderboard__pill-mass">{{ top.mass }}</span>
+        </span>
+      </div>
+    }
+  }
+} @else {
+  <section
+    *transloco="let t; prefix: 'frenzy.leaderboard'"
+    class="leaderboard"
+    [attr.aria-label]="t('ariaLabel')"
+  >
+    <header class="leaderboard__header">
+      <tui-icon icon="@tui.crown" class="leaderboard__crown" />
+      <h3 class="leaderboard__title">{{ t('title') }}</h3>
+    </header>
+    @if (rows().length === 0) {
+      <p class="leaderboard__empty">{{ t('empty') }}</p>
+    } @else {
+      <ol class="leaderboard__list">
+        @for (row of rows(); track row.id) {
+          <li class="leaderboard__row" [class.leaderboard__row--me]="row.isMe">
+            <span class="leaderboard__rank">{{ row.rank }}</span>
+            <span
+              tuiAvatar
+              class="leaderboard__avatar"
+              size="s"
+              [class.leaderboard__avatar--disconnected]="row.isDisconnected"
+            >
+              <img [src]="row.line | pokemonSprite: row.stage" alt="" />
+            </span>
+            <span class="leaderboard__name">
+              <span class="leaderboard__name-text">{{ row.name }}</span>
+              @if (row.isMe) {
+                <span class="leaderboard__you">{{ t('you') }}</span>
+              }
+              @if (row.isDisconnected) {
+                <tui-icon
+                  icon="@tui.wifi-off"
+                  class="leaderboard__away"
+                  [tuiHint]="t('disconnectedHint')"
+                  [attr.aria-label]="t('disconnectedHint')"
+                />
+              }
+            </span>
+            <span
+              class="leaderboard__stage"
+              [tuiHint]="t('stageHint', { stage: row.stage })"
+              [attr.aria-label]="t('stageHint', { stage: row.stage })"
+            >
+              {{ row.stage | stageRoman }}
+            </span>
+            <span class="leaderboard__mass">{{ row.mass }}</span>
+          </li>
+        }
+      </ol>
+    }
+  </section>
+}

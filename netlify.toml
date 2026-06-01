@@ -2,6 +2,10 @@
   command = "pnpm build"
   publish = "dist/ng-kitty-debug-left/browser"
 
+[build.environment]
+  NODE_VERSION = "24"
+  PNPM_VERSION = "10.30.0"
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

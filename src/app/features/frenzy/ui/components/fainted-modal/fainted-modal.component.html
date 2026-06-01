@@ -1,0 +1,64 @@
+<section *transloco="let t; prefix: 'frenzy.faintedModal'" class="fainted-modal" role="dialog">
+  <h2 class="fainted-modal__title">{{ t('title') }}</h2>
+
+  <dl class="fainted-modal__stats">
+    <div class="fainted-modal__stat">
+      <dt class="fainted-modal__stat-label">{{ t('lifespan') }}</dt>
+      <dd class="fainted-modal__stat-value">
+        {{ t('lifespanValue', { seconds: stats().lifespanSeconds }) }}
+      </dd>
+    </div>
+    <div class="fainted-modal__stat">
+      <dt class="fainted-modal__stat-label">{{ t('maxMass') }}</dt>
+      <dd class="fainted-modal__stat-value">{{ stats().maxMass }}</dd>
+    </div>
+    <div class="fainted-modal__stat">
+      <dt class="fainted-modal__stat-label">{{ t('maxStage') }}</dt>
+      <dd class="fainted-modal__stat-value">{{ stats().maxStage | stageRoman }}</dd>
+    </div>
+    <div class="fainted-modal__stat">
+      <dt class="fainted-modal__stat-label">{{ t('totalEaten') }}</dt>
+      <dd class="fainted-modal__stat-value">{{ stats().totalEaten }}</dd>
+    </div>
+  </dl>
+
+  @if (breakdown().length > 0) {
+    <ul class="fainted-modal__breakdown">
+      @for (row of breakdown(); track row.type) {
+        <li class="fainted-modal__item" [attr.aria-label]="t('items.' + row.type)">
+          <span tuiAvatar class="fainted-modal__item-icon" size="xs">
+            <img [src]="row.type | itemSprite" alt="" />
+          </span>
+          <span class="fainted-modal__item-count">{{ row.count }}</span>
+        </li>
+      }
+    </ul>
+  }
+
+  <div class="fainted-modal__actions">
+    <button
+      tuiButton
+      type="button"
+      size="m"
+      appearance="brand-accent"
+      [disabled]="!respawnReady()"
+      (click)="respawn.emit()"
+    >
+      {{ t('respawn') }}
+    </button>
+    <button
+      tuiButton
+      type="button"
+      size="m"
+      appearance="flat"
+      [disabled]="!respawnReady()"
+      (click)="chooseNew.emit()"
+    >
+      {{ t('chooseNew') }}
+    </button>
+  </div>
+
+  @if (!respawnReady()) {
+    <p class="fainted-modal__cooldown">{{ t('cooldownHint', { seconds: cooldownSeconds() }) }}</p>
+  }
+</section>

@@ -1,0 +1,27 @@
+<div
+  *transloco="let t; prefix: 'frenzy.sound'"
+  class="sound-toggle"
+  [tuiHint]="compact() ? null : t('hint')"
+>
+  <tui-icon class="sound-toggle__icon" [icon]="enabled() ? '@tui.volume-2' : '@tui.volume-x'" />
+  @if (!compact()) {
+    <input
+      class="sound-toggle__slider"
+      type="range"
+      tuiSlider
+      min="0"
+      max="1"
+      step="0.05"
+      [ngModel]="volume()"
+      (ngModelChange)="setVolume($event)"
+      [attr.aria-label]="t('volumeAriaLabel')"
+    />
+  }
+  <input
+    type="checkbox"
+    tuiSwitch
+    [ngModel]="enabled()"
+    (ngModelChange)="setEnabled($event)"
+    [attr.aria-label]="t('ariaLabel')"
+  />
+</div>

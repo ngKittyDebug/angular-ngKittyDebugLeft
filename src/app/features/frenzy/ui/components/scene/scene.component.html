@@ -1,0 +1,90 @@
+<div
+  *transloco="let t; prefix: 'frenzy.scene'"
+  class="scene"
+  role="region"
+  aria-label="Feeding frenzy scene"
+  (pointerdown)="onScenePointerDown($event)"
+>
+  <left-paw-aquarium-decor />
+
+  @for (item of renderedItems(); track item.id) {
+    <button
+      class="scene__item"
+      type="button"
+      [leftPawScenePosition]="{ x: item.x, y: item.y }"
+      (click)="onItemClick(item)"
+    >
+      <img class="scene__item-sprite" [src]="item.type | itemSprite" alt="" />
+    </button>
+  }
+
+  @for (message of floatingMessages(); track message.id) {
+    <left-paw-floating-text
+      [leftPawScenePosition]="{ x: message.x, y: message.y }"
+      [scenePositionClampX]="true"
+      [scenePositionFloor]="message.floor ?? false"
+      [scenePositionTopOffsetPx]="message.topOffsetPx ?? 0"
+      [floor]="message.floor ?? false"
+      [icon]="message.icon"
+      [who]="message.who"
+      [text]="t(message.textKey)"
+      [delta]="message.delta"
+      [tone]="message.tone"
+      [durationMs]="message.durationMs"
+    />
+  }
+
+  @for (player of renderedPlayers(); track player.id) {
+    <div
+      class="scene__player"
+      [class.scene__player--me]="player.isMe"
+      [class.scene__player--disconnected]="player.isDisconnected"
+      [style.--scene-sprite-height]="player.spriteHeight"
+      [leftPawScenePosition]="{ x: player.x, y: player.y }"
+    >
+      @if (player.isMe) {
+        <button
+          class="scene__poke"
+          type="button"
+          [attr.aria-label]="t('pokeAriaLabel')"
+          (click)="onSelfPoke()"
+        >
+          <span class="scene__sprite-flip" [class.scene__sprite-flip--right]="player.facingRight">
+            <img
+              class="scene__sprite"
+              [class.scene__sprite--evolving]="player.isEvolving"
+              [class.scene__sprite--sad]="player.isSad"
+              [src]="player.line | pokemonSprite: player.stage"
+              [alt]="player.label"
+            />
+          </span>
+        </button>
+      } @else {
+        <span class="scene__sprite-flip" [class.scene__sprite-flip--right]="player.facingRight">
+          <img
+            class="scene__sprite"
+            [class.scene__sprite--evolving]="player.isEvolving"
+            [class.scene__sprite--sad]="player.isSad"
+            [src]="player.line | pokemonSprite: player.stage"
+            [alt]="player.label"
+          />
+        </span>
+      }
+      <span class="scene__label">{{ player.label }}</span>
+      @if (!player.isMe) {
+        <progress
+          tuiProgressBar
+          class="scene__mass-bar"
+          size="xs"
+          [value]="player.mass"
+          [max]="maxMass"
+          [color]="player.mass | massToneColor"
+        ></progress>
+      }
+    </div>
+  }
+
+  @for (burst of bursts(); track burst.id) {
+    <left-paw-bubble-burst [leftPawScenePosition]="{ x: burst.x, y: burst.y }" />
+  }
+</div>

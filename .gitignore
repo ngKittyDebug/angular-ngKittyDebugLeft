@@ -7,7 +7,7 @@
 /bazel-out
 
 # Node
-/node_modules
+node_modules
 npm-debug.log
 yarn-error.log
 
@@ -42,3 +42,29 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# --- Pokémon Feeding Frenzy / Claude sessions ---
+
+# Local planning notes (per-developer, not for merge)
+.planning/
+
+# Claude Code — ignore all local config / sessions / skills
+.claude/
+CLAUDE.md
+skills-lock.json
+
+# PartyKit local dev state
+.partykit/
+partykit-server/.partykit/
+
+# Cloudflare Wrangler local state (if/when partyserver path is used)
+.wrangler/
+partykit-server/.wrangler/
+
+# Local env vars for PartyKit / Cloudflare
+.dev.vars
+partykit-server/.dev.vars
+
+# Build / deploy artifacts of partykit-server
+partykit-server/dist/
+partykit-server/.partykit-deploy/
