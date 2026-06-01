@@ -46,22 +46,34 @@
 </figure>
 <section class="profile__pokemon_stats">
   <h3 class="profile__pokemon_sec_heading">Battle Stats</h3>
-  <div class="profile__pokemon_stats_items">
-    @for (item of pokemonProfileData()?.stats; track item.stat.name) {
-      <div class="profile__line-stats">
-        <p class="profile_stats__name">{{ item.stat.name }}</p>
-        <p class="profile_stats__value">{{ item.base_stat }}</p>
-        <progress
-          class="profile_stats__bar profile_stats__bar-{{ item.stat.name }}"
-          max="300"
-          tuiProgressBar
-          [value]="item.base_stat"
-        ></progress>
+  <div class="profile__pokemon_stats_content">
+    <div class="profile__pokemon_stats_items">
+      @for (item of pokemonProfileData()?.stats; track item.stat.name) {
+        <div class="profile__line-stats">
+          <p class="profile_stats__name">{{ item.stat.name }}</p>
+          <p class="profile_stats__value">{{ item.base_stat }}</p>
+          <progress
+            class="profile_stats__bar profile_stats__bar-{{ item.stat.name }}"
+            max="300"
+            tuiProgressBar
+            [value]="item.base_stat"
+          ></progress>
+        </div>
+      }
+      <div class="profile__line-stats profile__line-total">
+        <p class="profile_stats__name">Total:</p>
+        <p class="profile_stats__value">{{ pokemonTotalStats() }}</p>
       </div>
-    }
-  </div>
-  <div class="profile__line-stats">
-    <p class="profile_stats__name">Total:</p>
-    <p class="profile_stats__value">{{ pokemonTotalStats() }}</p>
+    </div>
+    <div class="profile__pokemon_stats_radar">
+      <tui-arc-chart
+        size="xl"
+        [max]="300"
+        [minLabel]="'0'"
+        [maxLabel]="'300'"
+        class="profile__pokemon_chart"
+        [value]="chartValue"
+      />
+    </div>
   </div>
 </section>

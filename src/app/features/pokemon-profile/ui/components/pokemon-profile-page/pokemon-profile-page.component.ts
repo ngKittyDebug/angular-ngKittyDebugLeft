@@ -4,10 +4,12 @@ import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-dat
 import type { PokemonSpeciesApiData } from '@shared/models/pokemon-species-api-data-interface';
 import { TuiButton } from '@taiga-ui/core';
 import { TuiBadge, TuiProgress } from '@taiga-ui/kit';
+import { TuiArcChart } from '@taiga-ui/addon-charts';
+import { TuiCard } from '@taiga-ui/layout';
 
 @Component({
   selector: 'left-paw-pokemon-profile-page',
-  imports: [TuiBadge, TuiButton, TuiProgress],
+  imports: [TuiBadge, TuiButton, TuiProgress, TuiArcChart, TuiCard],
   templateUrl: './pokemon-profile-page.component.html',
   styleUrl: './pokemon-profile-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -29,6 +31,7 @@ export class PokemonProfilePageComponent implements OnInit {
   protected readonly pokemonTotalStats = computed(() => {
     return this.pokemonProfileData()?.stats.reduce((sum, entry) => sum + (entry.base_stat ?? 0), 0);
   });
+  protected readonly chartValue = [56, 45, 51, 64, 65, 70];
 
   public async ngOnInit() {
     try {

@@ -31,7 +31,7 @@ $stats: hp, attack, defense, special-attack, special-defense, speed;
 }
 
 .profile_pokemon__intro_information {
-  max-width: 25rem;
+  max-width: 23rem;
   @include mixins.flex_container_function($direction: column, $align_items: left, $gap: 0.75rem);
 }
 
@@ -49,6 +49,10 @@ $stats: hp, attack, defense, special-attack, special-defense, speed;
     align-items: center;
     gap: 1rem;
     width: 100%;
+  }
+  &-total {
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
   }
 }
 
@@ -91,20 +95,21 @@ $stats: hp, attack, defense, special-attack, special-defense, speed;
 }
 
 .profile__pokemon_stats {
-  width: 25rem;
-  height: 23rem;
   @include mixins.flex_container_function($direction: column, $align-items: start, $gap: 1rem);
+  width: 100%;
   background: var(--gradient-bg);
   border-radius: 1.6rem;
   border: 1px solid var(--border);
-  transition: all 0.3s;
   padding: 1rem;
+}
+
+.profile__pokemon_stats_content {
+  @include mixins.grid_container_function($grid_template_columns: repeat(2, 23rem), $gap: 1rem);
 }
 
 .profile__pokemon_stats_items {
   @include mixins.flex_container_function($direction: column, $gap: 0.5rem);
-  padding: 0 0 0.5rem;
-  border-bottom: 1px solid var(--border);
+  width: 100%;
 }
 
 .profile_stats__bar {
@@ -113,4 +118,18 @@ $stats: hp, attack, defense, special-attack, special-defense, speed;
       color: var(--stat-#{$stat}-start);
     }
   }
+}
+
+.profile__pokemon_stats_radar {
+  @include mixins.flex_container_function($direction: column);
+  width: 100%;
+}
+
+.profile__pokemon_chart {
+  --tui-chart-categorical-00: var(--stat-hp-start);
+  --tui-chart-categorical-01: var(--stat-attack-start);
+  --tui-chart-categorical-02: var(--stat-defense-start);
+  --tui-chart-categorical-03: var(--stat-special-attack-start);
+  --tui-chart-categorical-04: var(--stat-special-defense-start);
+  --tui-chart-categorical-05: var(--stat-speed-start);
 }
