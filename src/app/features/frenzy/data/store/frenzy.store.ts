@@ -92,6 +92,9 @@ export const FrenzyStore = signalStore(
         patchState(store, { myFaintedAt: null });
         socket.send({ type: 'join', name, line });
       },
+      steer(x: number, y: number): void {
+        socket.send({ type: 'steer', x, y });
+      },
     }),
   ),
   withHooks({

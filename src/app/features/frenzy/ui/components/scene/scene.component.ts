@@ -185,6 +185,7 @@ export class SceneComponent {
   public readonly myId = input<string | null>(null);
   public readonly players = input.required<readonly Player[]>();
   public readonly selfPoke = output<void>();
+  public readonly steer = output<{ x: number; y: number }>();
 
   protected readonly renderedItems = this._renderedItems.asReadonly();
   protected readonly renderedPlayers = this._renderedPlayers.asReadonly();
@@ -266,8 +267,9 @@ export class SceneComponent {
     this.selfPoke.emit();
   }
 
-  // Decorative-only: spawn a short-lived bubble burst at the press point (items, pokemon, or empty
-  // water all bubble up here). Gameplay handlers fire independently via their own (click) bindings.
+  // Press anywhere bubbles up here: always spawn a short-lived decorative bubble burst, and — unless the press
+  // landed on an actionable element (an item to eat, my own Pokémon to poke) — steer my Pokémon toward the point.
+  // Open water, decor and other players all count as steering targets. Item/poke taps keep their own (click) actions.
   protected onScenePointerDown(event: PointerEvent): void {
     const host = event.currentTarget as HTMLElement;
     const bounds = host.getBoundingClientRect();
@@ -288,6 +290,10 @@ export class SceneComponent {
     }, BURST_LIFETIME_MS);
 
     this.burstTimers.add(timer);
+
+    if ((event.target as HTMLElement).closest('.scene__item, .scene__poke') === null) {
+      this.steer.emit({ x, y });
+    }
   }
 
   // Signed normalized bat displacement: a fixed pixel step (BOMB_NUDGE_PX) converted to scene-width units,

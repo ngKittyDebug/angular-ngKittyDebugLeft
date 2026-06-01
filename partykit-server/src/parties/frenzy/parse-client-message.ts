@@ -45,6 +45,14 @@ export function parseClientMessage(raw: string): ClientMessage | null {
 
       return { type: 'click', itemId: data.itemId, nudgeX };
     }
+    case 'steer': {
+      return typeof data.x === 'number' &&
+        Number.isFinite(data.x) &&
+        typeof data.y === 'number' &&
+        Number.isFinite(data.y)
+        ? { type: 'steer', x: data.x, y: data.y }
+        : null;
+    }
     case 'leave': {
       return { type: 'leave' };
     }

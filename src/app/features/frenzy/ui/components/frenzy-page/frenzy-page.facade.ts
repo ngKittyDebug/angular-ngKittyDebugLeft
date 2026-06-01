@@ -98,6 +98,10 @@ export class FrenzyPageFacade {
     this.effects.pokeSelf();
   }
 
+  public steer(point: { x: number; y: number }): void {
+    this.store.steer(point.x, point.y);
+  }
+
   public join(payload: PickerSubmission): void {
     this.lastSubmission.set(payload);
     this.stats.startSession();

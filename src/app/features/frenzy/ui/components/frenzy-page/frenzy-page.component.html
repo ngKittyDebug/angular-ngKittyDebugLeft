@@ -9,6 +9,7 @@
     [blasts]="blasts()"
     (itemClick)="handleItemClick($event)"
     (selfPoke)="handleSelfPoke()"
+    (steer)="handleSteer($event)"
   />
 
   @if (me(); as myself) {

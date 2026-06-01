@@ -71,6 +71,20 @@ describe('parseClientMessage', () => {
     ).toEqual({ type: 'click', itemId: 'i1' });
   });
 
+  it('parses steer with finite x and y', () => {
+    expect(parseClientMessage(JSON.stringify({ type: 'steer', x: 0.3, y: 0.8 }))).toEqual({
+      type: 'steer',
+      x: 0.3,
+      y: 0.8,
+    });
+  });
+
+  it('rejects steer with missing or non-finite coordinates', () => {
+    expect(parseClientMessage(JSON.stringify({ type: 'steer', x: 0.3 }))).toBeNull();
+    expect(parseClientMessage(JSON.stringify({ type: 'steer', x: 'left', y: 0.8 }))).toBeNull();
+    expect(parseClientMessage(JSON.stringify({ type: 'steer', x: 0.3, y: null }))).toBeNull();
+  });
+
   it('parses leave', () => {
     expect(parseClientMessage(JSON.stringify({ type: 'leave' }))).toEqual({ type: 'leave' });
   });

@@ -69,4 +69,8 @@ export class FrenzyPageComponent implements OnInit {
   protected handleSelfPoke(): void {
     this.facade.pokeSelf();
   }
+
+  protected handleSteer(point: { x: number; y: number }): void {
+    this.facade.steer(point);
+  }
 }

@@ -4,6 +4,7 @@ import { GAME } from '@game/frenzy/constants';
 import type { Item, Line, Player, ServerMessage, ServerState } from '@game/frenzy/types';
 
 import { applyClick } from './engine/apply-click';
+import { applySteer } from './engine/apply-steer';
 import { applyTick } from './engine/apply-tick';
 import { checkClickRate } from './engine/check-click-rate';
 import { createPlayer } from './engine/create-player';
@@ -75,6 +76,10 @@ export default class FeedingRoom implements Party.Server {
       }
       case 'click': {
         this.handleClick(sender.id, message.itemId, message.nudgeX);
+        break;
+      }
+      case 'steer': {
+        this.handleSteer(sender.id, message.x, message.y);
         break;
       }
     }
@@ -202,6 +207,34 @@ export default class FeedingRoom implements Party.Server {
     if (this.players.length === 0) {
       this.stopLoop();
     }
+  }
+
+  private handleSteer(connectionId: string, x: number, y: number): void {
+    const sessionToken = this.connectionToSession.get(connectionId);
+
+    if (sessionToken === undefined) {
+      return;
+    }
+
+    // Steering shares the click rate-limit budget — it's player input and each accepted steer broadcasts a snapshot.
+    const rate = checkClickRate(this.clickTimestamps.get(sessionToken) ?? [], Date.now());
+
+    this.clickTimestamps.set(sessionToken, rate.timestamps);
+
+    if (!rate.allowed) {
+      return;
+    }
+
+    const state = this.currentState();
+    const next = applySteer(state, sessionToken, x, y);
+
+    // applySteer returns the same state reference when nothing changed (unknown/dead player, zero direction).
+    if (next === state) {
+      return;
+    }
+
+    this.syncState(next);
+    this.broadcast(this.snapshot());
   }
 
   private handleIdentify(connectionId: string, sessionToken: string): void {

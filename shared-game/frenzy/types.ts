@@ -83,6 +83,9 @@ export type ClientMessage =
   // `nudgeX` is the bomb-bat input: the signed horizontal displacement (normalized 0..1) the player wants,
   // computed client-side from a fixed pixel step and the tapped side. Server caps/clamps it. Ignored for non-bomb items.
   | { type: 'click'; itemId: string; nudgeX?: number }
+  // Steering: the player tapped empty water at normalized point (x, y). The server adds a velocity impulse toward
+  // it on top of the current drift (speed capped), so taps nudge the Pokémon's heading without replacing the drift.
+  | { type: 'steer'; x: number; y: number }
   | { type: 'leave' };
 
 export type ServerMessage =
