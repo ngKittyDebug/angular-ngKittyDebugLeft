@@ -77,3 +77,9 @@
     </div>
   </div>
 </section>
+<section class="pokemon__profile_evolution">
+  <left-paw-evolution-chain-item
+    [evolutionChain]="pokemonEvolutionChain()"
+    [activeName]="pokemonProfileData()?.name"
+  />
+</section>

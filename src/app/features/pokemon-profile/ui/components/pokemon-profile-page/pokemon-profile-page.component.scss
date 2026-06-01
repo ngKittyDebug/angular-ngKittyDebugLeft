@@ -133,3 +133,12 @@ $stats: hp, attack, defense, special-attack, special-defense, speed;
   --tui-chart-categorical-04: var(--stat-special-defense-start);
   --tui-chart-categorical-05: var(--stat-speed-start);
 }
+
+.pokemon__profile_evolution {
+  @include mixins.flex_container_function();
+  width: 100%;
+  background: var(--gradient-bg);
+  border-radius: 1.6rem;
+  border: 1px solid var(--border);
+  padding: 1rem;
+}

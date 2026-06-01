@@ -1,0 +1,17 @@
+<div class="card" [class.active]="evolutionChain()?.name === activeName()">
+  <h3>{{ evolutionChain()?.name }}</h3>
+  @if (evolutionChain()?.condition) {
+    <span class="badge">{{ evolutionChain()?.condition }}</span>
+  }
+</div>
+<!-- Рекурсия: рисуем детей -->
+@if (evolutionChain()?.children?.length) {
+  <div class="branches">
+    @for (child of evolutionChain()?.children; track child.name) {
+      <div class="branch">
+        <span class="arrow">→</span>
+        <left-paw-evolution-chain-item [evolutionChain]="child" [activeName]="activeName()" />
+      </div>
+    }
+  </div>
+}
