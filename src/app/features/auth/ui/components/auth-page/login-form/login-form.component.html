@@ -1,4 +1,6 @@
 @let loginForm = this.loginFormGroup;
+@let nameOrEmailFormControl = loginForm.controls.nameOrEmailFormControl;
+@let passwordFormControl = loginForm.controls.passwordFormControl;
 
 <form
   *transloco="let t"
@@ -22,9 +24,18 @@
         autocomplete="username"
         type="text"
         id="username"
+        [invalid]="nameOrEmailFormControl.invalid"
       />
     </tui-textfield>
-    <tui-error />
+
+    @if (nameOrEmailFormControl.hasError('invalidEmail') && nameOrEmailFormControl.touched) {
+      <tui-error [error]="t('auth.errorMessages.email')" />
+    }
+
+    @if (nameOrEmailFormControl.hasError('isValidUserName') && nameOrEmailFormControl.touched) {
+      <tui-error [error]="t('auth.errorMessages.username')" />
+    }
+
     <tui-textfield class="login__textfield" iconStart="@tui.lock">
       <label tuiLabel for="password">{{ t('auth.login.password') }}</label>
       <input
@@ -34,9 +45,13 @@
         autocomplete="current-password"
         type="password"
         id="password"
+        [invalid]="passwordFormControl.invalid"
       />
     </tui-textfield>
-    <tui-error />
+
+    @if (passwordFormControl.hasError('pattern') && passwordFormControl.touched) {
+      <tui-error [error]="t('auth.errorMessages.password')" />
+    }
   </div>
   <button
     class="login__form_button"
