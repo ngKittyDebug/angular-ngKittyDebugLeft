@@ -14,6 +14,5 @@ import { TuiCard } from '@taiga-ui/layout';
 export class EvolutionChainItemComponent {
   public readonly evolutionChain = input.required<MyEvolutionNode | null | undefined>();
   public readonly activeName = input<string | undefined>('');
-
   protected readonly index = signal(0);
 }

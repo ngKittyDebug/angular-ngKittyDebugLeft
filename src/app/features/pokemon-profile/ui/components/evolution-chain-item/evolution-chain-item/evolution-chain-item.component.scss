@@ -9,7 +9,18 @@
   }
 }
 
+.carousel__wrapper {
+  @include mixins.flex_container_function($direction: row, $gap: 1rem);
+}
+
+.transparent-slide {
+  background: transparent !important;
+  padding: 0;
+  height: 5rem;
+}
+
 .card {
   @include mixins.flex_container_function($direction: column);
   width: 100%;
+  height: 5rem;
 }

@@ -7,15 +7,14 @@ import { TuiBadge, TuiProgress } from '@taiga-ui/kit';
 import { TuiArcChart } from '@taiga-ui/addon-charts';
 import { TuiCard } from '@taiga-ui/layout';
 import type {
+  EvolutionChainItem,
   EvolutionChainResponse,
-  EvolutionNode,
 } from '@shared/models/pokemon-evolution-chain-api-data-interface';
 import { EvolutionChainItemComponent } from '../evolution-chain-item/evolution-chain-item/evolution-chain-item.component';
 
 export interface MyEvolutionNode {
   name: string;
   image: string;
-  types: string[];
   condition: string | null;
   children: MyEvolutionNode[];
 }
@@ -47,7 +46,7 @@ export class PokemonProfilePageComponent implements OnInit {
   });
   protected readonly chartValue = [56, 45, 51, 64, 65, 70]; // переделать
   protected readonly pokemonEvolutionChain = computed(() => {
-    const data = this.pokemonProfileEvolutionChainData()?.chain as EvolutionNode;
+    const data = this.pokemonProfileEvolutionChainData()?.chain as EvolutionChainItem;
     const result = this.buildStructure(data);
 
     return result;
@@ -85,7 +84,7 @@ export class PokemonProfilePageComponent implements OnInit {
     }
   }
 
-  private buildStructure(node: EvolutionNode): MyEvolutionNode | null {
+  private buildStructure(node: EvolutionChainItem): MyEvolutionNode | null {
     if (!node || !node.species) {
       return null; // ← Главная защита
     }
@@ -94,13 +93,12 @@ export class PokemonProfilePageComponent implements OnInit {
     const condition = detail?.min_level ? `Lv. ${detail.min_level}` : detail?.trigger?.name || null;
 
     const children: MyEvolutionNode[] = (node.evolves_to || [])
-      .map((child: EvolutionNode) => this.buildStructure(child))
+      .map((child: EvolutionChainItem) => this.buildStructure(child))
       .filter((c): c is MyEvolutionNode => c !== null);
 
     return {
       name: node.species.name,
       image: '',
-      types: [],
       condition,
       children,
     };
