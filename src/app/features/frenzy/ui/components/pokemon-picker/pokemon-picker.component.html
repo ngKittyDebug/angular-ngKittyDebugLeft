@@ -21,7 +21,12 @@
         [class.picker__line--selected]="selectedLine() === option.id"
         (click)="select(option.id)"
       >
-        <img class="picker__sprite" [src]="option.id | pokemonSprite" [alt]="option.label" />
+        <img
+          class="picker__sprite"
+          [src]="option.id | pokemonSprite"
+          [alt]="option.label"
+          draggable="false"
+        />
         <span class="picker__name-label">{{ option.label }}</span>
       </button>
     }

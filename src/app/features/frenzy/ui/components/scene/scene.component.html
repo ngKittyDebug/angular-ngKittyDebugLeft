@@ -1,8 +1,7 @@
-<div
+<section
   *transloco="let t; prefix: 'frenzy.scene'"
   class="scene"
   [class.scene--shaking]="blasts().length > 0"
-  role="region"
   aria-label="Feeding frenzy scene"
   (pointerdown)="onScenePointerDown($event)"
 >
@@ -22,6 +21,7 @@
         [style.animation-direction]="item.spinReverse ? 'reverse' : 'normal'"
         [style.animation-play-state]="item.landed ? 'paused' : 'running'"
         [src]="item.type | itemSprite"
+        draggable="false"
         alt=""
       />
     </button>
@@ -62,6 +62,7 @@
               [class.scene__sprite--sad]="player.isSad"
               [src]="player.line | pokemonSprite: player.stage"
               [alt]="player.label"
+              draggable="false"
             />
           </span>
         </button>
@@ -73,6 +74,7 @@
             [class.scene__sprite--sad]="player.isSad"
             [src]="player.line | pokemonSprite: player.stage"
             [alt]="player.label"
+            draggable="false"
           />
         </span>
       }
@@ -113,4 +115,4 @@
       [style.width.%]="blast.radius * 200"
     ></div>
   }
-</div>
+</section>

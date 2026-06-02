@@ -49,6 +49,7 @@
     transition:
       filter 0.4s ease,
       transform 0.2s ease;
+    -webkit-user-drag: none;
   }
 
   // Horizontal flip wrapper: kept separate from `&__sprite` so the flip doesn't fight the sprite's
@@ -132,6 +133,7 @@
     height: 60px;
     image-rendering: pixelated;
     pointer-events: none;
+    -webkit-user-drag: none;
   }
 
   // Tumble while falling — duration and direction (animation-direction) are set per item inline so each

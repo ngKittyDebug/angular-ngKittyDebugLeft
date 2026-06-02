@@ -27,7 +27,7 @@
       @for (row of breakdown(); track row.type) {
         <li class="fainted-modal__item" [attr.aria-label]="t('items.' + row.type)">
           <span tuiAvatar class="fainted-modal__item-icon" size="xs">
-            <img [src]="row.type | itemSprite" alt="" />
+            <img [src]="row.type | itemSprite" alt="" draggable="false" />
           </span>
           <span class="fainted-modal__item-count">{{ row.count }}</span>
         </li>
