@@ -1,0 +1,82 @@
+@use 'utility/mixins';
+@use 'screens-width';
+
+$types:
+  normal, fighting, flying, poison, ground, rock, bug, ghost, steel, fire, water, grass, electric,
+  psychic, ice, dragon, dark, fairy, stellar, unknown;
+
+:host {
+  @include mixins.flex_container_function($direction: row, $gap: 1rem);
+  width: 100%;
+  * {
+    margin: 0;
+  }
+}
+
+.profile_pokemon__intro {
+  width: 100%;
+  @include mixins.flex_container_function($gap: 1rem);
+  background: var(--gradient-bg);
+  border-radius: 1.6rem;
+  border: 1px solid var(--border);
+  transition: all 0.3s;
+  padding: 1rem;
+}
+
+.profile_pokemon__image {
+  width: 23rem;
+  height: 23rem;
+}
+
+.profile_pokemon__info {
+  max-width: 23rem;
+  width: 100%;
+  @include mixins.flex_container_function($direction: column, $align_items: left, $gap: 1rem);
+}
+
+.pokemon__info_group {
+  @include mixins.flex_container_function($direction: row, $justify_content: start, $gap: 1rem);
+  &-column {
+    @include mixins.flex_container_function($direction: column, $align_items: start, $gap: 0.5rem);
+  }
+}
+
+.pokemon__info_badges_row {
+  @include mixins.flex_container_function($direction: row, $gap: 0.75rem);
+}
+
+.profile__name {
+  @include mixins.font_function($weight: bold, $size: 1.5rem);
+  &::first-letter {
+    text-transform: uppercase;
+  }
+}
+
+.pokemon__info_subheading {
+  @include mixins.font_function($weight: bold);
+}
+
+.profile__type {
+  color: var(--accent-foreground);
+  text-transform: uppercase;
+  @each $type in $types {
+    &-#{$type} {
+      background: linear-gradient(to right, var(--type-#{$type}-start), var(--type-#{$type}-end));
+    }
+  }
+}
+
+.profile__ability {
+  color: var(--accent-foreground);
+  text-transform: uppercase;
+  &.profile__ability-hidden {
+    background: linear-gradient(to right, var(--ability-hidden-start), var(--ability-hidden-end));
+  }
+  &.profile__ability-visible {
+    background: linear-gradient(to right, var(--ability-visible-start), var(--ability-visible-end));
+  }
+}
+
+.pokemon__info_button {
+  width: 100%;
+}

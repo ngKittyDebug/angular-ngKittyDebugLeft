@@ -11,6 +11,8 @@ import type {
   EvolutionChainResponse,
 } from '@shared/models/pokemon-evolution-chain-api-data-interface';
 import { EvolutionChainItemComponent } from '../evolution-chain-item/evolution-chain-item/evolution-chain-item.component';
+import { TranslocoDirective } from '@jsverse/transloco';
+import { PokemonProfileInfoComponent } from '../pokemon-profile-info/pokemon-profile-info/pokemon-profile-info.component';
 
 export interface MyEvolutionNode {
   name: string;
@@ -21,7 +23,16 @@ export interface MyEvolutionNode {
 
 @Component({
   selector: 'left-paw-pokemon-profile-page',
-  imports: [TuiBadge, TuiButton, TuiProgress, TuiArcChart, TuiCard, EvolutionChainItemComponent],
+  imports: [
+    TuiBadge,
+    TuiButton,
+    TuiProgress,
+    TuiArcChart,
+    TuiCard,
+    EvolutionChainItemComponent,
+    PokemonProfileInfoComponent,
+    TranslocoDirective,
+  ],
   templateUrl: './pokemon-profile-page.component.html',
   styleUrl: './pokemon-profile-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -31,16 +42,7 @@ export class PokemonProfilePageComponent implements OnInit {
   protected readonly pokemonProfileData = signal<PokemonDetailApiData | null>(null);
   protected readonly pokemonProfileDataSpecies = signal<PokemonSpeciesApiData | null>(null);
   protected readonly pokemonProfileEvolutionChainData = signal<EvolutionChainResponse | null>(null);
-  protected readonly pokemonWeight = computed(() => {
-    const weight = Number(this.pokemonProfileData()?.weight) / 10;
 
-    return weight;
-  });
-  protected readonly pokemonHeight = computed(() => {
-    const height = Number(this.pokemonProfileData()?.height) / 10;
-
-    return height;
-  });
   protected readonly pokemonTotalStats = computed(() => {
     return this.pokemonProfileData()?.stats.reduce((sum, entry) => sum + (entry.base_stat ?? 0), 0);
   });
