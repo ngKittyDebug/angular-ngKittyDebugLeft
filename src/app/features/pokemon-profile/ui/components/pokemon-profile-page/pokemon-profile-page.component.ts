@@ -28,7 +28,7 @@ export interface MyEvolutionNode {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PokemonProfilePageComponent implements OnInit {
-  public readonly pokemonEndpoint = 'eevee'; // bulbasaur | eevee
+  public readonly pokemonEndpoint = 'bulbasaur'; // bulbasaur | eevee
   protected readonly pokemonProfileData = signal<PokemonDetailApiData | null>(null);
   protected readonly pokemonProfileDataSpecies = signal<PokemonSpeciesApiData | null>(null);
   protected readonly pokemonProfileEvolutionChainData = signal<EvolutionChainResponse | null>(null);

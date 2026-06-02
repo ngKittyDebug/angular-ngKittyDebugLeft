@@ -2,22 +2,14 @@
 @use 'screens-width';
 
 :host {
-  @include mixins.flex_container_function($gap: 1rem);
-  padding: 1rem;
+  @include mixins.flex_container_function($direction: column, $gap: 1rem);
+  width: 100%;
   * {
     margin: 0;
   }
 }
 
-.branches {
-  @include mixins.flex_container_function($direction: column, $gap: 1rem);
-}
-
-.branch {
-  @include mixins.flex_container_function();
-}
-
 .card {
   @include mixins.flex_container_function($direction: column);
-  width: 10rem;
+  width: 100%;
 }
