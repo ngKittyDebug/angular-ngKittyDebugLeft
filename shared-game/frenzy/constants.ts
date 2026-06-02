@@ -16,8 +16,19 @@ export const GAME = {
   snapshotEveryNTicks: 10,
   /** Mass thresholds for evolution: `stage2` — transition 1→2, `stage3` — 2→3. */
   thresholds: { stage2: 200, stage3: 500 },
-  /** Mass delta when an item is eaten, by type: + food/candy, − rotten, 0 for rock. `bomb` is never eaten (it nudges on click, damages via blast on land) — the 0 only keeps this map total over `ItemType`. */
-  itemEffects: { food: 10, rotten: -15, rock: 0, rareCandy: 30, bomb: 0 },
+  /** Mass delta when an item is eaten, by type: + food/candy, − rotten, 0 for rock. `bomb` is never eaten (it nudges on click, damages via blast on land) and `mushroom` rolls a random delta in `bomb`-style — the 0 only keeps this map total over `ItemType`. */
+  itemEffects: {
+    food: 10,
+    rotten: -15,
+    rock: 0,
+    rareCandy: 30,
+    bomb: 0,
+    goldenBerry: 25,
+    crumb: 5,
+    mushroom: 0,
+  },
+  /** Mushroom gamble: eating one yields a random integer mass delta within `[minDelta, maxDelta]` — high upside, real downside. Rolled server-side at eat time, so the outcome never leaks in the snapshot. */
+  mushroom: { minDelta: -20, maxDelta: 40 },
   /** Collision between falling/resting items and drifting Pokémon (resolved in applyTick). */
   collision: {
     /** Normalized hit radius (0..1). An item resolves against the closest alive Pokémon within this distance. Single radius — the scene isn't square, so it's approximate and intentionally generous. */
@@ -26,7 +37,16 @@ export const GAME = {
     rockDamage: -15,
   },
   /** Relative spawn weights per item type (not percentages — normalized by the sum of weights). */
-  spawnWeights: { food: 70, rotten: 15, rock: 25, rareCandy: 5, bomb: 10 },
+  spawnWeights: {
+    food: 55,
+    rotten: 15,
+    rock: 20,
+    rareCandy: 5,
+    bomb: 10,
+    goldenBerry: 5,
+    crumb: 35,
+    mushroom: 12,
+  },
   /** Bomb tunables: a slow-falling item juggled by clicks that explodes on contact, hitting everyone in range (incl. its owner). */
   bomb: {
     /** Mass removed from each Pokémon caught in the blast. */
@@ -42,8 +62,17 @@ export const GAME = {
   spawnIntervalMsRange: [700, 1300],
   /** Active-player count at which the spawn interval matches `spawnIntervalMsRange` as-is. The interval scales by `spawnReferencePlayers / activePlayers`, so per capita food income stays ~constant. */
   spawnReferencePlayers: 3,
-  /** Item fall speed by type, normalized scene-height units per second (1 = full height). 0.15 ≈ 6.7 s to cross; rock is heavier so it falls a bit faster. */
-  fallSpeed: { food: 0.15, rotten: 0.15, rock: 0.2, rareCandy: 0.15, bomb: 0.035 },
+  /** Item fall speed by type, normalized scene-height units per second (1 = full height). 0.15 ≈ 6.7 s to cross; rock is heavier so it falls a bit faster, crumb is light-but-quick, goldenBerry drops a touch faster (catch it before it's gone). */
+  fallSpeed: {
+    food: 0.15,
+    rotten: 0.15,
+    rock: 0.2,
+    rareCandy: 0.15,
+    bomb: 0.035,
+    goldenBerry: 0.18,
+    crumb: 0.25,
+    mushroom: 0.15,
+  },
   /** How long an item lies on the floor (still edible) after landing before it disappears, ms. */
   itemRestMs: 3000,
   /** `[min, max]` horizontal spawn position of an item (normalized 0..1), inset from the scene edges. */

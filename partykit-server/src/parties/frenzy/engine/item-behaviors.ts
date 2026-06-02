@@ -26,9 +26,16 @@ export interface ItemInteraction {
  */
 export interface ItemBehavior {
   // `nudgeX` is the player's bomb-bat input — a signed normalized displacement; ignored by items that aren't juggled.
-  onClick(item: Item, clickerId: string, state: ServerState, nudgeX?: number): ItemInteraction;
+  // `rng` is injected so gamble items (mushroom) can roll deterministically in tests; defaults to Math.random at the call site.
+  onClick(
+    item: Item,
+    clickerId: string,
+    state: ServerState,
+    nudgeX?: number,
+    rng?: () => number,
+  ): ItemInteraction;
   onLand?(item: Item, state: ServerState): ItemInteraction;
-  onCollide?(item: Item, player: Player, state: ServerState): ItemInteraction;
+  onCollide?(item: Item, player: Player, state: ServerState, rng?: () => number): ItemInteraction;
 }
 
 // Feeding any of these to a player (by click or by drifting into it) applies its fixed per-type mass delta, then the item is gone.
@@ -42,6 +49,25 @@ function eat(itemType: ItemType, playerId: string): ItemInteraction {
 const eatBehavior: ItemBehavior = {
   onClick: (item, clickerId) => eat(item.type, clickerId),
   onCollide: (item, player) => eat(item.type, player.id),
+};
+
+// Mushroom: a gamble — eating it (by click or collision) rolls a random integer mass delta within the configured range,
+// then it's gone. The roll happens server-side at eat time via the injected rng, so the outcome never leaks in a snapshot.
+function gambleDelta(rng: () => number): number {
+  const { maxDelta, minDelta } = GAME.mushroom;
+
+  return minDelta + Math.floor(rng() * (maxDelta - minDelta + 1));
+}
+
+const gambleBehavior: ItemBehavior = {
+  onClick: (_item, clickerId, _state, _nudgeX, rng = Math.random) => ({
+    massDeltas: [{ playerId: clickerId, amount: gambleDelta(rng) }],
+    consumed: true,
+  }),
+  onCollide: (_item, player, _state, rng = Math.random) => ({
+    massDeltas: [{ playerId: player.id, amount: gambleDelta(rng) }],
+    consumed: true,
+  }),
 };
 
 // Rock: clicking it does nothing (mass delta 0) but removes it, while a falling rock that bonks a Pokémon deals collision damage.
@@ -101,6 +127,9 @@ const ITEM_BEHAVIORS: Record<ItemType, ItemBehavior> = {
   rock: rockBehavior,
   rareCandy: eatBehavior,
   bomb: bombBehavior,
+  goldenBerry: eatBehavior,
+  crumb: eatBehavior,
+  mushroom: gambleBehavior,
 };
 
 export function getItemBehavior(type: ItemType): ItemBehavior {

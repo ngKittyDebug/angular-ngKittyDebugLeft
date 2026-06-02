@@ -14,7 +14,15 @@ interface BreakdownRow {
   type: ItemType;
 }
 
-const BREAKDOWN_ORDER: readonly ItemType[] = ['food', 'rareCandy', 'rotten', 'rock'];
+const BREAKDOWN_ORDER: readonly ItemType[] = [
+  'food',
+  'crumb',
+  'goldenBerry',
+  'rareCandy',
+  'mushroom',
+  'rotten',
+  'rock',
+];
 
 @Component({
   selector: 'left-paw-fainted-modal',

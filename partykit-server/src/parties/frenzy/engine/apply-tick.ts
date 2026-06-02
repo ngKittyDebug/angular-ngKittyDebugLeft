@@ -51,6 +51,7 @@ export function applyTick(
   state: ServerState,
   deltaSeconds: number,
   applyDecay: boolean,
+  rng: () => number = Math.random,
 ): TickResult {
   const restDeltaMs = deltaSeconds * 1000;
   const movedItems = state.items.map((item) => {
@@ -125,7 +126,7 @@ export function applyTick(
       continue;
     }
 
-    const interaction = onCollide(item, target, working);
+    const interaction = onCollide(item, target, working, rng);
     const resolved = applyMassDeltas(working, interaction.massDeltas);
 
     working = resolved.state;

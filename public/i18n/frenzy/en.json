@@ -21,7 +21,10 @@
       "food": "Good berries",
       "rotten": "Rotten berries",
       "rock": "Rocks",
-      "rareCandy": "Rare candy"
+      "rareCandy": "Rare candy",
+      "goldenBerry": "Golden berries",
+      "crumb": "Crumbs",
+      "mushroom": "Mushrooms"
     },
     "respawn": "Play again",
     "chooseNew": "Choose new Pokémon",
@@ -83,6 +86,27 @@
         "2": "Ouch!",
         "3": "Blast!",
         "4": "Yikes!"
+      },
+      "goldenBerry": {
+        "0": "Jackpot!",
+        "1": "So good!",
+        "2": "Golden!",
+        "3": "Delicious!",
+        "4": "Best one!"
+      },
+      "crumb": {
+        "0": "Nibble!",
+        "1": "Crunch!",
+        "2": "Snack!",
+        "3": "Tiny bite!",
+        "4": "Quick one!"
+      },
+      "mushroom": {
+        "0": "Gamble!",
+        "1": "Risky!",
+        "2": "Surprise!",
+        "3": "Lucky?",
+        "4": "Whoa!"
       }
     },
     "statusMessage": {

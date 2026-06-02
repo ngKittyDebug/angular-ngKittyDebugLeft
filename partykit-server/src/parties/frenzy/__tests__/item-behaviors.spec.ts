@@ -5,7 +5,7 @@ import type { Item, ItemType, Player, ServerState } from '@game/frenzy/types';
 
 import { getItemBehavior } from '../engine/item-behaviors';
 
-const ITEM_TYPES: ItemType[] = ['food', 'rotten', 'rock', 'rareCandy'];
+const ITEM_TYPES: ItemType[] = ['food', 'rotten', 'rock', 'rareCandy', 'goldenBerry', 'crumb'];
 const EMPTY_STATE: ServerState = { players: [], items: [], tick: 0 };
 
 function item(type: ItemType): Item {
@@ -43,8 +43,8 @@ describe('item behaviors', () => {
     }
   });
 
-  it('drifting into edible items (food, rareCandy, rotten) applies their mass delta like a click', () => {
-    for (const type of ['food', 'rareCandy', 'rotten'] as ItemType[]) {
+  it('drifting into edible items (food, rareCandy, rotten, goldenBerry, crumb) applies their mass delta like a click', () => {
+    for (const type of ['food', 'rareCandy', 'rotten', 'goldenBerry', 'crumb'] as ItemType[]) {
       const interaction = getItemBehavior(type).onCollide?.(item(type), PLAYER, EMPTY_STATE);
 
       expect(interaction).toEqual({
@@ -142,5 +142,66 @@ describe('bomb behavior', () => {
       { playerId: 'touched', amount: GAME.bomb.damage },
       { playerId: 'bystander', amount: GAME.bomb.damage },
     ]);
+  });
+});
+
+describe('mushroom gamble behavior', () => {
+  // gambleDelta(rng) = minDelta + floor(rng * (maxDelta - minDelta + 1)); with [-20, 40] that's -20 + floor(rng * 61).
+  const span = GAME.mushroom.maxDelta - GAME.mushroom.minDelta + 1;
+
+  it('a click rolls a delta within range, credits the clicker, and consumes the mushroom', () => {
+    const lowest = getItemBehavior('mushroom').onClick(
+      item('mushroom'),
+      'p1',
+      EMPTY_STATE,
+      undefined,
+      () => 0,
+    );
+    const highest = getItemBehavior('mushroom').onClick(
+      item('mushroom'),
+      'p1',
+      EMPTY_STATE,
+      undefined,
+      () => 0.999,
+    );
+
+    expect(lowest).toEqual({
+      consumed: true,
+      massDeltas: [{ playerId: 'p1', amount: GAME.mushroom.minDelta }],
+    });
+    expect(highest).toEqual({
+      consumed: true,
+      massDeltas: [{ playerId: 'p1', amount: GAME.mushroom.maxDelta }],
+    });
+  });
+
+  it('drifting into a mushroom rolls the same way for the colliding Pokémon', () => {
+    const interaction = getItemBehavior('mushroom').onCollide?.(
+      item('mushroom'),
+      PLAYER,
+      EMPTY_STATE,
+      () => 0.5,
+    );
+
+    expect(interaction).toEqual({
+      consumed: true,
+      massDeltas: [{ playerId: 'p1', amount: GAME.mushroom.minDelta + Math.floor(0.5 * span) }],
+    });
+  });
+
+  it('every roll lands within [minDelta, maxDelta]', () => {
+    for (let i = 0; i < span; i += 1) {
+      const rng = (): number => i / span;
+      const { amount } = getItemBehavior('mushroom').onClick(
+        item('mushroom'),
+        'p1',
+        EMPTY_STATE,
+        undefined,
+        rng,
+      ).massDeltas[0];
+
+      expect(amount).toBeGreaterThanOrEqual(GAME.mushroom.minDelta);
+      expect(amount).toBeLessThanOrEqual(GAME.mushroom.maxDelta);
+    }
   });
 });

@@ -14,6 +14,7 @@ export function applyClick(
   clickerId: string,
   itemId: string,
   nudgeX?: number,
+  rng: () => number = Math.random,
 ): ClickResult {
   const item = state.items.find((candidate) => candidate.id === itemId);
   const clicker = state.players.find((candidate) => candidate.id === clickerId);
@@ -22,7 +23,7 @@ export function applyClick(
     return { state, events: [] };
   }
 
-  const interaction = getItemBehavior(item.type).onClick(item, clickerId, state, nudgeX);
+  const interaction = getItemBehavior(item.type).onClick(item, clickerId, state, nudgeX, rng);
 
   // Juggle (bomb): no eating, no mass change — slide the item horizontally (clamped to the spawn range) and tell clients.
   if (interaction.nudgeX !== undefined && !interaction.consumed) {

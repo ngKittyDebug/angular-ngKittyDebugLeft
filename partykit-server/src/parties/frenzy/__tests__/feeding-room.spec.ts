@@ -203,9 +203,9 @@ describe('FeedingRoom orchestration', () => {
     const { room, server } = setup();
     const conn = new FakeConnection('c1');
 
-    // Force every spawn to rotten (the one type with no collision behavior) so falling items can't
-    // passively feed the idle player — decay alone must drain startingMass to 0 and faint the last player.
-    vi.spyOn(Math, 'random').mockReturnValue(0.7);
+    // Force every spawn to rock (a non-feeding type — collisions only damage) so falling items can't
+    // passively feed the idle player — decay must drain startingMass to 0 and faint the last player.
+    vi.spyOn(Math, 'random').mockReturnValue(0.5);
 
     server.onConnect(asParty(conn));
     joinPlayer(server, conn, 'token-1');
@@ -229,8 +229,8 @@ describe('FeedingRoom orchestration', () => {
     const { room, server } = setup();
     const first = new FakeConnection('c1');
 
-    // Rotten-only spawns can't passively feed the idle player (see decay-death test above).
-    vi.spyOn(Math, 'random').mockReturnValue(0.7);
+    // Rock-only spawns can't passively feed the idle player (see decay-death test above).
+    vi.spyOn(Math, 'random').mockReturnValue(0.5);
 
     server.onConnect(asParty(first));
     joinPlayer(server, first, 'token-1');

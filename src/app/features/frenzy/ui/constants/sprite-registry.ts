@@ -10,13 +10,16 @@ const STAGE_SPRITES: Record<Line, Record<Stage, string>> = {
   squirtle: { 1: 'squirtle', 2: 'wartortle', 3: 'blastoise' },
 };
 
-// Filenames include the extension since item art is mixed: pixel berries/rock are PNG, the bomb is a vector SVG.
+// Filenames include the extension since item art is mixed: pixel berries/rock are PNG, vector items (bomb, the new food trio) are SVG placeholders.
 const ITEM_SPRITES: Record<ItemType, string> = {
   food: 'oran-berry.png',
   rotten: 'pecha-berry.png',
   rock: 'hard-stone.png',
   rareCandy: 'rare-candy.png',
   bomb: 'bomb.svg',
+  goldenBerry: 'sitrus-berry.svg',
+  crumb: 'berry-crumb.svg',
+  mushroom: 'tiny-mushroom.svg',
 };
 
 // On-screen sprite height (px) per evolution stage — the single knob for tuning Pokémon size.

@@ -1,6 +1,14 @@
 export type Stage = 1 | 2 | 3;
 export type Line = 'bulbasaur' | 'caterpie' | 'charmander' | 'magikarp' | 'pidgey' | 'squirtle';
-export type ItemType = 'food' | 'rotten' | 'rock' | 'rareCandy' | 'bomb';
+export type ItemType =
+  | 'food'
+  | 'rotten'
+  | 'rock'
+  | 'rareCandy'
+  | 'bomb'
+  | 'goldenBerry'
+  | 'crumb'
+  | 'mushroom';
 export type PlayerStatus = 'alive' | 'disconnected';
 
 export interface Player {
