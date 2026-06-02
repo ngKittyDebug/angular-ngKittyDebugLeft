@@ -8,7 +8,7 @@
     tuiTabBar
     *transloco="let t"
     leftPawHideContent
-    [isHideWithScrollDown]="true"
+    [classDirective]="'hide'"
     class="mobile_nav-bar"
   >
     @for (item of navListItems; track item.label) {

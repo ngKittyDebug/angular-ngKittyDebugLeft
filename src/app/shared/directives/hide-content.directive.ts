@@ -4,15 +4,19 @@ import { Directive, input, signal } from '@angular/core';
   selector: '[leftPawHideContent]',
   host: {
     '(window:scroll)': 'scrollLogic()',
-    '[class.hide]': 'isCurrentClassHide()',
+    '[class]': 'isCurrentClassHide() ? classDirective() : ""',
   },
 })
 export class HideContentDirective {
   private previousScrollTop = 0;
-  public readonly isHideWithScrollDown = input.required<boolean>();
+  public readonly isHideWithScrollDown = input<boolean>(true);
   public readonly isCurrentClassHide = signal(false);
+  public readonly classDirective = input.required<string>();
 
   protected scrollLogic() {
+    if (typeof window === 'undefined') {
+      return;
+    }
     const scrollTop = window.scrollY;
 
     this.isCurrentClassHide.set(scrollTop > this.previousScrollTop === this.isHideWithScrollDown());
