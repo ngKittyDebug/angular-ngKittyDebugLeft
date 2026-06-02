@@ -46,7 +46,7 @@ describe('SelfMoodEffect', () => {
   });
 
   function last() {
-    const messages = floats.messages();
+    const messages = floats.ownedMessages();
 
     return messages[messages.length - 1];
   }
@@ -55,7 +55,7 @@ describe('SelfMoodEffect', () => {
     meSignal.set(me(150));
     TestBed.tick();
 
-    expect(floats.messages()).toHaveLength(0);
+    expect(floats.ownedMessages()).toHaveLength(0);
   });
 
   it('floats sad once when the Pokémon gets hungry, then happy on recovery', () => {
@@ -66,11 +66,11 @@ describe('SelfMoodEffect', () => {
     TestBed.tick();
     expect(last().textKey).toContain('statusMessage.sad');
 
-    const afterSad = floats.messages().length;
+    const afterSad = floats.ownedMessages().length;
 
     meSignal.set(me(40));
     TestBed.tick();
-    expect(floats.messages()).toHaveLength(afterSad);
+    expect(floats.ownedMessages()).toHaveLength(afterSad);
 
     meSignal.set(me(150));
     TestBed.tick();
@@ -87,7 +87,7 @@ describe('SelfMoodEffect', () => {
 
     meSignal.set(me(150));
     TestBed.tick();
-    expect(floats.messages().some((message) => message.id === dying.id)).toBe(false);
+    expect(floats.ownedMessages().some((message) => message.id === dying.id)).toBe(false);
   });
 
   it('pokeSelf floats a quip and replaces the previous one on rapid clicks', () => {
@@ -99,7 +99,7 @@ describe('SelfMoodEffect', () => {
     expect(first.textKey).toContain('statusMessage.poke');
 
     mood.pokeSelf();
-    expect(floats.messages().some((message) => message.id === first.id)).toBe(false);
+    expect(floats.ownedMessages().some((message) => message.id === first.id)).toBe(false);
     expect(last().textKey).toContain('statusMessage.poke');
   });
 });

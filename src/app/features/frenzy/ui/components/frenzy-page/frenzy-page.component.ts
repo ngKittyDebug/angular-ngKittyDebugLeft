@@ -35,7 +35,8 @@ export class FrenzyPageComponent implements OnInit {
   protected readonly disconnectedCount = this.facade.disconnectedCount;
   protected readonly evolvingPlayers = this.facade.evolvingPlayers;
   protected readonly faintedStats = this.facade.faintedStats;
-  protected readonly floatingMessages = this.facade.floatingMessages;
+  protected readonly orphanFloats = this.facade.orphanFloats;
+  protected readonly ownedFloats = this.facade.ownedFloats;
   protected readonly isMobile = this.facade.isMobile;
   protected readonly items = this.facade.items;
   protected readonly leaderboard = this.facade.leaderboard;

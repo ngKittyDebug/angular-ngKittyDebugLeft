@@ -43,13 +43,6 @@
   text-shadow: 0 0 10px var(--tui-status-warning);
 }
 
-// Anchor to the floor like the Pokémon (`.scene__player { bottom: 5% }` + ~6rem sprite + label),
-// so the message stays just above the head regardless of scene height. `top` stays unset here;
-// the position directive skips writing `top` for floor-anchored messages.
-:host(.floating-text--floor) {
-  bottom: calc(5% + 7rem);
-}
-
 .floating-text__icon {
   flex: none;
   font-size: 1rem;

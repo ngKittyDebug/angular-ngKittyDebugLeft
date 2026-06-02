@@ -21,6 +21,15 @@
     pointer-events: none;
   }
 
+  // Owned floats live inside the player box and ride along with its drift. Anchored above the box top
+  // (the sprite's head); the float's own rise animation carries it up from there. `left: 50%` pairs with
+  // the float's `translate(-50%, …)` to centre it over the sprite.
+  &__player-float {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+  }
+
   &__poke {
     padding: 0;
     background: none;

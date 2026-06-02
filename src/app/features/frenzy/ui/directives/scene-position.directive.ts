@@ -36,8 +36,6 @@ export function clampXPercent(x: number, elementWidth: number, parentWidth: numb
  * With `scenePositionClampX` the `x` is clamped (after first render, when layout is ready) by the
  * measured element width so a wide box — e.g. floating text near the edge — stays fully inside the
  * scene instead of being cut off by `overflow: hidden`. Shared by falling items and floating text.
- * `scenePositionTopOffsetPx` lifts `top` by N px (e.g. half a sprite height) so a status float anchors
- * to the top edge of a sprite whose `y` marks its centre.
  */
 @Directive({
   selector: '[leftPawScenePosition]',
@@ -48,9 +46,6 @@ export class ScenePositionDirective {
 
   public readonly position = input.required<ScenePosition>({ alias: 'leftPawScenePosition' });
   public readonly scenePositionClampX = input(false);
-  // When floor-anchored, vertical placement is handled in CSS (`bottom`), so skip writing `top`.
-  public readonly scenePositionFloor = input(false);
-  public readonly scenePositionTopOffsetPx = input(0);
 
   public constructor() {
     effect(() => {
@@ -66,19 +61,11 @@ export class ScenePositionDirective {
         parentWidth > 0 ? `${Math.round(x * parentWidth)}px` : `${x * 100}%`,
       );
 
-      if (!this.scenePositionFloor()) {
-        const offset = this.scenePositionTopOffsetPx();
-
-        if (parentHeight > 0) {
-          this.renderer.setStyle(element, 'top', `${Math.round(y * parentHeight - offset)}px`);
-        } else {
-          this.renderer.setStyle(
-            element,
-            'top',
-            offset === 0 ? `${y * 100}%` : `calc(${y * 100}% - ${offset}px)`,
-          );
-        }
-      }
+      this.renderer.setStyle(
+        element,
+        'top',
+        parentHeight > 0 ? `${Math.round(y * parentHeight)}px` : `${y * 100}%`,
+      );
     });
 
     afterNextRender(() => {

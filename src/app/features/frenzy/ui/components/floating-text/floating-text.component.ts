@@ -14,7 +14,6 @@ import type { FloatingTone } from '../../../data/models/floating-message';
     '[class.floating-text--negative]': "tone() === 'negative'",
     '[class.floating-text--neutral]': "tone() === 'neutral'",
     '[class.floating-text--warning]': "tone() === 'warning'",
-    '[class.floating-text--floor]': 'floor()',
     '[style.animation-duration.ms]': 'durationMs()',
   },
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -26,7 +25,6 @@ export class FloatingTextComponent {
   public readonly tone = input<FloatingTone>('neutral');
   public readonly icon = input<string>();
   public readonly durationMs = input(1000);
-  public readonly floor = input(false);
 
   protected readonly deltaLabel = computed(() => {
     const value = this.delta();

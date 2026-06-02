@@ -2,6 +2,7 @@ import {
   afterNextRender,
   ChangeDetectionStrategy,
   Component,
+  computed,
   DestroyRef,
   effect,
   inject,
@@ -17,7 +18,7 @@ import type { Item, Line, Player, Stage } from '@game/frenzy/types';
 
 import { isSad } from '../../../data/logic/is-sad';
 import type { Blast } from '../../../data/models/blast';
-import type { FloatingMessage } from '../../../data/models/floating-message';
+import type { OrphanFloat, OwnedFloat } from '../../../data/models/floating-message';
 import { spriteHeightFor } from '../../constants/sprite-registry';
 import { ScenePositionDirective } from '../../directives/scene-position.directive';
 import { ItemSpritePipe } from '../../pipes/item-sprite.pipe';
@@ -70,9 +71,6 @@ interface BubbleBurst {
 
 export interface ItemClick {
   itemId: string;
-  /** Item's current on-screen (extrapolated) normalized position at click time — for the eat float. */
-  x: number;
-  y: number;
   /** Bomb bat input: signed normalized horizontal displacement (fixed pixel step ÷ scene width). Undefined for non-bomb items. */
   nudgeX?: number;
 }
@@ -179,7 +177,8 @@ export class SceneComponent {
 
   public readonly blasts = input<readonly Blast[]>([]);
   public readonly evolvingPlayers = input<ReadonlyMap<string, number>>(new Map());
-  public readonly floatingMessages = input<readonly FloatingMessage[]>([]);
+  public readonly orphanFloats = input<readonly OrphanFloat[]>([]);
+  public readonly ownedFloats = input<readonly OwnedFloat[]>([]);
   public readonly itemClick = output<ItemClick>();
   public readonly items = input.required<readonly Item[]>();
   public readonly myId = input<string | null>(null);
@@ -191,6 +190,22 @@ export class SceneComponent {
   protected readonly renderedPlayers = this._renderedPlayers.asReadonly();
   protected readonly bursts = this._bursts.asReadonly();
   protected readonly maxMass = MAX_VISUAL_MASS;
+  // Owned floats grouped by their player, so each `.scene__player` can render (and carry) its own quips.
+  protected readonly floatsByOwner = computed(() => {
+    const grouped = new Map<string, OwnedFloat[]>();
+
+    for (const float of this.ownedFloats()) {
+      const existing = grouped.get(float.ownerId);
+
+      if (existing === undefined) {
+        grouped.set(float.ownerId, [float]);
+      } else {
+        existing.push(float);
+      }
+    }
+
+    return grouped;
+  });
 
   public constructor() {
     effect(() => {
@@ -260,7 +275,7 @@ export class SceneComponent {
     // Bomb is batted: tapping the left half of the sprite knocks it right, the right half knocks it left.
     const nudgeX = item.type === 'bomb' ? this.batNudge(event) : undefined;
 
-    this.itemClick.emit({ itemId: item.id, x: item.x, y: item.y, nudgeX });
+    this.itemClick.emit({ itemId: item.id, nudgeX });
   }
 
   protected onSelfPoke(): void {

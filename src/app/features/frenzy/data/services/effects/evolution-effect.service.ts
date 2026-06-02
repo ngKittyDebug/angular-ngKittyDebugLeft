@@ -36,7 +36,7 @@ export class EvolutionEffect implements FrenzyEffect {
       const me = this.store.me();
 
       if (me !== null) {
-        this.floats.pushStatus('evolved', me.x, me.y);
+        this.floats.pushOwnedStatus('evolved', me.id);
       }
     }
   }

@@ -8,8 +8,7 @@ import { FloatingMessagesStore } from './floating-messages.store';
 
 /**
  * Tracks who is on the scene from snapshots: emits "appeared"/"died" quips for other players and
- * remembers their last-known positions so effects (e.g. detonation) can anchor floats on a Pokémon
- * that has already vanished from the live state.
+ * remembers their last-known positions so a death quip can be stamped where the Pokémon vanished.
  */
 @Injectable()
 export class PresenceTracker implements FrenzyEffect {
@@ -29,17 +28,6 @@ export class PresenceTracker implements FrenzyEffect {
     }
   }
 
-  // Live snapshot position if the Pokémon is still around, else its last-known spot (it may have just fainted).
-  public positionOf(playerId: string): { x: number; y: number } | undefined {
-    const player = this.store.state()?.players.find((candidate) => candidate.id === playerId);
-
-    if (player !== undefined) {
-      return { x: player.x, y: player.y };
-    }
-
-    return this.lastKnownPlayers.get(playerId);
-  }
-
   private handleSnapshot(players: readonly Player[]): void {
     const myId = this.store.myId();
     const currentIds = new Set<string>();
@@ -49,7 +37,7 @@ export class PresenceTracker implements FrenzyEffect {
       this.lastKnownPlayers.set(player.id, { x: player.x, y: player.y, name: player.name });
 
       if (this.seenFirstSnapshot && player.id !== myId && !this.knownPlayerIds.has(player.id)) {
-        this.floats.pushStatus('appeared', player.x, player.y, player.name);
+        this.floats.pushOwnedStatus('appeared', player.id, player.name);
       }
     }
 
@@ -74,7 +62,7 @@ export class PresenceTracker implements FrenzyEffect {
       return;
     }
 
-    this.floats.pushStatus('died', last.x, last.y, last.name);
+    this.floats.pushOrphanStatus('died', last.x, last.y, last.name);
     this.lastKnownPlayers.delete(playerId);
     this.knownPlayerIds.delete(playerId);
   }

@@ -82,24 +82,15 @@ describe('EatEffect', () => {
   });
 
   function last() {
-    const messages = floats.messages();
+    const messages = floats.ownedMessages();
 
     return messages[messages.length - 1];
   }
 
-  it('anchors the float on the remembered click position over the event coords', () => {
-    effect.rememberEatPosition('i1', 0.2, 0.3);
-    effect.handle(eaten({ itemId: 'i1', x: 0.9, y: 0.8 }));
+  it('anchors the float to the eater', () => {
+    effect.handle(eaten({ playerId: 'other' }));
 
-    expect(last().x).toBe(0.2);
-    expect(last().y).toBe(0.3);
-  });
-
-  it('falls back to the event coords when no click position was remembered', () => {
-    effect.handle(eaten({ x: 0.9, y: 0.8 }));
-
-    expect(last().x).toBe(0.9);
-    expect(last().y).toBe(0.8);
+    expect(last().ownerId).toBe('other');
   });
 
   it('omits the name and plays the eat sound for my own eats', () => {

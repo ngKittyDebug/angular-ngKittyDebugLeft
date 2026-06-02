@@ -32,7 +32,8 @@ export class FrenzyEffectsService {
     this.presence,
   ];
 
-  public readonly floatingMessages = this.floats.messages;
+  public readonly ownedFloats = this.floats.ownedMessages;
+  public readonly orphanFloats = this.floats.orphanMessages;
   public readonly blasts = this.detonation.blasts;
   public readonly evolvingPlayers = this.evolution.evolvingPlayers;
 
@@ -42,11 +43,6 @@ export class FrenzyEffectsService {
         handler.handle(message);
       }
     });
-  }
-
-  // Called on click with the item's on-screen position; the matching `eaten` anchors its float here.
-  public rememberEatPosition(itemId: string, x: number, y: number): void {
-    this.eat.rememberEatPosition(itemId, x, y);
   }
 
   public pokeSelf(): void {

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 
-import type { FloatingMessage, FloatingTone } from '../../models/floating-message';
+import type { FloatingTone, OrphanFloat, OwnedFloat } from '../../models/floating-message';
 import { createTransientId, TransientList } from './transient-list';
 
 type StatusKind = 'evolved' | 'happy' | 'sad' | 'dying' | 'appeared' | 'died' | 'poke';
@@ -12,9 +12,13 @@ interface StatusConfig {
   phraseCount: number;
 }
 
-// Lift status floats to the sprite's top edge: player `y` is the sprite centre, sprite is 96px tall,
-// so half (48px) reaches the top border + a small gap so the text clears the head.
-const STATUS_SPRITE_TOP_OFFSET_PX = 60;
+interface StatusBase {
+  id: string;
+  tone: FloatingTone;
+  textKey: string;
+  durationMs: number;
+  icon: string;
+}
 
 // Status floats rise and fade like eat texts, but live longer so they can be read.
 const STATUS_CONFIG: Record<StatusKind, StatusConfig> = {
@@ -29,41 +33,54 @@ const STATUS_CONFIG: Record<StatusKind, StatusConfig> = {
 
 /**
  * The single source of floating scene texts. Multiple producers (eat, status transitions, detonation)
- * push here; the scene renders `messages`. Each entry self-removes after its own `durationMs`.
+ * push here. `ownedMessages` belong to a live sprite (rendered inside its container); `orphanMessages`
+ * are stamped at a vanished player's last-known spot. Each entry self-removes after its own `durationMs`.
  */
 @Injectable()
 export class FloatingMessagesStore {
-  private readonly list = new TransientList<FloatingMessage>();
+  private readonly owned = new TransientList<OwnedFloat>();
+  private readonly orphans = new TransientList<OrphanFloat>();
 
-  public readonly messages = this.list.items;
+  public readonly ownedMessages = this.owned.items;
+  public readonly orphanMessages = this.orphans.items;
 
-  public push(entry: FloatingMessage): void {
-    this.list.add(entry, entry.durationMs);
+  public pushOwned(entry: OwnedFloat): void {
+    this.owned.add(entry, entry.durationMs);
+  }
+
+  public pushOrphan(entry: OrphanFloat): void {
+    this.orphans.add(entry, entry.durationMs);
   }
 
   public remove(id: string): void {
-    this.list.remove(id);
+    this.owned.remove(id);
   }
 
-  // A short status quip (eat-independent) anchored above a sprite. Returns the id so callers that
-  // own a single live quip (dying, poke) can replace or clear it.
-  public pushStatus(kind: StatusKind, x: number, y: number, who?: string): string {
+  // Status quip anchored to a live sprite. Returns the id so callers that own a single live quip
+  // (dying, poke) can replace or clear it.
+  public pushOwnedStatus(kind: StatusKind, ownerId: string, who?: string): string {
+    const entry: OwnedFloat = { ...this.statusBase(kind), ownerId, who };
+
+    this.pushOwned(entry);
+
+    return entry.id;
+  }
+
+  // Death quip for a player already gone — stamped at its last-known scene position.
+  public pushOrphanStatus(kind: StatusKind, x: number, y: number, who?: string): void {
+    this.pushOrphan({ ...this.statusBase(kind), x, y, who });
+  }
+
+  private statusBase(kind: StatusKind): StatusBase {
     const config = STATUS_CONFIG[kind];
     const index = Math.floor(Math.random() * config.phraseCount);
-    const entry: FloatingMessage = {
+
+    return {
       id: createTransientId(),
-      x,
-      y,
       tone: config.tone,
       textKey: `statusMessage.${kind}.${index}`,
       durationMs: config.durationMs,
       icon: config.icon,
-      who,
-      topOffsetPx: STATUS_SPRITE_TOP_OFFSET_PX,
     };
-
-    this.push(entry);
-
-    return entry.id;
   }
 }

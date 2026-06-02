@@ -44,7 +44,8 @@ export class FrenzyPageFacade {
     maxStage: this.stats.maxStage(),
     totalEaten: this.stats.totalEaten(),
   }));
-  public readonly floatingMessages = this.effects.floatingMessages;
+  public readonly orphanFloats = this.effects.orphanFloats;
+  public readonly ownedFloats = this.effects.ownedFloats;
   public readonly isMobile = computed(() => this.breakpoint() === 'mobile');
   public readonly items = computed(() => this.store.state()?.items ?? []);
   public readonly leaderboard = this.store.leaderboard;
@@ -86,7 +87,6 @@ export class FrenzyPageFacade {
   }
 
   public click(event: ItemClick): void {
-    this.effects.rememberEatPosition(event.itemId, event.x, event.y);
     this.store.click(event.itemId, event.nudgeX);
   }
 

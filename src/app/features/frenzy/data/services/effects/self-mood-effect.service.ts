@@ -28,15 +28,15 @@ export class SelfMoodEffect {
       const sadNow = alive && !dyingNow && isSad(me.mass, me.stage);
 
       if (me !== null && sadNow && !this.wasSad) {
-        this.floats.pushStatus('sad', me.x, me.y);
+        this.floats.pushOwnedStatus('sad', me.id);
       }
 
       if (me !== null && alive && !dyingNow && !sadNow && this.wasSad) {
-        this.floats.pushStatus('happy', me.x, me.y);
+        this.floats.pushOwnedStatus('happy', me.id);
       }
 
       if (me !== null && dyingNow && !this.wasDying) {
-        this.dyingMessageId = this.floats.pushStatus('dying', me.x, me.y);
+        this.dyingMessageId = this.floats.pushOwnedStatus('dying', me.id);
       } else if (!dyingNow && this.wasDying && this.dyingMessageId !== null) {
         this.floats.remove(this.dyingMessageId);
         this.dyingMessageId = null;
@@ -60,6 +60,6 @@ export class SelfMoodEffect {
       this.floats.remove(this.pokeMessageId);
     }
 
-    this.pokeMessageId = this.floats.pushStatus('poke', me.x, me.y);
+    this.pokeMessageId = this.floats.pushOwnedStatus('poke', me.id);
   }
 }

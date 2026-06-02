@@ -56,25 +56,19 @@ describe('PresenceTracker', () => {
   it('emits no quips for the first snapshot it sees', () => {
     tracker.handle(snapshot([player('me', 'Me'), player('other', 'Ash')]));
 
-    expect(floats.messages()).toHaveLength(0);
+    expect(floats.ownedMessages()).toHaveLength(0);
   });
 
   it('announces a newly appeared other player, not myself', () => {
     tracker.handle(snapshot([player('me', 'Me'), player('other', 'Ash')]));
     tracker.handle(snapshot([player('me', 'Me'), player('other', 'Ash'), player('p3', 'Misty')]));
 
-    const messages = floats.messages();
+    const messages = floats.ownedMessages();
 
     expect(messages).toHaveLength(1);
+    expect(messages[0].ownerId).toBe('p3');
     expect(messages[0].who).toBe('Misty');
     expect(messages[0].textKey).toContain('statusMessage.appeared');
-  });
-
-  it('keeps a faded-out player last-known position once it leaves the live state', () => {
-    tracker.handle(snapshot([player('other', 'Ash', 0.4, 0.6)]));
-    state.set(null);
-
-    expect(tracker.positionOf('other')).toMatchObject({ x: 0.4, y: 0.6 });
   });
 
   it('floats a death quip at the last-known spot when another player faints', () => {
@@ -82,7 +76,7 @@ describe('PresenceTracker', () => {
     state.set(null);
     tracker.handle({ type: 'fainted', playerId: 'other' });
 
-    const messages = floats.messages();
+    const messages = floats.orphanMessages();
     const died = messages[messages.length - 1];
 
     expect(died.textKey).toContain('statusMessage.died');
@@ -95,6 +89,6 @@ describe('PresenceTracker', () => {
     tracker.handle(snapshot([player('me', 'Me')]));
     tracker.handle({ type: 'fainted', playerId: 'me' });
 
-    expect(floats.messages()).toHaveLength(0);
+    expect(floats.orphanMessages()).toHaveLength(0);
   });
 });

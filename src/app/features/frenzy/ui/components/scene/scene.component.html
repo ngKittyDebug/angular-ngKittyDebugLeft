@@ -27,19 +27,16 @@
     </button>
   }
 
-  @for (message of floatingMessages(); track message.id) {
+  @for (float of orphanFloats(); track float.id) {
     <left-paw-floating-text
-      [leftPawScenePosition]="{ x: message.x, y: message.y }"
+      [leftPawScenePosition]="{ x: float.x, y: float.y }"
       [scenePositionClampX]="true"
-      [scenePositionFloor]="message.floor ?? false"
-      [scenePositionTopOffsetPx]="message.topOffsetPx ?? 0"
-      [floor]="message.floor ?? false"
-      [icon]="message.icon"
-      [who]="message.who"
-      [text]="t(message.textKey)"
-      [delta]="message.delta"
-      [tone]="message.tone"
-      [durationMs]="message.durationMs"
+      [icon]="float.icon"
+      [who]="float.who"
+      [text]="t(float.textKey)"
+      [delta]="float.delta"
+      [tone]="float.tone"
+      [durationMs]="float.durationMs"
     />
   }
 
@@ -89,6 +86,17 @@
           [max]="maxMass"
           [color]="player.mass | massToneColor"
         ></progress>
+      }
+      @for (float of floatsByOwner().get(player.id) ?? []; track float.id) {
+        <left-paw-floating-text
+          class="scene__player-float"
+          [icon]="float.icon"
+          [who]="float.who"
+          [text]="t(float.textKey)"
+          [delta]="float.delta"
+          [tone]="float.tone"
+          [durationMs]="float.durationMs"
+        />
       }
     </div>
   }
