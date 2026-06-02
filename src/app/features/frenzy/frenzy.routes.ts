@@ -1,6 +1,12 @@
 import type { Routes } from '@angular/router';
 import { provideTranslocoScope } from '@jsverse/transloco';
 
+import { DetonationEffect } from './data/services/effects/detonation-effect.service';
+import { EatEffect } from './data/services/effects/eat-effect.service';
+import { EvolutionEffect } from './data/services/effects/evolution-effect.service';
+import { FloatingMessagesStore } from './data/services/effects/floating-messages.store';
+import { PresenceTracker } from './data/services/effects/presence-tracker.service';
+import { SelfMoodEffect } from './data/services/effects/self-mood-effect.service';
 import { FrenzyEffectsService } from './data/services/frenzy-effects.service';
 import { FrenzySocketService } from './data/services/frenzy-socket.service';
 import { SessionTokenService } from './data/services/session-token.service';
@@ -27,6 +33,12 @@ export const frenzyRoutes: Routes = [
       FrenzySocketService,
       FrenzyStore,
       FrenzyStatsStore,
+      FloatingMessagesStore,
+      EatEffect,
+      EvolutionEffect,
+      DetonationEffect,
+      PresenceTracker,
+      SelfMoodEffect,
       FrenzyEffectsService,
       FrenzyPageFacade,
       SessionTokenService,

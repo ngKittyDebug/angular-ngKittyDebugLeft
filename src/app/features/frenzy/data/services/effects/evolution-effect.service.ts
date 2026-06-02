@@ -1,0 +1,72 @@
+import { inject, Injectable, signal } from '@angular/core';
+
+import type { ServerMessage } from '@game/frenzy/types';
+
+import { type SoundEffect } from '../../models/sound-effect';
+import { EvolveSoundService } from '../sound/evolve-sound.service';
+import { SoundSettingsService } from '../sound/sound-settings.service';
+import { FrenzyStore } from '../../store/frenzy.store';
+import type { FrenzyEffect } from './frenzy-effect';
+import { FloatingMessagesStore } from './floating-messages.store';
+
+const EVOLUTION_ANIMATION_MS = 1500;
+
+/** Flags an evolving Pokémon for the scene's flash, plays the chime + an "evolved" quip for own evolutions. */
+@Injectable()
+export class EvolutionEffect implements FrenzyEffect {
+  private readonly evolveSound = inject(EvolveSoundService);
+  private readonly floats = inject(FloatingMessagesStore);
+  private readonly soundSettings = inject(SoundSettingsService);
+  private readonly store = inject(FrenzyStore);
+  // Map of playerId → flash start time, not a TransientList (the scene keys the flash by id, not order).
+  private readonly _evolvingPlayers = signal<ReadonlyMap<string, number>>(new Map());
+
+  public readonly evolvingPlayers = this._evolvingPlayers.asReadonly();
+
+  public handle(message: ServerMessage): void {
+    if (message.type !== 'evolved') {
+      return;
+    }
+
+    this.markEvolving(message.playerId);
+
+    if (message.playerId === this.store.myId()) {
+      this.playSound(this.evolveSound);
+
+      const me = this.store.me();
+
+      if (me !== null) {
+        this.floats.pushStatus('evolved', me.x, me.y);
+      }
+    }
+  }
+
+  private markEvolving(playerId: string): void {
+    this._evolvingPlayers.update((current) => {
+      const next = new Map(current);
+
+      next.set(playerId, Date.now());
+
+      return next;
+    });
+    setTimeout(() => {
+      this._evolvingPlayers.update((current) => {
+        if (!current.has(playerId)) {
+          return current;
+        }
+
+        const next = new Map(current);
+
+        next.delete(playerId);
+
+        return next;
+      });
+    }, EVOLUTION_ANIMATION_MS);
+  }
+
+  private playSound(source: SoundEffect): void {
+    if (this.soundSettings.enabled()) {
+      source.play();
+    }
+  }
+}
