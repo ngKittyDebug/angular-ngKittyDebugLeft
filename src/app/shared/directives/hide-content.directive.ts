@@ -1,24 +1,21 @@
-import { Directive, ElementRef, inject, input } from '@angular/core';
+import { Directive, input, signal } from '@angular/core';
 
 @Directive({
   selector: '[leftPawHideContent]',
   host: {
     '(window:scroll)': 'scrollLogic()',
+    '[class.hide]': 'isCurrentClassHide()',
   },
 })
 export class HideContentDirective {
   private previousScrollTop = 0;
-  private navItem = inject(ElementRef<HTMLElement>);
-  public readonly hideClass = input.required<string>();
+  public readonly isHideWithScrollDown = input.required<boolean>();
+  public readonly isCurrentClassHide = signal(false);
 
   protected scrollLogic() {
     const scrollTop = window.scrollY;
 
-    if (scrollTop > this.previousScrollTop) {
-      this.navItem.nativeElement.classList.add(this.hideClass());
-    } else {
-      this.navItem.nativeElement.classList.remove(this.hideClass());
-    }
+    this.isCurrentClassHide.set(scrollTop > this.previousScrollTop === this.isHideWithScrollDown());
     this.previousScrollTop = scrollTop;
   }
 }
