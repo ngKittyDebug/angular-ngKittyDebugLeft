@@ -12,13 +12,11 @@ export function emailOrUserNameValidator(): ValidatorFn {
     const hasAtSymbol = value.includes('@');
 
     if (hasAtSymbol) {
-      const emailRegex = EMAIL_PATTERN;
-      const isValidEmail = emailRegex.test(value);
+      const isValidEmail = EMAIL_PATTERN.test(value);
 
       return isValidEmail ? null : { invalidEmail: true };
     } else {
-      const userNameRegex = USER_PATTERN;
-      const isValidUserName = userNameRegex.test(value);
+      const isValidUserName = USER_PATTERN.test(value);
 
       return isValidUserName ? null : { isValidUserName: true };
     }
