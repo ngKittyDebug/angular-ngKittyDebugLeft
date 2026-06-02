@@ -2,17 +2,15 @@ import type { OnInit } from '@angular/core';
 import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
 import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
 import type { PokemonSpeciesApiData } from '@shared/models/pokemon-species-api-data-interface';
-import { TuiButton } from '@taiga-ui/core';
-import { TuiBadge, TuiProgress } from '@taiga-ui/kit';
-import { TuiArcChart } from '@taiga-ui/addon-charts';
+import { TuiProgress } from '@taiga-ui/kit';
 import { TuiCard } from '@taiga-ui/layout';
 import type {
   EvolutionChainItem,
   EvolutionChainResponse,
 } from '@shared/models/pokemon-evolution-chain-api-data-interface';
 import { EvolutionChainItemComponent } from '../evolution-chain-item/evolution-chain-item/evolution-chain-item.component';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { PokemonProfileInfoComponent } from '../pokemon-profile-info/pokemon-profile-info/pokemon-profile-info.component';
+import { PokemonProfileStatsComponent } from '../pokemon-profile-stats/pokemon-profile-stats/pokemon-profile-stats.component';
 
 export interface MyEvolutionNode {
   name: string;
@@ -24,14 +22,11 @@ export interface MyEvolutionNode {
 @Component({
   selector: 'left-paw-pokemon-profile-page',
   imports: [
-    TuiBadge,
-    TuiButton,
     TuiProgress,
-    TuiArcChart,
     TuiCard,
     EvolutionChainItemComponent,
     PokemonProfileInfoComponent,
-    TranslocoDirective,
+    PokemonProfileStatsComponent,
   ],
   templateUrl: './pokemon-profile-page.component.html',
   styleUrl: './pokemon-profile-page.component.scss',
@@ -77,10 +72,9 @@ export class PokemonProfilePageComponent implements OnInit {
       // console.log(this.pokemonProfileData());
       // console.log(this.pokemonProfileDataSpecies());
       // console.log(this.pokemonTotalStats());
-      console.log(this.pokemonProfileEvolutionChainData());
-      //
+      // console.log(this.pokemonProfileData()?.stats);
       // console.log(this.pokemonProfileEvolutionChainData()?.chain);
-      console.log(this.pokemonEvolutionChain());
+      // console.log(this.pokemonEvolutionChain());
     } catch (error) {
       console.error('Ошибка при загрузке:', error);
     }
