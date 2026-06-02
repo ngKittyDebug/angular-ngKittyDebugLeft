@@ -2,6 +2,13 @@ import type { ServerMessage, ServerState } from '@game/frenzy/types';
 
 const EMPTY_STATE: ServerState = { players: [], items: [], tick: 0 };
 
+// A typed no-op for the switch's `default`: the `never` parameter enforces that every ServerMessage
+// variant is handled above — a newly added one would fail to compile here, naming the missing type —
+// while at runtime an unrecognized message simply leaves the state unchanged.
+function ignoreUnhandledMessage(_message: never, state: ServerState | null): ServerState | null {
+  return state;
+}
+
 export function applyServerMessage(
   previous: ServerState | null,
   message: ServerMessage,
@@ -99,6 +106,10 @@ export function applyServerMessage(
 
     case 'roomFull': {
       return previous;
+    }
+
+    default: {
+      return ignoreUnhandledMessage(message, previous);
     }
   }
 }
