@@ -1,5 +1,6 @@
 import type { Routes } from '@angular/router';
 import { provideTranslocoScope } from '@jsverse/transloco';
+import { LoginFormService } from './data/services/login-form.service';
 
 export const authRoutes: Routes = [
   {
@@ -19,7 +20,7 @@ export const authRoutes: Routes = [
           import('./ui/components/auth-page/login-form/login-form.component').then(
             (m) => m.LoginFormComponent,
           ),
-        providers: [provideTranslocoScope('auth')],
+        providers: [provideTranslocoScope('auth'), LoginFormService],
       },
       {
         path: 'signup',
