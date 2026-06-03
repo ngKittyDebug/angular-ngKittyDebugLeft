@@ -6,5 +6,5 @@ export const authGuard: CanActivateFn = () => {
   const isUserInLocalStorage = localStorage.getItem('loginFormData');
   const router = inject(Router);
 
-  return isUserInLocalStorage ? true : router.createUrlTree(['auth/login']);
+  return isUserInLocalStorage ? true : router.createUrlTree(['/auth/login']);
 };
