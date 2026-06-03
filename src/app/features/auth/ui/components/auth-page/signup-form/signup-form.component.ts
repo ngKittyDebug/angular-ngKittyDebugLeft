@@ -40,6 +40,6 @@ export class SignupFormComponent {
     }
     const formData = this.registrationForm.getRawValue();
 
-    localStorage.setItem('registrationFormData', JSON.stringify(formData));
+    localStorage.setItem('loginFormData', JSON.stringify(formData));
   }
 }
