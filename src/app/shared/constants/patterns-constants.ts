@@ -1,4 +1,4 @@
-export const PASSWORD_PATTERN = /^(?!\s)(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[^\s]{8,}(?<!\s)$/;
+export const PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)\S{8,}$/;
 
 export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
