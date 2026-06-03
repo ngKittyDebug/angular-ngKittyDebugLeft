@@ -25,14 +25,14 @@ import { TuiForm } from '@taiga-ui/layout';
 })
 export class LoginFormComponent {
   private readonly loginFormService = inject(LoginFormService);
-  public readonly loginFormGroup = this.loginFormService.loginFormGroup;
+  public readonly loginForm = this.loginFormService.loginForm;
 
   protected submit(): void {
-    if (this.loginFormGroup.invalid) {
+    if (this.loginForm.invalid) {
       return;
     }
 
-    const formData = this.loginFormGroup.getRawValue();
+    const formData = this.loginForm.getRawValue();
 
     localStorage.setItem('loginFormData', JSON.stringify(formData));
   }

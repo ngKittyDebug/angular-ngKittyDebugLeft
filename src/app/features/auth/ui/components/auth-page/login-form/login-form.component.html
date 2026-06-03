@@ -1,6 +1,5 @@
-@let loginForm = this.loginFormGroup;
-@let nameOrEmailFormControl = loginForm.controls.nameOrEmailFormControl;
-@let passwordFormControl = loginForm.controls.passwordFormControl;
+@let nameOrEmailFormControl = loginForm.controls.nameOrEmail;
+@let passwordFormControl = loginForm.controls.password;
 
 <form
   *transloco="let t"
@@ -18,7 +17,7 @@
     <tui-textfield class="login__textfield" iconStart="@tui.user">
       <label tuiLabel for="username">{{ t('auth.login.username') }}</label>
       <input
-        formControlName="nameOrEmailFormControl"
+        formControlName="nameOrEmail"
         placeholder="John"
         tuiInput
         autocomplete="username"
@@ -39,7 +38,7 @@
     <tui-textfield class="login__textfield" iconStart="@tui.lock">
       <label tuiLabel for="password">{{ t('auth.login.password') }}</label>
       <input
-        formControlName="passwordFormControl"
+        formControlName="password"
         placeholder="333333Qq"
         tuiInput
         autocomplete="current-password"
