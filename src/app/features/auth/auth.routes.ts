@@ -1,6 +1,6 @@
 import type { Routes } from '@angular/router';
-import { guestGuard } from '@core/guards/guest.guard';
 import { provideTranslocoScope } from '@jsverse/transloco';
+import { guestGuard } from '@shared/guards/guest.guard';
 
 export const authRoutes: Routes = [
   {
