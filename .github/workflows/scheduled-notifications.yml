@@ -1,0 +1,115 @@
+name: scheduled notifications
+
+on:
+  schedule:
+    - cron: '0 11 * * 0' # Вс 14:00 МСК — дневник
+    - cron: '0 8 * * 3' # Ср 11:00 МСК — ревью PR
+    - cron: '0 6 * * *' # Ежедневно 9:00 МСК — доброе утро
+  workflow_dispatch:
+    inputs:
+      scenario:
+        description: 'Manual test: diary | pr-review | good-morning'
+        type: choice
+        options: [diary, pr-review, good-morning]
+        required: true
+
+jobs:
+  diary-reminder:
+    name: Diary reminder (Sun 14:00 MSK)
+    if: github.event.schedule == '0 11 * * 0' || github.event.inputs.scenario == 'diary'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Telegram — diary reminder
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: html
+          message: |
+            📔 <b>Напоминание про дневник</b>
+            Не забудьте написать и запушить дневник в репозиторий.
+            🔗 <a href="https://github.com/${{ github.repository }}">${{ github.repository }}</a>
+
+      - name: Discord — diary reminder
+        env:
+          DC_MESSAGE: |
+            📔 **Напоминание про дневник**
+            Не забудьте написать и запушить дневник в репозиторий.
+            🔗 https://github.com/${{ github.repository }}
+        run: |
+          curl -X POST -H "Content-Type: application/json" \
+            -d "$(jq -n --arg content "$DC_MESSAGE" '{content: $content}')" \
+            "${{ secrets.PR_NOTIFIER_WEBHOOK }}"
+
+  pr-review-reminder:
+    name: PR review reminder (Wed 11:00 MSK)
+    if: github.event.schedule == '0 8 * * 3' || github.event.inputs.scenario == 'pr-review'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    steps:
+      - name: Collect open PRs
+        id: prs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          json=$(gh pr list --repo "${{ github.repository }}" --state open \
+            --json number,title,url,isDraft --jq '[.[] | select(.isDraft|not)]')
+          count=$(echo "$json" | jq 'length')
+
+          tg_header="👀 <b>Время ревью!</b> Загляните в открытые Pull Request:"
+          dc_header="👀 **Время ревью!** Загляните в открытые Pull Request:"
+
+          if [ "$count" -eq 0 ]; then
+            tg_body="Открытых PR сейчас нет 🎉"
+            dc_body="Открытых PR сейчас нет 🎉"
+          else
+            tg_body=$(echo "$json" | jq -r '.[] | "• <a href=\"\(.url)\">#\(.number)</a> \(.title)"')
+            dc_body=$(echo "$json" | jq -r '.[] | "• #\(.number) \(.title) — \(.url)"')
+          fi
+
+          {
+            printf 'tg_message<<MSG_EOF\n%s\n\n%s\nMSG_EOF\n' "$tg_header" "$tg_body"
+            printf 'dc_message<<MSG_EOF\n%s\n\n%s\nMSG_EOF\n' "$dc_header" "$dc_body"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Telegram — PR review reminder
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: html
+          message: ${{ steps.prs.outputs.tg_message }}
+
+      - name: Discord — PR review reminder
+        env:
+          DC_MESSAGE: ${{ steps.prs.outputs.dc_message }}
+        run: |
+          curl -X POST -H "Content-Type: application/json" \
+            -d "$(jq -n --arg content "$DC_MESSAGE" '{content: $content}')" \
+            "${{ secrets.PR_NOTIFIER_WEBHOOK }}"
+
+  good-morning:
+    name: Good morning (daily 09:00 MSK)
+    if: github.event.schedule == '0 6 * * *' || github.event.inputs.scenario == 'good-morning'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Telegram — good morning
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: html
+          message: |
+            ☀️ <b>Доброе утро, команда!</b>
+            Хорошего и продуктивного рабочего дня 🚀
+
+      - name: Discord — good morning
+        env:
+          DC_MESSAGE: |
+            ☀️ **Доброе утро, команда!**
+            Хорошего и продуктивного рабочего дня 🚀
+        run: |
+          curl -X POST -H "Content-Type: application/json" \
+            -d "$(jq -n --arg content "$DC_MESSAGE" '{content: $content}')" \
+            "${{ secrets.PR_NOTIFIER_WEBHOOK }}"
