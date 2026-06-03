@@ -7,6 +7,16 @@
   width: calc(100% + 4rem);
 }
 
+// At/below the layout's tablet breakpoint (TABLE_BREAKPOINT = 800px) the mobile tab bar is rendered as a
+// position:fixed bar at the viewport bottom — out of flow, so the full-bleed page would otherwise extend
+// behind it and hide low-drifting Pokémon and floor items. Reserve the bar's height (Taiga tab bar host =
+// --tui-height-l, plus its 1px top border) so the whole play area ends just above the bar.
+@media (max-width: 800px) {
+  :host {
+    margin-block-end: calc(var(--tui-height-l) + 1px);
+  }
+}
+
 .frenzy-page {
   position: relative;
   flex: 1;

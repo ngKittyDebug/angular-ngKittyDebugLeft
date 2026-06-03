@@ -20,6 +20,10 @@ interface StatusBase {
   icon: string;
 }
 
+// Distinct vertical slots above a head before we start reusing the lowest — keeps a flurry of floats
+// stacked legibly without marching off the top of the scene.
+const MAX_FLOAT_LANES = 4;
+
 // Status floats rise and fade like eat texts, but live longer so they can be read.
 const STATUS_CONFIG: Record<StatusKind, StatusConfig> = {
   evolved: { tone: 'positive', icon: '@tui.sparkles', durationMs: 2500, phraseCount: 4 },
@@ -44,8 +48,10 @@ export class FloatingMessagesStore {
   public readonly ownedMessages = this.owned.items;
   public readonly orphanMessages = this.orphans.items;
 
-  public pushOwned(entry: OwnedFloat): void {
-    this.owned.add(entry, entry.durationMs);
+  public pushOwned(entry: Omit<OwnedFloat, 'lane'>): void {
+    const placed: OwnedFloat = { ...entry, lane: this.freeLaneFor(entry.ownerId) };
+
+    this.owned.add(placed, placed.durationMs);
   }
 
   public pushOrphan(entry: OrphanFloat): void {
@@ -59,7 +65,7 @@ export class FloatingMessagesStore {
   // Status quip anchored to a live sprite. Returns the id so callers that own a single live quip
   // (dying, poke) can replace or clear it.
   public pushOwnedStatus(kind: StatusKind, ownerId: string, who?: string): string {
-    const entry: OwnedFloat = { ...this.statusBase(kind), ownerId, who };
+    const entry: Omit<OwnedFloat, 'lane'> = { ...this.statusBase(kind), ownerId, who };
 
     this.pushOwned(entry);
 
@@ -69,6 +75,25 @@ export class FloatingMessagesStore {
   // Death quip for a player already gone — stamped at its last-known scene position.
   public pushOrphanStatus(kind: StatusKind, x: number, y: number, who?: string): void {
     this.pushOrphan({ ...this.statusBase(kind), x, y, who });
+  }
+
+  // Smallest vertical slot not currently taken by another live float of the same player, so a new float
+  // wedges into a free gap instead of stacking on a neighbour. Falls back to wrapping once all lanes fill.
+  private freeLaneFor(ownerId: string): number {
+    const taken = new Set(
+      this.owned
+        .items()
+        .filter((float) => float.ownerId === ownerId)
+        .map((float) => float.lane),
+    );
+
+    for (let lane = 0; lane < MAX_FLOAT_LANES; lane++) {
+      if (!taken.has(lane)) {
+        return lane;
+      }
+    }
+
+    return taken.size % MAX_FLOAT_LANES;
   }
 
   private statusBase(kind: StatusKind): StatusBase {

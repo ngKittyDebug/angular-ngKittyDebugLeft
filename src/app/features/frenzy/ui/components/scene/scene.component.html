@@ -92,6 +92,7 @@
       @for (float of floatsByOwner().get(player.id) ?? []; track float.id) {
         <left-paw-floating-text
           class="scene__player-float"
+          [style.--float-lane]="float.lane"
           [icon]="float.icon"
           [who]="float.who"
           [text]="t(float.textKey)"
@@ -113,6 +114,13 @@
       aria-hidden="true"
       [leftPawScenePosition]="{ x: blast.x, y: blast.y }"
       [style.width.%]="blast.radius * 200"
-    ></div>
+    >
+      <span class="scene__blast-ring"></span>
+      <span class="scene__blast-ring scene__blast-ring--secondary"></span>
+      <span class="scene__blast-smoke"></span>
+      <span class="scene__blast-core"></span>
+      <span class="scene__blast-flash"></span>
+      <span class="scene__blast-sparks"></span>
+    </div>
   }
 </section>

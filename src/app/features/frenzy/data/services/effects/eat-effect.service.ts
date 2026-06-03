@@ -45,7 +45,7 @@ export class EatEffect implements FrenzyEffect {
       .state()
       ?.players.find((candidate) => candidate.id === message.playerId);
     const index = Math.floor(Math.random() * FLOATING_TEXT_PHRASE_COUNT);
-    const entry: OwnedFloat = {
+    const entry: Omit<OwnedFloat, 'lane'> = {
       id: createTransientId(),
       ownerId: message.playerId,
       tone: this.toneForDelta(message.delta),

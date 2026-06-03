@@ -13,8 +13,8 @@ import { FloatingMessagesStore } from './floating-messages.store';
 import { createTransientId, TransientList } from './transient-list';
 
 const FLOATING_TEXT_PHRASE_COUNT = 5;
-// Shockwave ring lifetime — matches the scene's blast CSS animation.
-const BLAST_TTL_MS = 700;
+// Blast lifetime — must outlast the longest scene blast layer (the smoke puff, ~1000ms) so no layer is cut.
+const BLAST_TTL_MS = 1000;
 // Bomb damage floats linger a touch longer than eat floats so the "−25" hit reads amid the explosion.
 const BOMB_FLOAT_TTL_MS = 1400;
 
@@ -48,7 +48,7 @@ export class DetonationEffect implements FrenzyEffect {
     // still around, so a Pokémon the bomb finished off simply shows the "died" quip instead.
     for (const playerId of message.playerIds) {
       const index = Math.floor(Math.random() * FLOATING_TEXT_PHRASE_COUNT);
-      const entry: OwnedFloat = {
+      const entry: Omit<OwnedFloat, 'lane'> = {
         id: createTransientId(),
         ownerId: playerId,
         tone: 'negative',

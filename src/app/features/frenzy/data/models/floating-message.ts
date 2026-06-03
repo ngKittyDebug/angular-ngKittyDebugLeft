@@ -19,6 +19,8 @@ interface FloatingBase {
  */
 export interface OwnedFloat extends FloatingBase {
   ownerId: string;
+  /** Vertical slot above the owner's head (0 = closest), so co-existing floats of one player don't overlap. Assigned by the store. */
+  lane: number;
 }
 
 /**
