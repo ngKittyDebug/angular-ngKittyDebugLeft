@@ -32,7 +32,7 @@
       <tui-error [error]="t('auth.errorMessages.email')" />
     }
 
-    @if (nameOrEmailFormControl.hasError('isValidUserName') && nameOrEmailFormControl.touched) {
+    @if (nameOrEmailFormControl.hasError('invalidUserName') && nameOrEmailFormControl.touched) {
       <tui-error [error]="t('auth.errorMessages.username')" />
     }
 

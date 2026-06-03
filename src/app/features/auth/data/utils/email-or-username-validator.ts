@@ -18,7 +18,7 @@ export function emailOrUserNameValidator(): ValidatorFn {
     } else {
       const isValidUserName = USER_PATTERN.test(value);
 
-      return isValidUserName ? null : { isValidUserName: true };
+      return isValidUserName ? null : { invalidUserName: true };
     }
   };
 }
