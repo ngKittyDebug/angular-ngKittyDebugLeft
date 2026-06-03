@@ -26,9 +26,12 @@ export const GAME = {
     goldenBerry: 25,
     crumb: 5,
     mushroom: 0,
+    vitamin: 0,
   },
   /** Mushroom gamble: eating one yields a random integer mass delta within `[minDelta, maxDelta]` — high upside, real downside. Rolled server-side at eat time, so the outcome never leaks in the snapshot. */
   mushroom: { minDelta: -20, maxDelta: 40 },
+  /** Vitamin: a pickup granting a `shield` for `shieldMs` — suspends decay AND wards off all incoming damage (bomb/rock/rotten). A short window of full invulnerability; rare on purpose. */
+  vitamin: { shieldMs: 10_000 },
   /** Collision between falling/resting items and drifting Pokémon (resolved in applyTick). */
   collision: {
     /** Normalized hit radius (0..1). An item resolves against the closest alive Pokémon within this distance. Single radius — the scene isn't square, so it's approximate and intentionally generous. */
@@ -46,6 +49,7 @@ export const GAME = {
     goldenBerry: 5,
     crumb: 35,
     mushroom: 12,
+    vitamin: 8,
   },
   /** Bomb tunables: a slow-falling item juggled by clicks that explodes on contact, hitting everyone in range (incl. its owner). */
   bomb: {
@@ -72,6 +76,7 @@ export const GAME = {
     goldenBerry: 0.18,
     crumb: 0.25,
     mushroom: 0.15,
+    vitamin: 0.15,
   },
   /** How long an item lies on the floor (still edible) after landing before it disappears, ms. */
   itemRestMs: 3000,

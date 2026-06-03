@@ -31,20 +31,27 @@ describe('parseClientMessage', () => {
     expect(parseClientMessage(JSON.stringify({ type: 'identify', sessionToken: 5 }))).toBeNull();
   });
 
-  it('parses join with a valid line and trimmable name', () => {
+  it('parses join with an appearance id and trimmable name', () => {
     expect(
-      parseClientMessage(JSON.stringify({ type: 'join', name: '  Ash ', line: 'magikarp' })),
-    ).toEqual({ type: 'join', name: '  Ash ', line: 'magikarp' });
+      parseClientMessage(JSON.stringify({ type: 'join', name: '  Ash ', appearance: 'magikarp' })),
+    ).toEqual({ type: 'join', name: '  Ash ', appearance: 'magikarp' });
   });
 
-  it('rejects join with blank name or unknown line', () => {
+  it('accepts any non-empty bounded appearance string (server is roster-agnostic)', () => {
+    // The server no longer knows the roster — an id it doesn't recognise still parses; the client maps it.
     expect(
-      parseClientMessage(JSON.stringify({ type: 'join', name: '   ', line: 'magikarp' })),
-    ).toBeNull();
+      parseClientMessage(JSON.stringify({ type: 'join', name: 'Ash', appearance: 'dragonite' })),
+    ).toEqual({ type: 'join', name: 'Ash', appearance: 'dragonite' });
+  });
+
+  it('rejects join with blank name or missing/oversized appearance', () => {
     expect(
-      parseClientMessage(JSON.stringify({ type: 'join', name: 'Ash', line: 'dragonite' })),
+      parseClientMessage(JSON.stringify({ type: 'join', name: '   ', appearance: 'magikarp' })),
     ).toBeNull();
     expect(parseClientMessage(JSON.stringify({ type: 'join', name: 'Ash' }))).toBeNull();
+    expect(
+      parseClientMessage(JSON.stringify({ type: 'join', name: 'Ash', appearance: 'x'.repeat(33) })),
+    ).toBeNull();
   });
 
   it('parses click with a non-empty itemId', () => {

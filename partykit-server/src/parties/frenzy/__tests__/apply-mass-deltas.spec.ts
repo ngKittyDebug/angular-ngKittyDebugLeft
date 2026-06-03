@@ -8,7 +8,7 @@ function player(overrides: Partial<Player> = {}): Player {
   return {
     id: 'p1',
     name: 'Ash',
-    line: 'caterpie',
+    appearance: 'caterpie',
     stage: 1,
     mass: 100,
     x: 0.5,
@@ -18,6 +18,7 @@ function player(overrides: Partial<Player> = {}): Player {
     status: 'alive',
     disconnectedAt: null,
     joinedAt: 0,
+    effects: [],
     ...overrides,
   };
 }
@@ -101,5 +102,27 @@ describe('applyMassDeltas', () => {
     ]);
 
     expect(result.state.players[0].mass).toBe(120);
+  });
+
+  it('nullifies a net-negative delta for a shielded player (no damage, no faint)', () => {
+    const state = stateWith([
+      player({ mass: 10, effects: [{ kind: 'shield', expiresAt: 10_000 }] }),
+    ]);
+
+    const result = applyMassDeltas(state, [{ playerId: 'p1', amount: -15 }]);
+
+    expect(result.state.players).toHaveLength(1);
+    expect(result.state.players[0].mass).toBe(10);
+    expect(result.events).toEqual([]);
+  });
+
+  it('still applies positive deltas to a shielded player', () => {
+    const state = stateWith([
+      player({ mass: 100, effects: [{ kind: 'shield', expiresAt: 10_000 }] }),
+    ]);
+
+    const result = applyMassDeltas(state, [{ playerId: 'p1', amount: 10 }]);
+
+    expect(result.state.players[0].mass).toBe(110);
   });
 });

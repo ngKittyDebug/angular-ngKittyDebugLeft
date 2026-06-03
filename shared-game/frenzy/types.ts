@@ -1,5 +1,4 @@
 export type Stage = 1 | 2 | 3;
-export type Line = 'bulbasaur' | 'caterpie' | 'charmander' | 'magikarp' | 'pidgey' | 'squirtle';
 export type ItemType =
   | 'food'
   | 'rotten'
@@ -8,13 +7,26 @@ export type ItemType =
   | 'bomb'
   | 'goldenBerry'
   | 'crumb'
-  | 'mushroom';
+  | 'mushroom'
+  | 'vitamin';
 export type PlayerStatus = 'alive' | 'disconnected';
+
+// Timed buffs/debuffs a Pokémon carries. The union grows per phase; `shield` (vitamin) suspends mass decay
+// AND wards off all incoming damage (bomb blast, rock bonk, rotten/negative-mushroom) for its duration.
+export type PlayerEffectKind = 'shield';
+
+export interface PlayerEffect {
+  kind: PlayerEffectKind;
+  /** Server-clock ms (Date.now) after which the effect lapses; the engine prunes it each tick. */
+  expiresAt: number;
+}
 
 export interface Player {
   id: string;
   name: string;
-  line: Line;
+  /** Opaque appearance id the player chose. The server relays it but never interprets it; the client maps it
+   * to a Pokémon line/sprite (with a fallback for unknown ids). Keeps the server independent of the roster. */
+  appearance: string;
   stage: Stage;
   mass: number;
   x: number;
@@ -24,6 +36,8 @@ export interface Player {
   status: PlayerStatus;
   disconnectedAt: number | null;
   joinedAt: number;
+  /** Active timed effects, always present (default `[]`). Carried in snapshots; refreshed via `effectGranted`. */
+  effects: PlayerEffect[];
 }
 
 export interface Item {
@@ -82,12 +96,27 @@ export interface DetonatedEvent {
   playerIds: string[];
 }
 
+// A player picked up an effect item (e.g. vitamin → shield) and gained a timed effect. `itemId` is the
+// consumed pickup so clients drop its sprite at once; `effect` carries the kind and server-clock expiry for the aura.
+export interface EffectGrantedEvent {
+  type: 'effectGranted';
+  playerId: string;
+  effect: PlayerEffect;
+  itemId: string;
+}
+
 // Gameplay events emitted by the engine (apply-click/apply-tick) — single source; ServerMessage reuses them.
-export type GameEvent = EatenEvent | EvolvedEvent | FaintedEvent | ItemNudgedEvent | DetonatedEvent;
+export type GameEvent =
+  | EatenEvent
+  | EvolvedEvent
+  | FaintedEvent
+  | ItemNudgedEvent
+  | DetonatedEvent
+  | EffectGrantedEvent;
 
 export type ClientMessage =
   | { type: 'identify'; sessionToken: string }
-  | { type: 'join'; name: string; line: Line }
+  | { type: 'join'; name: string; appearance: string }
   // `nudgeX` is the bomb-bat input: the signed horizontal displacement (normalized 0..1) the player wants,
   // computed client-side from a fixed pixel step and the tapped side. Server caps/clamps it. Ignored for non-bomb items.
   | { type: 'click'; itemId: string; nudgeX?: number }

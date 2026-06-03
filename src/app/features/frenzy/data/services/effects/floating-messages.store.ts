@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import type { FloatingTone, OrphanFloat, OwnedFloat } from '../../models/floating-message';
 import { createTransientId, TransientList } from './transient-list';
 
-type StatusKind = 'evolved' | 'happy' | 'sad' | 'dying' | 'appeared' | 'died' | 'poke';
+type StatusKind = 'evolved' | 'happy' | 'sad' | 'dying' | 'appeared' | 'died' | 'poke' | 'shield';
 
 interface StatusConfig {
   tone: FloatingTone;
@@ -33,6 +33,7 @@ const STATUS_CONFIG: Record<StatusKind, StatusConfig> = {
   appeared: { tone: 'positive', icon: '@tui.user-plus', durationMs: 2500, phraseCount: 4 },
   died: { tone: 'neutral', icon: '@tui.skull', durationMs: 5500, phraseCount: 4 },
   poke: { tone: 'neutral', icon: '@tui.laugh', durationMs: 1400, phraseCount: 12 },
+  shield: { tone: 'positive', icon: '@tui.shield', durationMs: 2500, phraseCount: 4 },
 };
 
 /**

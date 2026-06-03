@@ -16,7 +16,7 @@ function player(id: string, name: string): Player {
   return {
     id,
     name,
-    line: 'pidgey',
+    appearance: 'pidgey',
     stage: 1,
     mass: 100,
     x: 0.5,
@@ -26,6 +26,7 @@ function player(id: string, name: string): Player {
     status: 'alive',
     disconnectedAt: null,
     joinedAt: 0,
+    effects: [],
   };
 }
 

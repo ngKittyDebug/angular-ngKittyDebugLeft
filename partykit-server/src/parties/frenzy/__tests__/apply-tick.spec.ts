@@ -8,7 +8,7 @@ import { applyTick } from '../engine/apply-tick';
 const PLAYER: Player = {
   id: 'p1',
   name: 'Ash',
-  line: 'caterpie',
+  appearance: 'caterpie',
   stage: 1,
   mass: 100,
   x: 0.5,
@@ -18,6 +18,7 @@ const PLAYER: Player = {
   status: 'alive',
   disconnectedAt: null,
   joinedAt: 0,
+  effects: [],
 };
 
 function makeItem(overrides: Partial<Item> = {}): Item {
@@ -207,6 +208,87 @@ describe('applyTick', () => {
     );
     expect(events.some((event) => event.type === 'eaten')).toBe(false);
     expect(events).toContainEqual(expect.objectContaining({ type: 'detonated' }));
+  });
+
+  it('skips decay for a shielded player (mass holds while the shield is live)', () => {
+    const shielded: Player = { ...PLAYER, effects: [{ kind: 'shield', expiresAt: 10_000 }] };
+    const { state: next } = applyTick(stateWith([shielded], []), 0.1, true, Math.random, 5000);
+
+    expect(next.players[0].mass).toBe(PLAYER.mass);
+  });
+
+  it('prunes a lapsed effect and resumes decay once it expires', () => {
+    const shielded: Player = { ...PLAYER, effects: [{ kind: 'shield', expiresAt: 4000 }] };
+    const { state: next } = applyTick(stateWith([shielded], []), 0.1, true, Math.random, 5000);
+
+    expect(next.players[0].effects).toEqual([]);
+    expect(next.players[0].mass).toBe(PLAYER.mass - GAME.decayPerTick);
+  });
+
+  it('grants a shield (effectGranted, no eaten) when a Pokémon drifts into a vitamin', () => {
+    const vitamin = makeItem({ type: 'vitamin', x: 0.5, y: 0.6, vy: 0 });
+    const { state: next, events } = applyTick(
+      stateWith([PLAYER], [vitamin]),
+      0.1,
+      false,
+      Math.random,
+      1000,
+    );
+
+    expect(next.items).toHaveLength(0);
+    expect(next.players[0].mass).toBe(PLAYER.mass);
+    expect(next.players[0].effects).toEqual([
+      { kind: 'shield', expiresAt: 1000 + GAME.vitamin.shieldMs },
+    ]);
+    expect(events.some((event) => event.type === 'eaten')).toBe(false);
+    expect(events).toContainEqual({
+      type: 'effectGranted',
+      playerId: 'p1',
+      effect: { kind: 'shield', expiresAt: 1000 + GAME.vitamin.shieldMs },
+      itemId: 'i1',
+    });
+  });
+
+  it('spares a shielded Pokémon from a bomb blast (no damage, excluded from playerIds)', () => {
+    const shielded: Player = {
+      ...PLAYER,
+      id: 'shielded',
+      x: 0.5,
+      y: 0.95,
+      effects: [{ kind: 'shield', expiresAt: 10_000 }],
+    };
+    const exposed: Player = { ...PLAYER, id: 'exposed', x: 0.52, y: 0.95 };
+    const bomb = makeItem({ type: 'bomb', x: 0.5, y: 0.99, vy: GAME.fallSpeed.bomb });
+
+    const { state: next, events } = applyTick(
+      stateWith([shielded, exposed], [bomb]),
+      0.5,
+      false,
+      Math.random,
+      5000,
+    );
+
+    expect(next.players.find((player) => player.id === 'shielded')?.mass).toBe(PLAYER.mass);
+    expect(next.players.find((player) => player.id === 'exposed')?.mass).toBe(
+      PLAYER.mass + GAME.bomb.damage,
+    );
+    expect(events).toContainEqual(
+      expect.objectContaining({ type: 'detonated', playerIds: ['exposed'] }),
+    );
+  });
+
+  it('nullifies rock collision damage for a shielded Pokémon', () => {
+    const shielded: Player = {
+      ...PLAYER,
+      x: 0.5,
+      y: 0.6,
+      effects: [{ kind: 'shield', expiresAt: 10_000 }],
+    };
+    const rock = makeItem({ type: 'rock', x: 0.5, y: 0.6, vy: 0 });
+    const { state: next } = applyTick(stateWith([shielded], [rock]), 0.1, false, Math.random, 5000);
+
+    expect(next.items).toHaveLength(0);
+    expect(next.players[0].mass).toBe(PLAYER.mass);
   });
 
   it('emits fainted when a rock collision drops mass to zero', () => {

@@ -8,7 +8,7 @@
       >
         <tui-icon icon="@tui.crown" class="leaderboard__crown" />
         <span tuiAvatar class="leaderboard__avatar" size="xs">
-          <img [src]="top.line | pokemonSprite: top.stage" alt="" draggable="false" />
+          <img [src]="top.appearance | pokemonSprite: top.stage" alt="" draggable="false" />
         </span>
         <span class="leaderboard__pill-stats">
           <span class="leaderboard__pill-name" [class.leaderboard__pill-name--me]="top.isMe">{{
@@ -42,7 +42,7 @@
               size="s"
               [class.leaderboard__avatar--disconnected]="row.isDisconnected"
             >
-              <img [src]="row.line | pokemonSprite: row.stage" alt="" draggable="false" />
+              <img [src]="row.appearance | pokemonSprite: row.stage" alt="" draggable="false" />
             </span>
             <span class="leaderboard__name">
               <span class="leaderboard__name-text">{{ row.name }}</span>

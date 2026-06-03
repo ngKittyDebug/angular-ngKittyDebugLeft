@@ -1,7 +1,7 @@
 import type * as Party from 'partykit/server';
 
 import { GAME } from '@game/frenzy/constants';
-import type { Item, Line, Player, ServerMessage, ServerState } from '@game/frenzy/types';
+import type { Item, Player, ServerMessage, ServerState } from '@game/frenzy/types';
 
 import { applyClick } from './engine/apply-click';
 import { applySteer } from './engine/apply-steer';
@@ -67,7 +67,7 @@ export default class FeedingRoom implements Party.Server {
         break;
       }
       case 'join': {
-        this.handleJoin(sender.id, message.name, message.line);
+        this.handleJoin(sender.id, message.name, message.appearance);
         break;
       }
       case 'leave': {
@@ -259,7 +259,7 @@ export default class FeedingRoom implements Party.Server {
     this.log(`[party] rejoined: ${connectionId} (session=${sessionToken})`);
   }
 
-  private handleJoin(connectionId: string, name: string, line: Line): void {
+  private handleJoin(connectionId: string, name: string, appearance: string): void {
     const sessionToken = this.connectionToSession.get(connectionId);
 
     if (sessionToken === undefined) {
@@ -273,7 +273,7 @@ export default class FeedingRoom implements Party.Server {
     const player = createPlayer({
       sessionToken,
       name: name.trim().slice(0, 24),
-      line,
+      appearance,
       now: Date.now(),
       existingPlayers: this.players,
     });

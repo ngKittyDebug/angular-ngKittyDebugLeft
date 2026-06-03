@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
+import { GAME } from '@game/frenzy/constants';
+
 import { applyClick } from '../engine/apply-click';
 import type { Item, Player, ServerState } from '@game/frenzy/types';
 
 const PLAYER: Player = {
   id: 'p1',
   name: 'Ash',
-  line: 'caterpie',
+  appearance: 'caterpie',
   stage: 1,
   mass: 100,
   x: 0.5,
@@ -16,6 +18,7 @@ const PLAYER: Player = {
   status: 'alive',
   disconnectedAt: null,
   joinedAt: 0,
+  effects: [],
 };
 
 function makeItem(overrides: Partial<Item> = {}): Item {
@@ -122,6 +125,33 @@ describe('applyClick', () => {
     expect(next.items[0].x).toBeCloseTo(0.4, 5);
     expect(next.players[0].mass).toBe(100);
     expect(events).toEqual([{ type: 'itemNudged', itemId: 'i1', x: expect.closeTo(0.4, 5) }]);
+  });
+
+  it('grabbing a vitamin grants a shield, removes the item, and emits effectGranted (no mass change)', () => {
+    const state = stateWith([PLAYER], [makeItem({ type: 'vitamin' })]);
+
+    const { state: next, events } = applyClick(
+      state,
+      PLAYER.id,
+      'i1',
+      undefined,
+      Math.random,
+      1000,
+    );
+
+    expect(next.items).toHaveLength(0);
+    expect(next.players[0].mass).toBe(100);
+    expect(next.players[0].effects).toEqual([
+      { kind: 'shield', expiresAt: 1000 + GAME.vitamin.shieldMs },
+    ]);
+    expect(events).toEqual([
+      {
+        type: 'effectGranted',
+        playerId: 'p1',
+        effect: { kind: 'shield', expiresAt: 1000 + GAME.vitamin.shieldMs },
+        itemId: 'i1',
+      },
+    ]);
   });
 
   it('rock leaves mass unchanged but still removes item', () => {

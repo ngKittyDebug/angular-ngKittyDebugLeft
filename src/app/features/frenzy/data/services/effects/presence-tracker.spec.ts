@@ -12,7 +12,7 @@ function player(id: string, name: string, x = 0.5, y = 0.5): Player {
   return {
     id,
     name,
-    line: 'pidgey',
+    appearance: 'pidgey',
     stage: 1,
     mass: 100,
     x,
@@ -22,6 +22,7 @@ function player(id: string, name: string, x = 0.5, y = 0.5): Player {
     status: 'alive',
     disconnectedAt: null,
     joinedAt: 0,
+    effects: [],
   };
 }
 

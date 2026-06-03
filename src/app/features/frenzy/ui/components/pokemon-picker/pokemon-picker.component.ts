@@ -1,18 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, output, signal } from '@angular/core';
 
-import { LINES } from '@game/frenzy/lines';
-import type { Line } from '@game/frenzy/types';
-
+import type { Line } from '../../constants/pokemon-registry';
+import { POKEMON_LINES } from '../../constants/pokemon-registry';
 import { PokemonSpritePipe } from '../../pipes/pokemon-sprite.pipe';
 
 export interface PickerSubmission {
   name: string;
   line: Line;
-}
-
-interface LineOption {
-  id: Line;
-  label: string;
 }
 
 @Component({
@@ -27,10 +21,7 @@ export class PokemonPickerComponent {
   protected readonly canSubmit = computed(
     () => this.name().trim().length > 0 && this.selectedLine() !== null,
   );
-  protected readonly lineOptions: readonly LineOption[] = LINES.map((line) => ({
-    id: line.id,
-    label: line.label,
-  }));
+  protected readonly lineOptions = POKEMON_LINES;
   protected readonly name = signal('');
   protected readonly selectedLine = signal<Line | null>(null);
 

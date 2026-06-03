@@ -6,6 +6,7 @@ import { EatEffect } from './effects/eat-effect.service';
 import { EvolutionEffect } from './effects/evolution-effect.service';
 import type { FrenzyEffect } from './effects/frenzy-effect';
 import { FloatingMessagesStore } from './effects/floating-messages.store';
+import { PlayerEffectsTracker } from './effects/player-effects-tracker.service';
 import { PresenceTracker } from './effects/presence-tracker.service';
 import { SelfMoodEffect } from './effects/self-mood-effect.service';
 import { FrenzySocketService } from './frenzy-socket.service';
@@ -24,12 +25,14 @@ export class FrenzyEffectsService {
   private readonly evolution = inject(EvolutionEffect);
   private readonly detonation = inject(DetonationEffect);
   private readonly presence = inject(PresenceTracker);
+  private readonly playerEffects = inject(PlayerEffectsTracker);
   private readonly selfMood = inject(SelfMoodEffect);
   private readonly handlers: readonly FrenzyEffect[] = [
     this.eat,
     this.evolution,
     this.detonation,
     this.presence,
+    this.playerEffects,
   ];
 
   public readonly ownedFloats = this.floats.ownedMessages;

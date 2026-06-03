@@ -3,16 +3,16 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import { TuiHintDirective, TuiIcon } from '@taiga-ui/core';
 import { TuiAvatar } from '@taiga-ui/kit';
 
-import type { Line, Player, Stage } from '@game/frenzy/types';
+import type { Player, Stage } from '@game/frenzy/types';
 
 import { PokemonSpritePipe } from '../../pipes/pokemon-sprite.pipe';
 import { StageRomanPipe } from '../../pipes/stage-roman.pipe';
 
 interface LeaderboardRow {
+  appearance: string;
   id: string;
   isDisconnected: boolean;
   isMe: boolean;
-  line: Line;
   mass: number;
   name: string;
   rank: number;
@@ -41,10 +41,10 @@ export class LeaderboardComponent {
     const id = this.myId();
 
     return this.entries().map((player, index) => ({
+      appearance: player.appearance,
       id: player.id,
       isDisconnected: player.status === 'disconnected',
       isMe: player.id === id,
-      line: player.line,
       mass: Math.round(player.mass),
       name: player.name,
       rank: index + 1,

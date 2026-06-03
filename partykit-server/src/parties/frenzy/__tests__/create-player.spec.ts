@@ -8,7 +8,7 @@ import { createPlayer } from '../engine/create-player';
 const occupiedPlayer = (overrides: Partial<Player>): Player => ({
   id: 'p1',
   name: 'Ash',
-  line: 'caterpie',
+  appearance: 'caterpie',
   stage: 1,
   mass: 100,
   x: 0.5,
@@ -18,6 +18,7 @@ const occupiedPlayer = (overrides: Partial<Player>): Player => ({
   status: 'alive',
   disconnectedAt: null,
   joinedAt: 0,
+  effects: [],
   ...overrides,
 });
 
@@ -26,7 +27,7 @@ describe('createPlayer', () => {
     const player = createPlayer({
       sessionToken: 'tok-1',
       name: 'Ash',
-      line: 'caterpie',
+      appearance: 'caterpie',
       now: 1700000000,
       rng: () => 0,
     });
@@ -34,7 +35,7 @@ describe('createPlayer', () => {
     expect(player).toMatchObject({
       id: 'tok-1',
       name: 'Ash',
-      line: 'caterpie',
+      appearance: 'caterpie',
       stage: 1,
       mass: GAME.startingMass,
       status: 'alive',
@@ -48,7 +49,7 @@ describe('createPlayer', () => {
     const player = createPlayer({
       sessionToken: 'tok-1',
       name: 'Ash',
-      line: 'pidgey',
+      appearance: 'pidgey',
       now: 0,
     });
 
@@ -62,7 +63,7 @@ describe('createPlayer', () => {
     const player = createPlayer({
       sessionToken: 'tok-1',
       name: 'Ash',
-      line: 'pidgey',
+      appearance: 'pidgey',
       now: 0,
     });
 
@@ -77,7 +78,7 @@ describe('createPlayer', () => {
     const player = createPlayer({
       sessionToken: 'tok-2',
       name: 'Misty',
-      line: 'pidgey',
+      appearance: 'pidgey',
       now: 0,
       existingPlayers: [occupied],
       rng,

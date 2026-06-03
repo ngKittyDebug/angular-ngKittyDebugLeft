@@ -48,6 +48,9 @@
       [style.--scene-sprite-height]="player.spriteHeight"
       [leftPawScenePosition]="{ x: player.x, y: player.y }"
     >
+      @if (player.hasShield) {
+        <span class="scene__shield" aria-hidden="true"></span>
+      }
       @if (player.isMe) {
         <button
           class="scene__poke"
@@ -60,7 +63,7 @@
               class="scene__sprite"
               [class.scene__sprite--evolving]="player.isEvolving"
               [class.scene__sprite--sad]="player.isSad"
-              [src]="player.line | pokemonSprite: player.stage"
+              [src]="player.appearance | pokemonSprite: player.stage"
               [alt]="player.label"
               draggable="false"
             />
@@ -72,7 +75,7 @@
             class="scene__sprite"
             [class.scene__sprite--evolving]="player.isEvolving"
             [class.scene__sprite--sad]="player.isSad"
-            [src]="player.line | pokemonSprite: player.stage"
+            [src]="player.appearance | pokemonSprite: player.stage"
             [alt]="player.label"
             draggable="false"
           />

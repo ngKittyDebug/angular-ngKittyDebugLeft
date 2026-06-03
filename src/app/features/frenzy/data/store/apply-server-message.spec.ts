@@ -7,7 +7,7 @@ import { applyServerMessage } from './apply-server-message';
 const PLAYER: Player = {
   id: 't1',
   name: 'Ash',
-  line: 'caterpie',
+  appearance: 'caterpie',
   stage: 1,
   mass: 100,
   x: 0.5,
@@ -17,6 +17,7 @@ const PLAYER: Player = {
   status: 'alive',
   disconnectedAt: null,
   joinedAt: 0,
+  effects: [],
 };
 
 const SNAPSHOT_STATE: ServerState = { players: [PLAYER], items: [], tick: 0 };
@@ -81,6 +82,35 @@ describe('applyServerMessage', () => {
     });
 
     expect(next?.items).toHaveLength(0);
+  });
+
+  it('adds the effect and drops the consumed item on effectGranted', () => {
+    const state: ServerState = {
+      ...SNAPSHOT_STATE,
+      items: [{ id: 'v1', type: 'vitamin', x: 0.3, y: 0.4, vy: 0.15 }],
+    };
+    const next = applyServerMessage(state, {
+      type: 'effectGranted',
+      playerId: 't1',
+      effect: { kind: 'shield', expiresAt: 9000 },
+      itemId: 'v1',
+    });
+
+    expect(next?.items).toHaveLength(0);
+    expect(next?.players[0].effects).toEqual([{ kind: 'shield', expiresAt: 9000 }]);
+  });
+
+  it('refreshes an existing effect of the same kind on effectGranted', () => {
+    const shielded: Player = { ...PLAYER, effects: [{ kind: 'shield', expiresAt: 5000 }] };
+    const state: ServerState = { players: [shielded], items: [], tick: 0 };
+    const next = applyServerMessage(state, {
+      type: 'effectGranted',
+      playerId: 't1',
+      effect: { kind: 'shield', expiresAt: 9000 },
+      itemId: 'gone',
+    });
+
+    expect(next?.players[0].effects).toEqual([{ kind: 'shield', expiresAt: 9000 }]);
   });
 
   it('returns previous on rejoined and roomFull (no-op in reducer)', () => {

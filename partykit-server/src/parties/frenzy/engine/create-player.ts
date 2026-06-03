@@ -1,10 +1,10 @@
 import { GAME } from '@game/frenzy/constants';
-import type { Line, Player } from '@game/frenzy/types';
+import type { Player } from '@game/frenzy/types';
 
 export interface CreatePlayerInput {
   sessionToken: string;
   name: string;
-  line: Line;
+  appearance: string;
   now: number;
   existingPlayers?: readonly Player[];
   rng?: () => number;
@@ -49,7 +49,7 @@ function pickSpawnPoint(existingPlayers: readonly Player[], rng: () => number): 
 export function createPlayer({
   sessionToken,
   name,
-  line,
+  appearance,
   now,
   existingPlayers = [],
   rng = Math.random,
@@ -60,7 +60,7 @@ export function createPlayer({
   return {
     id: sessionToken,
     name,
-    line,
+    appearance,
     stage: 1,
     mass: GAME.startingMass,
     x,
@@ -70,5 +70,6 @@ export function createPlayer({
     status: 'alive',
     disconnectedAt: null,
     joinedAt: now,
+    effects: [],
   };
 }

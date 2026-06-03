@@ -1,6 +1,7 @@
 import { GAME } from '@game/frenzy/constants';
 import type { DetonatedEvent, GameEvent, Item, Player, ServerState } from '@game/frenzy/types';
 
+import { applyEffects, resolveGrants } from './apply-effect';
 import { applyMassDeltas } from './apply-mass-deltas';
 import { getItemBehavior } from './item-behaviors';
 import type { MassDelta } from './item-behaviors';
@@ -52,7 +53,14 @@ export function applyTick(
   deltaSeconds: number,
   applyDecay: boolean,
   rng: () => number = Math.random,
+  now: number = Date.now(),
 ): TickResult {
+  // Prune lapsed effects up front so decay-skip and the aura reflect only effects still live this tick.
+  const livePlayers = state.players.map((player) => {
+    const effects = player.effects.filter((effect) => effect.expiresAt > now);
+
+    return effects.length === player.effects.length ? player : { ...player, effects };
+  });
   const restDeltaMs = deltaSeconds * 1000;
   const movedItems = state.items.map((item) => {
     if (item.restMs !== undefined) {
@@ -77,7 +85,7 @@ export function applyTick(
 
   const zone = GAME.playerDriftZone;
   // Slow drift with wall bounce, applied every tick (not only on decay ticks).
-  const movedPlayers = state.players.map((player) => {
+  const movedPlayers = livePlayers.map((player) => {
     let { x, y, vx, vy } = player;
 
     x += vx * deltaSeconds;
@@ -127,6 +135,29 @@ export function applyTick(
     }
 
     const interaction = onCollide(item, target, working, rng);
+
+    // Effect pickup (vitamin) by drifting into it: grant the timed effect, report `effectGranted`, don't "eat".
+    if (interaction.effects !== undefined && interaction.effects.length > 0) {
+      const applications = resolveGrants(interaction.effects, now);
+
+      working = applyEffects(working, applications);
+
+      for (const application of applications) {
+        events.push({
+          type: 'effectGranted',
+          playerId: application.playerId,
+          effect: application.effect,
+          itemId: item.id,
+        });
+      }
+
+      if (interaction.consumed) {
+        collidedItemIds.add(item.id);
+      }
+
+      continue;
+    }
+
     const resolved = applyMassDeltas(working, interaction.massDeltas);
 
     working = resolved.state;
@@ -186,6 +217,12 @@ export function applyTick(
   const decaySurvivors: Player[] = [];
 
   for (const player of working.players) {
+    // shield (vitamin) suspends the bleed entirely while active — mass holds, no faint from decay.
+    if (player.effects.some((effect) => effect.kind === 'shield')) {
+      decaySurvivors.push(player);
+      continue;
+    }
+
     const newMass = Math.max(0, player.mass - GAME.decayPerTick);
 
     if (newMass <= 0) {

@@ -56,6 +56,7 @@ describe('FrenzyStatsStore', () => {
       goldenBerry: 0,
       crumb: 0,
       mushroom: 0,
+      vitamin: 0,
     });
     expect(store.totalEaten()).toBe(4);
     expect(store.maxMass()).toBe(150);

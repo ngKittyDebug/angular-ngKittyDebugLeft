@@ -5,6 +5,7 @@ import { DetonationEffect } from './data/services/effects/detonation-effect.serv
 import { EatEffect } from './data/services/effects/eat-effect.service';
 import { EvolutionEffect } from './data/services/effects/evolution-effect.service';
 import { FloatingMessagesStore } from './data/services/effects/floating-messages.store';
+import { PlayerEffectsTracker } from './data/services/effects/player-effects-tracker.service';
 import { PresenceTracker } from './data/services/effects/presence-tracker.service';
 import { SelfMoodEffect } from './data/services/effects/self-mood-effect.service';
 import { FrenzyEffectsService } from './data/services/frenzy-effects.service';
@@ -16,6 +17,7 @@ import { EatSoundService } from './data/services/sound/eat-sound.service';
 import { EvolveSoundService } from './data/services/sound/evolve-sound.service';
 import { ExplosionSoundService } from './data/services/sound/explosion-sound.service';
 import { RockSoundService } from './data/services/sound/rock-sound.service';
+import { ShieldSoundService } from './data/services/sound/shield-sound.service';
 import { SoundSettingsService } from './data/services/sound/sound-settings.service';
 import { FrenzyStatsStore } from './data/store/frenzy-stats.store';
 import { FrenzyStore } from './data/store/frenzy.store';
@@ -38,6 +40,7 @@ export const frenzyRoutes: Routes = [
       EvolutionEffect,
       DetonationEffect,
       PresenceTracker,
+      PlayerEffectsTracker,
       SelfMoodEffect,
       FrenzyEffectsService,
       FrenzyPageFacade,
@@ -48,6 +51,7 @@ export const frenzyRoutes: Routes = [
       EvolveSoundService,
       ExplosionSoundService,
       RockSoundService,
+      ShieldSoundService,
       SoundSettingsService,
     ],
   },

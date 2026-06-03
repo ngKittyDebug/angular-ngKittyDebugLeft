@@ -50,7 +50,7 @@ function send(server: FeedingRoom, conn: FakeConnection, message: ClientMessage)
 
 function joinPlayer(server: FeedingRoom, conn: FakeConnection, token: string): void {
   send(server, conn, { type: 'identify', sessionToken: token });
-  send(server, conn, { type: 'join', name: `Trainer-${token}`, line: 'caterpie' });
+  send(server, conn, { type: 'join', name: `Trainer-${token}`, appearance: 'caterpie' });
 }
 
 function byType<T extends ServerMessage['type']>(
@@ -97,6 +97,10 @@ describe('FeedingRoom orchestration', () => {
   });
 
   it('lets a player eat a spawned item (click path works end to end)', () => {
+    // Pin the spawn roll to food — without it the random type can be a bomb/vitamin, which is batted/granted
+    // rather than eaten, so no `eaten` event is emitted and the assertion below flakes.
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+
     const { room, server } = setup();
     const conn = new FakeConnection('c1');
 

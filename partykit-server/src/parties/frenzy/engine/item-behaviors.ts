@@ -1,10 +1,17 @@
 import { GAME } from '@game/frenzy/constants';
-import type { Item, ItemType, Player, ServerState } from '@game/frenzy/types';
+import type { Item, ItemType, Player, PlayerEffectKind, ServerState } from '@game/frenzy/types';
 
 /** A mass change targeted at one player. Negative amounts are damage. */
 export interface MassDelta {
   playerId: string;
   amount: number;
+}
+
+/** A timed effect to grant a player. `durationMs` is converted to an absolute `expiresAt` by the apply layer (which holds the clock). */
+export interface EffectGrant {
+  playerId: string;
+  kind: PlayerEffectKind;
+  durationMs: number;
 }
 
 /** Outcome of interacting with an item: which mass changes happen and whether the item leaves the field. */
@@ -15,6 +22,8 @@ export interface ItemInteraction {
   nudgeX?: number;
   /** When set, the engine reports this as a `detonated` blast (bomb) rather than an `eaten`/silent landing. */
   explodes?: boolean;
+  /** Timed effects to grant on pickup (e.g. vitamin → decayShield); the engine reports these as `effectGranted`, not `eaten`. */
+  effects?: EffectGrant[];
 }
 
 /**
@@ -70,6 +79,21 @@ const gambleBehavior: ItemBehavior = {
   }),
 };
 
+// Vitamin: a pickup that grants no mass but a timed `shield`. Grabbing or drifting into it shields the
+// taker and removes the item; the engine reports an `effectGranted` (not `eaten`) so eat FX/stats stay untouched.
+function grantShield(playerId: string): ItemInteraction {
+  return {
+    massDeltas: [],
+    consumed: true,
+    effects: [{ playerId, kind: 'shield', durationMs: GAME.vitamin.shieldMs }],
+  };
+}
+
+const vitaminBehavior: ItemBehavior = {
+  onClick: (_item, clickerId) => grantShield(clickerId),
+  onCollide: (_item, player) => grantShield(player.id),
+};
+
 // Rock: clicking it does nothing (mass delta 0) but removes it, while a falling rock that bonks a Pokémon deals collision damage.
 const rockBehavior: ItemBehavior = {
   onClick: (item, clickerId) => eat(item.type, clickerId),
@@ -79,14 +103,15 @@ const rockBehavior: ItemBehavior = {
   }),
 };
 
-// The blast: every alive Pokémon within the radius takes damage, the owner included (friendly fire).
+// The blast: every alive, unshielded Pokémon within the radius takes damage, the owner included (friendly fire).
+// Shielded Pokémon are skipped entirely — no damage and no "−25" float (they aren't in `detonated.playerIds`).
 // `explodes` tells the engine to report a `detonated` event (not `eaten`), whether triggered by land or collision.
 function bombBlast(item: Item, state: ServerState): ItemInteraction {
   const radiusSquared = GAME.bomb.blastRadius * GAME.bomb.blastRadius;
   const massDeltas: MassDelta[] = [];
 
   for (const player of state.players) {
-    if (player.status !== 'alive') {
+    if (player.status !== 'alive' || player.effects.some((effect) => effect.kind === 'shield')) {
       continue;
     }
 
@@ -130,6 +155,7 @@ const ITEM_BEHAVIORS: Record<ItemType, ItemBehavior> = {
   goldenBerry: eatBehavior,
   crumb: eatBehavior,
   mushroom: gambleBehavior,
+  vitamin: vitaminBehavior,
 };
 
 export function getItemBehavior(type: ItemType): ItemBehavior {

@@ -10,7 +10,7 @@ import {
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { tap } from 'rxjs';
 
-import type { Line, ServerMessage, ServerState } from '@game/frenzy/types';
+import type { ServerMessage, ServerState } from '@game/frenzy/types';
 
 import { applyServerMessage } from './apply-server-message';
 import { FrenzySocketService } from '../services/frenzy-socket.service';
@@ -87,10 +87,10 @@ export const FrenzyStore = signalStore(
       dismissFainted(): void {
         patchState(store, { myFaintedAt: null });
       },
-      join(name: string, line: Line): void {
+      join(name: string, appearance: string): void {
         sessionTokens.saveName(name);
         patchState(store, { myFaintedAt: null });
-        socket.send({ type: 'join', name, line });
+        socket.send({ type: 'join', name, appearance });
       },
       steer(x: number, y: number): void {
         socket.send({ type: 'steer', x, y });

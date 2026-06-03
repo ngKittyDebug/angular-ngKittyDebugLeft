@@ -165,6 +165,12 @@
         "9": "Leave me be!",
         "10": "I'm eating here!",
         "11": "Easy there!"
+      },
+      "shield": {
+        "0": "Shielded!",
+        "1": "No decay!",
+        "2": "Protected!",
+        "3": "Holding strong!"
       }
     }
   }

@@ -16,6 +16,7 @@ const STATS: FaintedStats = {
     goldenBerry: 0,
     crumb: 0,
     mushroom: 0,
+    vitamin: 0,
   },
   lifespanSeconds: 42,
   maxMass: 230,

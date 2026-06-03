@@ -100,6 +100,31 @@ export function applyServerMessage(
       };
     }
 
+    case 'effectGranted': {
+      if (previous === null) {
+        return previous;
+      }
+
+      // Drop the consumed pickup at once and add/refresh the effect so the aura shows immediately
+      // (one effect per kind — re-granting replaces it); the next snapshot reconciles either way.
+      return {
+        ...previous,
+        items: previous.items.filter((item) => item.id !== message.itemId),
+        players: previous.players.map((player) => {
+          if (player.id !== message.playerId) {
+            return player;
+          }
+
+          const effects = [
+            ...player.effects.filter((effect) => effect.kind !== message.effect.kind),
+            message.effect,
+          ];
+
+          return { ...player, effects };
+        }),
+      };
+    }
+
     case 'rejoined': {
       return previous;
     }

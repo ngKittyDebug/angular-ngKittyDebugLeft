@@ -12,7 +12,7 @@ function me(mass: number): Player {
   return {
     id: 'me',
     name: 'Me',
-    line: 'pidgey',
+    appearance: 'pidgey',
     stage: 1,
     mass,
     x: 0.5,
@@ -22,6 +22,7 @@ function me(mass: number): Player {
     status: 'alive',
     disconnectedAt: null,
     joinedAt: 0,
+    effects: [],
   };
 }
 

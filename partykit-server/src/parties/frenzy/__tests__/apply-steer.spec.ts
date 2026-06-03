@@ -8,7 +8,7 @@ import { applySteer } from '../engine/apply-steer';
 const PLAYER: Player = {
   id: 'p1',
   name: 'Ash',
-  line: 'caterpie',
+  appearance: 'caterpie',
   stage: 1,
   mass: 100,
   x: 0.5,
@@ -18,6 +18,7 @@ const PLAYER: Player = {
   status: 'alive',
   disconnectedAt: null,
   joinedAt: 0,
+  effects: [],
 };
 
 function stateWith(players: Player[]): ServerState {

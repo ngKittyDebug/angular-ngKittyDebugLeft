@@ -14,12 +14,12 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import { TuiProgressBar } from '@taiga-ui/kit';
 
 import { GAME } from '@game/frenzy/constants';
-import type { Item, Line, Player, Stage } from '@game/frenzy/types';
+import type { Item, Player, Stage } from '@game/frenzy/types';
 
 import { isSad } from '../../../data/logic/is-sad';
 import type { Blast } from '../../../data/models/blast';
 import type { OrphanFloat, OwnedFloat } from '../../../data/models/floating-message';
-import { spriteHeightFor } from '../../constants/sprite-registry';
+import { spriteHeightFor } from '../../constants/pokemon-registry';
 import { ScenePositionDirective } from '../../directives/scene-position.directive';
 import { ItemSpritePipe } from '../../pipes/item-sprite.pipe';
 import { MassToneColorPipe } from '../../pipes/mass-tone-color.pipe';
@@ -38,14 +38,15 @@ const BURST_LIFETIME_MS = 1000;
 const BOMB_NUDGE_PX = 72;
 
 interface RenderedPlayer {
+  appearance: string;
   facingRight: boolean;
+  hasShield: boolean;
   id: string;
   isDisconnected: boolean;
   isEvolving: boolean;
   isMe: boolean;
   isSad: boolean;
   label: string;
-  line: Line;
   mass: number;
   spriteHeight: string;
   stage: Stage;
@@ -366,6 +367,9 @@ export class SceneComponent {
     const me = this.myId();
     const evolving = this.evolvingPlayers();
     const zone = GAME.playerDriftZone;
+    // Effect expiry is server-clock (Date.now), independent of the rAF `now` (performance.now) — drop the
+    // aura the moment the shield lapses rather than waiting for the snapshot to prune it.
+    const wallNow = Date.now();
 
     return this.players().map((player) => {
       const baseline = this.playerBaselines.get(player.id);
@@ -376,14 +380,17 @@ export class SceneComponent {
       const vy = baseline?.vy ?? player.vy;
 
       return {
+        appearance: player.appearance,
         facingRight: reflectDirection(x0, vx, elapsed, zone.minX, zone.maxX) > 0,
+        hasShield: player.effects.some(
+          (effect) => effect.kind === 'shield' && effect.expiresAt > wallNow,
+        ),
         id: player.id,
         isDisconnected: player.status === 'disconnected',
         isEvolving: evolving.has(player.id),
         isMe: player.id === me,
         isSad: isSad(player.mass, player.stage),
         label: player.name,
-        line: player.line,
         mass: player.mass,
         spriteHeight: spriteHeightFor(player.stage),
         stage: player.stage,

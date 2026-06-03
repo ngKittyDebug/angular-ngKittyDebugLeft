@@ -7,7 +7,7 @@ import type { Player, ServerState } from '@game/frenzy/types';
 const ALIVE_PLAYER: Player = {
   id: 't1',
   name: 'Ash',
-  line: 'caterpie',
+  appearance: 'caterpie',
   stage: 1,
   mass: 100,
   x: 0.5,
@@ -17,6 +17,7 @@ const ALIVE_PLAYER: Player = {
   status: 'alive',
   disconnectedAt: null,
   joinedAt: 0,
+  effects: [],
 };
 
 const STATE: ServerState = { players: [ALIVE_PLAYER], items: [], tick: 0 };

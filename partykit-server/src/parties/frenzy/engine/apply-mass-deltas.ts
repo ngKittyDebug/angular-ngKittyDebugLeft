@@ -35,6 +35,16 @@ export function applyMassDeltas(state: ServerState, deltas: MassDelta[]): MassDe
       continue;
     }
 
+    // A `shield` (vitamin) wards off all incoming damage — net-negative deltas are nullified, so the player
+    // keeps their mass and can't faint from a hit (bomb is already filtered at the blast; this covers rock,
+    // rotten and negative mushroom rolls). Positive deltas still apply, so feeding through a shield still grows.
+    const shielded = player.effects.some((effect) => effect.kind === 'shield');
+
+    if (shielded && amount < 0) {
+      players.push(player);
+      continue;
+    }
+
     const newMass = Math.max(0, player.mass + amount);
 
     if (newMass <= 0) {

@@ -15,7 +15,7 @@ function item(type: ItemType): Item {
 const PLAYER: Player = {
   id: 'p1',
   name: 'Ash',
-  line: 'caterpie',
+  appearance: 'caterpie',
   stage: 1,
   mass: 100,
   x: 0.5,
@@ -25,6 +25,7 @@ const PLAYER: Player = {
   status: 'alive',
   disconnectedAt: null,
   joinedAt: 0,
+  effects: [],
 };
 
 describe('item behaviors', () => {
@@ -124,6 +125,19 @@ describe('bomb behavior', () => {
     ]);
   });
 
+  it('spares a shielded Pokémon from the blast (skipped, not zero-damage)', () => {
+    const owner = playerAt('owner', 0.5, 1);
+    const shielded: Player = {
+      ...playerAt('shielded', 0.55, 1),
+      effects: [{ kind: 'shield', expiresAt: 10_000 }],
+    };
+    const state: ServerState = { players: [owner, shielded], items: [], tick: 0 };
+
+    const interaction = getItemBehavior('bomb').onLand?.(bombAt(0.5), state);
+
+    expect(interaction?.massDeltas).toEqual([{ playerId: 'owner', amount: GAME.bomb.damage }]);
+  });
+
   it('also detonates on mid-air collision — same area blast, not a one-on-one hit', () => {
     const touched = playerAt('touched', 0.5, 0.6);
     const bystander = playerAt('bystander', 0.6, 0.6);
@@ -142,6 +156,32 @@ describe('bomb behavior', () => {
       { playerId: 'touched', amount: GAME.bomb.damage },
       { playerId: 'bystander', amount: GAME.bomb.damage },
     ]);
+  });
+});
+
+describe('vitamin behavior', () => {
+  it('grabbing a vitamin grants the clicker a shield and consumes it, with no mass delta', () => {
+    const interaction = getItemBehavior('vitamin').onClick(item('vitamin'), 'p1', EMPTY_STATE);
+
+    expect(interaction).toEqual({
+      consumed: true,
+      massDeltas: [],
+      effects: [{ playerId: 'p1', kind: 'shield', durationMs: GAME.vitamin.shieldMs }],
+    });
+  });
+
+  it('drifting into a vitamin shields the colliding Pokémon the same way', () => {
+    const interaction = getItemBehavior('vitamin').onCollide?.(
+      item('vitamin'),
+      PLAYER,
+      EMPTY_STATE,
+    );
+
+    expect(interaction).toEqual({
+      consumed: true,
+      massDeltas: [],
+      effects: [{ playerId: 'p1', kind: 'shield', durationMs: GAME.vitamin.shieldMs }],
+    });
   });
 });
 
