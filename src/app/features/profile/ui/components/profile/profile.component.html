@@ -1,9 +1,30 @@
-<div class="wrapper">
+<div *transloco="let t" class="wrapper">
   <div class="user">
-    <div class="img-wrapper">
-      <img src="images/team/PavelCat.jpg" alt="user" />
+    <div class="user-info">
+      <div tuiAvatar size="xxl" [round]="true">
+        <img src="images/team/PavelCat.jpg" alt="user" />
+      </div>
+      <div class="user-content">
+        <h2 class="name">Name</h2>
+        <p class="email">email@sobaka.com</p>
+      </div>
+    </div>
+    <div class="achievements">
+      <h4>{{ t('profile.achievements.heading') }}</h4>
+      <span class="line-mini"></span>
+    </div>
+    <div class="settings">
+      <h4>{{ t('profile.settings.heading') }}</h4>
+      <span class="line-mini"></span>
+      <div></div>
     </div>
   </div>
-  <div class="caught">caught</div>
-  <div class="favorite">favorite</div>
+  <div class="caught">
+    <h3>{{ t('profile.caught') }}</h3>
+    <span class="line"></span>
+  </div>
+  <div class="favorite">
+    <h3>{{ t('profile.favorite') }}</h3>
+    <span class="line"></span>
+  </div>
 </div>
