@@ -1,5 +1,6 @@
 import type { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
-import { EMAIL_PATTERN, USER_PATTERN } from '@shared/constants/patterns-constants';
+import { userNameValidator } from './username-validator';
+import { emailValidator } from './email-validator';
 
 export function emailOrUserNameValidator(): ValidatorFn {
   return (control: AbstractControl<string>): ValidationErrors | null => {
@@ -12,13 +13,9 @@ export function emailOrUserNameValidator(): ValidatorFn {
     const hasAtSymbol = value.includes('@');
 
     if (hasAtSymbol) {
-      const isValidEmail = EMAIL_PATTERN.test(value);
-
-      return isValidEmail ? null : { invalidEmail: true };
+      return emailValidator(value);
     } else {
-      const isValidUserName = USER_PATTERN.test(value);
-
-      return isValidUserName ? null : { invalidUserName: true };
+      return userNameValidator(value);
     }
   };
 }
