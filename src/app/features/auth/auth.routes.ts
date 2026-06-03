@@ -1,4 +1,5 @@
 import type { Routes } from '@angular/router';
+import { guestGuard } from '@core/guards/guest.guard';
 import { provideTranslocoScope } from '@jsverse/transloco';
 
 export const authRoutes: Routes = [
@@ -7,6 +8,7 @@ export const authRoutes: Routes = [
     loadComponent: () =>
       import('./ui/components/auth-page/auth-page.component').then((m) => m.AuthPageComponent),
     providers: [provideTranslocoScope('auth')],
+    canActivate: [guestGuard],
     children: [
       {
         path: '',

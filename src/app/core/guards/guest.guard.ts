@@ -6,5 +6,5 @@ export const guestGuard: CanActivateFn = () => {
   const isUserInLocalStorage = localStorage.getItem('loginFormData');
   const router = inject(Router);
 
-  return isUserInLocalStorage ? true : router.createUrlTree(['/']);
+  return !isUserInLocalStorage ? true : router.createUrlTree(['/']);
 };
