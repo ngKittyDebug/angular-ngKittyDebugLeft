@@ -11,6 +11,7 @@ import type {
 import { EvolutionChainItemComponent } from '../evolution-chain-item/evolution-chain-item/evolution-chain-item.component';
 import { PokemonProfileInfoComponent } from '../pokemon-profile-info/pokemon-profile-info/pokemon-profile-info.component';
 import { PokemonProfileStatsComponent } from '../pokemon-profile-stats/pokemon-profile-stats/pokemon-profile-stats.component';
+import { PokemonProfileSpeciesBreedingComponent } from '../pokemon-profile-species-breeding/pokemon-profile-species-breeding/pokemon-profile-species-breeding.component';
 
 export interface MyEvolutionNode {
   name: string;
@@ -27,6 +28,7 @@ export interface MyEvolutionNode {
     EvolutionChainItemComponent,
     PokemonProfileInfoComponent,
     PokemonProfileStatsComponent,
+    PokemonProfileSpeciesBreedingComponent,
   ],
   templateUrl: './pokemon-profile-page.component.html',
   styleUrl: './pokemon-profile-page.component.scss',
@@ -41,7 +43,6 @@ export class PokemonProfilePageComponent implements OnInit {
   protected readonly pokemonTotalStats = computed(() => {
     return this.pokemonProfileData()?.stats.reduce((sum, entry) => sum + (entry.base_stat ?? 0), 0);
   });
-  protected readonly chartValue = [56, 45, 51, 64, 65, 70]; // переделать
   protected readonly pokemonEvolutionChain = computed(() => {
     const data = this.pokemonProfileEvolutionChainData()?.chain as EvolutionChainItem;
     const result = this.buildStructure(data);
@@ -70,7 +71,7 @@ export class PokemonProfilePageComponent implements OnInit {
       this.pokemonProfileEvolutionChainData.set(resultChain);
 
       // console.log(this.pokemonProfileData());
-      // console.log(this.pokemonProfileDataSpecies());
+      console.log(this.pokemonProfileDataSpecies());
       // console.log(this.pokemonTotalStats());
       // console.log(this.pokemonProfileData()?.stats);
       // console.log(this.pokemonProfileEvolutionChainData()?.chain);

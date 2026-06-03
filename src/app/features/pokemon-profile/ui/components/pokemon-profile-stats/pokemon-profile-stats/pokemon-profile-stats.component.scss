@@ -10,6 +10,10 @@ $stats: hp, attack, defense, special-attack, special-defense, speed;
   border-radius: 1.6rem;
   border: 1px solid var(--border);
   padding: 1rem;
+  grid-column: span 2;
+  @include mixins.respond-to(screens-width.$screen-large, 'max') {
+    grid-column: auto;
+  }
   * {
     margin: 0;
   }
@@ -17,6 +21,9 @@ $stats: hp, attack, defense, special-attack, special-defense, speed;
 
 .pokemon__stats_content {
   @include mixins.grid_container_function($grid_template_columns: repeat(2, 23rem), $gap: 1rem);
+  @include mixins.respond-to(screens-width.$screen-large, 'max') {
+    @include mixins.grid_container_function($grid_template_columns: repeat(1, 23rem), $gap: 1rem);
+  }
 }
 
 .pokemon__stats_items {

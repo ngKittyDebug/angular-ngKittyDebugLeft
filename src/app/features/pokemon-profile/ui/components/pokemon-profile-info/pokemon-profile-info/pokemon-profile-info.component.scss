@@ -8,6 +8,10 @@ $types:
 :host {
   @include mixins.flex_container_function($direction: row, $gap: 1rem);
   width: 100%;
+  grid-column: span 2;
+  @include mixins.respond-to(screens-width.$screen-large, 'max') {
+    grid-column: auto;
+  }
   * {
     margin: 0;
   }
@@ -16,6 +20,9 @@ $types:
 .profile_pokemon__intro {
   width: 100%;
   @include mixins.flex_container_function($gap: 1rem);
+  @include mixins.respond-to(screens-width.$screen-large, 'max') {
+    @include mixins.flex_container_function($direction: column, $gap: 1rem);
+  }
   background: var(--gradient-bg);
   border-radius: 1.6rem;
   border: 1px solid var(--border);
@@ -24,8 +31,10 @@ $types:
 }
 
 .profile_pokemon__image {
-  width: 23rem;
-  height: 23rem;
+  width: 100%;
+  max-width: 23rem;
+  height: auto;
+  display: block;
 }
 
 .profile_pokemon__info {

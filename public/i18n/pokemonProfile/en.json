@@ -14,5 +14,12 @@
   "special-attack": "Special-attack",
   "special-defense": "Special-defense",
   "speed": "Speed",
-  "total": "Total: "
+  "total": "Total: ",
+  "species": "Species & Breeding",
+  "capture": "Capture rate",
+  "happiness": "Base happiness",
+  "eggs": "Egg groups",
+  "hatch": "Hatch Steps",
+  "steps": "steps",
+  "cycles": "cycles"
 }
