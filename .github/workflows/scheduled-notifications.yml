@@ -64,13 +64,18 @@ jobs:
             tg_body="Открытых PR сейчас нет 🎉"
             dc_body="Открытых PR сейчас нет 🎉"
           else
-            tg_body=$(echo "$json" | jq -r '.[] | "• <a href=\"\(.url)\">#\(.number)</a> \(.title)"')
+            # PR titles are attacker-controllable (fork PRs) — escape HTML for the
+            # Telegram `format: html` message. Discord content is plain text (jq JSON-escaped).
+            tg_body=$(echo "$json" | jq -r '.[] | "• <a href=\"\(.url)\">#\(.number)</a> \(.title | gsub("&";"&amp;") | gsub("<";"&lt;") | gsub(">";"&gt;"))"')
             dc_body=$(echo "$json" | jq -r '.[] | "• #\(.number) \(.title) — \(.url)"')
           fi
 
+          # Randomized heredoc delimiter so a crafted PR title cannot terminate the
+          # block early and inject extra step outputs into $GITHUB_OUTPUT.
+          delimiter="MSG_$(openssl rand -hex 8)"
           {
-            printf 'tg_message<<MSG_EOF\n%s\n\n%s\nMSG_EOF\n' "$tg_header" "$tg_body"
-            printf 'dc_message<<MSG_EOF\n%s\n\n%s\nMSG_EOF\n' "$dc_header" "$dc_body"
+            printf '%s<<%s\n%s\n\n%s\n%s\n' "tg_message" "$delimiter" "$tg_header" "$tg_body" "$delimiter"
+            printf '%s<<%s\n%s\n\n%s\n%s\n' "dc_message" "$delimiter" "$dc_header" "$dc_body" "$delimiter"
           } >> "$GITHUB_OUTPUT"
 
       - name: Telegram — PR review reminder
