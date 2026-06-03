@@ -28,11 +28,11 @@
       />
     </tui-textfield>
 
-    @if (nameOrEmailFormControl.hasError('invalidEmail') && nameOrEmailFormControl.touched) {
+    @if (nameOrEmailFormControl.errors?.['invalidEmail'] && nameOrEmailFormControl.touched) {
       <tui-error [error]="t('auth.errorMessages.email')" />
     }
 
-    @if (nameOrEmailFormControl.hasError('invalidUserName') && nameOrEmailFormControl.touched) {
+    @if (nameOrEmailFormControl.errors?.['invalidUserName'] && nameOrEmailFormControl.touched) {
       <tui-error [error]="t('auth.errorMessages.username')" />
     }
 
@@ -49,7 +49,7 @@
       />
     </tui-textfield>
 
-    @if (passwordFormControl.hasError('pattern') && passwordFormControl.touched) {
+    @if (passwordFormControl.errors?.['pattern'] && passwordFormControl.touched) {
       <tui-error [error]="t('auth.errorMessages.password')" />
     }
   </div>
