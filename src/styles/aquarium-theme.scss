@@ -1,0 +1,57 @@
+/* =============================================================================
+   Aquarium scene theming for Frenzy
+   -----------------------------------------------------------------------------
+   IMPORTANT: do NOT touch the global `--gradient-bg` (it is `--tui-background-
+   base-alt`, used app-wide). We add a SCOPED `--scene-bg` + decor vars instead,
+   consumed only by `.scene` and `<left-paw-aquarium-decor />`.
+
+   The blocks below MIRROR the selectors used in light-style.scss /
+   dark-style.scss, so the vars cascade into the (emulated-encapsulated) scene.
+   ========================================================================== */
+
+/* ☀️  LIGHT  →  Variant A · Sunlit Shallows */
+:root,
+[tuiTheme='light'] {
+  --scene-bg: linear-gradient(180deg, #7fe3f0 0%, #46c6e0 32%, #1f9fc9 64%, #0e7aa8 100%);
+
+  --aq-floor: radial-gradient(
+    120% 80% at 50% 100%,
+    #f4e2b8 0%,
+    #e9cf97 38%,
+    rgba(233, 207, 151, 0) 72%
+  );
+  --aq-ray: rgba(255, 255, 255, 0.5);
+  --aq-bubble: rgba(255, 255, 255, 0.85);
+  --aq-plankton: rgba(255, 255, 255, 0.9);
+  --aq-plant-a: #2f9e6f;
+  --aq-plant-b: #57c98c;
+  --aq-plant-c: #8bd5a6;
+  --aq-vignette: rgba(8, 70, 96, 0.32);
+  --aq-glow: rgba(255, 255, 255, 0.5);
+}
+
+/* 🌑  DARK  →  Variant C · Bioluminescent Abyss (on-brand violet #7c3aed) */
+[tuiTheme='dark'] {
+  --scene-bg: radial-gradient(
+    140% 110% at 50% 0%,
+    #1a2f6e 0%,
+    #121b45 28%,
+    #0b1030 55%,
+    #060a22 100%
+  );
+
+  --aq-floor: radial-gradient(
+    130% 80% at 50% 100%,
+    #2a1c54 0%,
+    #160f33 42%,
+    rgba(22, 15, 51, 0) 76%
+  );
+  --aq-ray: rgba(120, 160, 255, 0.28);
+  --aq-bubble: rgba(180, 210, 255, 0.6);
+  --aq-plankton: rgba(150, 220, 255, 1);
+  --aq-plant-a: #4338a8;
+  --aq-plant-b: #7c3aed;
+  --aq-plant-c: #2bb6d8;
+  --aq-vignette: rgba(2, 4, 18, 0.7);
+  --aq-glow: rgba(124, 90, 237, 0.5);
+}

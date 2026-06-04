@@ -1,0 +1,44 @@
+<section
+  *transloco="let t; prefix: 'frenzy.currentPokemonStatus'"
+  class="current-pokemon-status"
+  role="status"
+  [class.current-pokemon-status--compact]="compact()"
+  [attr.aria-label]="t('ariaLabel')"
+>
+  <header class="current-pokemon-status__header">
+    @if (!compact()) {
+      <span class="current-pokemon-status__label">{{ t('label') }}</span>
+    }
+    <span class="current-pokemon-status__value">{{ mass() }}</span>
+    @if (compact()) {
+      <!-- Mobile: the mood sits inline in the header (no dedicated bottom row) to keep the card short. -->
+      <tui-icon
+        class="current-pokemon-status__mood-icon"
+        [icon]="moodVisual().icon"
+        [style.color]="moodVisual().color"
+        [attr.aria-label]="t('mood.' + mood())"
+      />
+    }
+    <span class="current-pokemon-status__stage" [attr.aria-label]="t('stage', { stage: stage() })">
+      {{ stage() | stageRoman }}
+    </span>
+  </header>
+  <progress
+    tuiProgressBar
+    class="current-pokemon-status__bar"
+    size="s"
+    [value]="mass()"
+    [max]="max"
+    [color]="mass() | massToneColor"
+  ></progress>
+  @if (!compact()) {
+    <p class="current-pokemon-status__mood" [attr.aria-label]="t('mood.' + mood())">
+      <tui-icon
+        class="current-pokemon-status__mood-icon"
+        [icon]="moodVisual().icon"
+        [style.color]="moodVisual().color"
+      />
+      <span class="current-pokemon-status__mood-label">{{ t('mood.' + mood()) }}</span>
+    </p>
+  }
+</section>

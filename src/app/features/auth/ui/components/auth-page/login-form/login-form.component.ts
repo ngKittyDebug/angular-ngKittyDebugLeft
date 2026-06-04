@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { LoginFormService } from '@features/auth/data/services/login-form.service';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { TuiButton, TuiError, TuiInput, TuiLabel, TuiTextfieldComponent } from '@taiga-ui/core';
 import { TuiForm } from '@taiga-ui/layout';
@@ -23,14 +24,8 @@ import { TuiForm } from '@taiga-ui/layout';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LoginFormComponent {
-  private fb = inject(FormBuilder);
-
-  public readonly loginForm = this.fb.nonNullable.group({
-    username: ['', Validators.required],
-    password: ['', Validators.required],
-  });
-
-  protected loginRouterPath = '../signup';
+  private readonly loginFormService = inject(LoginFormService);
+  public readonly loginForm = this.loginFormService.loginForm;
 
   protected submit(): void {
     if (this.loginForm.invalid) {

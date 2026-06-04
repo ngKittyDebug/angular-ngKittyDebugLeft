@@ -1,0 +1,456 @@
+.scene {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--scene-bg, var(--gradient-bg));
+  touch-action: manipulation;
+  user-select: none;
+
+  &__player {
+    position: absolute;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    align-items: center;
+    // Position (left/top) is driven per-frame by rAF extrapolation — no CSS transition, like items.
+    // translateZ(0) promotes its own layer so per-frame repositioning repaints cleanly (no flicker).
+    transform: translate(-50%, -50%) translateZ(0);
+    backface-visibility: hidden;
+    pointer-events: none;
+  }
+
+  // Owned floats live inside the player box and ride along with its drift. Anchored above the box top
+  // (the sprite's head); the float's own rise animation carries it up from there. `left: 50%` pairs with
+  // the float's `translate(-50%, …)` to centre it over the sprite.
+  &__player-float {
+    position: absolute;
+    // Each float sits in its own vertical lane above the head (set per message via `--float-lane`),
+    // so several co-existing quips of one player wedge into free slots instead of overlapping.
+    bottom: calc(100% + var(--float-lane, 0) * 1.6rem);
+    left: 50%;
+  }
+
+  // decayShield aura: a soft cyan ring centred on the sprite while the shield is active. Sits behind the
+  // sprite (the player box paints it first; no z-index needed) and is purely decorative (aria-hidden).
+  &__shield {
+    position: absolute;
+    top: calc(var(--scene-sprite-height, 96px) / 2);
+    left: 50%;
+    width: calc(var(--scene-sprite-height, 96px) * 1.5);
+    height: calc(var(--scene-sprite-height, 96px) * 1.5);
+    border-radius: 50%;
+    border: 2px solid rgba(120, 220, 255, 0.85);
+    background: radial-gradient(
+      circle,
+      rgba(120, 220, 255, 0) 55%,
+      rgba(120, 220, 255, 0.22) 80%,
+      rgba(120, 220, 255, 0) 100%
+    );
+    box-shadow:
+      0 0 12px rgba(120, 220, 255, 0.6),
+      inset 0 0 12px rgba(120, 220, 255, 0.35);
+    transform: translate(-50%, -50%);
+    animation: scene-shield-pulse 1.8s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  &__poke {
+    padding: 0;
+    background: none;
+    border: none;
+    line-height: 0;
+    cursor: pointer;
+    // Re-enable clicks on top of the players layer (`.scene__player` is `pointer-events: none`).
+    pointer-events: auto;
+  }
+
+  &__sprite {
+    // Animated BW sprites are non-square; height drives the size (per evolution stage, set via the
+    // `--scene-sprite-height` custom property on `.scene__player`) and width follows the aspect ratio.
+    // No `image-rendering: pixelated` here — these detailed sprites read cleaner with smooth scaling.
+    width: auto;
+    height: var(--scene-sprite-height, 96px);
+    transition:
+      filter 0.4s ease,
+      transform 0.2s ease;
+    -webkit-user-drag: none;
+  }
+
+  // Horizontal flip wrapper: kept separate from `&__sprite` so the flip doesn't fight the sprite's
+  // own transform (evolve pulse / hover). Flip is instant — a transition would squash through 0 width.
+  &__sprite-flip {
+    display: inline-block;
+    line-height: 0;
+  }
+
+  &__sprite-flip--right {
+    transform: scaleX(-1);
+  }
+
+  &__sprite--sad {
+    filter: saturate(0.6) brightness(0.85);
+  }
+
+  &__sprite--evolving {
+    animation: scene-evolve-pulse 1.5s ease-out;
+  }
+
+  &__label {
+    color: #f5f5f5;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    // No background pill — a crisp shadow keeps the name legible over the aquarium instead.
+    text-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.9),
+      0 0 4px rgba(0, 0, 0, 0.6);
+  }
+
+  &__player--me &__label {
+    color: #8bf58b;
+    font-weight: 600;
+  }
+
+  &__player--disconnected {
+    opacity: 0.5;
+    filter: grayscale(1);
+  }
+
+  // Vertical health bar for other players, pinned to the right side of the 96px sprite.
+  &__mass-bar {
+    position: absolute;
+    top: 48px;
+    left: calc(50% + 58px);
+    width: 72px;
+    transform: translate(-50%, -50%) rotate(-90deg);
+    transform-origin: center;
+  }
+
+  &__item {
+    position: absolute;
+    z-index: 1;
+    // Anchor by the bottom edge (translateY -100%) so `y` is the item's foot: it stays fully visible
+    // while falling and lies wholly on the floor (y = 1) without needing its height in scene units.
+    transform: translate(-50%, -100%);
+    padding: 12px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.08s ease;
+    outline: none;
+    user-select: none;
+  }
+
+  &__item:hover,
+  &__item:focus-visible {
+    transform: translate(-50%, -100%) scale(1.1);
+  }
+
+  &__item:active {
+    transform: translate(-50%, -100%) scale(0.95);
+  }
+
+  &__item-sprite {
+    display: block;
+    // Integer multiple of the 30px source (×2) so `pixelated` upscaling stays even — a fractional
+    // scale (e.g. 56px) makes nearest-neighbour shimmer/comb during the fall.
+    width: 60px;
+    height: 60px;
+    image-rendering: pixelated;
+    pointer-events: none;
+    -webkit-user-drag: none;
+  }
+
+  // Tumble while falling — duration and direction (animation-direction) are set per item inline so each
+  // spins at its own speed, clockwise or counter-clockwise. The bomb opts out to keep its fuse readable.
+  &__item-sprite--spin {
+    animation-name: scene-item-spin;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+  }
+
+  // Bomb explosion. The element is just a positioning box sized to the exact damage zone (width % from the
+  // blast radius inline, `aspect-ratio: 1` keeps it circular); each child span is one stacked, timed layer of
+  // the blast (shockwave rings, smoke, fireball core, white flash, sparks). Layers self-clip at the scene edge.
+  &__blast {
+    position: absolute;
+    z-index: 2;
+    aspect-ratio: 1;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+  }
+
+  // Every blast layer fills the damage box and is a circle centred on the blast point.
+  &__blast-ring,
+  &__blast-smoke,
+  &__blast-core,
+  &__blast-flash,
+  &__blast-sparks {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+  }
+
+  // Shockwave: a bright ring that expands past the damage radius and thins to a hairline as it fades.
+  &__blast-ring {
+    border: 3px solid rgba(255, 224, 130, 0.95);
+    box-shadow:
+      0 0 14px rgba(255, 150, 50, 0.7),
+      inset 0 0 14px rgba(255, 120, 40, 0.4);
+    animation: scene-blast-ring 700ms ease-out forwards;
+  }
+
+  // A fainter, larger, slightly delayed second wave for depth.
+  &__blast-ring--secondary {
+    border-color: rgba(255, 200, 120, 0.5);
+    box-shadow: none;
+    animation: scene-blast-ring-secondary 850ms ease-out forwards;
+  }
+
+  // Fireball: a hot core that pops with a brief scale overshoot, then settles and fades.
+  &__blast-core {
+    background: radial-gradient(
+      circle,
+      rgba(255, 255, 240, 0.98) 0%,
+      rgba(255, 190, 80, 0.85) 38%,
+      rgba(255, 110, 40, 0.45) 64%,
+      rgba(255, 90, 40, 0) 80%
+    );
+    box-shadow: 0 0 30px rgba(255, 150, 50, 0.8);
+    animation: scene-blast-core 700ms ease-out forwards;
+  }
+
+  // White-hot flash: an instant bright bloom (a touch wider than the core) that snaps in and vanishes fast.
+  &__blast-flash {
+    inset: -18%;
+    background: radial-gradient(
+      circle,
+      #fff 0%,
+      rgba(255, 245, 210, 0.9) 30%,
+      rgba(255, 200, 120, 0) 70%
+    );
+    filter: blur(2px);
+    animation: scene-blast-flash 200ms ease-out forwards;
+  }
+
+  // Sparks: eight bright dots ringed around the centre. Scaling the layer outward flings them radially while
+  // they fade — a cheap one-element debris burst. Positions are 8 points on a circle at ~38% radius.
+  &__blast-sparks {
+    background-repeat: no-repeat;
+    background-image:
+      radial-gradient(circle at 88% 50%, #ffd27a 0, transparent 3px),
+      radial-gradient(circle at 77% 23%, #ffd27a 0, transparent 2.5px),
+      radial-gradient(circle at 50% 12%, #ffd27a 0, transparent 3.5px),
+      radial-gradient(circle at 23% 23%, #ffd27a 0, transparent 2.5px),
+      radial-gradient(circle at 12% 50%, #ffd27a 0, transparent 3px),
+      radial-gradient(circle at 23% 77%, #ffd27a 0, transparent 2.5px),
+      radial-gradient(circle at 50% 88%, #ffd27a 0, transparent 3.5px),
+      radial-gradient(circle at 77% 77%, #ffd27a 0, transparent 3px);
+    animation: scene-blast-sparks 650ms ease-out forwards;
+  }
+
+  // Smoke: a soft dark puff that swells after the fireball, drifts up and dissolves — the aftermath.
+  &__blast-smoke {
+    inset: 8%;
+    background: radial-gradient(
+      circle,
+      rgba(40, 30, 25, 0.55) 0%,
+      rgba(40, 30, 25, 0.3) 45%,
+      rgba(40, 30, 25, 0) 72%
+    );
+    filter: blur(4px);
+    animation: scene-blast-smoke 1000ms ease-out forwards;
+  }
+
+  // Screen shake while a blast is on screen — a sharp, decaying jolt.
+  &--shaking {
+    animation: scene-shake 450ms cubic-bezier(0.36, 0.07, 0.19, 0.97);
+  }
+}
+
+@keyframes scene-item-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes scene-blast-ring {
+  0% {
+    opacity: 0;
+    border-width: 4px;
+    transform: scale(0.5);
+  }
+
+  20% {
+    opacity: 1;
+    transform: scale(0.95);
+  }
+
+  100% {
+    opacity: 0;
+    border-width: 1px;
+    transform: scale(1.25);
+  }
+}
+
+@keyframes scene-blast-ring-secondary {
+  0%,
+  10% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+
+  30% {
+    opacity: 0.6;
+  }
+
+  100% {
+    opacity: 0;
+    border-width: 1px;
+    transform: scale(1.6);
+  }
+}
+
+@keyframes scene-blast-core {
+  0% {
+    opacity: 0.98;
+    transform: scale(0.2);
+  }
+
+  22% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+
+  35% {
+    transform: scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+
+@keyframes scene-blast-flash {
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+
+  18% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes scene-blast-sparks {
+  0% {
+    opacity: 0;
+    transform: scale(0.2) rotate(-8deg);
+  }
+
+  15% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.55) rotate(6deg);
+  }
+}
+
+@keyframes scene-blast-smoke {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.5);
+  }
+
+  25% {
+    opacity: 0.6;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-28%) scale(1.25);
+  }
+}
+
+@keyframes scene-shake {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+
+  10% {
+    transform: translate(-8px, 4px);
+  }
+
+  25% {
+    transform: translate(7px, -5px);
+  }
+
+  40% {
+    transform: translate(-6px, 3px);
+  }
+
+  55% {
+    transform: translate(5px, 4px);
+  }
+
+  70% {
+    transform: translate(-3px, -2px);
+  }
+
+  85% {
+    transform: translate(2px, 1px);
+  }
+}
+
+@keyframes scene-shield-pulse {
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: translate(-50%, -50%) scale(0.97);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.03);
+  }
+}
+
+// Respect reduced-motion: keep the explosion's light/colour but drop the big screen shake.
+@media (prefers-reduced-motion: reduce) {
+  .scene--shaking {
+    animation: none;
+  }
+
+  // Keep the shield ring visible but static — its job is to signal the buff, not to animate.
+  .scene__shield {
+    animation: none;
+  }
+}
+
+@keyframes scene-evolve-pulse {
+  0% {
+    filter: brightness(1) drop-shadow(0 0 0 rgba(255, 255, 200, 0));
+    transform: scale(1);
+  }
+
+  35% {
+    filter: brightness(2.2) drop-shadow(0 0 24px rgba(255, 240, 150, 1));
+    transform: scale(1.3);
+  }
+
+  100% {
+    filter: brightness(1) drop-shadow(0 0 0 rgba(255, 255, 200, 0));
+    transform: scale(1);
+  }
+}

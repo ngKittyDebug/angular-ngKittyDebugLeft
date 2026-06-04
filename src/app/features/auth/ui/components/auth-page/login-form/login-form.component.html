@@ -1,3 +1,6 @@
+@let nameOrEmailFormControl = loginForm.controls.nameOrEmail;
+@let passwordFormControl = loginForm.controls.password;
+
 <form
   *transloco="let t"
   tuiAppearance="floating"
@@ -14,7 +17,7 @@
     <tui-textfield class="login__textfield" iconStart="@tui.user">
       <label tuiLabel for="username">{{ t('auth.login.username') }}</label>
       <input
-        formControlName="username"
+        formControlName="nameOrEmail"
         placeholder="John"
         tuiInput
         autocomplete="username"
@@ -22,7 +25,15 @@
         id="username"
       />
     </tui-textfield>
-    <tui-error />
+
+    @if (nameOrEmailFormControl.errors?.['invalidEmail'] && nameOrEmailFormControl.touched) {
+      <tui-error [error]="t('auth.errorMessages.email')" />
+    }
+
+    @if (nameOrEmailFormControl.errors?.['invalidUserName'] && nameOrEmailFormControl.touched) {
+      <tui-error [error]="t('auth.errorMessages.username')" />
+    }
+
     <tui-textfield class="login__textfield" iconStart="@tui.lock">
       <label tuiLabel for="password">{{ t('auth.login.password') }}</label>
       <input
@@ -34,7 +45,10 @@
         id="password"
       />
     </tui-textfield>
-    <tui-error />
+
+    @if (passwordFormControl.errors?.['pattern'] && passwordFormControl.touched) {
+      <tui-error [error]="t('auth.errorMessages.password')" />
+    }
   </div>
   <button
     class="login__form_button"
@@ -48,7 +62,7 @@
   <div class="login__title-wrapper">
     <p class="login__form_text">
       {{ t('auth.login.endingText') }}
-      <a [routerLink]="loginRouterPath" tuiLink class="login__form_link">{{
+      <a [routerLink]="['/auth', 'signup']" tuiLink class="login__form_link">{{
         t('auth.login.loginLink')
       }}</a>
     </p>

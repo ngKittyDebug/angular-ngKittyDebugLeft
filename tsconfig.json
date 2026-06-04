@@ -16,10 +16,13 @@
     "module": "preserve",
     "esModuleInterop": true,
     "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
     "paths": {
       "@core/*": ["src/app/core/*"],
       "@features/*": ["src/app/features/*"],
-      "@shared/*": ["src/app/shared/*"]
+      "@shared/*": ["src/app/shared/*"],
+      "@game/*": ["shared-game/*"],
+      "@environments/*": ["src/environments/*"]
     }
   },
 

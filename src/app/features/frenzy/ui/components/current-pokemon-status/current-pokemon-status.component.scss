@@ -1,0 +1,74 @@
+@use 'utility/hud-pill' as *;
+
+.current-pokemon-status {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  width: 13rem;
+  padding: 0.55rem 0.85rem 0.65rem;
+  border-radius: 0.6rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+
+  @include hud_pill;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--tui-text-secondary);
+  }
+
+  &__value {
+    flex: 1;
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--tui-text-primary);
+  }
+
+  &__stage {
+    min-inline-size: 1.6rem;
+    padding: 0.1rem 0.45rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--tui-text-primary) 12%, transparent);
+    color: var(--tui-text-primary);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__bar {
+    width: 100%;
+  }
+
+  &__mood {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin: 0;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--tui-text-secondary);
+  }
+
+  &__mood-icon {
+    block-size: 1rem;
+    inline-size: 1rem;
+  }
+
+  &--compact {
+    gap: 0.25rem;
+    width: 9rem;
+    padding: 0.4rem 0.6rem 0.5rem;
+  }
+}

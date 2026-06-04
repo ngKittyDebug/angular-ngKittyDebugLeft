@@ -1,0 +1,174 @@
+@use 'utility/hud-pill' as *;
+
+.leaderboard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: 18rem;
+  padding: 0.6rem 0.8rem 0.7rem;
+  border-radius: 0.6rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+
+  @include hud_pill;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  &__crown {
+    block-size: 1rem;
+    inline-size: 1rem;
+    color: var(--tui-status-warning);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--tui-text-primary);
+  }
+
+  &__empty {
+    margin: 0.2rem 0 0;
+    font-size: 0.8rem;
+    color: var(--tui-text-secondary);
+  }
+
+  &__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  &__row {
+    display: grid;
+    grid-template-columns: 1.1rem auto 1fr auto auto;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.3rem 0.45rem;
+    border-radius: 0.4rem;
+    font-size: 0.85rem;
+    line-height: 1.1;
+    background: color-mix(in srgb, var(--tui-text-primary) 5%, transparent);
+
+    &--me {
+      background: color-mix(in srgb, var(--tui-status-positive) 18%, transparent);
+      box-shadow: inset 0 0 0 1px var(--tui-status-positive);
+    }
+  }
+
+  &__stage {
+    min-inline-size: 1.6rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--tui-text-primary) 12%, transparent);
+    color: var(--tui-text-primary);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__rank {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--tui-text-secondary);
+    text-align: center;
+  }
+
+  &__avatar {
+    background: transparent;
+
+    &--disconnected {
+      opacity: 0.5;
+      filter: grayscale(1);
+    }
+  }
+
+  &__name {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-width: 0;
+    font-weight: 600;
+  }
+
+  &__name-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__you {
+    flex: 0 0 auto;
+    padding: 0.05rem 0.35rem;
+    border-radius: 999px;
+    background: var(--tui-status-positive);
+    color: #0a0a0a;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  &__away {
+    flex: 0 0 auto;
+    block-size: 0.85rem;
+    inline-size: 0.85rem;
+    color: var(--tui-status-warning);
+  }
+
+  &__mass {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--tui-status-positive);
+  }
+
+  &__pill {
+    display: inline-flex;
+    gap: 0.4rem;
+    align-items: center;
+    padding: 0.4rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1;
+
+    @include hud_pill;
+  }
+
+  // Name and mass share a baseline so the champion line reads evenly (the crown and avatar
+  // stay vertically centred against the taller pill via the parent's `align-items: center`).
+  &__pill-stats {
+    display: inline-flex;
+    gap: 0.4rem;
+    align-items: baseline;
+    min-width: 0;
+  }
+
+  &__pill-name {
+    max-width: 7rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    &--me {
+      color: var(--tui-status-positive);
+    }
+  }
+
+  &__pill-mass {
+    flex: 0 0 auto;
+    font-variant-numeric: tabular-nums;
+    color: var(--tui-status-positive);
+  }
+}

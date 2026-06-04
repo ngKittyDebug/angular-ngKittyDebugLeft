@@ -1,9 +1,7 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Service } from '@angular/core';
 import { TranslocoService } from '@jsverse/transloco';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Service()
 export class LanguageSwitcherService {
   private readonly translocoService = inject(TranslocoService);
   private readonly availableLangs = this.translocoService.getAvailableLangs();
