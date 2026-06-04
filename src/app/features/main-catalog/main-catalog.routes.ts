@@ -1,4 +1,5 @@
 import type { Routes } from '@angular/router';
+import { authGuard } from '@shared/guards/auth.guard';
 
 export const mainCatalogRoutes: Routes = [
   {
@@ -7,5 +8,6 @@ export const mainCatalogRoutes: Routes = [
       import('./ui/components/main-catalog-page/main-catalog-page.component').then(
         (m) => m.MainCatalogPageComponent,
       ),
+    canActivate: [authGuard],
   },
 ];
