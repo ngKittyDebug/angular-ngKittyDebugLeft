@@ -23,7 +23,7 @@ import { TuiForm } from '@taiga-ui/layout';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SignupFormComponent {
-  private fb = inject(FormBuilder);
+  private readonly fb = inject(FormBuilder);
 
   public readonly registrationForm = this.fb.nonNullable.group({
     username: ['', Validators.required],
@@ -40,6 +40,6 @@ export class SignupFormComponent {
     }
     const formData = this.registrationForm.getRawValue();
 
-    localStorage.setItem('registrationFormData', JSON.stringify(formData));
+    localStorage.setItem('loginFormData', JSON.stringify(formData));
   }
 }

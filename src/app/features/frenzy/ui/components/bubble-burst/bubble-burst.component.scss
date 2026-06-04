@@ -1,0 +1,100 @@
+/* =============================================================================
+   Bubble burst — one-shot click feedback. Centered on the click point (the
+   parent sets left/top via [leftPawScenePosition]); dots fan out and rise.
+   Per-dot spread/size/timing is defined here via :nth-child() (no JS/inline).
+   Tint reuses `--aq-bubble` from aquarium-theme.scss to stay theme-aware.
+   ========================================================================== */
+
+:host {
+  position: absolute;
+  z-index: 2; // pops above the actors (z-index:1) for a moment
+  display: block;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.bubble-burst {
+  position: relative;
+  display: block;
+
+  &__dot {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: var(--size, 8px);
+    height: var(--size, 8px);
+    border-radius: 50%;
+    background: radial-gradient(
+      circle at 32% 28%,
+      rgba(255, 255, 255, 0.95),
+      var(--aq-bubble, rgba(255, 255, 255, 0.85)) 45%,
+      rgba(255, 255, 255, 0.05) 72%
+    );
+    box-shadow: inset 0 0 3px rgba(255, 255, 255, 0.5);
+    opacity: 0;
+    animation: bubble-burst-pop 0.9s ease-out forwards;
+
+    &:nth-child(1) {
+      --size: 11px;
+      --bx: -36px;
+      --by: -20px;
+      animation-delay: 0s;
+    }
+    &:nth-child(2) {
+      --size: 7px;
+      --bx: -18px;
+      --by: -32px;
+      animation-delay: 0.03s;
+    }
+    &:nth-child(3) {
+      --size: 12px;
+      --bx: 0;
+      --by: -44px;
+      animation-delay: 0.06s;
+    }
+    &:nth-child(4) {
+      --size: 8px;
+      --bx: 18px;
+      --by: -56px;
+      animation-delay: 0.09s;
+    }
+    &:nth-child(5) {
+      --size: 13px;
+      --bx: 36px;
+      --by: -20px;
+      animation-delay: 0.12s;
+    }
+    &:nth-child(6) {
+      --size: 9px;
+      --bx: -36px;
+      --by: -32px;
+      animation-delay: 0.15s;
+    }
+    &:nth-child(7) {
+      --size: 14px;
+      --bx: -18px;
+      --by: -44px;
+      animation-delay: 0.18s;
+    }
+  }
+}
+
+@keyframes bubble-burst-pop {
+  0% {
+    transform: translate(0, 0) scale(0.3);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(var(--bx, 0), var(--by, -24px)) scale(1);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bubble-burst__dot {
+    animation: none;
+  }
+}
