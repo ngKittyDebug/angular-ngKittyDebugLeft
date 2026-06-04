@@ -22,13 +22,19 @@
   <div class="caught">
     <h3>{{ t('profile.caught') }}</h3>
     <span class="line"></span>
+    @for (item of caughtList.results; track item) {
+      <left-paw-pokemon-card-profile [pokemonName]="item.name" />
+    } @empty {
+      <!-- @empty — отдельный блок, отрисовывается когда коллекция пуста -->
+      <li>Список пуст.</li>
+    }
   </div>
   <div class="favorite">
     <h3>{{ t('profile.favorite') }}</h3>
     <span class="line"></span>
     <div class="card-container">
-      @for (item of favorites.results; track item) {
-        <left-paw-favorites-card [pokemonName]="item.name" />
+      @for (item of favoritesList.results; track item) {
+        <left-paw-pokemon-card-profile [pokemonName]="item.name" />
       } @empty {
         <!-- @empty — отдельный блок, отрисовывается когда коллекция пуста -->
         <li>Список пуст.</li>

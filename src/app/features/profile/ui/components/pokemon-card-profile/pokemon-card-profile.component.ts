@@ -4,13 +4,13 @@ import { TuiProgress } from '@taiga-ui/kit';
 import type { OnInit } from '@angular/core';
 
 @Component({
-  selector: 'left-paw-favorites-card',
+  selector: 'left-paw-pokemon-card-profile',
   imports: [TuiProgress],
-  templateUrl: './favorites-card.component.html',
-  styleUrl: './favorites-card.component.scss',
+  templateUrl: './pokemon-card-profile.component.html',
+  styleUrl: './pokemon-card-profile.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class FavoritesCardComponent implements OnInit {
+export class PokemonCardProfileComponent implements OnInit {
   public readonly pokemonName = input.required<string>();
   protected readonly pokemonCardData = signal<PokemonDetailApiData | null>(null);
 
