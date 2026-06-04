@@ -26,7 +26,7 @@
       >
         Previous
       </button>
-      <tui-carousel #carousel [duration]="5000" [(index)]="index">
+      <tui-carousel class="carousel__slides" #carousel [duration]="5000" [(index)]="index">
         <section *tuiItem="let index" appearance="neutral" tuiCardMedium class="transparent-slide">
           @let current = evolutionChain()?.children!.at(index % evolutionChain()?.children!.length);
           <left-paw-evolution-chain-item [evolutionChain]="current" [activeName]="activeName()" />

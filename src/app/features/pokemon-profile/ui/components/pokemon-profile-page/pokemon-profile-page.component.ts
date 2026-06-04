@@ -35,7 +35,7 @@ export interface MyEvolutionNode {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PokemonProfilePageComponent implements OnInit {
-  public readonly pokemonEndpoint = 'bulbasaur'; // bulbasaur | eevee
+  public readonly pokemonEndpoint = 'eevee'; // bulbasaur | eevee
   protected readonly pokemonProfileData = signal<PokemonDetailApiData | null>(null);
   protected readonly pokemonProfileDataSpecies = signal<PokemonSpeciesApiData | null>(null);
   protected readonly pokemonProfileEvolutionChainData = signal<EvolutionChainResponse | null>(null);
@@ -69,13 +69,6 @@ export class PokemonProfilePageComponent implements OnInit {
       this.pokemonProfileData.set(result);
       this.pokemonProfileDataSpecies.set(resultSpecies);
       this.pokemonProfileEvolutionChainData.set(resultChain);
-
-      // console.log(this.pokemonProfileData());
-      console.log(this.pokemonProfileDataSpecies());
-      // console.log(this.pokemonTotalStats());
-      // console.log(this.pokemonProfileData()?.stats);
-      // console.log(this.pokemonProfileEvolutionChainData()?.chain);
-      // console.log(this.pokemonEvolutionChain());
     } catch (error) {
       console.error('Ошибка при загрузке:', error);
     }
