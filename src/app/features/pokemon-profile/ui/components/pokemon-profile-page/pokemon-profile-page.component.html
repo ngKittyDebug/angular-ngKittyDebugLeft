@@ -1,11 +1,13 @@
 <left-paw-pokemon-profile-info [pokemonProfileData]="pokemonProfileData()" />
 <left-paw-pokemon-profile-stats [pokemonProfileData]="pokemonProfileData()" />
 <section class="pokemon__profile_evolution">
-  <left-paw-evolution-chain-item
-    [evolutionChain]="pokemonEvolutionChain()"
-    [activeName]="pokemonProfileData()?.name"
-  />
+  @if (pokemonEvolutionChain(); as evolution) {
+    <left-paw-evolution-chain-item
+      [evolutionChain]="evolution"
+      [activeName]="pokemonProfileData()?.name"
+    />
+  }
 </section>
-<left-paw-pokemon-profile-species-breeding
-  [pokemonProfileDataSpecies]="pokemonProfileDataSpecies()"
-/>
+@if (pokemonProfileDataSpecies(); as species) {
+  <left-paw-pokemon-profile-species-breeding [pokemonProfileDataSpecies]="species" />
+}

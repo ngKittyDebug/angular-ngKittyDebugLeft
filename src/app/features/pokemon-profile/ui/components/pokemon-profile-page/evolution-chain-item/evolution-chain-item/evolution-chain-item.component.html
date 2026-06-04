@@ -1,15 +1,15 @@
-<div class="card" [class.active]="evolutionChain()?.name === activeName()">
-  <h3>{{ evolutionChain()?.name }}</h3>
-  @if (evolutionChain()?.condition) {
-    <span class="badge">{{ evolutionChain()?.condition }}</span>
+<div class="card" [class.active]="evolutionChain().name === activeName()">
+  <h3>{{ evolutionChain().name }}</h3>
+  @if (evolutionChain().condition) {
+    <span class="badge">{{ evolutionChain().condition }}</span>
   }
 </div>
 
-@if (evolutionChain()?.children?.length) {
-  @if (evolutionChain()?.children!.length === 1) {
+@if (evolutionChain().children.length) {
+  @if (evolutionChain().children.length === 1) {
     <tui-icon icon="@tui.arrow-down" size="xs" class="arrow-icon" />
     <left-paw-evolution-chain-item
-      [evolutionChain]="evolutionChain()?.children![0]"
+      [evolutionChain]="evolutionChain().children[0]"
       [activeName]="activeName()"
     />
   } @else {
@@ -24,12 +24,14 @@
         type="button"
         (click)="carousel.prev()"
       >
-        Previous
+        previous
       </button>
-      <tui-carousel class="carousel__slides" #carousel [duration]="5000" [(index)]="index">
+      <tui-carousel #carousel class="adaptive-carousel" [duration]="5000" [(index)]="index">
         <section *tuiItem="let index" appearance="neutral" tuiCardMedium class="transparent-slide">
-          @let current = evolutionChain()?.children!.at(index % evolutionChain()?.children!.length);
-          <left-paw-evolution-chain-item [evolutionChain]="current" [activeName]="activeName()" />
+          @let current = evolutionChain().children.at(index % evolutionChain().children.length);
+          @if (current) {
+            <left-paw-evolution-chain-item [evolutionChain]="current" [activeName]="activeName()" />
+          }
         </section>
       </tui-carousel>
       <button
@@ -41,7 +43,7 @@
         type="button"
         (click)="carousel.next()"
       >
-        Next
+        next
       </button>
     </div>
   }
