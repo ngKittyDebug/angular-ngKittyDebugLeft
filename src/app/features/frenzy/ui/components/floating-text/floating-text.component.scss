@@ -68,7 +68,8 @@
   font-variant-numeric: tabular-nums;
 }
 
-// Non-uniform fade: opacity stays full while rising, then fades out only near the end.
+// Uniform fade: after a quick pop-in the opacity steps down evenly to 0 across the whole rise,
+// instead of holding full and dropping only near the end.
 @keyframes floating-text-rise {
   0% {
     opacity: 0;
@@ -80,8 +81,12 @@
     transform: translate(-50%, -72%) scale(1.05);
   }
 
+  41% {
+    opacity: 0.7;
+  }
+
   70% {
-    opacity: 1;
+    opacity: 0.4;
     transform: translate(-50%, -135%) scale(1);
   }
 

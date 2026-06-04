@@ -10,6 +10,15 @@
       <span class="current-pokemon-status__label">{{ t('label') }}</span>
     }
     <span class="current-pokemon-status__value">{{ mass() }}</span>
+    @if (compact()) {
+      <!-- Mobile: the mood sits inline in the header (no dedicated bottom row) to keep the card short. -->
+      <tui-icon
+        class="current-pokemon-status__mood-icon"
+        [icon]="moodVisual().icon"
+        [style.color]="moodVisual().color"
+        [attr.aria-label]="t('mood.' + mood())"
+      />
+    }
     <span class="current-pokemon-status__stage" [attr.aria-label]="t('stage', { stage: stage() })">
       {{ stage() | stageRoman }}
     </span>
@@ -22,14 +31,14 @@
     [max]="max"
     [color]="mass() | massToneColor"
   ></progress>
-  <p class="current-pokemon-status__mood" [attr.aria-label]="t('mood.' + mood())">
-    <tui-icon
-      class="current-pokemon-status__mood-icon"
-      [icon]="moodVisual().icon"
-      [style.color]="moodVisual().color"
-    />
-    @if (!compact()) {
+  @if (!compact()) {
+    <p class="current-pokemon-status__mood" [attr.aria-label]="t('mood.' + mood())">
+      <tui-icon
+        class="current-pokemon-status__mood-icon"
+        [icon]="moodVisual().icon"
+        [style.color]="moodVisual().color"
+      />
       <span class="current-pokemon-status__mood-label">{{ t('mood.' + mood()) }}</span>
-    }
-  </p>
+    </p>
+  }
 </section>

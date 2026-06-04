@@ -7,7 +7,6 @@ import { type SoundEffect } from '../../models/sound-effect';
 import { BadEatSoundService } from '../sound/bad-eat-sound.service';
 import { EatSoundService } from '../sound/eat-sound.service';
 import { RockSoundService } from '../sound/rock-sound.service';
-import { SoundSettingsService } from '../sound/sound-settings.service';
 import { FrenzyStore } from '../../store/frenzy.store';
 import type { FrenzyEffect } from './frenzy-effect';
 import { FloatingMessagesStore } from './floating-messages.store';
@@ -25,7 +24,6 @@ export class EatEffect implements FrenzyEffect {
   private readonly eatSound = inject(EatSoundService);
   private readonly floats = inject(FloatingMessagesStore);
   private readonly rockSound = inject(RockSoundService);
-  private readonly soundSettings = inject(SoundSettingsService);
   private readonly store = inject(FrenzyStore);
 
   public handle(message: ServerMessage): void {
@@ -36,7 +34,7 @@ export class EatEffect implements FrenzyEffect {
     this.pushFloatingText(message);
 
     if (this.isMine(message.playerId)) {
-      this.playSound(this.eatenSoundFor(message));
+      this.eatenSoundFor(message).play();
     }
   }
 
@@ -82,11 +80,5 @@ export class EatEffect implements FrenzyEffect {
     }
 
     return 'neutral';
-  }
-
-  private playSound(source: SoundEffect): void {
-    if (this.soundSettings.enabled()) {
-      source.play();
-    }
   }
 }

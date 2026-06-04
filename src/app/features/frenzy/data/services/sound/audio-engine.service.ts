@@ -20,6 +20,10 @@ export class AudioEngineService {
   private context: AudioContext | null = null;
 
   public playTone(options: ToneOptions): void {
+    if (!this.settings.enabled()) {
+      return;
+    }
+
     const peak = (options.gain ?? 0.12) * this.settings.volume();
 
     if (peak <= SILENCE) {

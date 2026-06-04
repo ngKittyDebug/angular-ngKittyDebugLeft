@@ -1,14 +1,14 @@
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { TuiHintDirective, TuiIcon, TuiSlider } from '@taiga-ui/core';
+import { TuiIcon, TuiSlider } from '@taiga-ui/core';
 import { TuiSwitch } from '@taiga-ui/kit';
 
 import { SoundSettingsService } from '../../../data/services/sound/sound-settings.service';
 
 @Component({
   selector: 'left-paw-sound-toggle',
-  imports: [FormsModule, TranslocoDirective, TuiHintDirective, TuiIcon, TuiSlider, TuiSwitch],
+  imports: [FormsModule, TranslocoDirective, TuiIcon, TuiSlider, TuiSwitch],
   templateUrl: './sound-toggle.component.html',
   styleUrl: './sound-toggle.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

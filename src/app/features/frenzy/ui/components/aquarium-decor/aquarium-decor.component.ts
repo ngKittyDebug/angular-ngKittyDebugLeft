@@ -15,31 +15,15 @@ import {
  * `aria-hidden` and `pointer-events: none`, so it never interferes with
  * gameplay or a11y. All motion is CSS — no rAF, no timers, no rng.
  *
- * Per-element variety (position, size, timing) is computed deterministically
- * from the element index and applied via inline CSS variables. The bottom kelp
- * is sized to the measured scene WIDTH (≈ one blade per `KELP_SPACING_PX`), so
- * the forest keeps the same density on any viewport and reaches both edges,
- * instead of being a fixed count stretched thin on wide screens.
+ * Rays, plankton and bubbles are static markup; their per-element variety
+ * (position, size, timing) lives entirely in the stylesheet as `:nth-child`
+ * formulas — no TS, no inline styles. The ONLY thing this component still
+ * computes is the bottom kelp: it is sized to the measured scene WIDTH
+ * (≈ one blade per `KELP_SPACING_PX`) so the forest keeps the same density on
+ * any viewport and reaches both edges, instead of being a fixed count
+ * stretched thin on wide screens — and pure CSS cannot count how many blades
+ * fit a width.
  */
-interface Ray {
-  left: number;
-  width: number;
-  rotation: number;
-  duration: number;
-  delay: number;
-}
-
-interface Mote {
-  left: number;
-  top: number;
-  size: number;
-  driftX: number;
-  driftY: number;
-  peak: number;
-  duration: number;
-  delay: number;
-}
-
 interface Plant {
   left: number;
   height: number;
@@ -48,14 +32,6 @@ interface Plant {
   zIndex: number;
   color: string;
   shape: number;
-  duration: number;
-  delay: number;
-}
-
-interface Bubble {
-  left: number;
-  size: number;
-  drift: number;
   duration: number;
   delay: number;
 }
@@ -98,33 +74,6 @@ export class AquariumDecorComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly _plants = signal<readonly Plant[]>([]);
   private plantCount = 0;
-
-  protected readonly rays: readonly Ray[] = indices(5).map((i) => ({
-    left: (i - 1) * 22 - 4,
-    width: 14 + ((i * 5) % 14),
-    rotation: 4 + i * 1.4,
-    duration: 7 + i,
-    delay: -(i * 1.3),
-  }));
-
-  protected readonly motes: readonly Mote[] = indices(16).map((i) => ({
-    left: (i * 37) % 100,
-    top: (i * 53) % 100,
-    size: 1.5 + (i % 3),
-    driftX: ((i % 7) - 3) * 8,
-    driftY: -((i % 5) * 7),
-    peak: 0.4 + (i % 6) * 0.1,
-    duration: 10 + (i % 12),
-    delay: -(i * 0.7),
-  }));
-
-  protected readonly bubbles: readonly Bubble[] = indices(12).map((i) => ({
-    left: (i * 61) % 97,
-    size: 5 + ((i * 7) % 12),
-    drift: ((i % 5) - 2) * 9,
-    duration: 6 + (i % 8),
-    delay: -(i * 0.83),
-  }));
 
   protected readonly plants = this._plants.asReadonly();
 

@@ -3,7 +3,6 @@ import { inject, Injectable } from '@angular/core';
 import type { PlayerEffectKind, ServerMessage } from '@game/frenzy/types';
 
 import { ShieldSoundService } from '../sound/shield-sound.service';
-import { SoundSettingsService } from '../sound/sound-settings.service';
 import { FrenzyStore } from '../../store/frenzy.store';
 import type { FrenzyEffect } from './frenzy-effect';
 import { FloatingMessagesStore } from './floating-messages.store';
@@ -18,7 +17,6 @@ const STATUS_FOR_EFFECT: Record<PlayerEffectKind, 'shield'> = {
 export class PlayerEffectsTracker implements FrenzyEffect {
   private readonly floats = inject(FloatingMessagesStore);
   private readonly shieldSound = inject(ShieldSoundService);
-  private readonly soundSettings = inject(SoundSettingsService);
   private readonly store = inject(FrenzyStore);
 
   public handle(message: ServerMessage): void {
@@ -34,7 +32,7 @@ export class PlayerEffectsTracker implements FrenzyEffect {
 
     this.floats.pushOwnedStatus(STATUS_FOR_EFFECT[message.effect.kind], message.playerId, who);
 
-    if (isMine && this.soundSettings.enabled()) {
+    if (isMine) {
       this.shieldSound.play();
     }
   }

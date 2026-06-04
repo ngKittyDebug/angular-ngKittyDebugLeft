@@ -1,10 +1,6 @@
-<div
-  *transloco="let t; prefix: 'frenzy.sound'"
-  class="sound-toggle"
-  [tuiHint]="compact() ? null : t('hint')"
->
+<div *transloco="let t; prefix: 'frenzy.sound'" class="sound-toggle">
   <tui-icon class="sound-toggle__icon" [icon]="enabled() ? '@tui.volume-2' : '@tui.volume-x'" />
-  @if (!compact()) {
+  @if (!compact() && enabled()) {
     <input
       class="sound-toggle__slider"
       type="range"

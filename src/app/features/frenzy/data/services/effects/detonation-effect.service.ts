@@ -5,9 +5,7 @@ import type { ServerMessage } from '@game/frenzy/types';
 
 import type { Blast } from '../../models/blast';
 import type { OwnedFloat } from '../../models/floating-message';
-import { type SoundEffect } from '../../models/sound-effect';
 import { ExplosionSoundService } from '../sound/explosion-sound.service';
-import { SoundSettingsService } from '../sound/sound-settings.service';
 import type { FrenzyEffect } from './frenzy-effect';
 import { FloatingMessagesStore } from './floating-messages.store';
 import { createTransientId, TransientList } from './transient-list';
@@ -23,7 +21,6 @@ const BOMB_FLOAT_TTL_MS = 1400;
 export class DetonationEffect implements FrenzyEffect {
   private readonly explosionSound = inject(ExplosionSoundService);
   private readonly floats = inject(FloatingMessagesStore);
-  private readonly soundSettings = inject(SoundSettingsService);
   private readonly list = new TransientList<Blast>();
 
   public readonly blasts = this.list.items;
@@ -33,7 +30,7 @@ export class DetonationEffect implements FrenzyEffect {
       return;
     }
 
-    this.playSound(this.explosionSound);
+    this.explosionSound.play();
 
     const blast: Blast = {
       id: createTransientId(),
@@ -59,12 +56,6 @@ export class DetonationEffect implements FrenzyEffect {
       };
 
       this.floats.pushOwned(entry);
-    }
-  }
-
-  private playSound(source: SoundEffect): void {
-    if (this.soundSettings.enabled()) {
-      source.play();
     }
   }
 }

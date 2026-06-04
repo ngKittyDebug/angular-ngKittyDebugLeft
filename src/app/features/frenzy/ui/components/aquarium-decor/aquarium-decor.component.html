@@ -1,34 +1,33 @@
 <div class="aq" aria-hidden="true">
   <div class="aq__floor"></div>
 
+  <!-- Rays, motes and bubbles carry no inline styles: all per-element variety
+       (position, size, timing) is computed in the stylesheet via :nth-child. -->
   <div class="aq__rays">
-    @for (ray of rays; track $index) {
-      <span
-        class="aq__ray"
-        [style.left.%]="ray.left"
-        [style.width.%]="ray.width"
-        [style.--rot]="ray.rotation + 'deg'"
-        [style.animation-duration.s]="ray.duration"
-        [style.animation-delay.s]="ray.delay"
-      ></span>
-    }
+    <span class="aq__ray"></span>
+    <span class="aq__ray"></span>
+    <span class="aq__ray"></span>
+    <span class="aq__ray"></span>
+    <span class="aq__ray"></span>
   </div>
 
   <div class="aq__plankton">
-    @for (mote of motes; track $index) {
-      <span
-        class="aq__mote"
-        [style.left.%]="mote.left"
-        [style.top.%]="mote.top"
-        [style.width.px]="mote.size"
-        [style.height.px]="mote.size"
-        [style.--dx]="mote.driftX + 'px'"
-        [style.--dy]="mote.driftY + 'px'"
-        [style.--peak]="mote.peak"
-        [style.animation-duration.s]="mote.duration"
-        [style.animation-delay.s]="mote.delay"
-      ></span>
-    }
+    <span class="aq__mote"></span>
+    <span class="aq__mote"></span>
+    <span class="aq__mote"></span>
+    <span class="aq__mote"></span>
+    <span class="aq__mote"></span>
+    <span class="aq__mote"></span>
+    <span class="aq__mote"></span>
+    <span class="aq__mote"></span>
+    <span class="aq__mote"></span>
+    <span class="aq__mote"></span>
+    <span class="aq__mote"></span>
+    <span class="aq__mote"></span>
+    <span class="aq__mote"></span>
+    <span class="aq__mote"></span>
+    <span class="aq__mote"></span>
+    <span class="aq__mote"></span>
   </div>
 
   <div class="aq__plants">
@@ -72,17 +71,18 @@
   </div>
 
   <div class="aq__bubbles">
-    @for (bubble of bubbles; track $index) {
-      <span
-        class="aq__bubble"
-        [style.left.%]="bubble.left"
-        [style.width.px]="bubble.size"
-        [style.height.px]="bubble.size"
-        [style.--drift]="bubble.drift + 'px'"
-        [style.animation-duration.s]="bubble.duration"
-        [style.animation-delay.s]="bubble.delay"
-      ></span>
-    }
+    <span class="aq__bubble"></span>
+    <span class="aq__bubble"></span>
+    <span class="aq__bubble"></span>
+    <span class="aq__bubble"></span>
+    <span class="aq__bubble"></span>
+    <span class="aq__bubble"></span>
+    <span class="aq__bubble"></span>
+    <span class="aq__bubble"></span>
+    <span class="aq__bubble"></span>
+    <span class="aq__bubble"></span>
+    <span class="aq__bubble"></span>
+    <span class="aq__bubble"></span>
   </div>
 
   <div class="aq__vignette"></div>

@@ -45,7 +45,6 @@
     "stageHint": "Evolution stage {{stage}}"
   },
   "sound": {
-    "hint": "Sound effects",
     "ariaLabel": "Toggle sound effects",
     "volumeAriaLabel": "Sound volume"
   },

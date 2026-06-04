@@ -2,9 +2,7 @@ import { inject, Injectable, signal } from '@angular/core';
 
 import type { ServerMessage } from '@game/frenzy/types';
 
-import { type SoundEffect } from '../../models/sound-effect';
 import { EvolveSoundService } from '../sound/evolve-sound.service';
-import { SoundSettingsService } from '../sound/sound-settings.service';
 import { FrenzyStore } from '../../store/frenzy.store';
 import type { FrenzyEffect } from './frenzy-effect';
 import { FloatingMessagesStore } from './floating-messages.store';
@@ -16,7 +14,6 @@ const EVOLUTION_ANIMATION_MS = 1500;
 export class EvolutionEffect implements FrenzyEffect {
   private readonly evolveSound = inject(EvolveSoundService);
   private readonly floats = inject(FloatingMessagesStore);
-  private readonly soundSettings = inject(SoundSettingsService);
   private readonly store = inject(FrenzyStore);
   // Map of playerId → flash start time, not a TransientList (the scene keys the flash by id, not order).
   private readonly _evolvingPlayers = signal<ReadonlyMap<string, number>>(new Map());
@@ -31,7 +28,7 @@ export class EvolutionEffect implements FrenzyEffect {
     this.markEvolving(message.playerId);
 
     if (message.playerId === this.store.myId()) {
-      this.playSound(this.evolveSound);
+      this.evolveSound.play();
 
       const me = this.store.me();
 
@@ -62,11 +59,5 @@ export class EvolutionEffect implements FrenzyEffect {
         return next;
       });
     }, EVOLUTION_ANIMATION_MS);
-  }
-
-  private playSound(source: SoundEffect): void {
-    if (this.soundSettings.enabled()) {
-      source.play();
-    }
   }
 }

@@ -7,7 +7,6 @@ import type { ItemType, Player, ServerMessage, ServerState } from '@game/frenzy/
 import { BadEatSoundService } from '../sound/bad-eat-sound.service';
 import { EatSoundService } from '../sound/eat-sound.service';
 import { RockSoundService } from '../sound/rock-sound.service';
-import { SoundSettingsService } from '../sound/sound-settings.service';
 import { FrenzyStore } from '../../store/frenzy.store';
 import { EatEffect } from './eat-effect.service';
 import { FloatingMessagesStore } from './floating-messages.store';
@@ -70,7 +69,6 @@ describe('EatEffect', () => {
         { provide: EatSoundService, useValue: eatSound },
         { provide: BadEatSoundService, useValue: badEatSound },
         { provide: RockSoundService, useValue: rockSound },
-        { provide: SoundSettingsService, useValue: { enabled: signal(true) } },
         { provide: FrenzyStore, useValue: { myId: signal('me'), state } },
       ],
     });

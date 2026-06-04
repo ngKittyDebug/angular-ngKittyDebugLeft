@@ -5,7 +5,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Player, ServerMessage, ServerState } from '@game/frenzy/types';
 
 import { ShieldSoundService } from '../sound/shield-sound.service';
-import { SoundSettingsService } from '../sound/sound-settings.service';
 import { FrenzyStore } from '../../store/frenzy.store';
 import { FloatingMessagesStore } from './floating-messages.store';
 import { PlayerEffectsTracker } from './player-effects-tracker.service';
@@ -56,7 +55,6 @@ describe('PlayerEffectsTracker', () => {
         PlayerEffectsTracker,
         FloatingMessagesStore,
         { provide: FrenzyStore, useValue: { myId: signal('me'), state } },
-        { provide: SoundSettingsService, useValue: { enabled: signal(true) } },
         { provide: ShieldSoundService, useValue: { play } },
       ],
     });
