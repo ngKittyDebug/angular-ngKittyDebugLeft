@@ -1,0 +1,24 @@
+{
+  "name": "@ng-kitty/partykit-server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "partykit dev",
+    "deploy": "partykit deploy",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src",
+    "test": "vitest run",
+    "preflight": "pnpm typecheck && pnpm lint && pnpm test"
+  },
+  "dependencies": {
+    "partykit": "^0.0.115"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260526.1",
+    "@eslint/js": "^10.0.1",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "8.56.1",
+    "vitest": "^4.1.6"
+  }
+}

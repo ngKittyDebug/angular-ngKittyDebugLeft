@@ -1,0 +1,228 @@
+/* =============================================================================
+   Aquarium decor — layout, keyframes and per-element variety. Rays, motes and
+   bubbles are static markup; their position/size/timing are computed here via
+   `:nth-child` formulas (mirroring the old per-index TS), so the template and
+   component stay free of inline styles. Only the bottom kelp keeps inline vars
+   (its count is viewport-derived in TS).
+   Palette vars (`--aq-*`, `--scene-bg`) come from aquarium-theme.scss.
+   ========================================================================== */
+
+:host {
+  position: absolute;
+  inset: 0;
+  z-index: 0; // behind .scene__item / .scene__player (which we lift to z-index:1)
+  display: block;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.aq {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+
+  /* ---------- Floor glow ---------- */
+  &__floor {
+    position: absolute;
+    inset: 0;
+    background: var(--aq-floor);
+  }
+
+  /* ---------- Light rays (caustics) ---------- */
+  &__rays {
+    position: absolute;
+    inset: -25% -10% auto -10%;
+    height: 145%;
+    mix-blend-mode: screen;
+  }
+
+  &__ray {
+    position: absolute;
+    top: -10%;
+    height: 130%;
+    transform-origin: top center;
+    filter: blur(10px);
+    background: linear-gradient(to bottom, var(--aq-ray) 0%, rgba(255, 255, 255, 0) 78%);
+    animation: aq-ray-sway 9s ease-in-out infinite alternate;
+
+    // Per-ray variety (was inline vars from the component).
+    @for $i from 1 through 5 {
+      &:nth-child(#{$i}) {
+        left: (($i - 1) * 22 - 4) * 1%;
+        width: (14 + ($i * 5) % 14) * 1%;
+        --rot: #{4 + $i * 1.4}deg;
+        animation-duration: #{7 + $i}s;
+        animation-delay: #{-($i * 1.3)}s;
+      }
+    }
+  }
+
+  /* ---------- Plankton / drifting particles ---------- */
+  &__plankton {
+    position: absolute;
+    inset: 0;
+  }
+
+  &__mote {
+    position: absolute;
+    border-radius: 50%;
+    background: var(--aq-plankton);
+    box-shadow: 0 0 6px var(--aq-glow);
+    animation: aq-mote-drift 16s ease-in-out infinite alternate;
+
+    // Per-mote variety (was inline vars from the component).
+    @for $i from 1 through 16 {
+      &:nth-child(#{$i}) {
+        $size: 1.5 + $i % 3;
+
+        left: (($i * 37) % 100) * 1%;
+        top: (($i * 53) % 100) * 1%;
+        width: #{$size}px;
+        height: #{$size}px;
+        --dx: #{($i % 7 - 3) * 8}px;
+        --dy: #{-($i % 5 * 7)}px;
+        --peak: #{0.4 + $i % 6 * 0.1};
+        animation-duration: #{10 + $i % 12}s;
+        animation-delay: #{-($i * 0.7)}s;
+      }
+    }
+  }
+
+  /* ---------- Bottom plants (kelp + coral) ---------- */
+  &__plants {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -2%;
+    height: 46%;
+  }
+
+  &__plant {
+    position: absolute;
+    bottom: 0;
+    transform-origin: 50% 100%;
+    animation: aq-plant-sway 6s ease-in-out infinite alternate;
+  }
+
+  &__blade {
+    display: block;
+    width: 34px;
+    height: var(--h, 120px);
+    fill: currentColor;
+
+    &--coral {
+      opacity: 0.92;
+    }
+  }
+
+  /* ---------- Bubbles ---------- */
+  &__bubbles {
+    position: absolute;
+    inset: 0;
+  }
+
+  &__bubble {
+    position: absolute;
+    bottom: -8%;
+    border-radius: 50%;
+    background: radial-gradient(
+      circle at 32% 28%,
+      rgba(255, 255, 255, 0.95),
+      var(--aq-bubble) 45%,
+      rgba(255, 255, 255, 0.05) 72%
+    );
+    box-shadow: inset 0 0 4px rgba(255, 255, 255, 0.4);
+    opacity: 0;
+    animation: aq-bubble-rise 9s linear infinite;
+
+    // Per-bubble variety (was inline vars from the component).
+    @for $i from 1 through 12 {
+      &:nth-child(#{$i}) {
+        $size: 5 + ($i * 7) % 12;
+
+        left: (($i * 61) % 97) * 1%;
+        width: #{$size}px;
+        height: #{$size}px;
+        --drift: #{($i % 5 - 2) * 9}px;
+        animation-duration: #{6 + $i % 8}s;
+        animation-delay: #{-($i * 0.83)}s;
+      }
+    }
+  }
+
+  /* ---------- Vignette ---------- */
+  &__vignette {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(120% 90% at 50% 38%, rgba(0, 0, 0, 0) 52%, var(--aq-vignette) 100%);
+  }
+}
+
+@keyframes aq-ray-sway {
+  0% {
+    transform: rotate(var(--rot, 8deg)) translateX(-6%) scaleY(0.96);
+    opacity: 0.3;
+  }
+  100% {
+    transform: rotate(calc(var(--rot, 8deg) + 4deg)) translateX(6%) scaleY(1.04);
+    opacity: 0.8;
+  }
+}
+
+@keyframes aq-mote-drift {
+  0% {
+    transform: translate(0, 0);
+    opacity: 0.15;
+  }
+  50% {
+    opacity: var(--peak, 0.8);
+  }
+  100% {
+    transform: translate(var(--dx, 18px), var(--dy, -22px));
+    opacity: 0.25;
+  }
+}
+
+@keyframes aq-plant-sway {
+  0% {
+    transform: rotate(var(--rot, -4deg));
+  }
+  100% {
+    transform: rotate(calc(var(--rot, -4deg) * -1));
+  }
+}
+
+@keyframes aq-bubble-rise {
+  0% {
+    bottom: -8%;
+    transform: translateX(0) scale(0.6);
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.9;
+  }
+  50% {
+    // Halfway up — horizontal wobble swings the other way (vertical is driven by `bottom`).
+    transform: translateX(calc(var(--drift, 12px) * -1)) scale(1);
+  }
+  92% {
+    opacity: 0.9;
+  }
+  100% {
+    // Vertical travel via `bottom` (% of the scene container), so it rises the full scene height
+    // and out the top regardless of viewport — never falls back, never overshoots into a long gap.
+    bottom: 108%;
+    transform: translateX(var(--drift, 12px)) scale(1.05);
+    opacity: 0;
+  }
+}
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .aq__ray,
+  .aq__mote,
+  .aq__plant,
+  .aq__bubble {
+    animation: none;
+  }
+}

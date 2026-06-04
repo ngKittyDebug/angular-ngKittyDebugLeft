@@ -1,0 +1,9 @@
+{
+  "$schema": "https://www.partykit.io/schema.json",
+  "name": "feeding-frenzy",
+  "main": "src/parties/frenzy/index.ts",
+  "parties": {
+    "frenzy": "src/parties/frenzy/index.ts"
+  },
+  "compatibilityDate": "2025-01-01"
+}

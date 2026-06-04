@@ -6,7 +6,7 @@
     "outDir": "./out-tsc/app",
     "types": []
   },
-  "include": ["src/**/*.ts", "transloco.config.ts"],
+  "include": ["src/**/*.ts", "transloco.config.ts", "shared-game/**/*.ts"],
   "exclude": ["src/**/*.spec.ts"],
   "angularCompilerOptions": {
     "extendedDiagnostics": {

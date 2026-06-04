@@ -1,0 +1,176 @@
+{
+  "currentPokemonStatus": {
+    "label": "Mass",
+    "stage": "Stage {{stage}}",
+    "ariaLabel": "Your Pokémon status",
+    "mood": {
+      "happy": "Happy",
+      "content": "Content",
+      "hungry": "Hungry",
+      "starving": "Starving"
+    }
+  },
+  "faintedModal": {
+    "title": "Pokémon fainted!",
+    "lifespan": "Survived",
+    "lifespanValue": "{{seconds}} s",
+    "maxMass": "Peak mass",
+    "maxStage": "Top stage",
+    "totalEaten": "Items eaten",
+    "items": {
+      "food": "Good berries",
+      "rotten": "Rotten berries",
+      "rock": "Rocks",
+      "rareCandy": "Rare candy",
+      "goldenBerry": "Golden berries",
+      "crumb": "Crumbs",
+      "mushroom": "Mushrooms"
+    },
+    "respawn": "Play again",
+    "chooseNew": "Choose new Pokémon",
+    "cooldownHint": "Ready in {{seconds}} s"
+  },
+  "presence": {
+    "online": "{{count}} online",
+    "disconnected": "{{count}} away",
+    "onlineAriaLabel": "Players online",
+    "disconnectedAriaLabel": "Players disconnected, may reconnect"
+  },
+  "leaderboard": {
+    "title": "Top 5",
+    "ariaLabel": "Leaderboard, top 5 players by mass",
+    "empty": "No challengers yet",
+    "you": "You",
+    "disconnectedHint": "Disconnected — may return within 15s",
+    "stageHint": "Evolution stage {{stage}}"
+  },
+  "sound": {
+    "ariaLabel": "Toggle sound effects",
+    "volumeAriaLabel": "Sound volume"
+  },
+  "scene": {
+    "pokeAriaLabel": "Poke your Pokémon",
+    "floatingText": {
+      "food": {
+        "0": "Yum!",
+        "1": "Tasty!",
+        "2": "Mmm~",
+        "3": "Yay!",
+        "4": "More!"
+      },
+      "rotten": {
+        "0": "Yuck!",
+        "1": "Bleh!",
+        "2": "Eww!",
+        "3": "Gross!",
+        "4": "Ouch…"
+      },
+      "rock": {
+        "0": "What?",
+        "1": "A rock?",
+        "2": "Hmm…",
+        "3": "Huh",
+        "4": "Why?"
+      },
+      "rareCandy": {
+        "0": "Whoa!",
+        "1": "Awesome!",
+        "2": "Power up!",
+        "3": "Boom!",
+        "4": "Level up!"
+      },
+      "bomb": {
+        "0": "Boom!",
+        "1": "Kaboom!",
+        "2": "Ouch!",
+        "3": "Blast!",
+        "4": "Yikes!"
+      },
+      "goldenBerry": {
+        "0": "Jackpot!",
+        "1": "So good!",
+        "2": "Golden!",
+        "3": "Delicious!",
+        "4": "Best one!"
+      },
+      "crumb": {
+        "0": "Nibble!",
+        "1": "Crunch!",
+        "2": "Snack!",
+        "3": "Tiny bite!",
+        "4": "Quick one!"
+      },
+      "mushroom": {
+        "0": "Gamble!",
+        "1": "Risky!",
+        "2": "Surprise!",
+        "3": "Lucky?",
+        "4": "Whoa!"
+      }
+    },
+    "statusMessage": {
+      "evolved": {
+        "0": "Evolved!",
+        "1": "Level up!",
+        "2": "Stronger!",
+        "3": "New form!"
+      },
+      "happy": {
+        "0": "Feeling great!",
+        "1": "So happy!",
+        "2": "Full again!",
+        "3": "Back to strength!"
+      },
+      "sad": {
+        "0": "I'm hungry…",
+        "1": "Feed me?",
+        "2": "Getting weak…",
+        "3": "Need a snack!"
+      },
+      "dying": {
+        "0": "Hang on!",
+        "1": "Don't give up!",
+        "2": "Eat, quick!",
+        "3": "Almost gone…",
+        "4": "No strength left…",
+        "5": "Save me!",
+        "6": "Where's the food?!",
+        "7": "I'm fading…",
+        "8": "Just a bit more…",
+        "9": "Don't let me drop!"
+      },
+      "appeared": {
+        "0": "joined!",
+        "1": "is here!",
+        "2": "wants to play!",
+        "3": "entered the arena!"
+      },
+      "died": {
+        "0": "fainted!",
+        "1": "is gone…",
+        "2": "was defeated!",
+        "3": "rest in peace…"
+      },
+      "poke": {
+        "0": "Hee-hee!",
+        "1": "That tickles!",
+        "2": "Stop it!",
+        "3": "What do you want?",
+        "4": "What now?",
+        "5": "Hey!",
+        "6": "Quit poking!",
+        "7": "I'm busy!",
+        "8": "Not again!",
+        "9": "Leave me be!",
+        "10": "I'm eating here!",
+        "11": "Easy there!"
+      },
+      "shield": {
+        "0": "Shielded!",
+        "1": "No decay!",
+        "2": "Protected!",
+        "3": "Holding strong!"
+      }
+    }
+  }
+}
