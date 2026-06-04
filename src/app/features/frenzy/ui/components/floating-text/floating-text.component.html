@@ -1,0 +1,10 @@
+@if (icon(); as iconName) {
+  <tui-icon class="floating-text__icon" [icon]="iconName" />
+}
+@if (who()) {
+  <span class="floating-text__who">{{ who() }}</span>
+}
+<span class="floating-text__phrase">{{ text() }}</span>
+@if (deltaLabel(); as label) {
+  <span class="floating-text__delta">{{ label }}</span>
+}

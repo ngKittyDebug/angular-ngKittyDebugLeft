@@ -1,0 +1,114 @@
+:host {
+  position: absolute;
+  z-index: 4;
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #f5f5f5;
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+  transform: translate(-50%, -50%);
+  // Duration is overridden per message via the host `animation-duration` style binding.
+  animation: floating-text-rise 1s ease-out forwards;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+:host(.floating-text--positive) {
+  color: var(--tui-status-positive);
+  box-shadow: 0 0 0 1px var(--tui-status-positive);
+}
+
+:host(.floating-text--negative) {
+  color: var(--tui-status-negative);
+  box-shadow: 0 0 0 1px var(--tui-status-negative);
+}
+
+:host(.floating-text--neutral) {
+  color: rgba(255, 255, 255, 0.75);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+
+// Death warning — brighter and more prominent than the rest.
+:host(.floating-text--warning) {
+  color: var(--tui-status-warning);
+  font-size: 1.05rem;
+  box-shadow: 0 0 0 1px var(--tui-status-warning);
+  text-shadow: 0 0 10px var(--tui-status-warning);
+}
+
+.floating-text__icon {
+  flex: none;
+  font-size: 1rem;
+}
+
+.floating-text__who {
+  display: inline-block;
+  max-width: 7rem;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-overflow: ellipsis;
+}
+
+.floating-text__phrase {
+  color: inherit;
+  font-size: 0.85rem;
+}
+
+.floating-text__delta {
+  color: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+// Uniform fade: after a quick pop-in the opacity steps down evenly to 0 across the whole rise,
+// instead of holding full and dropping only near the end.
+@keyframes floating-text-rise {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.85);
+  }
+
+  12% {
+    opacity: 1;
+    transform: translate(-50%, -72%) scale(1.05);
+  }
+
+  41% {
+    opacity: 0.7;
+  }
+
+  70% {
+    opacity: 0.4;
+    transform: translate(-50%, -135%) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -185%) scale(0.96);
+  }
+}
+
+/* =============================================================================
+   Aquarium bubble sheen — REMOVABLE cosmetic layer.
+   Lays a glassy top-left highlight + thin rim over the existing pill so each
+   floating message reads like a water bubble, WITHOUT replacing its dark base
+   (keeps text contrast intact). Delete this whole block to revert; nothing
+   else depends on it.
+   ========================================================================== */
+:host {
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background-image: radial-gradient(
+    125% 125% at 28% 22%,
+    rgba(255, 255, 255, 0.38),
+    rgba(255, 255, 255, 0.05) 55%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
