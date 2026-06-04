@@ -21,5 +21,6 @@
   "eggs": "Egg groups",
   "hatch": "Hatch Steps",
   "steps": "steps",
-  "cycles": "cycles"
+  "cycles": "cycles",
+  "from": "from"
 }

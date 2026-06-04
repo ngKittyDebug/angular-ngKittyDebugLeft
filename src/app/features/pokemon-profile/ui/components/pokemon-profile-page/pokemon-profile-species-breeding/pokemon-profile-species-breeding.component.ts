@@ -12,5 +12,5 @@ import type { PokemonSpeciesApiData } from '@shared/models/pokemon-species-api-d
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PokemonProfileSpeciesBreedingComponent {
-  public readonly pokemonProfileDataSpecies = input.required<PokemonSpeciesApiData | null>();
+  public readonly pokemonProfileDataSpecies = input.required<PokemonSpeciesApiData>();
 }
