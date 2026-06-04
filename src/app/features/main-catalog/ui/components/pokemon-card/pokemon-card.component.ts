@@ -30,8 +30,6 @@ export class PokemonCardComponent implements OnInit {
       const result: PokemonDetailApiData = (await response.json()) as PokemonDetailApiData;
 
       this.pokemonCardData.set(result);
-
-      console.log(this.pokemonCardData());
     } catch (error) {
       console.error('Ошибка при загрузке:', error);
     }

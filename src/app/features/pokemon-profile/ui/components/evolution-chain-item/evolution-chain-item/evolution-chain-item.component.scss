@@ -17,11 +17,12 @@
   background: transparent !important;
   padding: 0;
   height: 5rem;
+  width: 100%;
 }
 
-.carousel__slides {
-  width: 80%;
-}
+// .carousel__slides {
+//   width: 80%;
+// }
 
 .card {
   @include mixins.flex_container_function($direction: column);
