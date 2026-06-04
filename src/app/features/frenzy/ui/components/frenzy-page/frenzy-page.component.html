@@ -24,12 +24,14 @@
   }
 
   <div class="frenzy-page__hud-top-right">
-    <left-paw-sound-toggle [compact]="isMobile()" />
-    <left-paw-presence-counter
-      [online]="presenceCount()"
-      [disconnected]="disconnectedCount()"
-      [compact]="isMobile()"
-    />
+    <div class="frenzy-page__hud-row">
+      <left-paw-sound-toggle [compact]="isMobile()" />
+      <left-paw-presence-counter
+        [online]="presenceCount()"
+        [disconnected]="disconnectedCount()"
+        [compact]="isMobile()"
+      />
+    </div>
     <left-paw-leaderboard [entries]="leaderboard()" [myId]="myId()" [compact]="isMobile()" />
   </div>
 

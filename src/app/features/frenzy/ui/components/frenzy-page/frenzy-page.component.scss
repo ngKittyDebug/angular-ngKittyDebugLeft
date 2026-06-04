@@ -53,6 +53,12 @@
     pointer-events: none;
   }
 
+  &__hud-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
   &__overlay {
     position: absolute;
     inset: 0;
