@@ -49,4 +49,7 @@ body {
   flex-direction: column;
   width: 100%;
   flex: 1 0 auto;
+  @include mixins.respond-to(screens-width.$screen-x-small, 'max') {
+    padding: 0 0.5rem;
+  }
 }

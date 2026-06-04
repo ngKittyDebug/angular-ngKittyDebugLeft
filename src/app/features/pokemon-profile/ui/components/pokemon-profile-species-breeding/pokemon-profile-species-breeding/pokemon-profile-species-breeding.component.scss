@@ -80,3 +80,10 @@ $types:
     }
   }
 }
+
+.circle__progress_image {
+  transform-origin: center;
+  @include mixins.respond-to(screens-width.$screen-x-small, 'max') {
+    transform: scale(0.85);
+  }
+}

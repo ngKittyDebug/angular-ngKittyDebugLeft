@@ -10,6 +10,7 @@
           <p>255</p>
         </span>
         <tui-progress-circle
+          class="circle__progress_image"
           size="xxl"
           [max]="100"
           [value]="(pokemonProfileDataSpecies()?.capture_rate! / 255) * 100"
@@ -25,6 +26,7 @@
           <p>255</p>
         </span>
         <tui-progress-circle
+          class="circle__progress_image"
           size="xxl"
           [max]="100"
           [value]="(pokemonProfileDataSpecies()?.base_happiness! / 255) * 100"
@@ -53,6 +55,7 @@
           </p>
         </span>
         <tui-progress-circle
+          class="circle__progress_image"
           size="xxl"
           [max]="100"
           [value]="(pokemonProfileDataSpecies()?.hatch_counter! / 40) * 100"

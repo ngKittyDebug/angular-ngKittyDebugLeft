@@ -41,12 +41,16 @@ $types:
   max-width: 23rem;
   width: 100%;
   @include mixins.flex_container_function($direction: column, $align_items: left, $gap: 1rem);
+  flex-shrink: 0;
+  flex: 1 0 100%;
 }
 
 .pokemon__info_group {
   @include mixins.flex_container_function($direction: row, $justify_content: start, $gap: 1rem);
+  width: 100%;
   &-column {
     @include mixins.flex_container_function($direction: column, $align_items: start, $gap: 0.5rem);
+    width: 100%;
   }
 }
 
@@ -88,4 +92,5 @@ $types:
 
 .pokemon__info_button {
   width: 100%;
+  max-width: 23rem;
 }

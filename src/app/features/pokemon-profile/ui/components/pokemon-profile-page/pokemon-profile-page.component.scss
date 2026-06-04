@@ -8,6 +8,8 @@ $stats: hp, attack, defense, special-attack, special-defense, speed;
   @include mixins.respond-to(screens-width.$screen-large, 'max') {
     @include mixins.grid_container_function($grid_template_columns: repeat(1, 1fr), $gap: 1rem);
   }
+  max-width: 55rem;
+  width: 100%;
   padding: 1rem;
   * {
     margin: 0;
