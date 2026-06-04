@@ -136,6 +136,7 @@ export default defineConfig(
           fixture: 'off',
           token: 'off',
           facade: 'off',
+          guard: 'off',
         },
       ],
       'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
