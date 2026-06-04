@@ -1,8 +1,12 @@
 <figure class="card__cover">
   <img
     class="card__image"
-    [src]="pokemonCardData()?.sprites?.other?.['official-artwork']?.front_default"
-    [alt]="pokemonCardData()?.name"
+    [src]="
+      $safeNavigationMigration(
+        pokemonCardData()?.sprites?.other?.['official-artwork']?.front_default
+      )
+    "
+    [alt]="$safeNavigationMigration(pokemonCardData()?.name)"
   />
   <figcaption class="card__information">
     <div class="card__line">

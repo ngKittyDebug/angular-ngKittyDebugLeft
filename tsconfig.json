@@ -16,6 +16,7 @@
     "module": "preserve",
     "esModuleInterop": true,
     "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
     "paths": {
       "@core/*": ["src/app/core/*"],
       "@features/*": ["src/app/features/*"],
