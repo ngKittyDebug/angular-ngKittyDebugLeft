@@ -5,6 +5,12 @@
   "settings": {
     "heading": "Settings"
   },
-  "caught": "Caught pokemons",
-  "favorite": "Favorite pokemons"
+  "caught": {
+    "heading": "Caught pokemons",
+    "empty": "Looks like Pokémon keep successfully passing by you 😅"
+  },
+  "favorite": {
+    "heading": "Favorite pokemons",
+    "empty": "No favorite Pokémon yet 💔"
+  }
 }
