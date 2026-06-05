@@ -3,12 +3,17 @@
 <div>
   // это отладочное, для проверки работы, в ласт пр не будет
   @if (!pokemonStorageService.isLoadingPokemonPaginationData()) {
+    <p>общее количество {{ pokemonStorageService.countPokemonData() }}</p>
+    <p>Следующая ссылка {{ pokemonStorageService.nextPokemonPaginationLink() }}</p>
+    <p>Предыдущая ссылка {{ pokemonStorageService.previousPokemonPaginationLink() }}</p>
     @for (item of pokemonStorageService.pokemonPaginationData()?.results; track item.name) {
       <h1>{{ item.name }}</h1>
     }
   } @else {
     <h1>Loading</h1>
   }
+  <button (click)="inc()">inc</button>
+  <button (click)="dec()">dec</button>
 </div>
 
 <main class="root-wrapper">
