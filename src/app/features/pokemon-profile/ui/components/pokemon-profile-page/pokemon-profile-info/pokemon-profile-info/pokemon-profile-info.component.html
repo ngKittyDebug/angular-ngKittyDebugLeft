@@ -1,19 +1,19 @@
 <figure *transloco="let t" class="profile_pokemon__intro">
   <img
     class="profile_pokemon__image"
-    [src]="pokemonProfileData()?.sprites?.other?.['official-artwork']?.front_default"
-    [alt]="pokemonProfileData()?.name"
+    [src]="pokemonProfileData().sprites.other['official-artwork'].front_default"
+    [alt]="pokemonProfileData().name"
   />
   <figcaption class="profile_pokemon__info">
     <div class="pokemon__info_group">
-      <h2 class="profile__name">{{ pokemonProfileData()?.name }}</h2>
-      <p class="profile__id">#{{ pokemonProfileData()?.id }}</p>
+      <h2 class="profile__name">{{ pokemonProfileData().name }}</h2>
+      <p class="profile__id">#{{ pokemonProfileData().id }}</p>
     </div>
     <div class="pokemon__info_group-column">
       <p class="pokemon__info_subheading">{{ t('pokemonProfile.types') }}</p>
       <div class="pokemon__info_badges_row">
-        @for (item of pokemonProfileData()?.types; track item.type.name) {
-          <span className="profile__type profile__type-{{ item.type.name }}" tuiBadge>{{
+        @for (item of pokemonProfileData().types; track item.type.name) {
+          <span class="profile__type profile__type-{{ item.type.name }}" tuiBadge>{{
             item.type.name
           }}</span>
         }
@@ -22,7 +22,7 @@
     <div class="pokemon__info_group-column">
       <p class="pokemon__info_subheading">{{ t('pokemonProfile.abilities') }}</p>
       <div class="pokemon__info_badges_row">
-        @for (item of pokemonProfileData()?.abilities; track item.ability?.name) {
+        @for (item of pokemonProfileData().abilities; track item.ability?.name) {
           <span
             [class]="
               item.is_hidden
@@ -38,11 +38,11 @@
     <div class="pokemon__info_group">
       <p class="profile__param">
         <span class="pokemon__info_subheading">{{ t('pokemonProfile.weight') }}</span
-        >{{ pokemonWeight() }} {{ t('pokemonProfile.kg') }}
+        >{{ pokemonProfileData().weight | leftPawDivideByTen }} {{ t('pokemonProfile.kg') }}
       </p>
       <p class="profile__param">
         <span class="pokemon__info_subheading">{{ t('pokemonProfile.height') }}</span
-        >{{ pokemonHeight() }} {{ t('pokemonProfile.m') }}
+        >{{ pokemonProfileData().height | leftPawDivideByTen }} {{ t('pokemonProfile.m') }}
       </p>
     </div>
     <button class="pokemon__info_button" tuiButton size="m" appearance="brand-accent">

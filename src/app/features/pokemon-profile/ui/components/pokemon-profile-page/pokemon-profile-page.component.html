@@ -1,4 +1,7 @@
-<left-paw-pokemon-profile-info [pokemonProfileData]="pokemonProfileData()" />
+<!-- <left-paw-pokemon-profile-info [pokemonProfileData]="pokemonProfileData()" /> -->
+@if (pokemonProfileData(); as pokemonData) {
+  <left-paw-pokemon-profile-info [pokemonProfileData]="pokemonData" />
+}
 <left-paw-pokemon-profile-stats [pokemonProfileData]="pokemonProfileData()" />
 <section class="pokemon__profile_evolution">
   @if (pokemonEvolutionChain(); as evolution) {
