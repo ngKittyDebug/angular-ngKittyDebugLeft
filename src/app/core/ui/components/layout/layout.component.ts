@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { HeaderComponent } from './header/header.component';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { NAV_LIST_ITEMS } from './constants/nav-list';
@@ -8,6 +8,7 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import { ResponsiveRenderDirective } from '@shared/directives/responsive-render.directive';
 import { TABLE_BREAKPOINT } from './constants/breakpoints';
 import { HideContentDirective } from '@shared/directives/hide-content.directive';
+import { PokemonStorageService } from '@core/services/pokemon/pokemon-storage.service';
 
 @Component({
   selector: 'left-paw-layout',
@@ -26,6 +27,7 @@ import { HideContentDirective } from '@shared/directives/hide-content.directive'
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LayoutComponent {
+  protected readonly pokemonStorageService = inject(PokemonStorageService);
   protected readonly tableBreakpoint = TABLE_BREAKPOINT;
   protected readonly navListItems = NAV_LIST_ITEMS;
 }

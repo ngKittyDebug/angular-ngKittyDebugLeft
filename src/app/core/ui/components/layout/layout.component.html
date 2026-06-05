@@ -1,8 +1,19 @@
 <left-paw-header [navListItems]="navListItems" />
+
+<div>
+  // это отладочное, для проверки работы, в ласт пр не будет
+  @if (!pokemonStorageService.isLoadingPokemonPaginationData()) {
+    @for (item of pokemonStorageService.pokemonPaginationData()?.results; track item.name) {
+      <h1>{{ item.name }}</h1>
+    }
+  } @else {
+    <h1>Loading</h1>
+  }
+</div>
+
 <main class="root-wrapper">
   <router-outlet />
 </main>
-
 <div *leftPawResponsiveRender="`(max-width:${tableBreakpoint}px)`">
   <nav
     tuiTabBar
