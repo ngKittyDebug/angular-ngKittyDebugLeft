@@ -2,7 +2,7 @@
   <h3 class="pokemon__sec_heading">{{ t('pokemonProfile.stats') }}</h3>
   <div class="pokemon__stats_content">
     <div class="pokemon__stats_items">
-      @for (item of pokemonProfileData()?.stats; track item.stat.name) {
+      @for (item of pokemonProfileData().stats; track item.stat.name) {
         <div class="pokemon__stats_group">
           <p class="pokemon_stats__name">{{ t(`pokemonProfile.${item.stat.name}`) }}</p>
           <p class="pokemon_stats__value">{{ item.base_stat }}</p>

@@ -13,7 +13,7 @@
           class="circle__progress_image"
           size="xxl"
           [max]="100"
-          [value]="(pokemonProfileDataSpecies().capture_rate! / 255) * 100"
+          [value]="pokemonProfileDataSpecies().capture_rate | leftPawPercentage: 255"
         />
       </div>
     </div>
@@ -29,7 +29,7 @@
           class="circle__progress_image"
           size="xxl"
           [max]="100"
-          [value]="(pokemonProfileDataSpecies().base_happiness! / 255) * 100"
+          [value]="pokemonProfileDataSpecies().base_happiness | leftPawPercentage: 255"
         />
       </div>
     </div>
@@ -56,7 +56,7 @@
           class="circle__progress_image"
           size="xxl"
           [max]="100"
-          [value]="(pokemonProfileDataSpecies().hatch_counter! / 40) * 100"
+          [value]="pokemonProfileDataSpecies().hatch_counter | leftPawPercentage: 40"
         />
       </div>
     </div>

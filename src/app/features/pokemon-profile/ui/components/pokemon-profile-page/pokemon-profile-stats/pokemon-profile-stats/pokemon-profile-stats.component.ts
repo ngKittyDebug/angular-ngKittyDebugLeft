@@ -13,7 +13,7 @@ import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-dat
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PokemonProfileStatsComponent {
-  public readonly pokemonProfileData = input.required<PokemonDetailApiData | null>();
+  public readonly pokemonProfileData = input.required<PokemonDetailApiData>();
   protected readonly pokemonTotalStats = computed(() => {
     const stats = this.pokemonProfileData()?.stats ?? [];
 
