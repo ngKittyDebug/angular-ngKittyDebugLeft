@@ -2,9 +2,9 @@ name: scheduled notifications
 
 on:
   schedule:
-    - cron: '0 11 * * 0' # Вс 14:00 МСК — дневник
-    - cron: '0 8 * * 3' # Ср 11:00 МСК — ревью PR
-    - cron: '0 6 * * *' # Ежедневно 9:00 МСК — доброе утро
+    - cron: '11 11 * * 0' # Вс 14:00 МСК — дневник
+    - cron: '23 8 * * 3' # Ср 11:00 МСК — ревью PR
+    - cron: '17 6 * * *' # Ежедневно 9:00 МСК — доброе утро
   workflow_dispatch:
     inputs:
       scenario:
@@ -16,7 +16,7 @@ on:
 jobs:
   diary-reminder:
     name: Diary reminder (Sun 14:00 MSK)
-    if: github.event.schedule == '0 11 * * 0' || github.event.inputs.scenario == 'diary'
+    if: github.event.schedule == '11 11 * * 0' || github.event.inputs.scenario == 'diary'
     runs-on: ubuntu-latest
     steps:
       - name: Telegram — diary reminder
@@ -43,7 +43,7 @@ jobs:
 
   pr-review-reminder:
     name: PR review reminder (Wed 11:00 MSK)
-    if: github.event.schedule == '0 8 * * 3' || github.event.inputs.scenario == 'pr-review'
+    if: github.event.schedule == '23 8 * * 3' || github.event.inputs.scenario == 'pr-review'
     runs-on: ubuntu-latest
     permissions:
       pull-requests: read
@@ -96,7 +96,7 @@ jobs:
 
   good-morning:
     name: Good morning (daily 09:00 MSK)
-    if: github.event.schedule == '0 6 * * *' || github.event.inputs.scenario == 'good-morning'
+    if: github.event.schedule == '17 6 * * *' || github.event.inputs.scenario == 'good-morning'
     runs-on: ubuntu-latest
     steps:
       - name: Telegram — good morning
