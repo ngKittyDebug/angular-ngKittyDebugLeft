@@ -11,4 +11,9 @@ import { TuiPagination } from '@taiga-ui/kit';
 })
 export class CatalogPaginationComponent {
   protected pokemonPaginationService = inject(PokemonPaginationService);
+
+  protected setFilterInput(name: number) {
+    this.pokemonPaginationService.currentPage.set(0);
+    this.pokemonPaginationService.filterByName.set(name.toString());
+  }
 }

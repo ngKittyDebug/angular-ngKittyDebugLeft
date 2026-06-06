@@ -1,7 +1,15 @@
 <left-paw-catalog-filter />
 <div class="catalog-container">
-  @for (item of catalogPageMocks.results; track item) {
-    <left-paw-pokemon-card [pokemonName]="item.name" />
+  @if (!pokemonPaginationService.isLoadingPokemonPaginationData()) {
+    @for (item of pokemonPaginationService.currentPokemonDataAfterPagination(); track item.name) {
+      @defer (on viewport) {
+        <left-paw-pokemon-card [pokemonName]="item.name" />
+      } @placeholder {
+        <div>Loading</div>
+      }
+    }
+  } @else {
+    <h1>Loading</h1>
   }
 </div>
 <left-paw-catalog-pagination />

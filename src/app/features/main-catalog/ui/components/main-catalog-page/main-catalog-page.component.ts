@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { CatalogFilterComponent } from '../filter/catalog-filter/catalog-filter.component';
 import { CatalogPaginationComponent } from '../pagination/catalog-pagination/catalog-pagination.component';
 import { PokemonCardComponent } from '../pokemon-card/pokemon-card.component';
-import { CatalogPageMocks } from './constants/catalog-page-mocks';
+import { PokemonPaginationService } from '@core/services/pokemon/pokemon-pagination.service';
 
 @Component({
   selector: 'left-paw-main-catalog-page',
@@ -12,5 +12,5 @@ import { CatalogPageMocks } from './constants/catalog-page-mocks';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MainCatalogPageComponent {
-  protected readonly catalogPageMocks = CatalogPageMocks;
+  protected pokemonPaginationService = inject(PokemonPaginationService);
 }

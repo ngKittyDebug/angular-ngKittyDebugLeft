@@ -1,19 +1,5 @@
 <left-paw-header [navListItems]="navListItems" />
 
-<div>
-  // это отладочное, для проверки работы, в ласт пр не будет
-  @if (!pokemonPagination.isLoadingPokemonPaginationData()) {
-    <p>общее количество {{ pokemonPagination.countPokemonData() }}</p>
-    <p>общее количество {{ pokemonPagination.currentPage() }}</p>
-    <p>количество страничек {{ pokemonPagination.allPokemonPagesCount() }}</p>
-    @for (item of pokemonPagination.currentPokemonDataAfterPagination(); track item.name) {
-      <h1>{{ item.name }}</h1>
-    }
-  } @else {
-    <h1>Loading</h1>
-  }
-</div>
-
 <main class="root-wrapper">
   <router-outlet />
 </main>
