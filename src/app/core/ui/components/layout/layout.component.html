@@ -2,8 +2,6 @@
 
 <div>
   // это отладочное, для проверки работы, в ласт пр не будет
-  <button (click)="pokemonPagination.increasePaginationCount()">inc</button>
-  <button (click)="pokemonPagination.decreasePaginationCount()">dec</button>
   @if (!pokemonPagination.isLoadingPokemonPaginationData()) {
     <p>общее количество {{ pokemonPagination.countPokemonData() }}</p>
     <p>общее количество {{ pokemonPagination.currentPage() }}</p>

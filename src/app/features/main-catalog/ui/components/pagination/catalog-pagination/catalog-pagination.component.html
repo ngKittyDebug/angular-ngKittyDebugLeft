@@ -1,1 +1,5 @@
-<p>catalog-pagination works!</p>
+<tui-pagination
+  [index]="pokemonPaginationService.currentPage()"
+  [length]="pokemonPaginationService.allPokemonPagesCount() + 1"
+  (indexChange)="pokemonPaginationService.setPaginationCount($event)"
+/>

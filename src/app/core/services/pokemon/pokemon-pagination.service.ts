@@ -40,4 +40,8 @@ export class PokemonPaginationService {
     }
     this.currentPage.update((previous) => previous - 1);
   }
+
+  public setPaginationCount(count: number) {
+    this.currentPage.set(count);
+  }
 }
