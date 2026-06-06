@@ -13,6 +13,24 @@
   }
 }
 
+:host
+  ::ng-deep
+  [tuiAppearance][data-appearance='textfield']:is(
+    [data-mode~='invalid'],
+    .tui-invalid,
+    :invalid
+  ):not(:has(input.ng-touched)):not(
+    [data-mode~='readonly'],
+    [data-mode~='valid'],
+    [data-state='disabled'],
+    :disabled,
+    ._disabled
+  ) {
+  outline-color: var(--tui-border-normal, #ebedf2) !important;
+
+  --tui-caption: var(--tui-text-secondary, #666e80) !important;
+}
+
 .signup__form {
   width: 100%;
 }

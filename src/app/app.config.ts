@@ -6,6 +6,7 @@ import {
   provideZoneChangeDetection,
 } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
+import { provideSignalFormsConfig } from '@angular/forms/signals';
 
 import { routes } from './app.routes';
 import { provideStore } from '@ngrx/store';
@@ -34,6 +35,14 @@ export const appConfig: ApplicationConfig = {
     provideTranslocoPersistLang({
       storage: {
         useValue: localStorage,
+      },
+    }),
+    provideSignalFormsConfig({
+      classes: {
+        'tui-invalid': (field) => field.state().invalid() && field.state().touched(),
+        'ng-touched': (field) => field.state().touched(),
+        'ng-invalid': (field) => field.state().invalid(),
+        'ng-dirty': (field) => field.state().dirty(),
       },
     }),
   ],
