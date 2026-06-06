@@ -21,6 +21,13 @@
         id="username"
       />
     </tui-textfield>
+    <tui-error
+      [error]="
+        signupFormService.signupForm.userName().touched()
+          ? (signupFormService.signupForm.userName().errors()[0]?.message ?? null)
+          : null
+      "
+    />
     <tui-error />
     <tui-textfield class="signup__textfield" iconStart="@tui.mail">
       <label tuiLabel for="email">{{ t('auth.signup.email') }}</label>
@@ -33,6 +40,13 @@
         id="email"
       />
     </tui-textfield>
+    <tui-error
+      [error]="
+        signupFormService.signupForm.email().touched()
+          ? (signupFormService.signupForm.email().errors()[0]?.message ?? null)
+          : null
+      "
+    />
     <tui-error />
     <tui-textfield class="signup__textfield" iconStart="@tui.lock">
       <label tuiLabel for="password">{{ t('auth.signup.password') }}</label>
@@ -45,6 +59,13 @@
         id="password"
       />
     </tui-textfield>
+    <tui-error
+      [error]="
+        signupFormService.signupForm.password().touched()
+          ? (signupFormService.signupForm.password().errors()[0]?.message ?? null)
+          : null
+      "
+    />
     <tui-error />
     <tui-textfield class="signup__textfield" iconStart="@tui.lock">
       <label tuiLabel for="passwordRepeat">{{ t('auth.signup.passwordRepeat') }}</label>
@@ -57,9 +78,22 @@
         id="passwordRepeat"
       />
     </tui-textfield>
+    <tui-error
+      [error]="
+        signupFormService.signupForm.repeatPassword().touched()
+          ? (signupFormService.signupForm.repeatPassword().errors()[0]?.message ?? null)
+          : null
+      "
+    />
     <tui-error />
   </div>
-  <button class="signup__form_button" tuiButton appearance="brand-accent" type="submit">
+  <button
+    class="signup__form_button"
+    tuiButton
+    appearance="brand-accent"
+    type="submit"
+    [disabled]="!signupFormService.signupForm().valid()"
+  >
     {{ t('auth.signup.button') }}
   </button>
   <div class="signup__title-wrapper">

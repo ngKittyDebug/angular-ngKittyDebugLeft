@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { TuiButton, TuiError, TuiInput, TuiLabel, TuiTextfieldComponent } from '@taiga-ui/core';
@@ -11,7 +11,6 @@ import { SignupFormService } from '@features/auth/data/services/signup-form.serv
   selector: 'left-paw-signup-form',
   imports: [
     RouterLink,
-    ReactiveFormsModule,
     TuiTextfieldComponent,
     TuiButton,
     TuiInput,
