@@ -9,7 +9,6 @@ import { ResponsiveRenderDirective } from '@shared/directives/responsive-render.
 import { TABLE_BREAKPOINT } from './constants/breakpoints';
 import { HideContentDirective } from '@shared/directives/hide-content.directive';
 import { PokemonStorageService } from '@core/services/pokemon/pokemon-storage.service';
-import { INITIAL_LIMIT } from '@core/constants/pokemon-constants';
 
 @Component({
   selector: 'left-paw-layout',
@@ -31,12 +30,5 @@ export class LayoutComponent {
   protected readonly pokemonStorageService = inject(PokemonStorageService);
   protected readonly tableBreakpoint = TABLE_BREAKPOINT;
   protected readonly navListItems = NAV_LIST_ITEMS;
-
-  public inc() {
-    this.pokemonStorageService.paginationOffsetStep.update((previous) => previous + INITIAL_LIMIT);
-  }
-
-  public dec() {
-    this.pokemonStorageService.paginationOffsetStep.update((previous) => previous - INITIAL_LIMIT);
-  }
+  protected readonly pokemonPagination = this.pokemonStorageService.pokemonPaginationService;
 }
