@@ -3,7 +3,7 @@
   tuiAppearance="floating"
   tuiForm="m"
   class="signup__form"
-  (ngSubmit)="submit($event)"
+  (ngSubmit)="signupFormService.handleForSubmit($event)"
 >
   <div class="signup__title-wrapper">
     <h2 class="signup__title" tuiTitle>{{ t('auth.signup.heading') }}</h2>
@@ -13,7 +13,7 @@
     <tui-textfield class="signup__textfield" iconStart="@tui.user">
       <label tuiLabel for="username">{{ t('auth.signup.username') }}</label>
       <input
-        [formField]="signupForm.userName"
+        [formField]="signupFormService.signupForm.userName"
         placeholder="John"
         tuiInput
         autocomplete="username"
@@ -25,7 +25,7 @@
     <tui-textfield class="signup__textfield" iconStart="@tui.mail">
       <label tuiLabel for="email">{{ t('auth.signup.email') }}</label>
       <input
-        [formField]="signupForm.email"
+        [formField]="signupFormService.signupForm.email"
         placeholder="john@wick.com"
         tuiInput
         autocomplete="email"
@@ -37,7 +37,7 @@
     <tui-textfield class="signup__textfield" iconStart="@tui.lock">
       <label tuiLabel for="password">{{ t('auth.signup.password') }}</label>
       <input
-        [formField]="signupForm.password"
+        [formField]="signupFormService.signupForm.password"
         placeholder="333333Qq"
         tuiInput
         autocomplete="current-password"
@@ -49,7 +49,7 @@
     <tui-textfield class="signup__textfield" iconStart="@tui.lock">
       <label tuiLabel for="passwordRepeat">{{ t('auth.signup.passwordRepeat') }}</label>
       <input
-        [formField]="signupForm.repeatPassword"
+        [formField]="signupFormService.signupForm.repeatPassword"
         placeholder="333333Qq"
         tuiInput
         autocomplete="current-password"
