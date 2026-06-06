@@ -12,4 +12,9 @@ import { TuiDataListWrapper } from '@taiga-ui/kit';
 })
 export class CatalogFilterComponent {
   protected pokemonPaginationService = inject(PokemonPaginationService);
+
+  protected setFilterInput(name: string) {
+    this.pokemonPaginationService.currentPage.set(0);
+    this.pokemonPaginationService.filterByName.set(name.toString());
+  }
 }

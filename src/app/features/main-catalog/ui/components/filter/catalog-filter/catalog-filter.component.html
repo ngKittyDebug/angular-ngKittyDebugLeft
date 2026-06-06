@@ -4,6 +4,6 @@
     id="filter-name"
     formControlName="user"
     tuiInput
-    (input)="pokemonPaginationService.filterByName.set($event.target.value)"
+    (input)="setFilterInput($event.target.value)"
   />
 </tui-textfield>
