@@ -1,0 +1,16 @@
+<!-- <left-paw-pokemon-profile-info [pokemonProfileData]="pokemonProfileData()" /> -->
+@if (pokemonProfileData(); as pokemonData) {
+  <left-paw-pokemon-profile-info [pokemonProfileData]="pokemonData" />
+  <left-paw-pokemon-profile-stats [pokemonProfileData]="pokemonData" />
+}
+<section class="pokemon__profile_evolution">
+  @if (pokemonEvolutionChain(); as evolution) {
+    <left-paw-evolution-chain-item
+      [evolutionChain]="evolution"
+      [activeName]="pokemonProfileData()?.name"
+    />
+  }
+</section>
+@if (pokemonProfileDataSpecies(); as species) {
+  <left-paw-pokemon-profile-species-breeding [pokemonProfileDataSpecies]="species" />
+}

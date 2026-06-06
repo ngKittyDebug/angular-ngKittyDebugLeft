@@ -1,0 +1,64 @@
+<ng-container *transloco="let t">
+  <h3 class="pokemon__sec_heading">{{ t('pokemonProfile.species') }}</h3>
+  <div class="pokemon__species_container">
+    <div class="species_card species_card-capture">
+      <p class="species_card__label">{{ t('pokemonProfile.capture') }}</p>
+      <div class="circle__progress" tuiProgressLabel>
+        <span class="circle__progress_label" tuiHeader="h6">
+          <p>{{ pokemonProfileDataSpecies().capture_rate! }}</p>
+          <p tuiSubtitle>{{ t('pokemonProfile.from') }}</p>
+          <p>255</p>
+        </span>
+        <tui-progress-circle
+          class="circle__progress_image"
+          size="xxl"
+          [max]="100"
+          [value]="pokemonProfileDataSpecies().capture_rate | leftPawPercentage: 255"
+        />
+      </div>
+    </div>
+    <div class="species_card species_card-happiness">
+      <p class="species_card__label">{{ t('pokemonProfile.happiness') }}</p>
+      <div class="circle__progress" tuiProgressLabel>
+        <span class="circle__progress_label" tuiHeader="h6">
+          <p>{{ pokemonProfileDataSpecies().base_happiness }}</p>
+          <p tuiSubtitle>{{ t('pokemonProfile.from') }}</p>
+          <p>255</p>
+        </span>
+        <tui-progress-circle
+          class="circle__progress_image"
+          size="xxl"
+          [max]="100"
+          [value]="pokemonProfileDataSpecies().base_happiness | leftPawPercentage: 255"
+        />
+      </div>
+    </div>
+    <div class="species_card species_card-egg_groups">
+      <p class="species_card__label">{{ t('pokemonProfile.eggs') }}</p>
+      <div class="species_card__badge_container">
+        @for (group of pokemonProfileDataSpecies().egg_groups; track group.name) {
+          <span [class]="'species__egg_group species__egg_group-' + group.name" tuiBadge>{{
+            group.name
+          }}</span>
+        }
+      </div>
+    </div>
+    <div class="species_card species_card-hatch">
+      <p class="species_card__label">{{ t('pokemonProfile.hatch') }}</p>
+      <div class="circle__progress" tuiProgressLabel>
+        <span class="circle__progress_label" tuiHeader="h6">
+          <p>
+            {{ pokemonProfileDataSpecies().hatch_counter! * 255 }} {{ t('pokemonProfile.steps') }}
+          </p>
+          <p>({{ pokemonProfileDataSpecies().hatch_counter! }} {{ t('pokemonProfile.cycles') }})</p>
+        </span>
+        <tui-progress-circle
+          class="circle__progress_image"
+          size="xxl"
+          [max]="100"
+          [value]="pokemonProfileDataSpecies().hatch_counter | leftPawPercentage: 40"
+        />
+      </div>
+    </div>
+  </div>
+</ng-container>

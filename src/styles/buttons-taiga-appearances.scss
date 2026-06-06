@@ -23,3 +23,29 @@ a[tuiButton][data-appearance='brand-accent'] {
     cursor: not-allowed;
   }
 }
+
+button[tuiButton][data-appearance='brand-primary'],
+a[tuiButton][data-appearance='brand-primary'] {
+  background: var(--gradient-secondary);
+  color: var(--primary-foreground);
+  box-shadow: var(--glow-primary);
+  transition: all 0.2s ease;
+
+  @media (hover: hover) {
+    &:hover {
+      box-shadow: var(--glow-primary-light);
+      transform: scale(1.05);
+    }
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  &:disabled {
+    filter: none;
+    box-shadow: none;
+    transform: none;
+    cursor: not-allowed;
+  }
+}
