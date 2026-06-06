@@ -26,9 +26,7 @@ p {
   width: 100%;
 }
 .user-content {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  @include flex_container_function($direction: column, $align_items: start, $gap: 0.5rem);
 }
 .user-info,
 .achievements,
@@ -39,11 +37,26 @@ p {
   flex: 2;
   padding: 1rem;
 }
+.achievement-box {
+  @include flex_container_function($gap: 0.5rem, $justify_content: space-evenly);
+  padding: 0.5rem 0;
+  color: #996515;
+}
+.achievement-icon {
+  @include flex_container_function($direction: column, $flex_wrap: wrap, $align_items: center);
+  background: linear-gradient(135deg, #f0e68c, #fafad2, #f0e68c);
+  padding: 0.5rem;
+  margin: 0;
+  border: 2px solid #e6be8a;
+  border-radius: 1rem;
+  width: fit-content;
+}
+.achievement-text {
+  text-wrap: wrap;
+}
 .user-info {
-  display: flex;
   flex: 1;
-  align-items: center;
-  gap: 1rem;
+  @include flex_container_function($gap: 1rem, $flex_wrap: nowrap, $justify_content: start);
 }
 
 .caught,
@@ -72,11 +85,8 @@ p {
   text-align: center;
 }
 .card-container {
+  @include flex_container_function($justify_content: space-around, $gap: 2rem);
   width: 100%;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-around;
-  gap: 2rem;
   padding: 1rem 0;
 }
 

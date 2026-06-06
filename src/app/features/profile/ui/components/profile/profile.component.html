@@ -12,6 +12,16 @@
     <div class="achievements">
       <h4>{{ t('profile.achievements.heading') }}</h4>
       <span class="line-mini"></span>
+      <div class="achievement-box">
+        @for (item of achievements; track item) {
+          <figure class="achievement-icon">
+            <tui-icon icon="@tui.star" />
+            <figcaption class="achievement-text">
+              {{ t(`profile.achievements.achievement.${item}`) }}
+            </figcaption>
+          </figure>
+        }
+      </div>
     </div>
     <div class="settings">
       <h4>{{ t('profile.settings.heading') }}</h4>

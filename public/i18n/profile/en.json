@@ -1,6 +1,10 @@
 {
   "achievements": {
-    "heading": "Achievements"
+    "heading": "Achievements",
+    "achievement": {
+      "exemple": "first game",
+      "exempleLong": "first game in the project"
+    }
   },
   "settings": {
     "heading": "Settings"
