@@ -3,14 +3,21 @@
   tuiAppearance="floating"
   tuiForm="m"
   class="signup__form"
-  (ngSubmit)="signupFormService.handleForSubmit($event)"
+  (submit)="signupFormService.handleForSubmit($event)"
 >
   <div class="signup__title-wrapper">
     <h2 class="signup__title" tuiTitle>{{ t('auth.signup.heading') }}</h2>
     <p class="signup__subtitle" tuiSubtitle>{{ t('auth.signup.subheading') }}</p>
   </div>
   <div class="signup__inputs">
-    <tui-textfield class="signup__textfield" iconStart="@tui.user">
+    <tui-textfield
+      class="signup__textfield"
+      iconStart="@tui.user"
+      [class.tui-invalid]="
+        signupFormService.signupForm.userName().touched() &&
+        signupFormService.signupForm.userName().invalid()
+      "
+    >
       <label tuiLabel for="username">{{ t('auth.signup.username') }}</label>
       <input
         [formField]="signupFormService.signupForm.userName"
@@ -23,12 +30,12 @@
     </tui-textfield>
     <tui-error
       [error]="
-        signupFormService.signupForm.userName().touched()
-          ? (signupFormService.signupForm.userName().errors()[0]?.message ?? null)
+        signupFormService.signupForm.userName().touched() &&
+        signupFormService.signupForm.userName().errors()[0]?.message
+          ? t(signupFormService.signupForm.userName().errors()[0]!.message!)
           : null
       "
     />
-    <tui-error />
     <tui-textfield class="signup__textfield" iconStart="@tui.mail">
       <label tuiLabel for="email">{{ t('auth.signup.email') }}</label>
       <input
@@ -42,12 +49,12 @@
     </tui-textfield>
     <tui-error
       [error]="
-        signupFormService.signupForm.email().touched()
-          ? (signupFormService.signupForm.email().errors()[0]?.message ?? null)
+        signupFormService.signupForm.email().touched() &&
+        signupFormService.signupForm.email().errors()[0]?.message
+          ? t(signupFormService.signupForm.email().errors()[0]!.message!)
           : null
       "
     />
-    <tui-error />
     <tui-textfield class="signup__textfield" iconStart="@tui.lock">
       <label tuiLabel for="password">{{ t('auth.signup.password') }}</label>
       <input
@@ -61,12 +68,12 @@
     </tui-textfield>
     <tui-error
       [error]="
-        signupFormService.signupForm.password().touched()
-          ? (signupFormService.signupForm.password().errors()[0]?.message ?? null)
+        signupFormService.signupForm.password().touched() &&
+        signupFormService.signupForm.password().errors()[0]?.message
+          ? t(signupFormService.signupForm.password().errors()[0]!.message!)
           : null
       "
     />
-    <tui-error />
     <tui-textfield class="signup__textfield" iconStart="@tui.lock">
       <label tuiLabel for="passwordRepeat">{{ t('auth.signup.passwordRepeat') }}</label>
       <input
@@ -80,19 +87,19 @@
     </tui-textfield>
     <tui-error
       [error]="
-        signupFormService.signupForm.repeatPassword().touched()
-          ? (signupFormService.signupForm.repeatPassword().errors()[0]?.message ?? null)
+        signupFormService.signupForm.repeatPassword().touched() &&
+        signupFormService.signupForm.repeatPassword().errors()[0]?.message
+          ? t(signupFormService.signupForm.repeatPassword().errors()[0]!.message!)
           : null
       "
     />
-    <tui-error />
   </div>
   <button
     class="signup__form_button"
     tuiButton
     appearance="brand-accent"
     type="submit"
-    [disabled]="!signupFormService.signupForm().valid()"
+    [disabled]="signupFormService.isSubmitDisabled()"
   >
     {{ t('auth.signup.button') }}
   </button>

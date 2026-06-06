@@ -1,3 +1,4 @@
+import type { OnInit } from '@angular/core';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -25,10 +26,20 @@ import { SignupFormService } from '@features/auth/data/services/signup-form.serv
   styleUrl: './signup-form.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SignupFormComponent {
+export class SignupFormComponent implements OnInit {
   protected readonly signupFormService = inject(SignupFormService);
 
   protected loginRouterPath = '../login';
+
+  public ngOnInit(): void {
+    const currentModel = this.signupFormService.signupModel();
+
+    // 2. Перезаписываем сигнал модели точно такими же данными.
+    // Для Angular Signals это «событие изменения». Он просыпается,
+    // принудительно прогоняет модель через движок валидации Signal Forms,
+    // видит, что поля пустые, и выставляет статус signupForm().valid() в false.
+    this.signupFormService.signupModel.set({ ...currentModel });
+  }
 }
 
 // import { ChangeDetectionStrategy, Component, inject } from '@angular/core';

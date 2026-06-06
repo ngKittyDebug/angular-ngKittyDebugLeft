@@ -1,6 +1,6 @@
-import { Injectable, signal } from '@angular/core';
+import { computed, Injectable, signal } from '@angular/core';
 import type { SignUpData } from '../models/signup-form.model';
-import { form, validate } from '@angular/forms/signals';
+import { form, submit, validate } from '@angular/forms/signals';
 
 @Injectable({
   providedIn: 'root',
@@ -11,6 +11,13 @@ export class SignupFormService {
     email: '',
     password: '',
     repeatPassword: '',
+  });
+
+  public readonly isSubmitDisabled = computed(() => {
+    return (
+      this.signupForm().invalid() ||
+      Object.values(this.signupModel()).some((value) => !value.trim())
+    );
   });
 
   public readonly signupForm = form(this.signupModel, (schemaPath) => {
@@ -25,7 +32,7 @@ export class SignupFormService {
       const value = context.value();
 
       return !value || value.trim() === ''
-        ? { kind: 'required', message: 'Username is required' }
+        ? { kind: 'required', message: 'auth.signupErrorMessages.usernameRequired' }
         : null;
     });
 
@@ -38,7 +45,7 @@ export class SignupFormService {
       const value = context.value();
 
       return !value || value.trim() === ''
-        ? { kind: 'required', message: 'Email is required' }
+        ? { kind: 'required', message: 'auth.signupErrorMessages.emailRequired' }
         : null;
     });
 
@@ -51,7 +58,7 @@ export class SignupFormService {
       const value = context.value();
 
       return !value || value.trim() === ''
-        ? { kind: 'required', message: 'Password is required' }
+        ? { kind: 'required', message: 'auth.signupErrorMessages.passwordRequired' }
         : null;
     });
 
@@ -64,14 +71,14 @@ export class SignupFormService {
       const repeatPass = context.value();
 
       if (!repeatPass || repeatPass.trim() === '') {
-        return { kind: 'required', message: 'Repeat password is required' };
+        return { kind: 'required', message: 'auth.signupErrorMessages.repeatPasswordRequired' };
       }
 
       // Безопасно извлекаем значение из соседнего поля password без вызова скобок у пути
       const pass = context.valueOf(schemaPath.password);
 
       if (pass !== repeatPass) {
-        return { kind: 'mismatch', message: 'Passwords do not match' };
+        return { kind: 'mismatch', message: 'auth.signupErrorMessages.matchPassword' };
       }
 
       return null;
@@ -81,8 +88,14 @@ export class SignupFormService {
   public handleForSubmit(event: Event): void {
     event.preventDefault();
 
-    const data = this.signupModel();
+    // Функция submit автоматически подсветит пустые поля ошибками, если форма невалидна
+    submit(this.signupForm, async () => {
+      const data = this.signupModel();
 
-    localStorage.setItem('loginFormDataSignal', JSON.stringify(data));
+      localStorage.setItem('loginFormDataSignal', JSON.stringify(data));
+      alert('Регистрация прошла успешно!');
+
+      return null; // Успешное завершение отправки для Signal Forms
+    });
   }
 }
