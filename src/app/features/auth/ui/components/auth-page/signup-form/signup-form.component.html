@@ -3,6 +3,80 @@
   tuiAppearance="floating"
   tuiForm="m"
   class="signup__form"
+  (ngSubmit)="submit($event)"
+>
+  <div class="signup__title-wrapper">
+    <h2 class="signup__title" tuiTitle>{{ t('auth.signup.heading') }}</h2>
+    <p class="signup__subtitle" tuiSubtitle>{{ t('auth.signup.subheading') }}</p>
+  </div>
+  <div class="signup__inputs">
+    <tui-textfield class="signup__textfield" iconStart="@tui.user">
+      <label tuiLabel for="username">{{ t('auth.signup.username') }}</label>
+      <input
+        [formField]="signupForm.userName"
+        placeholder="John"
+        tuiInput
+        autocomplete="username"
+        type="text"
+        id="username"
+      />
+    </tui-textfield>
+    <tui-error />
+    <tui-textfield class="signup__textfield" iconStart="@tui.mail">
+      <label tuiLabel for="email">{{ t('auth.signup.email') }}</label>
+      <input
+        [formField]="signupForm.email"
+        placeholder="john@wick.com"
+        tuiInput
+        autocomplete="email"
+        type="email"
+        id="email"
+      />
+    </tui-textfield>
+    <tui-error />
+    <tui-textfield class="signup__textfield" iconStart="@tui.lock">
+      <label tuiLabel for="password">{{ t('auth.signup.password') }}</label>
+      <input
+        [formField]="signupForm.password"
+        placeholder="333333Qq"
+        tuiInput
+        autocomplete="current-password"
+        type="password"
+        id="password"
+      />
+    </tui-textfield>
+    <tui-error />
+    <tui-textfield class="signup__textfield" iconStart="@tui.lock">
+      <label tuiLabel for="passwordRepeat">{{ t('auth.signup.passwordRepeat') }}</label>
+      <input
+        [formField]="signupForm.repeatPassword"
+        placeholder="333333Qq"
+        tuiInput
+        autocomplete="current-password"
+        type="password"
+        id="passwordRepeat"
+      />
+    </tui-textfield>
+    <tui-error />
+  </div>
+  <button class="signup__form_button" tuiButton appearance="brand-accent" type="submit">
+    {{ t('auth.signup.button') }}
+  </button>
+  <div class="signup__title-wrapper">
+    <p class="signup__form_text">
+      {{ t('auth.signup.endingText')
+      }}<a [routerLink]="loginRouterPath" tuiLink class="signup__form_link">{{
+        t('auth.signup.signupLink')
+      }}</a>
+    </p>
+  </div>
+</form>
+
+<!-- <form
+  *transloco="let t"
+  tuiAppearance="floating"
+  tuiForm="m"
+  class="signup__form"
   [formGroup]="registrationForm"
   (ngSubmit)="submit()"
 >
@@ -77,4 +151,4 @@
       }}</a>
     </p>
   </div>
-</form>
+</form> -->

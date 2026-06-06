@@ -1,6 +1,6 @@
 import type { Routes } from '@angular/router';
 import { provideTranslocoScope } from '@jsverse/transloco';
-import { guestGuard } from '@shared/guards/guest.guard';
+// import { guestGuard } from '@shared/guards/guest.guard';
 import { LoginFormService } from './data/services/login-form.service';
 
 export const authRoutes: Routes = [
@@ -9,7 +9,7 @@ export const authRoutes: Routes = [
     loadComponent: () =>
       import('./ui/components/auth-page/auth-page.component').then((m) => m.AuthPageComponent),
     providers: [provideTranslocoScope('auth')],
-    canActivate: [guestGuard],
+    // canActivate: [guestGuard],
     children: [
       {
         path: '',
