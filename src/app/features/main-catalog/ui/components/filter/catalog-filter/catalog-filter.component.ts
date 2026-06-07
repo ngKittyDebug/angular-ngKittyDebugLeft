@@ -1,11 +1,10 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { PokemonPaginationService } from '@core/services/pokemon/pokemon-pagination.service';
-import { TuiInput, TuiLabel } from '@taiga-ui/core';
-import { TuiDataListWrapper } from '@taiga-ui/kit';
+import { TuiInput, TuiLabel, TuiTextfieldComponent } from '@taiga-ui/core';
 
 @Component({
   selector: 'left-paw-catalog-filter',
-  imports: [TuiDataListWrapper, TuiInput, TuiLabel],
+  imports: [TuiTextfieldComponent, TuiInput, TuiLabel],
   templateUrl: './catalog-filter.component.html',
   styleUrl: './catalog-filter.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
