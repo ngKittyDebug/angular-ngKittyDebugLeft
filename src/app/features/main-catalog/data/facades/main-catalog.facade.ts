@@ -1,5 +1,5 @@
 import { inject, Service } from '@angular/core';
-import { PokemonPaginationService } from '@core/services/pokemon/pokemon-pagination.service';
+import { PokemonPaginationService } from '@features/main-catalog/data/services/pokemon-pagination.service';
 
 @Service({ autoProvided: false })
 export class MainCatalogFacade {

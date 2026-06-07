@@ -1,8 +1,7 @@
 import { inject, Service } from '@angular/core';
-
 import { PokemonPaginationService } from './pokemon-pagination.service';
 
-@Service()
+@Service({ autoProvided: false })
 export class PokemonStorageService {
   public readonly pokemonPaginationService = inject(PokemonPaginationService);
 }

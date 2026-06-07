@@ -2,7 +2,7 @@ import { inject, resource, Service } from '@angular/core';
 import { PokemonApiService } from '@core/api/pokemon-pagination-api.service';
 import type { PokemonListApiData } from '@shared/models/pokemon-list-api-data-interface';
 
-@Service()
+@Service({ autoProvided: false })
 export class PokemonPaginationStorageService {
   private readonly pokemonApiService = inject(PokemonApiService);
 

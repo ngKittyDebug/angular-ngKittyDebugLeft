@@ -1,8 +1,8 @@
 import { computed, debounced, inject, Service, signal } from '@angular/core';
 import { INITIAL_LIMIT_STEP } from '@core/constants/pokemon-constants';
-import { PokemonPaginationStorageService } from '../data/pokemon-pagination-storage.service';
+import { PokemonPaginationStorageService } from './pokemon-pagination-storage.service';
 
-@Service()
+@Service({ autoProvided: false })
 export class PokemonPaginationService {
   private readonly pokemonPaginationStorageService = inject(PokemonPaginationStorageService);
   private readonly _pokemonPagination = this.pokemonPaginationStorageService._pokemonPagination;
