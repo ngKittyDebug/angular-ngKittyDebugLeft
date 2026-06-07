@@ -15,11 +15,9 @@ export class PokemonPaginationService {
 
   public readonly countPokemonData = computed(() => this.filteredPokemonData()?.length);
 
-  public readonly allPokemonPagesCount = computed(() => {
-    const count = this.countPokemonData() || 0;
-
-    return Math.floor(count / INITIAL_LIMIT_STEP);
-  });
+  public readonly pagesCount = computed(() =>
+    Math.ceil((this.countPokemonData() || 0) / INITIAL_LIMIT_STEP),
+  );
 
   public readonly isLoadingPokemonPaginationData = this._pokemonPagination.asReadonly().isLoading;
 
