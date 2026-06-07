@@ -1,6 +1,6 @@
 import { computed, debounced, inject, Service, signal } from '@angular/core';
-import { INITIAL_LIMIT_STEP } from '@core/constants/pokemon-constants';
 import { PokemonPaginationStorageService } from './pokemon-pagination-storage.service';
+import { INITIAL_LIMIT_STEP } from '../constants/main-catalog-constants';
 
 @Service({ autoProvided: false })
 export class PokemonPaginationService {
