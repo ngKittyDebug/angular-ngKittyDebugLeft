@@ -3,7 +3,7 @@
   tuiAppearance="floating"
   tuiForm="m"
   class="signup__form"
-  (submit)="signupFormService.handleForSubmit($event)"
+  (submit)="signupFormService.onSubmit($event)"
 >
   <div class="signup__title-wrapper">
     <h2 class="signup__title" tuiTitle>{{ t('auth.signup.heading') }}</h2>

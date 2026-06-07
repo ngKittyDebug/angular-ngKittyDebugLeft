@@ -7,9 +7,7 @@ import {
   USER_PATTERN,
 } from '@shared/constants/patterns-constants';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable()
 export class SignupFormService {
   public readonly signupModel = signal<SignUpData>({
     userName: '',
@@ -52,15 +50,17 @@ export class SignupFormService {
     });
   });
 
-  public handleForSubmit(event: Event): void {
-    event.preventDefault();
-
+  public submitForm(): void {
     submit(this.signupForm, async () => {
-      const data = this.signupModel();
-
-      localStorage.setItem('loginFormDataSignal', JSON.stringify(data));
+      localStorage.setItem('loginFormData', JSON.stringify(this.signupModel()));
 
       return null;
     });
+  }
+
+  public onSubmit(event: Event): void {
+    event.preventDefault();
+
+    this.submitForm();
   }
 }
