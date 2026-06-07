@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { PokemonPaginationService } from '@core/services/pokemon/pokemon-pagination.service';
+import { MainCatalogFacade } from '@features/main-catalog/data/facades/main-catalog.facade';
 import { TuiPagination } from '@taiga-ui/kit';
 
 @Component({
@@ -10,5 +10,5 @@ import { TuiPagination } from '@taiga-ui/kit';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CatalogPaginationComponent {
-  protected pokemonPaginationService = inject(PokemonPaginationService);
+  protected catalogFacade = inject(MainCatalogFacade);
 }

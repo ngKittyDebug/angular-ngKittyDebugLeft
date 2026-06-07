@@ -1,8 +1,8 @@
 <left-paw-catalog-filter />
 
-@if (!pokemonPaginationService.isLoadingPokemonPaginationData()) {
+@if (!catalogFacade.isLoadingPokemonPaginationData()) {
   <div class="catalog-container">
-    @for (item of pokemonPaginationService.paginatedPokemonList(); track item.name) {
+    @for (item of catalogFacade.paginatedPokemonList(); track item.name) {
       @defer (on viewport) {
         <left-paw-pokemon-card [pokemonName]="item.name" />
       } @placeholder {

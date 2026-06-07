@@ -2,8 +2,8 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { CatalogFilterComponent } from '../filter/catalog-filter/catalog-filter.component';
 import { CatalogPaginationComponent } from '../pagination/catalog-pagination/catalog-pagination.component';
 import { PokemonCardComponent } from '../pokemon-card/pokemon-card.component';
-import { PokemonPaginationService } from '@core/services/pokemon/pokemon-pagination.service';
 import { TuiLoader, tuiLoaderOptionsProvider } from '@taiga-ui/core';
+import { MainCatalogFacade } from '@features/main-catalog/data/facades/main-catalog.facade';
 
 @Component({
   selector: 'left-paw-main-catalog-page',
@@ -14,5 +14,5 @@ import { TuiLoader, tuiLoaderOptionsProvider } from '@taiga-ui/core';
   providers: [tuiLoaderOptionsProvider({ size: 'xxl' })],
 })
 export class MainCatalogPageComponent {
-  protected pokemonPaginationService = inject(PokemonPaginationService);
+  protected catalogFacade = inject(MainCatalogFacade);
 }

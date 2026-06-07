@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { PokemonPaginationService } from '@core/services/pokemon/pokemon-pagination.service';
+import { MainCatalogFacade } from '@features/main-catalog/data/facades/main-catalog.facade';
 import { TuiInput, TuiLabel, TuiTextfieldComponent } from '@taiga-ui/core';
 
 @Component({
@@ -10,7 +10,7 @@ import { TuiInput, TuiLabel, TuiTextfieldComponent } from '@taiga-ui/core';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CatalogFilterComponent {
-  protected pokemonPaginationService = inject(PokemonPaginationService);
+  protected catalogFacade = inject(MainCatalogFacade);
 
   protected onFilterInput(event: Event): void {
     if (!(event.target instanceof HTMLInputElement)) {
@@ -19,7 +19,7 @@ export class CatalogFilterComponent {
 
     const name = event.target.value;
 
-    this.pokemonPaginationService.currentPage.set(0);
-    this.pokemonPaginationService.filterByName.set(name);
+    this.catalogFacade.currentPage.set(0);
+    this.catalogFacade.filterByName.set(name);
   }
 }
