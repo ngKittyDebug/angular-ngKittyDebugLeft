@@ -2,6 +2,7 @@ import type { Routes } from '@angular/router';
 import { provideTranslocoScope } from '@jsverse/transloco';
 import { guestGuard } from '@shared/guards/guest.guard';
 import { LoginFormService } from './data/services/login-form.service';
+import { SignupFormService } from './data/services/signup-form.service';
 
 export const authRoutes: Routes = [
   {
@@ -30,7 +31,7 @@ export const authRoutes: Routes = [
           import('./ui/components/auth-page/signup-form/signup-form.component').then(
             (m) => m.SignupFormComponent,
           ),
-        providers: [provideTranslocoScope('auth')],
+        providers: [provideTranslocoScope('auth'), SignupFormService],
       },
     ],
   },
