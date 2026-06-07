@@ -3,7 +3,7 @@
   tuiAppearance="floating"
   tuiForm="m"
   class="signup__form"
-  (submit)="signupFormService.onSubmit($event)"
+  (submit)="onSubmit($event)"
 >
   <div class="signup__title-wrapper">
     <h2 class="signup__title" tuiTitle>{{ t('auth.signup.heading') }}</h2>
@@ -44,8 +44,8 @@
         id="password"
       />
     </tui-textfield>
-    @let userEmailPassword = firstErrorKey(signupFormService.signupForm.password);
-    <tui-error [error]="userEmailPassword ? t(userEmailPassword) : null" />
+    @let userPasswordError = firstErrorKey(signupFormService.signupForm.password);
+    <tui-error [error]="userPasswordError ? t(userPasswordError) : null" />
     <tui-textfield class="signup__textfield" iconStart="@tui.lock">
       <label tuiLabel for="passwordRepeat">{{ t('auth.signup.passwordRepeat') }}</label>
       <input
@@ -56,8 +56,8 @@
         id="passwordRepeat"
       />
     </tui-textfield>
-    @let userEmailRepeatPassword = firstErrorKey(signupFormService.signupForm.repeatPassword);
-    <tui-error [error]="userEmailRepeatPassword ? t(userEmailRepeatPassword) : null" />
+    @let userRepeatPasswordError = firstErrorKey(signupFormService.signupForm.repeatPassword);
+    <tui-error [error]="userRepeatPasswordError ? t(userRepeatPasswordError) : null" />
   </div>
   <button
     class="signup__form_button"

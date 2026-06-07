@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import type { SignUpModel } from '../models/signup-form.model';
+import type { SignupModel } from '../models/signup-form.model';
 import { form, pattern, required, submit, validate } from '@angular/forms/signals';
 import {
   EMAIL_PATTERN,
@@ -9,7 +9,7 @@ import {
 
 @Injectable()
 export class SignupFormService {
-  public readonly signupFormModel = signal<SignUpModel>({
+  public readonly signupFormModel = signal<SignupModel>({
     userName: '',
     email: '',
     password: '',
@@ -56,11 +56,5 @@ export class SignupFormService {
 
       return null;
     });
-  }
-
-  public onSubmit(event: Event): void {
-    event.preventDefault();
-
-    this.submitForm();
   }
 }

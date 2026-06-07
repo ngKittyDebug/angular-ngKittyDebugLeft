@@ -36,4 +36,9 @@ export class SignupFormComponent {
 
     return state.touched() ? (state.errors()[0]?.message ?? null) : null;
   }
+
+  protected onSubmit(event: Event): void {
+    event.preventDefault();
+    this.signupFormService.submitForm();
+  }
 }
