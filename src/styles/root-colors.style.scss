@@ -11,6 +11,12 @@
   --stat-defense-start: #3b82f6;
   --stat-defense-end: #06b6d4;
 
+  --stat-special-attack-start: #fb923c;
+  --stat-special-attack-end: #ea580c;
+
+  --stat-special-defense-start: #7c3aed;
+  --stat-special-defense-end: #a78bfa;
+
   /* Цвет для Speed (скорость) - желто-янтарный градиент */
   --stat-speed-start: #eab308;
   --stat-speed-end: #f59e0b;
@@ -85,6 +91,28 @@
   --type-unknown-start: #888888;
   --type-unknown-end: #686868;
 
+  --ability-visible-start: #e85048;
+  --ability-visible-end: #c03028;
+
+  --ability-hidden-start: #888888;
+  --ability-hidden-end: #686868;
+
   --angular: #dd0031;
   --rs: #ffda1f;
+
+  --egg-group-monster: #7d3c98;
+  --egg-group-water1: #2471a3;
+  --egg-group-bug: #1e8449;
+  --egg-group-flying: #2980b9;
+  --egg-group-ground: #8b6f47;
+  --egg-group-fairy: #c71585;
+  --egg-group-plant: #1e8449;
+  --egg-group-humanshape: #c0392b;
+  --egg-group-water3: #16a085;
+  --egg-group-mineral: #5d6d7e;
+  --egg-group-indeterminate: #6c5ce7;
+  --egg-group-water2: #2874a6;
+  --egg-group-ditto: #8e44ad;
+  --egg-group-dragon: #d35400;
+  --egg-group-no-eggs: #2c3e50;
 }
