@@ -13,7 +13,7 @@ export class PokemonPaginationService {
 
   public readonly currentPage = signal<number>(0);
 
-  public readonly countPokemonData = computed(() => this.filteredPokemonData()?.length);
+  public readonly countPokemonData = computed(() => this.filteredPokemonList()?.length);
 
   public readonly pagesCount = computed(() =>
     Math.ceil((this.countPokemonData() || 0) / INITIAL_LIMIT_STEP),
@@ -23,14 +23,14 @@ export class PokemonPaginationService {
 
   public readonly pokemonPaginationData = this._pokemonPagination.asReadonly().value;
 
-  public readonly filteredPokemonData = computed(() =>
+  public readonly filteredPokemonList = computed(() =>
     this.pokemonPaginationData()?.results.filter((pokemon) =>
       pokemon.name.includes(this.debounceFilter.value()),
     ),
   );
 
-  public readonly currentPokemonDataAfterPagination = computed(() =>
-    this.filteredPokemonData()?.slice(
+  public readonly paginatedPokemonList = computed(() =>
+    this.filteredPokemonList()?.slice(
       this.currentPage() * INITIAL_LIMIT_STEP,
       this.currentPage() * INITIAL_LIMIT_STEP + INITIAL_LIMIT_STEP,
     ),
