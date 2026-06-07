@@ -1,12 +1,14 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { MainCatalogFacade } from '@features/main-catalog/data/facades/main-catalog.facade';
+import { provideTranslocoScope, TranslocoDirective } from '@jsverse/transloco';
 import { TuiInput, TuiLabel, TuiTextfieldComponent } from '@taiga-ui/core';
 
 @Component({
   selector: 'left-paw-catalog-filter',
-  imports: [TuiTextfieldComponent, TuiInput, TuiLabel],
+  imports: [TuiTextfieldComponent, TuiInput, TuiLabel, TranslocoDirective],
   templateUrl: './catalog-filter.component.html',
   styleUrl: './catalog-filter.component.scss',
+  providers: [provideTranslocoScope('main')],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CatalogFilterComponent {
