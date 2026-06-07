@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import type { SignUpData } from '../models/signup-form.model';
+import type { SignUpModel } from '../models/signup-form.model';
 import { form, pattern, required, submit, validate } from '@angular/forms/signals';
 import {
   EMAIL_PATTERN,
@@ -9,14 +9,14 @@ import {
 
 @Injectable()
 export class SignupFormService {
-  public readonly signupModel = signal<SignUpData>({
+  public readonly signupFormModel = signal<SignUpModel>({
     userName: '',
     email: '',
     password: '',
     repeatPassword: '',
   });
 
-  public readonly signupForm = form(this.signupModel, (schemaPath) => {
+  public readonly signupForm = form(this.signupFormModel, (schemaPath) => {
     required(schemaPath.userName, { message: 'auth.errorMessages.usernameRequired' });
     pattern(schemaPath.userName, USER_PATTERN, {
       message: 'auth.errorMessages.username',
@@ -52,7 +52,7 @@ export class SignupFormService {
 
   public submitForm(): void {
     submit(this.signupForm, async () => {
-      localStorage.setItem('loginFormData', JSON.stringify(this.signupModel()));
+      localStorage.setItem('loginFormData', JSON.stringify(this.signupFormModel()));
 
       return null;
     });

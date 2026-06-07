@@ -20,14 +20,8 @@
         id="username"
       />
     </tui-textfield>
-    <tui-error
-      [error]="
-        signupFormService.signupForm.userName().touched() &&
-        signupFormService.signupForm.userName().errors()[0]?.message
-          ? t(signupFormService.signupForm.userName().errors()[0]!.message!)
-          : null
-      "
-    />
+    @let userNameError = firstErrorKey(signupFormService.signupForm.userName);
+    <tui-error [error]="userNameError ? t(userNameError) : null" />
     <tui-textfield class="signup__textfield" iconStart="@tui.mail">
       <label tuiLabel for="email">{{ t('auth.signup.email') }}</label>
       <input
@@ -38,14 +32,8 @@
         id="email"
       />
     </tui-textfield>
-    <tui-error
-      [error]="
-        signupFormService.signupForm.email().touched() &&
-        signupFormService.signupForm.email().errors()[0]?.message
-          ? t(signupFormService.signupForm.email().errors()[0]!.message!)
-          : null
-      "
-    />
+    @let userEmailError = firstErrorKey(signupFormService.signupForm.email);
+    <tui-error [error]="userEmailError ? t(userEmailError) : null" />
     <tui-textfield class="signup__textfield" iconStart="@tui.lock">
       <label tuiLabel for="password">{{ t('auth.signup.password') }}</label>
       <input
@@ -56,14 +44,8 @@
         id="password"
       />
     </tui-textfield>
-    <tui-error
-      [error]="
-        signupFormService.signupForm.password().touched() &&
-        signupFormService.signupForm.password().errors()[0]?.message
-          ? t(signupFormService.signupForm.password().errors()[0]!.message!)
-          : null
-      "
-    />
+    @let userEmailPassword = firstErrorKey(signupFormService.signupForm.password);
+    <tui-error [error]="userEmailPassword ? t(userEmailPassword) : null" />
     <tui-textfield class="signup__textfield" iconStart="@tui.lock">
       <label tuiLabel for="passwordRepeat">{{ t('auth.signup.passwordRepeat') }}</label>
       <input
@@ -74,14 +56,8 @@
         id="passwordRepeat"
       />
     </tui-textfield>
-    <tui-error
-      [error]="
-        signupFormService.signupForm.repeatPassword().touched() &&
-        signupFormService.signupForm.repeatPassword().errors()[0]?.message
-          ? t(signupFormService.signupForm.repeatPassword().errors()[0]!.message!)
-          : null
-      "
-    />
+    @let userEmailRepeatPassword = firstErrorKey(signupFormService.signupForm.repeatPassword);
+    <tui-error [error]="userEmailRepeatPassword ? t(userEmailRepeatPassword) : null" />
   </div>
   <button
     class="signup__form_button"
