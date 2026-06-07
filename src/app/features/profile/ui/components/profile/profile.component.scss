@@ -80,8 +80,11 @@ p {
 }
 .gif {
   width: 100%;
+  max-height: 30vh;
+  object-fit: contain;
 }
 .caught-text {
+  width: 100%;
   text-align: center;
 }
 .card-container {
