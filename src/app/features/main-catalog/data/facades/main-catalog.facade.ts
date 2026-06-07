@@ -15,5 +15,6 @@ export class MainCatalogFacade {
 
   public readonly filterByName = this.pokemonPaginationService.filterByName;
 
-  public readonly setPaginationCount = this.pokemonPaginationService.setPaginationCount;
+  public readonly setPaginationCount = (count: number): void =>
+    this.pokemonPaginationService.setPaginationCount(count);
 }
