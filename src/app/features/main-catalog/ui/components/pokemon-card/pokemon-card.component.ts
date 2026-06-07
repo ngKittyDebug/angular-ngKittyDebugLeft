@@ -1,3 +1,4 @@
+import { TitleCasePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import type { OnInit } from '@angular/core';
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
@@ -7,7 +8,7 @@ import { TuiBadge, TuiProgress } from '@taiga-ui/kit';
 
 @Component({
   selector: 'left-paw-pokemon-card',
-  imports: [TuiProgress, TuiBadge],
+  imports: [TuiProgress, TuiBadge, TitleCasePipe],
   templateUrl: './pokemon-card.component.html',
   styleUrl: './pokemon-card.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

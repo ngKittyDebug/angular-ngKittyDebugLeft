@@ -10,7 +10,7 @@
   />
   <figcaption class="card__information">
     <div class="card__line">
-      <h3 class="card__name">{{ pokemonCardData()?.name }}</h3>
+      <h3 class="card__name">{{ pokemonCardData()?.name | titlecase }}</h3>
       <p class="card__id">#{{ pokemonCardData()?.id }}</p>
     </div>
     <div class="card__line-left">
