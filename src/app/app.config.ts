@@ -37,6 +37,7 @@ export const appConfig: ApplicationConfig = {
         useValue: localStorage,
       },
     }),
+    // TODO При переходе новой версии тайги проверить работоспособность.
     provideSignalFormsConfig({
       classes: {
         'tui-invalid': (field) => field.state().invalid() && field.state().touched(),
