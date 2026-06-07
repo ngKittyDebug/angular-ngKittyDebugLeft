@@ -1,0 +1,20 @@
+{
+  "achievements": {
+    "heading": "Achievements",
+    "achievement": {
+      "exemple": "first game",
+      "exempleLong": "first game in the project"
+    }
+  },
+  "settings": {
+    "heading": "Settings"
+  },
+  "caught": {
+    "heading": "Caught pokemons",
+    "empty": "Looks like Pokémon keep successfully passing by you 😅"
+  },
+  "favorite": {
+    "heading": "Favorite pokemons",
+    "empty": "No favorite Pokémon yet 💔"
+  }
+}
