@@ -25,7 +25,7 @@ export class PokemonPaginationService {
 
   public readonly filteredPokemonList = computed(() =>
     this.pokemonPaginationData()?.results.filter((pokemon) =>
-      pokemon.name.includes(this.debounceFilter.value()),
+      pokemon.name.includes(this.debounceFilter.value().toLowerCase()),
     ),
   );
 
