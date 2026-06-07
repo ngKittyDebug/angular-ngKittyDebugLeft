@@ -1,12 +1,14 @@
+import { TitleCasePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import type { OnInit } from '@angular/core';
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { POKEMON_BASE_API } from '@core/constants/pokemon-constants';
 import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
 import { TuiBadge, TuiProgress } from '@taiga-ui/kit';
 
 @Component({
   selector: 'left-paw-pokemon-card',
-  imports: [TuiProgress, TuiBadge],
+  imports: [TuiProgress, TuiBadge, TitleCasePipe],
   templateUrl: './pokemon-card.component.html',
   styleUrl: './pokemon-card.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -23,7 +25,7 @@ export class PokemonCardComponent implements OnInit {
 
   public ngOnInit(): void {
     this.http
-      .get<PokemonDetailApiData>(`/mocks/${this.pokemonName()}.json`)
+      .get<PokemonDetailApiData>(`${POKEMON_BASE_API}/pokemon/${this.pokemonName()}`)
       .subscribe((data) => this.pokemonCardData.set(data));
   }
 }

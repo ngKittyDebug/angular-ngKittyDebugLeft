@@ -1,16 +1,18 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { CatalogFilterComponent } from '../filter/catalog-filter/catalog-filter.component';
 import { CatalogPaginationComponent } from '../pagination/catalog-pagination/catalog-pagination.component';
 import { PokemonCardComponent } from '../pokemon-card/pokemon-card.component';
-import { CatalogPageMocks } from './constants/catalog-page-mocks';
+import { TuiLoader, tuiLoaderOptionsProvider } from '@taiga-ui/core';
+import { MainCatalogFacade } from '@features/main-catalog/data/facades/main-catalog.facade';
 
 @Component({
   selector: 'left-paw-main-catalog-page',
-  imports: [CatalogFilterComponent, CatalogPaginationComponent, PokemonCardComponent],
+  imports: [CatalogFilterComponent, CatalogPaginationComponent, PokemonCardComponent, TuiLoader],
   templateUrl: './main-catalog-page.component.html',
   styleUrl: './main-catalog-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [tuiLoaderOptionsProvider({ size: 'xxl' })],
 })
 export class MainCatalogPageComponent {
-  protected readonly catalogPageMocks = CatalogPageMocks;
+  protected catalogFacade = inject(MainCatalogFacade);
 }
