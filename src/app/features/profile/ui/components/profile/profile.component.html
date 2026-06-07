@@ -13,7 +13,7 @@
       <h4>{{ t('profile.achievements.heading') }}</h4>
       <span class="line-mini"></span>
       <div class="achievement-box">
-        @for (item of achievements; track item) {
+        @for (item of achievementsList; track $index) {
           <figure class="achievement-icon">
             <tui-icon icon="@tui.star" />
             <figcaption class="achievement-text">

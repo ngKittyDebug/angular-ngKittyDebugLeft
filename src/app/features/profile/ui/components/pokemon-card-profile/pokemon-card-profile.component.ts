@@ -1,11 +1,9 @@
 import { ChangeDetectionStrategy, Component, input, signal } from '@angular/core';
 import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
-import { TuiProgress } from '@taiga-ui/kit';
 import type { OnInit } from '@angular/core';
 
 @Component({
   selector: 'left-paw-pokemon-card-profile',
-  imports: [TuiProgress],
   templateUrl: './pokemon-card-profile.component.html',
   styleUrl: './pokemon-card-profile.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
