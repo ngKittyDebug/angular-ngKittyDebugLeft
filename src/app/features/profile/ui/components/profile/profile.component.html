@@ -1,0 +1,56 @@
+<div *transloco="let t" class="wrapper">
+  <div class="user">
+    <div class="user-info">
+      <div tuiAvatar size="xxl" [round]="true">
+        <img src="images/team/PavelCat.jpg" alt="user" />
+      </div>
+      <div class="user-content">
+        <h2 class="name">Name</h2>
+        <p class="email">email@sobaka.com</p>
+      </div>
+    </div>
+    <div class="achievements">
+      <h4>{{ t('profile.achievements.heading') }}</h4>
+      <span class="line-mini"></span>
+      <div class="achievement-box">
+        @for (item of achievementsList; track $index) {
+          <figure class="achievement-icon">
+            <tui-icon icon="@tui.star" />
+            <figcaption class="achievement-text">
+              {{ t(`profile.achievements.achievement.${item}`) }}
+            </figcaption>
+          </figure>
+        }
+      </div>
+    </div>
+    <div class="settings">
+      <h4>{{ t('profile.settings.heading') }}</h4>
+      <span class="line-mini"></span>
+      <div></div>
+    </div>
+  </div>
+  <div class="caught">
+    <h3>{{ t('profile.caught.heading') }}</h3>
+    <span class="line"></span>
+    <div class="card-container">
+      @for (item of caughtList.results; track item) {
+        <left-paw-pokemon-card-profile [pokemonName]="item.name" />
+      } @empty {
+        <div class="caught-text">{{ t('profile.caught.empty') }}</div>
+        <img class="gif" src="images/gif/hide.gif" alt="ups" />
+      }
+    </div>
+  </div>
+  <div class="favorite">
+    <h3>{{ t('profile.favorite.heading') }}</h3>
+    <span class="line"></span>
+    <div class="card-container">
+      @for (item of favoritesList.results; track item) {
+        <left-paw-pokemon-card-profile [pokemonName]="item.name" />
+      } @empty {
+        <div class="caught-text">{{ t('profile.favorite.empty') }}</div>
+        <img class="gif" src="images/gif/hide.gif" alt="ups" />
+      }
+    </div>
+  </div>
+</div>

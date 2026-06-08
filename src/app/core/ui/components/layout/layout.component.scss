@@ -1,3 +1,19 @@
 :host {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  height: 100%;
+}
+
+.mobile_nav-bar {
+  background: var(--gradient-bg);
+  border-top: 1px solid var(--border);
+  position: fixed;
+  right: 0;
+  left: 0;
+  bottom: 0;
+  transition: all 0.3s;
+}
+.hide {
+  height: 0;
 }

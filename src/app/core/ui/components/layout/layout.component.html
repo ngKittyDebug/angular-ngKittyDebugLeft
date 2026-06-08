@@ -1,5 +1,22 @@
 <left-paw-header [navListItems]="navListItems" />
+
 <main class="root-wrapper">
   <router-outlet />
-  <h1>Vorobey and cats in English stream</h1>
 </main>
+<div *leftPawResponsiveRender="`(max-width:${tableBreakpoint}px)`">
+  <nav
+    tuiTabBar
+    *transloco="let t"
+    leftPawHideContent
+    [classDirective]="'hide'"
+    class="mobile_nav-bar"
+  >
+    @for (item of navListItems; track item.label) {
+      <a routerLink="item.link" tuiLink class="nav_link" tuiTabBarItem [icon]="item.icon">
+        <span>{{ t(item.label) }}</span>
+      </a>
+    }
+  </nav>
+</div>
+
+<left-paw-footer *leftPawResponsiveRender="`(min-width:${tableBreakpoint}px)`" />

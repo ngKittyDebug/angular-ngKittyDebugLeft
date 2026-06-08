@@ -1,24 +1,45 @@
 @let itemsList = navListItems();
 
-<header class="header_component">
+<header *transloco="let t" class="header_component">
   <a href="#" tuiLink class="icon_wrapper">
     <img [src]="pokeDexIcoSrc" alt="pokedex_icon" class="pokedex_icon" />
     <h1>PokeDex</h1>
   </a>
-  <nav class="nav_container">
-    @for (item of itemsList; track item.label) {
-      <a [href]="item.link" tuiLink class="nav_link">
-        <tui-icon [icon]="item.icon" />
-        <span>{{ item.label }}</span>
-      </a>
-    }
-  </nav>
+  <div *leftPawResponsiveRender="`(min-width:${tableBreakpoint}px)`" class="nav_container">
+    <nav class="nav_container">
+      @for (item of itemsList; track item.label) {
+        <a routerLink="item.link" tuiLink class="nav_link">
+          <tui-icon [icon]="item.icon" />
+          <span>{{ t(item.label) }}</span>
+        </a>
+      }
+    </nav>
+  </div>
+
   <div class="settings_buttons_container">
-    <button tuiButton size="xs" appearance="textfield" tuiIconButton iconStart="@tui.moon">
+    <button
+      tuiButton
+      size="xs"
+      appearance="textfield"
+      tuiIconButton
+      [iconStart]="themeService.themeIcon()"
+      (click)="themeService.toggleTheme()"
+    >
       theme
     </button>
-    <button tuiButton size="xs" appearance="textfield" tuiIconButton iconStart="@tui.languages">
-      language
+    <button
+      class="language_btn"
+      tuiButton
+      size="xs"
+      appearance="textfield"
+      iconStart="@tui.languages"
+      tuiButtonSelect
+      type="button"
+      [(ngModel)]="value"
+      (ngModelChange)="language.languageSwitch(value)"
+    >
+      {{ value }}
+      <tui-data-list-wrapper *tuiDropdown [items]="language.languages" />
     </button>
   </div>
 </header>

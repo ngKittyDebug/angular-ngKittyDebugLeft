@@ -1,0 +1,5 @@
+<tui-pagination
+  [index]="catalogFacade.currentPage()"
+  [length]="catalogFacade.pagesCount()"
+  (indexChange)="catalogFacade.setPaginationCount($event)"
+/>

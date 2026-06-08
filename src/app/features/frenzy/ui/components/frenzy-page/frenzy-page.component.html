@@ -1,0 +1,63 @@
+<main class="frenzy-page" [class.frenzy-page--mobile]="isMobile()">
+  <left-paw-scene
+    class="frenzy-page__scene"
+    [players]="players()"
+    [items]="items()"
+    [myId]="myId()"
+    [evolvingPlayers]="evolvingPlayers()"
+    [ownedFloats]="ownedFloats()"
+    [orphanFloats]="orphanFloats()"
+    [blasts]="blasts()"
+    (itemClick)="handleItemClick($event)"
+    (selfPoke)="handleSelfPoke()"
+    (steer)="handleSteer($event)"
+  />
+
+  @if (me(); as myself) {
+    <div class="frenzy-page__hud-top-left">
+      <left-paw-current-pokemon-status
+        [mass]="myself.mass"
+        [stage]="myself.stage"
+        [compact]="isMobile()"
+      />
+    </div>
+  }
+
+  <div class="frenzy-page__hud-top-right">
+    <div class="frenzy-page__hud-row">
+      <left-paw-sound-toggle [compact]="isMobile()" />
+      <left-paw-presence-counter
+        [online]="presenceCount()"
+        [disconnected]="disconnectedCount()"
+        [compact]="isMobile()"
+      />
+    </div>
+    <left-paw-leaderboard [entries]="leaderboard()" [myId]="myId()" [compact]="isMobile()" />
+  </div>
+
+  <div class="frenzy-page__overlay">
+    @switch (uiState()) {
+      @case ('connecting') {
+        <p class="frenzy-page__status">Connecting…</p>
+      }
+      @case ('roomFull') {
+        <p class="frenzy-page__status">Room is full. Try again later.</p>
+      }
+      @case ('closed') {
+        <p class="frenzy-page__status">Disconnected.</p>
+      }
+      @case ('fainted') {
+        <left-paw-fainted-modal
+          [stats]="faintedStats()"
+          [respawnReady]="respawnReady()"
+          [cooldownSeconds]="cooldownSeconds()"
+          (respawn)="handleRespawn()"
+          (chooseNew)="handleChooseNew()"
+        />
+      }
+      @case ('picking') {
+        <left-paw-pokemon-picker (submitPicker)="handlePickerSubmit($event)" />
+      }
+    }
+  </div>
+</main>

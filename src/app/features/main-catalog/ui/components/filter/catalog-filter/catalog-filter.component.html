@@ -1,0 +1,4 @@
+<tui-textfield *transloco="let t">
+  <label tuiLabel for="filter-name">{{ t('main.filterInputName') }}</label>
+  <input id="filter-name" tuiInput (input)="onFilterInput($event)" />
+</tui-textfield>

@@ -1,0 +1,114 @@
+@use 'src/styles/utility/_mixins.scss' as *;
+@use 'src/styles/_screens-width.scss' as *;
+
+:host {
+  display: block;
+  width: 100%;
+}
+h2,
+h3,
+h4,
+p {
+  padding: 0;
+  margin: 0;
+}
+.wrapper {
+  @include flex_container_function(
+    $align_items: flex-start,
+    $justify_content: space-between,
+    $gap: 2rem
+  );
+  width: 100%;
+  margin: 2rem 0;
+}
+.user {
+  @include flex_container_function($display: flex, $align_items: stretch, $gap: 1rem);
+  width: 100%;
+}
+.user-content {
+  @include flex_container_function($direction: column, $align_items: start, $gap: 0.5rem);
+}
+.user-info,
+.achievements,
+.settings {
+  background: var(--gradient-bg);
+  border: 2px solid var(--sidebar-primary);
+  border-radius: 2rem;
+  flex: 2;
+  padding: 1rem;
+}
+.achievement-box {
+  @include flex_container_function($gap: 0.5rem, $flex_wrap: wrap, $justify_content: space-evenly);
+  padding: 0.5rem 0;
+  color: #fff;
+}
+.achievement-icon {
+  @include flex_container_function($direction: row, $flex_wrap: nowrap, $align_items: center);
+  background: linear-gradient(135deg, var(--chart-1), var(--chart-5), var(--chart-1));
+  padding: 0.5rem;
+  margin: 0;
+  border: 2px solid var(--ring);
+  border-radius: 1rem;
+  width: fit-content;
+}
+.achievement-text {
+  margin-left: 0.5rem;
+  text-wrap: wrap;
+}
+.user-info {
+  flex: 1;
+  @include flex_container_function($gap: 1rem, $flex_wrap: nowrap, $justify_content: start);
+}
+
+.caught,
+.favorite {
+  flex: 1;
+  background: var(--gradient-bg);
+  border: 2px solid var(--sidebar-primary);
+  border-radius: 2rem;
+  padding: 2rem;
+}
+.line,
+.line-mini {
+  width: 100%;
+  display: inline-block;
+}
+.line {
+  border: 2px solid var(--sidebar-primary);
+}
+.line-mini {
+  border: 1px solid var(--sidebar-primary);
+}
+.gif {
+  width: 100%;
+  max-height: 30vh;
+  object-fit: contain;
+}
+.caught-text {
+  width: 100%;
+  text-align: center;
+}
+.card-container {
+  @include flex_container_function($justify_content: space-around, $gap: 2rem);
+  width: 100%;
+  padding: 1rem 0;
+}
+
+@include respond_to($screen-large, max) {
+  .user {
+    flex-direction: column;
+  }
+  .wrapper {
+    gap: 1rem;
+  }
+  .caught,
+  .favorite {
+    padding: 1rem;
+  }
+}
+@include respond_to($screen-small, max) {
+  .wrapper {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

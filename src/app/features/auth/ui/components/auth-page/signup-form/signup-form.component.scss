@@ -1,0 +1,72 @@
+@use 'utility/mixins';
+@use 'screens-width';
+
+:host {
+  @include mixins.flex_container_function($direction: column);
+  border-radius: 1.6rem;
+  background: var(--gradient-bg);
+  width: 100%;
+  max-width: 32rem;
+  padding: 0.8rem 1.6rem;
+  * {
+    margin: 0;
+  }
+}
+
+// TODO При переходе новой версии тайги проверить работоспособность.
+:host
+  ::ng-deep
+  [tuiAppearance][data-appearance='textfield']:is(
+    [data-mode~='invalid'],
+    .tui-invalid,
+    :invalid
+  ):not(:has(input.ng-touched)):not(
+    [data-mode~='readonly'],
+    [data-mode~='valid'],
+    [data-state='disabled'],
+    :disabled,
+    ._disabled
+  ) {
+  outline-color: var(--tui-border-normal, #ebedf2) !important;
+
+  --tui-caption: var(--tui-text-secondary, #666e80) !important;
+}
+
+.signup__form {
+  width: 100%;
+}
+
+.signup__inputs {
+  @include mixins.flex_container_function($direction: column, $flex_wrap: nowrap, $gap: 0.8rem);
+  width: 100%;
+  margin: 1.2rem 0;
+}
+
+.signup__textfield {
+  width: 100%;
+}
+
+.signup__title-wrapper {
+  @include mixins.flex_container_function($direction: column, $gap: 0.8rem);
+}
+
+.signup__title {
+  text-align: center;
+}
+
+.signup__subtitle {
+  text-align: center;
+}
+
+.signup__form_button {
+  width: 100%;
+}
+
+.signup__form_text {
+  text-align: center;
+}
+
+.signup__form_link {
+  text-decoration: none;
+  color: var(--primary);
+}

@@ -1,6 +1,7 @@
 import { TuiRoot } from '@taiga-ui/core';
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { TUI_DARK_MODE } from '@taiga-ui/core';
 
 @Component({
   selector: 'left-paw-app-root',
@@ -9,4 +10,6 @@ import { RouterOutlet } from '@angular/router';
   styleUrl: './app.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AppComponent {}
+export class AppComponent {
+  protected readonly darkMode = inject(TUI_DARK_MODE);
+}

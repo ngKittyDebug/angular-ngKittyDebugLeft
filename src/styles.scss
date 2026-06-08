@@ -1,7 +1,9 @@
+@use './styles/screens-width.scss';
 @use './styles/utility/mixins';
 @use './styles/root-colors.style.scss';
 @use './styles/dark-style.scss';
 @use './styles/light-style.scss';
+@use './styles/aquarium-theme.scss';
 @use './styles/buttons-taiga-appearances.scss';
 
 * {
@@ -13,6 +15,22 @@ body {
   margin: 0;
   min-height: 100%;
   letter-spacing: 0.03em;
+  cursor:
+    url('./../public/images/cursor/cursor-default.png') 0 0,
+    auto;
+}
+
+a,
+button,
+[tuiButton],
+[tuiLink],
+tui-button,
+tui-link,
+.tui-island,
+[role='button'] {
+  cursor:
+    url('./../public/images/cursor/cursor-pointer.png') 0 0,
+    pointer !important;
 }
 
 body {
@@ -28,9 +46,11 @@ body {
 
 .root-wrapper {
   @include mixins.center_content;
-
   padding: 0 2rem;
   flex-direction: column;
   width: 100%;
-  min-height: 100vh;
+  flex: 1 0 auto;
+  @include mixins.respond-to(screens-width.$screen-x-small, 'max') {
+    padding: 0 0.5rem;
+  }
 }

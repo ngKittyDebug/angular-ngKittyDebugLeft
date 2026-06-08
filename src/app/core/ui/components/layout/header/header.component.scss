@@ -1,7 +1,8 @@
 @use 'utility/mixins';
+@use 'screens-width';
 
 :host {
-  display: block;
+  @include mixins.flex_container_function($direction: row);
   width: 100%;
   padding: 0.75rem 1rem;
   margin: 0 auto;
@@ -9,10 +10,13 @@
   border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0px;
+  z-index: 100;
 }
 
 .header_component {
   display: flex;
+  max-width: screens-width.$screen-xx-large;
+  width: 100%;
   flex-direction: row;
   justify-content: space-between;
 }
@@ -47,6 +51,9 @@
     padding: 1rem;
     border-radius: 1.25rem;
   }
+  .language_btn {
+    width: 4rem;
+  }
 }
 .icon_wrapper {
   @include mixins.center_content;
@@ -63,10 +70,4 @@
 
 .pokedex_icon {
   width: 2.5rem;
-}
-
-@media (max-width: 768px) {
-  .nav_container {
-    display: none;
-  }
 }

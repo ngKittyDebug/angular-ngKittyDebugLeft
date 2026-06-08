@@ -1,0 +1,89 @@
+@use 'utility/mixins';
+@use 'screens-width';
+
+$types:
+  monster, water1, bug, flying, ground, fairy, plant, humanshape, water3, mineral, indeterminate,
+  water2, ditto, dragon, no-eggs;
+
+:host {
+  @include mixins.flex_container_function($direction: column, $align-items: start, $gap: 1rem);
+  width: 100%;
+  background: var(--gradient-bg);
+  border-radius: 1.6rem;
+  border: 1px solid var(--border);
+  padding: 1rem;
+  * {
+    margin: 0;
+  }
+}
+
+.pokemon__species_container {
+  @include mixins.grid_container_function(
+    $grid_template_columns: repeat(2, 1fr),
+    $align_items: start,
+    $gap: 1rem
+  );
+  grid-auto-flow: dense;
+  width: 100%;
+}
+
+.species_card {
+  @include mixins.flex_container_function($direction: column, $gap: 1rem);
+  &-capture {
+    grid-column: 1;
+  }
+  &-happiness {
+    grid-column: 1;
+  }
+  &-egg_groups {
+    grid-column: 2;
+  }
+  &-1 {
+    grid-column: 2;
+    height: 2rem;
+  }
+  &-2 {
+    grid-column: 2;
+    height: 2rem;
+  }
+}
+
+.circle__progress {
+  position: relative;
+  display: inline-block;
+  color: var(--tui-text-primary);
+}
+
+.circle__progress_label {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  display: flex;
+  font: var(--tui-typography-body-s);
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.species_card__badge_container {
+  @include mixins.flex_container_function($direction: column, $gap: 1rem);
+}
+
+.species__egg_group {
+  @each $type in $types {
+    color: var(--accent-foreground);
+    text-transform: uppercase;
+    &-#{$type} {
+      background-color: var(--egg-group-#{$type});
+    }
+  }
+}
+
+.circle__progress_image {
+  transform-origin: center;
+  @include mixins.respond-to(screens-width.$screen-x-small, 'max') {
+    transform: scale(0.85);
+  }
+}

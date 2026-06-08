@@ -1,0 +1,79 @@
+<form
+  *transloco="let t"
+  tuiAppearance="floating"
+  tuiForm="m"
+  class="signup__form"
+  (submit)="onSubmit($event)"
+>
+  <div class="signup__title-wrapper">
+    <h2 class="signup__title" tuiTitle>{{ t('auth.signup.heading') }}</h2>
+    <p class="signup__subtitle" tuiSubtitle>{{ t('auth.signup.subheading') }}</p>
+  </div>
+  <div class="signup__inputs">
+    <tui-textfield class="signup__textfield" iconStart="@tui.user">
+      <label tuiLabel for="username">{{ t('auth.signup.username') }}</label>
+      <input
+        [formField]="signupFormService.signupForm.userName"
+        placeholder="John"
+        tuiInput
+        type="text"
+        id="username"
+      />
+    </tui-textfield>
+    @let userNameError = firstErrorKey(signupFormService.signupForm.userName);
+    <tui-error [error]="userNameError ? t(userNameError) : null" />
+    <tui-textfield class="signup__textfield" iconStart="@tui.mail">
+      <label tuiLabel for="email">{{ t('auth.signup.email') }}</label>
+      <input
+        [formField]="signupFormService.signupForm.email"
+        placeholder="john@wick.com"
+        tuiInput
+        type="email"
+        id="email"
+      />
+    </tui-textfield>
+    @let userEmailError = firstErrorKey(signupFormService.signupForm.email);
+    <tui-error [error]="userEmailError ? t(userEmailError) : null" />
+    <tui-textfield class="signup__textfield" iconStart="@tui.lock">
+      <label tuiLabel for="password">{{ t('auth.signup.password') }}</label>
+      <input
+        [formField]="signupFormService.signupForm.password"
+        placeholder="333333Qq"
+        tuiInput
+        type="password"
+        id="password"
+      />
+    </tui-textfield>
+    @let userPasswordError = firstErrorKey(signupFormService.signupForm.password);
+    <tui-error [error]="userPasswordError ? t(userPasswordError) : null" />
+    <tui-textfield class="signup__textfield" iconStart="@tui.lock">
+      <label tuiLabel for="passwordRepeat">{{ t('auth.signup.passwordRepeat') }}</label>
+      <input
+        [formField]="signupFormService.signupForm.repeatPassword"
+        placeholder="333333Qq"
+        tuiInput
+        type="password"
+        id="passwordRepeat"
+      />
+    </tui-textfield>
+    @let userRepeatPasswordError = firstErrorKey(signupFormService.signupForm.repeatPassword);
+    <tui-error [error]="userRepeatPasswordError ? t(userRepeatPasswordError) : null" />
+  </div>
+  <button
+    class="signup__form_button"
+    tuiButton
+    appearance="brand-accent"
+    type="submit"
+    [disabled]="!signupFormService.signupForm().valid()"
+  >
+    {{ t('auth.signup.button') }}
+  </button>
+  <div class="signup__title-wrapper">
+    <p class="signup__form_text">
+      {{ t('auth.signup.endingText')
+      }}<a [routerLink]="loginRouterPath" tuiLink class="signup__form_link">{{
+        t('auth.signup.signupLink')
+      }}</a>
+    </p>
+  </div>
+</form>
