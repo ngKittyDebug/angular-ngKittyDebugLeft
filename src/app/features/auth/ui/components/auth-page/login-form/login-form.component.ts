@@ -27,7 +27,7 @@ export class LoginFormComponent {
   private readonly loginFormService = inject(LoginFormService);
   public readonly loginForm = this.loginFormService.loginForm;
 
-  protected submit(): void {
+  protected onSubmit(): void {
     if (this.loginForm.invalid) {
       return;
     }
