@@ -9,6 +9,7 @@ import { Directive, input, signal } from '@angular/core';
 })
 export class HideContentDirective {
   private previousScrollTop = 0;
+  private readonly scrollThreshold = 50;
   public readonly isHideWithScrollDown = input<boolean>(true);
   public readonly isCurrentClassHide = signal(false);
   public readonly classDirective = input.required<string>();
@@ -18,8 +19,12 @@ export class HideContentDirective {
       return;
     }
     const scrollTop = window.scrollY;
+    const toDown = scrollTop - this.previousScrollTop > 0;
+    const isThresholdDone = Math.abs(scrollTop - this.previousScrollTop) >= this.scrollThreshold;
 
-    this.isCurrentClassHide.set(scrollTop > this.previousScrollTop === this.isHideWithScrollDown());
-    this.previousScrollTop = scrollTop;
+    if (isThresholdDone) {
+      this.isCurrentClassHide.set(toDown === this.isHideWithScrollDown());
+      this.previousScrollTop = scrollTop;
+    }
   }
 }
