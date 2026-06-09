@@ -11,5 +11,5 @@ import { TranslocoDirective } from '@jsverse/transloco';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AboutPageComponent {
-  protected readonly AccordionData = accordionData;
+  protected readonly accordionData = accordionData;
 }
