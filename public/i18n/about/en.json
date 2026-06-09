@@ -1,12 +1,15 @@
 {
   "pavelkuvsh1noff": {
-    "name": "Pavel"
+    "name": "Pavel",
+    "position": "Frontend developer / Designer"
   },
   "alexgorser": {
-    "name": "Alex👑"
+    "name": "Alex👑",
+    "position": "Fullstack developer / Team lead"
   },
   "oksi2510": {
-    "name": "Oksana"
+    "name": "Oksana",
+    "position": "Frontend developer / Designer"
   },
   "description": {
     "partOne": " is an interactive Pokémon catalog created as part of a team course project",
