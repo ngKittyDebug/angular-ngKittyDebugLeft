@@ -302,11 +302,13 @@ Autonomous mode exists for scheduled routines and turns on **only when the invok
 the marker `Autonomous mode`** — never inferred from context. Without the marker, always present
 the draft and wait, even if nobody seems to be answering.
 
-**First: make sure `gh` works.** Cloud sandboxes often ship without it, and every script of this
-skill wraps it. Do NOT fall back to improvising with GitHub MCP tools before walking the bootstrap
-ladder in `.claude/skills/_shared/gh-bootstrap.md` (install the static binary → harvest the git
-credential token → only then the MCP fallback, with its guard-preserving rules). State in the run
-report which rung you ran on.
+**First: pick the GitHub backend** per `.claude/skills/_shared/github-backend.md`. Locally that's
+the `gh` CLI and this skill's scripts, exactly as written. Cloud routine sandboxes firewall
+`api.github.com`, so there the **GitHub MCP tools are the canonical backend** — the playbook in
+that file maps every script of this skill to its MCP equivalent with the same guard semantics
+(one review object via the pending-review flow, the (file,line) guard, manual `+`-line
+validation, thread-resolve skipped). Don't improvise outside the playbook; state the chosen
+backend in the run report.
 
 ### Mentor identity — `MENTOR_LOGINS`
 

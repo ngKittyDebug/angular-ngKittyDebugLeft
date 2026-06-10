@@ -304,12 +304,13 @@ The interactive flow above is the **default**. Autonomous mode exists for schedu
 turns on **only when the invoking prompt contains the marker `Autonomous mode`** — never inferred
 from context. Without the marker, behave interactively even if no one seems to be answering.
 
-**First: make sure `gh` works.** Cloud sandboxes often ship without it, and both the dedup queries
-and `create_issue.sh` (which writes the provenance marker — the dedup anchor of every future run)
-wrap it. Do NOT fall back to improvising with GitHub MCP tools before walking the bootstrap ladder
-in `.claude/skills/_shared/gh-bootstrap.md` (install the static binary → harvest the git credential
-token → only then the MCP fallback, where the marker and labels become your manual responsibility).
-State in the run report which rung you ran on.
+**First: pick the GitHub backend** per `.claude/skills/_shared/github-backend.md`. Locally that's
+the `gh` CLI and `create_issue.sh`, exactly as written. Cloud routine sandboxes firewall
+`api.github.com`, so there the **GitHub MCP tools are the canonical backend** — the playbook in
+that file maps each operation (dedup search, create-with-marker, comment, reopen) to its MCP
+equivalent; the provenance marker `<!-- ai-codebase-audit:class=<slug> -->` and the labels become
+your manual responsibility, board wiring is skipped and reported. Don't improvise outside the
+playbook; state the chosen backend in the run report.
 
 What changes (and only this):
 
