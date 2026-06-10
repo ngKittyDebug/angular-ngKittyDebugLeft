@@ -1,0 +1,329 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## 1. Think Before Coding
+
+**Don't assume. Don't hide confusion. Surface tradeoffs.**
+
+Before implementing:
+
+- State your assumptions explicitly. If uncertain, ask.
+- If multiple interpretations exist, present them - don't pick silently.
+- If a simpler approach exists, say so. Push back when warranted.
+- If something is unclear, stop. Name what's confusing. Ask.
+
+## 2. Simplicity First
+
+**Minimum code that solves the problem. Nothing speculative.**
+
+- No features beyond what was asked.
+- No abstractions for single-use code.
+- No "flexibility" or "configurability" that wasn't requested.
+- No error handling for impossible scenarios.
+- If you write 200 lines and it could be 50, rewrite it.
+
+Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
+
+## 3. Surgical Changes
+
+**Touch only what you must. Clean up only your own mess.**
+
+When editing existing code:
+
+- Don't "improve" adjacent code, comments, or formatting.
+- Don't refactor things that aren't broken.
+- Match existing style, even if you'd do it differently.
+- If you notice unrelated dead code, mention it - don't delete it.
+
+When your changes create orphans:
+
+- Remove imports/variables/functions that YOUR changes made unused.
+- Don't remove pre-existing dead code unless asked.
+
+The test: Every changed line should trace directly to the user's request.
+
+## 4. Goal-Driven Execution
+
+**Define success criteria. Loop until verified.**
+
+Transform tasks into verifiable goals:
+
+- "Add validation" → "Write tests for invalid inputs, then make them pass"
+- "Fix the bug" → "Write a test that reproduces it, then make it pass"
+- "Refactor X" → "Ensure tests pass before and after"
+
+For multi-step tasks, state a brief plan:
+
+```
+1. [Step] → verify: [check]
+2. [Step] → verify: [check]
+3. [Step] → verify: [check]
+```
+
+Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+
+## Project board
+
+Tasks and issues are tracked on GitHub Projects: https://github.com/orgs/ngKittyDebug/projects/2
+
+## Commands
+
+```bash
+pnpm start          # dev server at http://localhost:4200
+pnpm build          # production build
+pnpm test           # run tests once (Vitest via Angular builder)
+pnpm test:cov       # tests with coverage report
+pnpm lint           # ESLint check
+pnpm lint:fix       # ESLint auto-fix
+pnpm format         # Prettier check
+pnpm format:fix     # Prettier auto-fix
+pnpm typecheck      # strict TypeScript check (tsc --noEmit)
+pnpm preflight      # typecheck + lint + format + test in one shot (run before pushing)
+```
+
+**Run a single test file:**
+
+```bash
+pnpm ng test --include="**/main-catalog-page.component.spec.ts"
+```
+
+## Git conventions
+
+**Branch naming** (enforced by `validate-branch-name` on pre-push):
+
+```
+(chore|feat|fix|docs|style|refactor|perf)/<word>[-_]<word>
+```
+
+**Commit types** (enforced by commitlint): `build`, `ci`, `docs`, `feat`, `fix`, `perf`, `refactor`, `revert`, `style`, `test`, `chore`
+
+**Hooks:**
+
+- `pre-commit`: lint-staged (ESLint + Prettier on staged files) + `typecheck`
+- `pre-push`: validate-branch-name + `pnpm lint` + `pnpm test`
+
+## Architecture
+
+```
+src/app/
+├── core/
+│   ├── services/          # ThemeSwitcherService (TUI_DARK_MODE), LanguageSwitcher (Transloco)
+│   └── ui/components/layout/  # Shell: LayoutComponent wraps Header + RouterOutlet + Footer
+├── features/
+│   ├── features.routes.ts # Aggregates all feature route arrays
+│   ├── main-catalog/      # Default route (''), behind authGuard: pokemon catalog with filter + pagination + cards
+│   ├── auth/              # /auth (children /login, /signup), behind guestGuard: localStorage-based login/signup
+│   ├── frenzy/            # /frenzy (data: { immersive: true }): realtime PartyKit game (see Frenzy sections)
+│   ├── pokemon-profile/   # /pokemon/:id — pokemon detail page
+│   ├── profile/           # /profile — user profile page
+│   ├── about/             # /about route
+│   └── not-found/         # Wildcard 404
+└── shared/
+    ├── models/            # Pokemon interfaces (PokemonCardModel, detail/list/species API shapes)
+    ├── guards/            # auth.guard (CanActivateFn → redirect to /auth/login with returnUrl) + guest.guard (inverse)
+    ├── constants/         # patterns-constants.ts — PASSWORD_PATTERN / EMAIL_PATTERN / USER_PATTERN
+    ├── directives/        # [leftPawHideContent] (scroll visibility) + [leftPawResponsiveRender] (CDK BreakpointObserver)
+    ├── pipes/             # shared pipes
+    └── mocks/             # TuiRootComponentMock — use in specs instead of real TuiRoot
+```
+
+**TypeScript path aliases:**
+
+- `@core/*` → `src/app/core/*`
+- `@features/*` → `src/app/features/*`
+- `@shared/*` → `src/app/shared/*` (внутри Angular)
+- `@game/*` → `shared-game/*` — **контракт** (типы/конфиг), общий для клиента и `partykit-server/`. Server-authoritative движок живёт НЕ здесь, а в `partykit-server/.../engine/`. Раскладка по активностям — импортируй как `@game/frenzy/*` (файлы в `shared-game/frenzy/`). **Тюнинг-конфиг — `@game/frenzy/config`** (НЕ `constants`): главный `config.ts` собирает плоский `FRENZY` спредом из per-concern партиалов `shared-game/frenzy/config/*` (`hp`, `world`, `collision`, `player-collision`, `items`, `spawn`, `buffs`, `player`, `loop`, `floats`, `score`, `npc`) плюс `features` отдельным ключом — ретюнишь концерн → правишь его партиал, `FRENZY.xxx` снаружи не меняется. (`hp` — здоровье покемона: `startingHp`/`maxHp`/`decayPerTick`/`decayIntervalMs`/`lowHpWarningThreshold` — пороги стадий теперь едут per-player в `Player.body`, см. «pokemon/theme-agnostic»; `floats` — `floatPriority`.) **Feature-flags** живут в `config/features.ts` (`FRENZY.features.items[type] = { enabled }` + `FRENZY.features.npc[kind]` той же формы — `NPC_FEATURES`): один булев тумблер на сущность гейтит ВСЕ пути её спавна (см. ниже про `pickItemType`); хелпер `isItemEnabled(type)` рядом в `config.ts`. **Сервер pokemon-agnostic:** контракт НЕ перечисляет ростер покемонов — `Player.appearance` это непрозрачная строка, сервер её только ретранслирует (валидирует лишь как непустую строку ≤32). `Line`-union, метки, спрайты и резолв `appearance→Line` (с фолбэком на неизвестное) живут на клиенте в `ui/constants/pokemon-registry.ts`.
+- `@environments/*` → `src/environments/*`
+
+**Не выдумывать новые alias на ходу.** Если нужно делиться кодом между Angular и `partykit-server/` — расширять `shared-game/` под `@game/*` (новая активность → своя подпапка `shared-game/<game>/`; общий между играми код — `shared-game/common/`, когда реально появится). Если внутри Angular — расширять `@core/*`, `@features/*`, `@shared/*`.
+
+**Routing pattern:** All routes are lazy-loaded via `loadComponent`. The root route loads `LayoutComponent`, which renders child feature routes in its `<router-outlet>`. Children (`features.routes.ts`): `main-catalog` (`''`, behind `authGuard`), `auth` (`/auth` with `/login`+`/signup` children, redirect `'' → signup`, behind `guestGuard`), `profile` (`/profile`), `pokemon-profile` (`/pokemon/:id`), `frenzy` (`/frenzy`, carries `data: { immersive: true }` for full-bleed layout, no guard — public game), `about`, wildcard 404. Auth state lives in localStorage (key `loginFormData`); the two guards read it and cross-redirect.
+
+**i18n:** Transloco with `en`/`ru` locales, defaulting to `ru`. Translation files live in `public/i18n/` (flat `en.json`/`ru.json` plus per-section subfolders, e.g. `public/i18n/frenzy/en.json`). Language persists via `transloco-persist-lang` (localStorage). Use `LanguageSwitcher` service to switch languages.
+
+**Theming:** Taiga UI v5 dark/light mode via `ThemeSwitcherService` (wraps `TUI_DARK_MODE` signal). Global styles in `src/styles/` — custom Taiga appearances in `buttons-taiga-appearances.scss`, CSS variables for colors in `root-colors.style.scss`, screen breakpoints in `_screens-width.scss`.
+
+## UI library — Taiga UI v5
+
+**Прежде чем писать SCSS-полоски, спиннеры, кнопки, аккордеоны, чекбоксы — проверь, нет ли готового Taiga компонента.** Свои реализации только если в Taiga нет аналога.
+
+Импорты:
+
+- Атомарные элементы (`TuiButton`, `TuiLink`, `TuiIcon`, `TuiRoot`, токены `TUI_DARK_MODE`, `provideTaiga`) — из **`@taiga-ui/core`**.
+- Виджеты (`TuiAccordion`, `TuiProgressBar`, `TuiProgressSegmented`, `TuiAvatar` и т.д.) — из **`@taiga-ui/kit`**.
+
+Паттерны:
+
+- Большинство Taiga-компонентов — это **директивы на нативных тегах**, а не custom-elements. Пример: `<progress tuiProgressBar [value]="x" [max]="100" size="m" [color]="cssColor">`. Не пиши `<tui-progress-bar>`.
+- Цвета передавай как `var(--tui-status-positive)` / `--tui-status-warning` / `--tui-status-negative` (см. тему Taiga) вместо хардкода hex.
+- `size`-input принимает один из `xxs | xs | s | m | l | xl | xxl` — не выдумывай свои значения.
+- **`TuiAvatar` с растровой картинкой (PNG-спрайт, фото) — только через дочерний `<img>`, НЕ через `[tuiAvatar]="url"`.** Вход `[tuiAvatar]` уходит в `iconStart` и для не-`@tui.*` значений рендерит картинку как моно-маску (`mask` + `currentColor`) → тёмный силуэт. Правильно: `<span tuiAvatar size="s"><img [src]="url" alt=""/></span>` (Taiga сам уберёт фон и сделает `object-fit: cover`). `[tuiAvatar]="'@tui.user'"` для иконок — ОК.
+- Темизация — через `provideTaiga()` в `app.config.ts` + `TUI_DARK_MODE` signal в `ThemeSwitcherService`. Не дёргай `<html>`-классы напрямую.
+
+В тестах вместо реального `TuiRoot` подключай `TuiRootComponentMock` из `@shared/mocks` — иначе TestBed тащит за собой DI-граф темы.
+
+## i18n — Transloco
+
+**Любой пользовательский текст (label, hint, кнопка, aria-label, статус) — через Transloco. Хардкод строк в шаблонах запрещён.** Числа, имена пользователей, hp-значения — это данные, не текст, их через `{{ value }}` без `t()`.
+
+Паттерн использования в фиче:
+
+1. **Создать scope-папку** `public/i18n/<scope>/en.json` и `ru.json`. Структура JSON совпадает на обоих языках, ключи в camelCase. Пример: `public/i18n/frenzy/{en,ru}.json`.
+2. **Подключить scope в `*.routes.ts`** через `provideTranslocoScope('<scope>')`:
+
+   ```ts
+   {
+     path: '',
+     loadComponent: () => import('...').then((m) => m.MyPageComponent),
+     providers: [provideTranslocoScope('frenzy')],
+   }
+   ```
+
+3. **В компоненте** импортировать `TranslocoDirective` из `@jsverse/transloco` (стандартный паттерн — directive в шаблоне, не `TranslocoPipe` и не `TranslocoService` в TS).
+4. **В шаблоне** оборачивать корневой элемент `*transloco="let t; prefix: '<scope>.<section>'"`:
+
+   ```html
+   <section *transloco="let t; prefix: 'frenzy.currentPokemonStatus'">
+     <span>{{ t('hpLabel') }}</span>
+     <span>{{ t('stageBadge', { stage: stage() }) }}</span>
+   </section>
+   ```
+
+   Параметры в перевод передаются объектом во втором аргументе `t()` и подставляются через `{{paramName}}` в JSON.
+
+Loader (`src/app/transloco-loader.ts`) дергает `/i18n/<lang>.json`. Для scope Transloco запрашивает уже как `<scope>/<lang>` — поэтому файл должен лежать в `public/i18n/<scope>/<lang>.json`. Если переименовать scope — переименуй и папку.
+
+В тестах используй `TranslocoTestingModule.forRoot(...)` (см. `fainted-modal.component.spec.ts`) — реальный HTTP-loader в spec-окружении не нужен.
+
+## Component conventions
+
+- **Selector prefix:** `left-paw-`
+- **Change detection:** Always `ChangeDetectionStrategy.OnPush` (enforced by ESLint)
+- **Standalone components only** (Angular 21, no NgModules)
+- **Signals preferred** over observables for local state (`@angular-eslint/prefer-signals` warn)
+- **File suffixes:** `.component.ts`, `.service.ts`, `.directive.ts`, `.pipe.ts`, `.resolver.ts`
+- **Styles:** SCSS per component; global style preprocessor includes `src/styles` so partials are importable without relative paths
+
+### Frenzy client data layer (`features/frenzy/data/`)
+
+- **`store/` — NgRx SignalStore** (а не «голые» signals — это и есть основное состояние фичи): `frenzy.store.ts` держит серверный стейт + `myId`/fainted-инфо/`roomFull`, отдаёт computed (`connectionStatus`, `leaderboard`, `me`, `presenceCount`, `disconnectedCount`) и методы (`connect`/`disconnect`/`click`/`steer`/`join`/`dismissFainted`); `frenzy-stats.store.ts` копит статистику сессии (`maxHp`, `maxStage`, `eatenByType`, lifespan). Чистый редьюсер серверных сообщений вынесен в `store/apply-server-message.ts` (+ spec).
+- **`logic/` — чистые функции** настроения покемона: `pokemon-mood.ts` (`getMood(hp, stage)` → `'starving' | 'hungry' | 'content' | 'happy'`), `is-sad.ts`.
+- **`services/`** делится на две подсистемы: `effects/` (floating-сообщения и FX, см. ниже) и `sound/` (отдельная аудио-подсистема — `audio-engine.service.ts` + per-effect сервисы + `sound-settings.service.ts`). Не путать: `effects/` и `sound/` сосуществуют.
+
+### Frenzy scene elements (падающие/всплывающие)
+
+- **`user-select: none`** на всех игровых падающих/всплывающих элементах (айтемы, floating-текст, статус-сообщения) — их кликают/таскают, а не выделяют. Уже стоит на `.scene` и `.scene__item`; компонент `left-paw-floating-text` ставит его на `:host`.
+- **Позиционирование по нормализованным `x,y` (0..1) — через директиву `[leftPawScenePosition]="{ x, y }"`** (`ui/directives/scene-position.directive.ts`), а НЕ инлайновые `[style.left.%]`/`[style.top.%]`. Директива пишет только `left`/`top`; центрирование и анимация остаются в CSS (`transform: translate(...)`). Применяется к падающим айтемам, bubble-burst, blast и **orphan-floating-тексту** (см. ниже). Для широких боксов (floating-текст) добавляй `[scenePositionClampX]="true"` — это зажимает `x` по измеренной ширине, чтобы у краёв сцены текст влезал целиком, а не обрезался `overflow: hidden`.
+- **Floating-текст переиспользуем:** `left-paw-floating-text` — presentational (перевод приходит готовой строкой через input `text`, ключ живёт в модели и резолвится в шаблоне сцены). Все сообщения transient — всплывают вверх и тают (анимация `floating-text-rise`, затухание равномерное: после быстрого pop-in непрозрачность ровными шагами снижается к 0 на всём подъёме). Длительность видимости задаётся per-message через input `durationMs` (host-биндинг `animation-duration` + тот же таймер удаления в `TransientList`). Опциональная Taiga-иконка — input `icon` (`@tui.*`).
+- **Два класса floating-сообщений (`FloatingMessagesStore`, модель `floating-message.ts`):**
+  - **`OwnedFloat` (привязан к живому спрайту)** — несёт `ownerId`, БЕЗ координат. Рендерится **внутри контейнера `.scene__player`** этого игрока (`.scene__player-float`: `position:absolute; bottom:100%; left:50%`) → сидит над головой и **едет вместе с дрейфом спрайта**. Сцена группирует их `floatsByOwner` (computed: `Map<ownerId, OwnedFloat[]>`). Сюда входят: eat (`+5`/`−N`, привязан к **поедателю**, не к айтему — у съеденного айтема контейнера уже нет), статусы своего покемона (sad/happy/dying/poke/evolved), появление чужого (`appeared`), урон бомбы по выжившим. Если спрайт исчезает — float уходит с ним (для bomb-фатала вместо него покажется `died`).
+  - **`OrphanFloat` (игрок уже исчез)** — единственный случай: `died`. Спрайта нет → штампуется по last-known `x,y` (из `PresenceTracker.lastKnownPlayers`) и рендерится в оверлее сцены через директиву + `scenePositionClampX`.
+- **Продюсеры** — семейство эффектов (`data/services/effects/`, по файлу `*-effect.service.ts` на продюсер): `EatEffect`, `SelfMoodEffect` (signal-driven по `me()`: sad/happy/dying-переходы; + `pokeSelf` easter-egg), `ReactiveMoodEffect`, `EvolutionEffect`, `PresenceTracker` (appeared из диффа `snapshot.players`, died из `fainted`), `DetonationEffect`, `BumpEffect`, `HitBurstEffect`, `ShieldBlockEffect`, `IntroQuipsEffect`, `NpcQuipEffect`, `EmissionSoundEffect`, `PlayerEffectsTracker`. Хелперы очередей/жизни сообщений — `transient-list.ts`, `owner-release-queue.ts`. Все пушат в `FloatingMessagesStore` (`pushOwned*`/`pushOrphan*`); `FrenzyEffectsService` — тонкий оркестратор, фанит `messages$` по хендлерам и реэкспозит `ownedFloats`/`orphanFloats`. Новый продюсер — новый файл в `effects/` по тому же шаблону, не раздувай существующие.
+
+### Frenzy item art pipeline (спрайты падающих предметов)
+
+**Источник — один цельный набор: [Microsoft Fluent Emoji](https://github.com/microsoft/fluentui-emoji), стиль 3D (глянцевые рендеры), лицензия MIT** (атрибуция не обязательна). Один набор на все предметы → визуальное единство сцены. Не подбирай предметам случайные картинки из разных источников и не рисуй наспех SVG — бери глиф из Fluent.
+
+**Как добавить спрайт для нового типа предмета:**
+
+1. **Подбери глиф** в наборе под смысл предмета (еда/буст/опасность). Raw-путь 3D-PNG:
+   `https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/<Имя>/3D/<snake_name>_3d.png`
+   (папка — с пробелами и Capitalized, напр. `assets/Red apple/3D/red_apple_3d.png`; пробел в URL → `%20`). Проверь `curl -sfL` (200).
+2. **Адаптируй:** ресайз до **120px** (2× от 60px-бокса сцены — `FRENZY.physicalSizePx.item`, чёткость на retina). В окружении нет webp-кодера (нет `cwebp`/`sharp`/imagemagick, `npx` упирается в реестр E401, `sips` не пишет webp), поэтому пока **PNG через `sips -Z 120 in.png --out out.png`** — выходит ~8–16 КБ/файл, near-webp вес. Если появится конвертер (`cwebp`/`sharp`) — предпочитай **WebP** (тот же 120px), он легче.
+3. **Положи** в `public/frenzy/items/<kebab-name>.png` (kebab-case, как остальные ассеты; имя = ключ типа: `rare-candy.png`, `golden-berry.png`, `easter-egg.png`). Покемоньи спрайты лежат отдельно — `public/frenzy/pokemon/sprites/<line>.gif`. Пути строятся в `pokemon-registry.ts`: `itemSpritePathFor` → `/frenzy/items/…`, `spritePathFor` → `/frenzy/pokemon/sprites/…`.
+4. **Пропиши** одной записью в `ITEM_ART` (`Record<ItemType, { sprite; dotColor; sandPuff }>` в `ui/constants/pokemon-registry.ts`) — `<type>: { sprite: '<kebab-name>.png', dotColor: '…', sandPuff: <0..1.3> }`. Единый источник на предмет: спрайт, цвет точки миникарты/легенды (`ITEM_DOT_COLOR` проецируется из него) и интенсивность sand-puff'а (`sandPuffWeightFor` читает его) — три грани в одной строке, дрейфовать не могут. Рендер (`<img>` в `scene.component.html` через пайп `itemSprite`) и сглаживание в `scene.component.scss` (bilinear, без `image-rendering: pixelated` — правильно для гладких рендеров) трогать не нужно.
+5. **Добавь в HUD-легенду** (`ui/components/item-legend/`): запись в `ITEM_GROUP` (это `Record<ItemType, …>` — пропуск нового типа = ошибка компиляции, страховка) + название в i18n `frenzy.legend.items.<type>` (en/ru). Цвет точки уже задан полем `dotColor` в `ITEM_ART` (шаг 4) — отдельной правки не требует. **Легенда обязана перечислять ВСЕ падающие предметы — не оставляй новый тип без группы/названия.**
+6. **Удали** старый ассет, если заменяешь, и сверь `grep`-ом, что на его имя файла не ссылаются вне реестра.
+
+Действующий маппинг: food→🍎, rotten→🦴, rareCandy→🍬, goldenBerry→🍊 (Tangerine), mushroom→🍄, vitamin→💊, crumb→🍪, easterEgg→🥚, poop→💩, rock→🪨 — это PNG (дефолт — Fluent 3D). Исключения (SVG, подобраны/нарисованы отдельно): bomb→💣 `bomb.svg` (редизайн морской мины), brick→🧱 — Twemoji (вектор), shield→🛡️ — кастомный SVG. NPC angry-bomb — отдельная машинерия: `angry-bomb.svg` в `public/frenzy/npc/`, запись в `NPC_SPRITES` (keyed by `NpcKind`), НЕ в `ITEM_ART` и не в `POKEMON_LINES` (picker не должен предлагать NPC). То есть набор НЕ строго одно-исходниковый: дефолт — Fluent, но если глиф не читается под смысл предмета (как камень), бери ясную векторную альтернативу (Twemoji/OpenMoji) или оставляй существующий кастомный SVG.
+
+## Angular skills (project-scoped)
+
+Three Angular-specific Claude skills are installed under `.claude/skills/`. Each has a `SKILL.md` with frontmatter (`name:`, `description:`) and reference material. Loaded automatically by Claude Code when the project is opened — invoke by topic match in conversation. These three are **local-only** (gitignored, unlike the committed `pr-review`/`codebase-audit`/`_shared` folders) — in a fresh clone or cloud environment they are absent; fall back to the `angular-cli`/`taiga-ui` MCPs.
+
+**When writing or reviewing Angular/Taiga code, consult these first, in this order:** the matching skill below for the pattern (read the `angular-developer/references/*.md` file the umbrella points to for depth) → the `angular-cli` MCP for version-correct Angular APIs the skill doesn't settle → the `taiga-ui` MCP for any `Tui*` symbol/package/snippet (see "MCP servers" below). Don't assert a v21 Angular or Taiga v5 API from memory — both drift from training data.
+
+Available skills:
+
+| Skill                                | Use case                                                                                                                                                                                                                                           |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `angular-developer`                  | **Umbrella** for everyday Angular work — components, signals/`linkedSignal`/`resource`/`effect`, forms, DI, routing, ARIA, styling/Tailwind, testing, CLI/tooling. Body is an index into `references/*.md`; read the matching reference for depth. |
+| `angular-best-practices-signalstore` | NgRx SignalStore patterns (`@ngrx/signals`, `@ngrx/signals/entities`, `rxMethod`)                                                                                                                                                                  |
+| `angular-best-practices-transloco`   | Transloco i18n integration (runtime translation, per-route lazy translation files, test mocking)                                                                                                                                                   |
+
+> The earlier sprawl of ~19 overlapping third-party Angular skills was removed in favour of the official `angular-developer` umbrella (from `github.com/angular/skills`, ships its full `references/` folder) plus the two project-specific add-ons that the umbrella does **not** cover (NgRx SignalStore + Transloco — both used here). Don't re-add granular per-topic skills (`angular-component`, `angular-signals`, `angular-routing`, …); their content lives inside `angular-developer/references/`.
+
+**Lockfile:** `skills-lock.json` tracks source repo + path + content hash for the three skills above. To upgrade a skill, fetch the latest `SKILL.md` from its source and update `computedHash`.
+
+## MCP servers (`.mcp.json`)
+
+Two MCP servers are configured for this project in `.mcp.json` — prefer them over memory for library-version-sensitive questions, since both Taiga v5 and Angular v21+ APIs drift from training data.
+
+| Server        | Command                           | Use it for                                                                                                                                                                                                                                                                                                                                                           |
+| ------------- | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `taiga-ui`    | `@taiga-ui/mcp` (`llms-full.txt`) | Source of truth for Taiga UI components — which package a `Tui*` symbol comes from, the right component for a use case, real usage snippets, migration guides. Check it **before** writing or recommending any Taiga code (a wrong-package import is a compile error). Tools: `get_overview`, `get_list_components`, `get_component_example`, `get_migration_guide`. |
+| `angular-cli` | `@angular/cli mcp`                | Angular workspace + version-correct guidance — `list_projects` (discover workspace/projects, run first), `get_best_practices` (load before writing Angular code), `search_documentation` (API/concept lookups), `onpush_zoneless_migration`. Prefer over shelling out to `ng` for equivalent actions.                                                                |
+
+When an MCP server is unavailable, fall back to the conventions in this file (Taiga section, Component conventions) and say in your output that you couldn't verify against the live docs — don't assert an API you can't confirm.
+
+## Workspace structure (pnpm)
+
+Проект использует `pnpm-workspace.yaml`. Кроме корневого Angular-приложения есть workspace:
+
+- `partykit-server/` — отдельный `package.json` с своими deps (partykit, vitest, typescript). Realtime-фичи. **Multi-party**: каждая активность = named party в `partykit.json` + самодостаточная папка `partykit-server/src/parties/<game>/`: `index.ts` (тонкий `Party.Server`-адаптер — транспорт+lifecycle, хранит `players`/`items` массивами), `engine/` (server-authoritative pure-движок — `apply-*`, `item-behaviors`-registry и пр.), `parse-client-message.ts` (типизированный guard границы `onMessage`), `__tests__/`. Сейчас одна — `frenzy` (Feeding Frenzy); клиент коннектится с `party: '<game>'` (endpoint `/parties/<game>/<roomId>`). Менял путь entry в `partykit.json` — перезапусти `partykit dev` (конфиг не hot-reload'ится). Серверные `console.log` спрятаны за `room.env.DEBUG` (`true`/`'true'`/`'1'`) — в prod молчат.
+
+### Frenzy engine — чистая архитектура (придерживаться при доработках)
+
+Каждый `apply-*` — **чистая функция-проход**, оркестратор тонкий, выносимая логика — в маленькие именованные функции с JSDoc. Раскладка `partykit-server/src/parties/frenzy/engine/`:
+
+- **`apply-tick.ts` — тонкий оркестратор**, который треды́т `working`-стейт через проходы из подпапки **`engine/tick/`** (+ NPC-проходы из `engine/npc/`): `prune-effects` → `move-items` (+ сплит survivors/expired в оркестраторе) → `move-players` (люди) / `moveNpc` (NPC, ищет еду вдоль дна) → `separate-players` (+ `apply-bumps`/`apply-impulses`, только при включённой player-collision) → `arm-emitted-items` (снять owner-immunity с разлетевшихся эмиссий) → `resolve-collisions` → `resolve-landings` → NPC-blast/cool-anger + `apply-scores` (kills; краун hp-лидера снимается ДО тика) → (только на decay-тиках) `apply-decay-step`. Общие хелперы прохода — `tick/collision-target.ts` (`findCollisionTarget`) и `tick/detonated.ts` (билдер `DetonatedEvent`). Порядок проходов менять осознанно — на нём держатся снапшот-инварианты.
+- **`item-behaviors/` — папка, по файлу на behaviour** (`eat`, `rock`, `brick`, `mushroom`, `shield`, `vitamin`, `easter-egg`, `bomb`, `poop`). `index.ts` = реестр `ITEM_BEHAVIORS` + `getItemBehavior()` и **ре-экспорт типов** (`ItemBehavior`/`ItemInteraction`/`HpDelta`/`EffectGrant` из `types.ts`), поэтому импортёры пишут `from './item-behaviors'` (резолвится в `index.ts`). Общие билдеры (`eat`, `grantEffect`) — в `shared.ts`; узкоспецифичные — рядом со своим behaviour (blast-математика — `compute-blast.ts`). **Новый предмет → новый файл behaviour + запись в реестре + вес в `config/spawn.ts` + флаг в `config/features.ts` + клиентский арт одной записью в `ITEM_ART` (sprite/dotColor/sandPuff) + HUD-легенда (`ITEM_GROUP` + i18n `frenzy.legend.items`, см. art-pipeline шаги 4–5).**
+- **Хелперы in-module** (без подпапок): `apply-click.ts` (click диспатчит в `grantEffectResult`/`nudgeResult`/`eatResult`), `apply-hp-deltas.ts` (`applyHpDeltas` → `HpDeltaResult`: `aggregateByPlayer` + `resolvePlayerHp`), плюс `apply-effect`, `apply-steer`, `apply-emissions`, `apply-bumps`, `apply-impulses`, `apply-scores`, `faint-cause`, `calculate-stage`, `create-player`, `check-click-rate`, `mark-disconnected`/`restore-connected`, `pick-item-type` — тот же стиль «чистая функция-проход на файл».
+- **NPC живёт в `engine/npc/<kind>/`** (сейчас один — `angry-bomb`: `move-npc`, `npc-blast`, `cool-anger`), серверный конфиг — `shared-game/frenzy/npc/` + партиал `config/npc.ts`, гейт — `NPC_FEATURES` в `config/features.ts`. NPC — это `Player` с `isNPC`-признаком, не отдельная сущность в снапшоте.
+- **Feature-flags — единая точка гейтинга в `pickItemType`**: фильтрует `FRENZY.spawnWeights` по `isItemEnabled` (предикат `isEnabled` инъектируется, дефолт — реальная проверка, в стиле инъекции `rng`/`createId` — так тестируемо). Этим гейтятся ОБА пути спавна (обычный дроп в `index.spawnItem()` и эмиссии в `apply-emissions.ts`) одним флагом; NPC-спавн гейтится `NPC_FEATURES` так же. Инвариант: ≥1 предмет `enabled`.
+
+Любая команда workspace-а: `pnpm --filter @ng-kitty/partykit-server <script>`.
+
+`pnpm dev` запускает обе половинки через `concurrently` (Angular на 4200, PartyKit на 1999).
+
+**Гомогенность tooling:** в обоих workspaces — TypeScript strict, ESLint, Vitest, тот же `interface`-style. У каждого workspace свой `eslint.config.js` и `tsconfig.json`. ESLint требует `tsconfigRootDir: import.meta.dirname` в **обоих** конфигах — иначе он не знает, какой tsconfig корневой при пересечении проектов.
+
+`node_modules` в .gitignore написан БЕЗ leading slash (`node_modules`, не `/node_modules`) — иначе nested `partykit-server/node_modules/` попадает в commit.
+
+### Сервер держим pokemon/theme-agnostic (принцип + roadmap)
+
+**Принцип:** контракт `shared-game/frenzy/` и движок `partykit-server/` НЕ должны перечислять тематические сущности (ростер покемонов, «эволюция на 200/500»). Всё, что зависит от конкретного актёра — **внешний вид, физический размер, скорость, пороги стадий** — приходит с клиента на `join` непрозрачными числами, сервер их только хранит на `Player` и применяет, как и `appearance`. Сейчас так сделано для:
+
+- `Player.appearance` — непрозрачная строка (клиент резолвит в `Line`/спрайт, фолбэк на неизвестное в `pokemon-registry.ts`).
+- `Player.body: PlayerBody` (per-stage `{ width, height, speed, maxSpeed, hp }`) — размер, крейсер/кап скорости и **HP-гейты стадий** едут на `join`; `calculateStage(hp, body)` читает гейты игрока, а не `FRENZY.thresholds` (их больше нет). AABB-коллизия (`tick/collision-target.ts`) и size-aware границы (`tick/move-players.ts`) читают `body`. Клиентская таблица — `STAGE_BODY` в `pokemon-registry.ts`, валидация формы в `parse-client-message.ts` + политика/границы → код причины в `validate-join.ts` (→ `ServerMessage` `joinRejected`).
+
+**Roadmap оставшихся связностей (от крупной к мелкой):**
+
+- **`ItemType`-юнион + `item-behaviors/`** — сервер знает ростер предметов и их поведение. **Самая крупная связность.** Цель (todo:35): data-driven дескрипторы поведения (`onCollide: eat|damage|grantEffect|toInventory` + параметры) по непрозрачному id; имена/спрайты — на клиент.
+- **`PlayerEffectKind`** — тематические эффекты (shield/wellFed/laying/pooping); уйдут вместе с предметами.
+- **HP-экономика и «аквариум/дно»** — физика нейтральная, тематично только именование; трогать при появлении второй темы (другой сайт/тематика в своей party-комнате).
+
+## Key ESLint rules to know
+
+- `@typescript-eslint/explicit-member-accessibility` — all class members need explicit access modifiers (`public`/`private`/`protected`); exceptions: `constructor`, `transform`
+- `@typescript-eslint/consistent-type-definitions` — use `interface` for object shapes; `type` is OK for unions, primitives, mapped types
+- `@typescript-eslint/consistent-type-imports` — type-only imports must use `import type`. E.g. `import type { OnInit } from '@angular/core'` separate from value imports
+- `@typescript-eslint/no-explicit-any` — banned (relaxed in `*.spec.ts` and `*.mock.ts`)
+- `import/no-cycle` — circular imports are errors
+- `sort-imports` — members inside one `import { a, b, c }` must be sorted alphabetically (case-insensitive). Imports across lines NOT sorted, only within braces
+- `unicorn/prevent-abbreviations` — most abbreviations banned. Allow list: `acc`, `env`, `i`, `j`, `props`, `Props`, `args`, `ImportMetaEnv`. Everything else needs full word: `Msg → Message`, `prod → production`, `ctx → context`, `req → request`, `cfg → config`
+- `unicorn/filename-case` — kebab-case OR camelCase. Same abbreviation rules apply to filenames: `environment.prod.ts` fails, must be `environment.production.ts`
+- Member ordering enforced: static fields → instance fields → constructor → methods (public → protected → private)
+- `@stylistic/padding-line-between-statements` — blank line required before `return`, after `import` block, between variable declarations and other statements
+- `no-console` is **not configured** in this project — do NOT write `// eslint-disable-next-line no-console`, ESLint will flag it as "Unused eslint-disable directive"
+
+## Common pitfalls (learned the hard way)
+
+- **Gitignore границы `.claude/`**: `.planning/` и почти весь `.claude/` (Angular-скиллы, `skills-lock.json`, локальные настройки) — gitignored, их правки живут только локально. **Исключения — обычные коммитящиеся файлы репо**: `CLAUDE.md` и три папки скиллов — `.claude/skills/pr-review/`, `.claude/skills/codebase-audit/`, `.claude/skills/_shared/` (закоммичены, чтобы облачные routines видели их в свежем клоне). Правки в исключениях проходят обычный flow: commit → PR → push.
+- **Relative path counting**: глубокие `../../../../../` хрупкие — используй path alias. Для environments есть `@environments/*` (`@environments/environment`), для общей логики — `@game/frenzy/*`. Если всё же считаешь относительный путь и сомневаешься — сперва `pnpm typecheck`.
+- **Husky `pre-commit`** runs `lint-staged + typecheck`. `lint-staged` includes `format:fix` on staged JSON/MD which **modifies** them. If commit fails (e.g. typecheck) — re-stage modified files before retry.
+- **Husky `pre-push`** runs `pnpm lint + pnpm test`. Full lint over whole project + full test suite. Don't bypass with `--no-verify` unless explicitly authorized.
+- **`pnpm typecheck`** uses `tsc -b --noEmit` (project references). New non-`src/` folders aren't checked automatically — add them to `tsconfig.app.json` `include` (e.g. `shared-game/**/*.ts`).
+- **Branch naming pattern** is enforced — see `validate-branch-name` in `package.json`. Requires at least one `_` or `-` separator AFTER the type prefix: `feat/foo_bar` ✓, `feat/foo` ✗.
+- **Vitest exits 1 if no tests found.** Either add a smoke spec or use `--passWithNoTests` flag. CI-friendly default is to keep at least one spec per workspace.
