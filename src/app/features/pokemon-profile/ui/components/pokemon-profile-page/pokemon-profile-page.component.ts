@@ -1,5 +1,5 @@
 import type { OnInit } from '@angular/core';
-import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
 import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
 import type { PokemonSpeciesApiData } from '@shared/models/pokemon-species-api-data-interface';
 import { TuiProgress } from '@taiga-ui/kit';
@@ -35,7 +35,8 @@ export interface EvolutionNodeModel {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PokemonProfilePageComponent implements OnInit {
-  public readonly pokemonEndpoint = 'eevee'; // bulbasaur | eevee
+  public readonly pokemonEndpoint = input.required<string>(); // bulbasaur | eevee
+
   protected readonly pokemonProfileData = signal<PokemonDetailApiData | null>(null);
   protected readonly pokemonProfileDataSpecies = signal<PokemonSpeciesApiData | null>(null);
   protected readonly pokemonProfileEvolutionChainData = signal<EvolutionChainResponse | null>(null);
@@ -50,10 +51,15 @@ export class PokemonProfilePageComponent implements OnInit {
   });
 
   public async ngOnInit() {
+    console.log(this.pokemonEndpoint());
     try {
-      const response = await fetch(`/mocks/${this.pokemonEndpoint}.json`);
-      const responseSpecies = await fetch(`/mocks/${this.pokemonEndpoint}-species.json`);
-      const responseChain = await fetch(`/mocks/${this.pokemonEndpoint}-evolution-chain.json`);
+      const response = await fetch(`/mocks/${this.pokemonEndpoint().toLowerCase()}.json`);
+      const responseSpecies = await fetch(
+        `/mocks/${this.pokemonEndpoint().toLowerCase()}-species.json`,
+      );
+      const responseChain = await fetch(
+        `/mocks/${this.pokemonEndpoint().toLowerCase()}-evolution-chain.json`,
+      );
 
       if (!response.ok || !responseSpecies.ok || !responseChain.ok) {
         throw new Error('Ошибка сети');
