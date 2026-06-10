@@ -48,9 +48,14 @@ Thumbs.db
 # Local planning notes (per-developer, not for merge)
 .planning/
 
-# Claude Code — ignore all local config / sessions / skills
-.claude/
-CLAUDE.md
+# Claude Code — local config / sessions / skills stay local, EXCEPT the committed review
+# skills (used by cloud routines, which only see what's in the repo) and CLAUDE.md itself.
+.claude/*
+!.claude/skills/
+.claude/skills/*
+!.claude/skills/pr-review/
+!.claude/skills/codebase-audit/
+!.claude/skills/_shared/
 skills-lock.json
 .mcp.json
 
