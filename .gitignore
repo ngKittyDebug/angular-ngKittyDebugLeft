@@ -49,7 +49,8 @@ Thumbs.db
 .planning/
 
 # Claude Code — local config / sessions / skills stay local, EXCEPT the committed review
-# skills (used by cloud routines, which only see what's in the repo) and CLAUDE.md itself.
+# skills (used by cloud routines, which only see what's in the repo), CLAUDE.md and .mcp.json
+# (cloud routines need the taiga-ui / angular-cli verification MCPs too).
 .claude/*
 !.claude/skills/
 .claude/skills/*
@@ -57,7 +58,6 @@ Thumbs.db
 !.claude/skills/codebase-audit/
 !.claude/skills/_shared/
 skills-lock.json
-.mcp.json
 
 # PartyKit local dev state
 .partykit/

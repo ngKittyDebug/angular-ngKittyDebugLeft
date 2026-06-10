@@ -65,6 +65,19 @@ own signature on top.
 | Reopen a closed issue                         | `update_issue` (state=open) + `add_issue_comment` explaining why it's back                                                                                                                                                                                                                                                                                         |
 | Board wiring (project column, Priority, Size) | Unreachable without `gh project` → **skip** and list the created issues in the run report so a human can place them on the board                                                                                                                                                                                                                                   |
 
+## Verification MCPs in the cloud (taiga-ui / angular-cli)
+
+`.mcp.json` is committed, so cloud sandboxes see the `taiga-ui` and `angular-cli` MCP servers the
+verification playbooks rely on. Two environmental gates, check before assuming they work:
+
+- both start via `npx` → need npm-registry egress from the sandbox;
+- the Angular CLI requires **Node ≥ v22.22.3** — check `node -v` first; on an older runtime the
+  `angular-cli` MCP won't start at all.
+
+If a verification MCP is unavailable, the skills' standing rule applies: don't assert an API you
+can't confirm, and say in the issue/comment that live verification wasn't available. That's a
+quality degradation, not a blocker.
+
 ## Appendix — gh bootstrap (only when the API is reachable)
 
 ```bash
