@@ -304,6 +304,13 @@ The interactive flow above is the **default**. Autonomous mode exists for schedu
 turns on **only when the invoking prompt contains the marker `Autonomous mode`** — never inferred
 from context. Without the marker, behave interactively even if no one seems to be answering.
 
+**First: make sure `gh` works.** Cloud sandboxes often ship without it, and both the dedup queries
+and `create_issue.sh` (which writes the provenance marker — the dedup anchor of every future run)
+wrap it. Do NOT fall back to improvising with GitHub MCP tools before walking the bootstrap ladder
+in `.claude/skills/_shared/gh-bootstrap.md` (install the static binary → harvest the git credential
+token → only then the MCP fallback, where the marker and labels become your manual responsibility).
+State in the run report which rung you ran on.
+
 What changes (and only this):
 
 - **Scope must be pinned by the invoking prompt.** No scope → do not scan; finish with a short
