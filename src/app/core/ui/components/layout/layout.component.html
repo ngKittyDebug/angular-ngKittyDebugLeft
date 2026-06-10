@@ -12,7 +12,7 @@
     class="mobile_nav-bar"
   >
     @for (item of navListItems; track item.label) {
-      <a routerLink="item.link" tuiLink class="nav_link" tuiTabBarItem [icon]="item.icon">
+      <a [routerLink]="item.link" tuiLink class="nav_link" tuiTabBarItem [icon]="item.icon">
         <span>{{ t(item.label) }}</span>
       </a>
     }
