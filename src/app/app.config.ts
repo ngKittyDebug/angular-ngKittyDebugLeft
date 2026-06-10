@@ -14,15 +14,22 @@ import { provideHttpClient } from '@angular/common/http';
 import { TranslocoHttpLoader } from './transloco-loader';
 import { provideTransloco } from '@jsverse/transloco';
 import { provideTranslocoPersistLang } from '@jsverse/transloco-persist-lang';
+import { provideEchartsCore } from 'ngx-echarts'; // <-- Используем Core-версию
+import * as echarts from 'echarts/core';
+import { RadarChart } from 'echarts/charts';
+import { LegendComponent, TitleComponent, TooltipComponent } from 'echarts/components';
+import { SVGRenderer } from 'echarts/renderers';
 
-export const appConfig: ApplicationConfig = {
+echarts.use([RadarChart, TitleComponent, TooltipComponent, LegendComponent, SVGRenderer]);
+
+export const appConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideRouter(routes, withComponentInputBinding()),
     provideZoneChangeDetection(),
-    provideTaiga(),
+    provideRouter(routes, withComponentInputBinding()),
     provideStore(),
     provideHttpClient(),
+    provideTaiga(),
     provideTransloco({
       config: {
         availableLangs: ['en', 'ru'],
@@ -37,7 +44,6 @@ export const appConfig: ApplicationConfig = {
         useValue: localStorage,
       },
     }),
-    // TODO При переходе новой версии тайги проверить работоспособность.
     provideSignalFormsConfig({
       classes: {
         'tui-invalid': (field) => field.state().invalid() && field.state().touched(),
@@ -46,5 +52,6 @@ export const appConfig: ApplicationConfig = {
         'ng-dirty': (field) => field.state().dirty(),
       },
     }),
+    provideEchartsCore({ echarts }),
   ],
-};
+} satisfies ApplicationConfig;

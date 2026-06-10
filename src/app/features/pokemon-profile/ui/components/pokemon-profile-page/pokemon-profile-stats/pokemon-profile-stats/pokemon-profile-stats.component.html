@@ -19,7 +19,13 @@
         <p class="pokemon_stats__value">{{ pokemonTotalStats() }}</p>
       </div>
     </div>
-    <div class="pokemon__stats_radar">
+    <div
+      echarts
+      [options]="getRadarChartOptions(t)"
+      [initOpts]="{ renderer: 'svg' }"
+      class="pokemon__stats_radar"
+    ></div>
+    <!-- <div class="pokemon__stats_radar">
       <tui-arc-chart
         size="xl"
         [max]="300"
@@ -28,6 +34,6 @@
         class="pokemon_chart"
         [value]="pokemonStatsValues()!"
       />
-    </div>
+    </div> -->
   </div>
 </ng-container>

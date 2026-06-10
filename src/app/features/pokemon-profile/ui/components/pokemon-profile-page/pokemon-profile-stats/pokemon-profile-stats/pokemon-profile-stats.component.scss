@@ -55,7 +55,7 @@ $stats: hp, attack, defense, special-attack, special-defense, speed;
 }
 
 .pokemon__stats_radar {
-  @include mixins.flex_container_function($direction: column);
+  height: 18rem; /* Фиксированная высота для предотвращения схлопывания SVG */
   max-width: 23rem;
   width: 100%;
 }
