@@ -71,8 +71,9 @@ contributor's time and erodes trust in the backlog — worse than no issue.
 The audit always runs against the **`develop` branch**, read from a **git worktree** — never the
 mentor's current working tree. `develop` is the stable integration branch, so the backlog reflects
 what's actually merged, not whatever feature branch happens to be checked out. The only writes to
-GitHub are issue operations (`gh issue create` / `comment` / `reopen`) — in interactive mode each
-one only after the user confirms it; in autonomous mode (see the section below) within its caps.
+GitHub are issue operations (`gh issue create` / `comment` / `reopen` / `close`) — in interactive
+mode each one only after the user confirms it; in autonomous mode (see the section below) within
+its caps.
 
 ### Step 1 — Create a `develop` worktree, then scope
 
@@ -245,13 +246,34 @@ audit's job is to keep the existing issue honest:
   gh issue reopen <NUMBER> --comment "Аудит <дата>: проблема всё ещё в коде — <path:line>, …"
   ```
 
+- **Existing issue is OPEN but the class no longer reproduces in the scanned code** → close it with
+  a verification comment. The backlog must shrink when the code improves, otherwise stale issues
+  bury the real ones. Closing has a higher bar than extending, because a wrong close hides real
+  debt — verify, don't assume:
+  - Re-check **every** checklist item (`- [ ] path:line`) against the worktree. An item is resolved
+    only if the violation is gone, not merely **moved** — search the class across the issue's whole
+    area first (the #115 lesson: persistence migrated component→service; that's an update, not a fix).
+  - Close **only** issues carrying this skill's provenance marker — never a human-filed ticket.
+  - Close **only** if every checklist path lies inside the scope you actually scanned this run. An
+    issue spanning other areas can't be attested by this run — leave it open and add a comment
+    marking the verified part instead.
+  - A class that became **irrelevant** (file/feature deleted, the rule retired in `docs/`) goes
+    through the same gate; say explicitly in the closing comment _why_ it no longer applies.
+
+  ```bash
+  gh issue close <NUMBER> --comment "Аудит <дата> (повторное сканирование <scope> на develop): все пункты проверены — <path:line>: исправлено (<чем>); … Закрываю как выполненное."
+  ```
+
+  The closing comment is the audit trail: one line per former checklist item with what resolved it
+  (commit, refactor, deletion). A bare "fixed" forces the next reader to redo your verification.
+
 - **Existing issue is OPEN and covers everything you found** → nothing to do; one line in the run
   report ("`onpush-missing` → уже #42, без изменений").
 - **Nothing similar** → go to 5b.
 
-In interactive mode, show the planned comment/reopen to the user before executing it, same as a
-new issue. In autonomous mode (see below) execute directly — comments and reopens don't count
-against the new-issue cap.
+In interactive mode, show the planned comment/reopen/close to the user before executing it, same
+as a new issue (for a close, show the per-item verification you did). In autonomous mode (see
+below) execute directly — comments, reopens and closes don't count against the new-issue cap.
 
 **5b. Present this one issue to the user and wait.** Show the full draft — title (emoji + count),
 **severity + the Priority (P0/P1/P2), Size (XS–XL) and Scope(s) you derived**, and the complete body — and the dedup result ("ничего похожего не нашёл" / "есть #42, но про другое"). Then **stop and ask for explicit confirmation for this specific issue.** Do not proceed to the next issue until the user answers. They may say create / edit / skip (and they may override the priority, size, or scopes).
@@ -318,16 +340,18 @@ What changes (and only this):
   report saying the routine prompt must name a path. Never pick a scope yourself — an unattended
   whole-repo sweep is exactly the flood Step 1 warns about.
 - **Step 5b (per-issue confirmation) is skipped.** The dedup of Step 5a is NOT — it runs before
-  every creation, exactly as written, including the comment/reopen update paths (those execute
-  directly instead of being proposed).
+  every creation, exactly as written, including the comment/reopen/close update paths (those
+  execute directly instead of being proposed). A close keeps its full verification bar from 5a —
+  skipping the confirmation does not lower it.
 - **Hard cap: 5 new issues per run.** The cap protects the board if dedup misjudges or the scope
   turns out dirtier than expected. Drafts beyond the cap are NOT filed — they go into the run
   report (title + slug + occurrence count), so the next run (or a human) can pick them up.
   Comments on existing issues and reopens don't count against the cap.
 - **End every run with a report** in the final message: scope scanned, classes found, what was
-  filed (links), what was extended/reopened, what was withheld by the cap, what was skipped as
-  unchanged. The report is the only place a human sees what an unattended run did — write it like
-  a changelog entry, not a log dump.
+  filed (links), what was extended/reopened, what was **closed as fixed/irrelevant** (with the
+  one-line verification per issue), what was withheld by the cap, what was skipped as unchanged.
+  The report is the only place a human sees what an unattended run did — write it like a changelog
+  entry, not a log dump.
 
 Everything else — criteria reading, verification against the skills/MCPs, grouping, slugs,
 severity/Priority/Size/Scope derivation, the issue template, cleanup — is identical in both modes.
