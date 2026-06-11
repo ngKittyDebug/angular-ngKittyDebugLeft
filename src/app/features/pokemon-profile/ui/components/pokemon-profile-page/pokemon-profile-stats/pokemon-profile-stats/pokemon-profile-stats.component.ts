@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { TuiProgress } from '@taiga-ui/kit';
-import { TuiArcChart } from '@taiga-ui/addon-charts';
 import { TuiCard } from '@taiga-ui/layout';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
@@ -10,7 +9,7 @@ import { createRadarChartOptions } from '@features/pokemon-profile/data/helpers/
 
 @Component({
   selector: 'left-paw-pokemon-profile-stats',
-  imports: [TuiProgress, TuiArcChart, TuiCard, TranslocoDirective, NgxEchartsDirective],
+  imports: [TuiProgress, TuiCard, TranslocoDirective, NgxEchartsDirective],
   templateUrl: './pokemon-profile-stats.component.html',
   styleUrl: './pokemon-profile-stats.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

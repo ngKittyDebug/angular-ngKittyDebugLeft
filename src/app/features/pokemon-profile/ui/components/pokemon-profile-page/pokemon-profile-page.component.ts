@@ -1,17 +1,12 @@
-import type { OnInit } from '@angular/core';
-import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
-import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
-import type { PokemonSpeciesApiData } from '@shared/models/pokemon-species-api-data-interface';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { TuiProgress } from '@taiga-ui/kit';
 import { TuiCard } from '@taiga-ui/layout';
-import type {
-  EvolutionChainItem,
-  EvolutionChainResponse,
-} from '@shared/models/pokemon-evolution-chain-api-data-interface';
+import type { EvolutionChainItem } from '@shared/models/pokemon-evolution-chain-api-data-interface';
 import { EvolutionChainItemComponent } from './evolution-chain-item/evolution-chain-item/evolution-chain-item.component';
 import { PokemonProfileInfoComponent } from './pokemon-profile-info/pokemon-profile-info/pokemon-profile-info.component';
 import { PokemonProfileStatsComponent } from './pokemon-profile-stats/pokemon-profile-stats/pokemon-profile-stats.component';
 import { PokemonProfileSpeciesBreedingComponent } from './pokemon-profile-species-breeding/pokemon-profile-species-breeding.component';
+import { PokemonProfileService } from '@features/pokemon-profile/data/services/pokemon-profile.service';
 
 export interface EvolutionNodeModel {
   name: string;
@@ -34,50 +29,26 @@ export interface EvolutionNodeModel {
   styleUrl: './pokemon-profile-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PokemonProfilePageComponent implements OnInit {
-  public readonly pokemonEndpoint = input.required<string>(); // bulbasaur | eevee
+export class PokemonProfilePageComponent {
+  private readonly profileService = inject(PokemonProfileService);
 
-  protected readonly pokemonProfileData = signal<PokemonDetailApiData | null>(null);
-  protected readonly pokemonProfileDataSpecies = signal<PokemonSpeciesApiData | null>(null);
-  protected readonly pokemonProfileEvolutionChainData = signal<EvolutionChainResponse | null>(null);
+  public readonly pokemonEndpoint = input.required<string>();
+
+  protected readonly pokemonProfile = this.profileService.createPokemonProfile(() =>
+    this.pokemonEndpoint().toLowerCase(),
+  );
 
   protected readonly pokemonTotalStats = computed(() => {
-    return this.pokemonProfileData()?.stats.reduce((sum, entry) => sum + (entry.base_stat ?? 0), 0);
+    return this.pokemonProfile
+      .profileData()
+      ?.stats.reduce((sum, entry) => sum + (entry.base_stat ?? 0), 0);
   });
+
   protected readonly pokemonEvolutionChain = computed(() => {
-    const data = this.pokemonProfileEvolutionChainData()?.chain;
+    const data = this.pokemonProfile.profileEvolution()?.chain;
 
     return data ? this.buildStructure(data) : null;
   });
-
-  public async ngOnInit() {
-    console.log(this.pokemonEndpoint());
-    try {
-      const response = await fetch(`/mocks/${this.pokemonEndpoint().toLowerCase()}.json`);
-      const responseSpecies = await fetch(
-        `/mocks/${this.pokemonEndpoint().toLowerCase()}-species.json`,
-      );
-      const responseChain = await fetch(
-        `/mocks/${this.pokemonEndpoint().toLowerCase()}-evolution-chain.json`,
-      );
-
-      if (!response.ok || !responseSpecies.ok || !responseChain.ok) {
-        throw new Error('Ошибка сети');
-      }
-
-      const result: PokemonDetailApiData = (await response.json()) as PokemonDetailApiData;
-      const resultSpecies: PokemonSpeciesApiData =
-        (await responseSpecies.json()) as PokemonSpeciesApiData;
-      const resultChain: EvolutionChainResponse =
-        (await responseChain.json()) as EvolutionChainResponse;
-
-      this.pokemonProfileData.set(result);
-      this.pokemonProfileDataSpecies.set(resultSpecies);
-      this.pokemonProfileEvolutionChainData.set(resultChain);
-    } catch (error) {
-      console.error('Ошибка при загрузке:', error);
-    }
-  }
 
   private buildStructure(node: EvolutionChainItem): EvolutionNodeModel | null {
     if (!node || !node.species) {

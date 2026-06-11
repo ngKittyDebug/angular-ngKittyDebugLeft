@@ -1,5 +1,5 @@
 <!-- <left-paw-pokemon-profile-info [pokemonProfileData]="pokemonProfileData()" /> -->
-@if (pokemonProfileData(); as pokemonData) {
+@if (pokemonProfile.profileData(); as pokemonData) {
   <left-paw-pokemon-profile-info [pokemonProfileData]="pokemonData" />
   <left-paw-pokemon-profile-stats [pokemonProfileData]="pokemonData" />
 }
@@ -7,10 +7,10 @@
   @if (pokemonEvolutionChain(); as evolution) {
     <left-paw-evolution-chain-item
       [evolutionChain]="evolution"
-      [activeName]="pokemonProfileData()?.name"
+      [activeName]="pokemonProfile.profileData()?.name"
     />
   }
 </section>
-@if (pokemonProfileDataSpecies(); as species) {
+@if (pokemonProfile.profileSpecies(); as species) {
   <left-paw-pokemon-profile-species-breeding [pokemonProfileDataSpecies]="species" />
 }
