@@ -16,7 +16,7 @@ export class PokemonApiService {
   }
 
   public async getPokemonSpecies(pokemonEndpoint: string): Promise<Response> {
-    return await fetch(`${POKEMON_BASE_API}/pokemon-species/${pokemonEndpoint}`);
+    return await fetch(`${POKEMON_BASE_API}pokemon-species/${pokemonEndpoint}`);
   }
 
   public async getEvolutionChain(pokemonEndpoint: string | null): Promise<Response> {

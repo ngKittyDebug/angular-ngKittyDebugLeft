@@ -7,6 +7,7 @@ import { PokemonProfileInfoComponent } from './pokemon-profile-info/pokemon-prof
 import { PokemonProfileStatsComponent } from './pokemon-profile-stats/pokemon-profile-stats/pokemon-profile-stats.component';
 import { PokemonProfileSpeciesBreedingComponent } from './pokemon-profile-species-breeding/pokemon-profile-species-breeding.component';
 import { PokemonProfileService } from '@features/pokemon-profile/data/services/pokemon-profile.service';
+import { TranslocoDirective } from '@jsverse/transloco';
 
 export interface EvolutionNodeModel {
   name: string;
@@ -24,6 +25,7 @@ export interface EvolutionNodeModel {
     PokemonProfileInfoComponent,
     PokemonProfileStatsComponent,
     PokemonProfileSpeciesBreedingComponent,
+    TranslocoDirective,
   ],
   templateUrl: './pokemon-profile-page.component.html',
   styleUrl: './pokemon-profile-page.component.scss',

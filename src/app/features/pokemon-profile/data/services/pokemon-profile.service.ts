@@ -53,6 +53,9 @@ export class PokemonProfileService {
       profileData: pokemonDataResource.value,
       profileSpecies: pokemonSpeciesResource.value,
       profileEvolution: pokemonEvolutionResource.value,
+      profileDataError: pokemonDataResource.error,
+      profileSpeciesError: pokemonSpeciesResource.error,
+      profileEvolutionError: pokemonEvolutionResource.error,
     };
 
     return result;

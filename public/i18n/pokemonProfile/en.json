@@ -24,5 +24,7 @@
   "hatch": "Hatch Steps",
   "steps": "steps",
   "cycles": "cycles",
-  "from": "from"
+  "from": "from",
+  "no-evolution": "Evolution data for this Pokémon form are missing from the database",
+  "no-species": "Breeding data for this Pokémon form are missing from the database"
 }
