@@ -229,6 +229,7 @@ export default defineConfig(
       '**/*.js',
       '.angular/**',
       '.planning/**',
+      '.claude/**',
       'partykit-server/**',
     ],
   }]
