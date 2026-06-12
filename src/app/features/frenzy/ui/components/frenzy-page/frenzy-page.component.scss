@@ -33,12 +33,20 @@
     display: block;
   }
 
-  &__hud-top-left {
+  // Satiety status: a wide bar pinned to the top-left corner of the scene.
+  &__hud-status {
     position: absolute;
     top: 1rem;
     left: 1rem;
     z-index: 5;
+    width: min(22rem, calc(100% - 2rem));
     pointer-events: none;
+  }
+
+  // Mobile: shrink to a compact pill so it doesn't collide with the right-hand HUD (sound/presence/leaderboard).
+  &--mobile &__hud-status {
+    width: auto;
+    max-width: calc(100% - 9rem);
   }
 
   &__hud-top-right {

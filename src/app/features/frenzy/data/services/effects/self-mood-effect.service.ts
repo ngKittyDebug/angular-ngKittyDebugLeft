@@ -1,6 +1,6 @@
 import { effect, inject, Injectable } from '@angular/core';
 
-import { GAME } from '@game/frenzy/constants';
+import { FRENZY } from '@game/frenzy/config';
 
 import { isSad } from '../../logic/is-sad';
 import { FrenzyStore } from '../../store/frenzy.store';
@@ -17,6 +17,7 @@ export class SelfMoodEffect {
   private readonly store = inject(FrenzyStore);
   private wasSad = false;
   private wasDying = false;
+  private moodMessageId: string | null = null;
   private dyingMessageId: string | null = null;
   private pokeMessageId: string | null = null;
 
@@ -24,15 +25,15 @@ export class SelfMoodEffect {
     effect(() => {
       const me = this.store.me();
       const alive = me !== null && me.mass > 0;
-      const dyingNow = alive && me.mass <= GAME.lowMassWarningThreshold;
+      const dyingNow = alive && me.mass <= FRENZY.lowMassWarningThreshold;
       const sadNow = alive && !dyingNow && isSad(me.mass, me.stage);
 
       if (me !== null && sadNow && !this.wasSad) {
-        this.floats.pushOwnedStatus('sad', me.id);
+        this.replaceMood('sad', me.id);
       }
 
       if (me !== null && alive && !dyingNow && !sadNow && this.wasSad) {
-        this.floats.pushOwnedStatus('happy', me.id);
+        this.replaceMood('happy', me.id);
       }
 
       if (me !== null && dyingNow && !this.wasDying) {
@@ -61,5 +62,15 @@ export class SelfMoodEffect {
     }
 
     this.pokeMessageId = this.floats.pushOwnedStatus('poke', me.id);
+  }
+
+  // Sad and happy are mutually exclusive moods — the new one replaces the previous so it surfaces at once
+  // instead of chasing it up the staggered column.
+  private replaceMood(kind: 'sad' | 'happy', ownerId: string): void {
+    if (this.moodMessageId !== null) {
+      this.floats.remove(this.moodMessageId);
+    }
+
+    this.moodMessageId = this.floats.pushOwnedStatus(kind, ownerId);
   }
 }

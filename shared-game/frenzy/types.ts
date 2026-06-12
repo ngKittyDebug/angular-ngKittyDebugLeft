@@ -8,12 +8,16 @@ export type ItemType =
   | 'goldenBerry'
   | 'crumb'
   | 'mushroom'
-  | 'vitamin';
+  | 'vitamin'
+  | 'shield'
+  | 'easterEgg';
 export type PlayerStatus = 'alive' | 'disconnected';
 
-// Timed buffs/debuffs a Pokémon carries. The union grows per phase; `shield` (vitamin) suspends mass decay
-// AND wards off all incoming damage (bomb blast, rock bonk, rotten/negative-mushroom) for its duration.
-export type PlayerEffectKind = 'shield';
+// Timed buffs/debuffs a Pokémon carries. `shield` suspends mass decay AND wards off all incoming damage
+// (bomb blast, rock bonk, rotten/negative-mushroom) — full invulnerability inside a bubble. `wellFed`
+// (vitamin) only suspends decay (damage still lands). `laying` (easterEgg) makes the Pokémon randomly emit
+// falling items (incl. bombs) from itself. The union grows per phase.
+export type PlayerEffectKind = 'shield' | 'wellFed' | 'laying';
 
 export interface PlayerEffect {
   kind: PlayerEffectKind;
@@ -46,8 +50,15 @@ export interface Item {
   x: number;
   y: number;
   vy: number;
+  /** Horizontal velocity (normalized units/sec). Only emitted easter-egg items carry it — they're launched
+   * backward (opposite the layer's heading) so they spray out behind it. Normal spawns fall straight (omitted,
+   * treated as 0). The engine drifts `x` by it and clamps/zeroes it at the scene edges; the client mirrors. */
+  vx?: number;
   /** Set once the item lands on the floor: remaining lie-on-floor time, ms. Counts down to removal; the item stays edible meanwhile. Undefined while still falling. */
   restMs?: number;
+  /** Player who emitted this item (easter-egg `laying` aura). That player is immune to it: collision and bomb
+   * blast skip the owner, so a Pokémon never eats or detonates its own output. Undefined for normal spawns. */
+  ownerId?: string;
 }
 
 export interface ServerState {
@@ -65,17 +76,21 @@ export interface EatenEvent {
   delta: number;
   x: number;
   y: number;
+  /** Float-column release order, stamped at broadcast (see `FRENZY.floatPriority`); client falls back to a default. */
+  priority?: number;
 }
 
 export interface EvolvedEvent {
   type: 'evolved';
   playerId: string;
   newStage: Stage;
+  priority?: number;
 }
 
 export interface FaintedEvent {
   type: 'fainted';
   playerId: string;
+  priority?: number;
 }
 
 // A bomb was juggled by a click: it moved horizontally to `x` (no mass change). Clients snap the item there immediately.
@@ -94,6 +109,7 @@ export interface DetonatedEvent {
   y: number;
   radius: number;
   playerIds: string[];
+  priority?: number;
 }
 
 // A player picked up an effect item (e.g. vitamin → shield) and gained a timed effect. `itemId` is the

@@ -1,7 +1,7 @@
 import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core';
 import { TUI_BREAKPOINT } from '@taiga-ui/core';
 
-import { GAME } from '@game/frenzy/constants';
+import { FRENZY } from '@game/frenzy/config';
 
 import type { FaintedStats } from '../../../data/models/fainted-stats';
 import { FrenzyEffectsService } from '../../../data/services/frenzy-effects.service';
@@ -30,7 +30,7 @@ export class FrenzyPageFacade {
       return 0;
     }
 
-    return Math.max(0, GAME.cooldownAfterFaintedMs - (this.nowMs() - faintedAt));
+    return Math.max(0, FRENZY.cooldownAfterFaintedMs - (this.nowMs() - faintedAt));
   });
 
   public readonly blasts = this.effects.blasts;

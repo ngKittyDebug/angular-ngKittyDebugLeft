@@ -1,5 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 
+import { FRENZY } from '@game/frenzy/config';
 import type { ServerMessage } from '@game/frenzy/types';
 
 import type { FloatingTone, OwnedFloat } from '../../models/floating-message';
@@ -14,7 +15,7 @@ import { createTransientId } from './transient-list';
 
 type EatenMessage = Extract<ServerMessage, { type: 'eaten' }>;
 
-const FLOATING_TEXT_TTL_MS = 1000;
+const FLOATING_TEXT_TTL_MS = 2000;
 const FLOATING_TEXT_PHRASE_COUNT = 5;
 
 /** Turns each `eaten` event into a floating text over the eater and (for own eats) the matching sound. */
@@ -43,7 +44,7 @@ export class EatEffect implements FrenzyEffect {
       .state()
       ?.players.find((candidate) => candidate.id === message.playerId);
     const index = Math.floor(Math.random() * FLOATING_TEXT_PHRASE_COUNT);
-    const entry: Omit<OwnedFloat, 'lane'> = {
+    const entry: OwnedFloat = {
       id: createTransientId(),
       ownerId: message.playerId,
       tone: this.toneForDelta(message.delta),
@@ -52,6 +53,7 @@ export class EatEffect implements FrenzyEffect {
       // My own eats don't need a name — it's obvious it's me; names help only on others' floats.
       who: this.isMine(message.playerId) ? undefined : player?.name,
       delta: message.delta,
+      priority: message.priority ?? FRENZY.floatPriority.eaten,
     };
 
     this.floats.pushOwned(entry);

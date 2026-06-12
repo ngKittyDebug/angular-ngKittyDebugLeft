@@ -1,0 +1,108 @@
+import type { GameEvent, ServerState } from '@game/frenzy/types';
+
+import { applyEffects, resolveGrants } from '../apply-effect';
+import { applyMassDeltas } from '../apply-mass-deltas';
+import { getItemBehavior } from '../item-behaviors';
+import { findCollisionTarget } from './collision-target';
+import { detonated } from './detonated';
+
+export interface CollisionResult {
+  state: ServerState;
+  events: GameEvent[];
+}
+
+/**
+ * Collision pass: an item overlapping a drifting Pokémon resolves against the closest alive one. Resolution is
+ * one-shot — a collided item is consumed, so a parked Pokémon can't be hit every tick. Effect pickups grant the
+ * timed effect (reported `effectGranted`) plus any heal; bombs detonate over the whole area (`detonated`); plain
+ * food is eaten (`eaten`). Consumed items are filtered out of the returned state. Iterates `state.items` as it
+ * stood at entry (the engine sets it to the surviving items before calling this).
+ */
+export function resolveCollisions(
+  state: ServerState,
+  rng: () => number,
+  now: number,
+): CollisionResult {
+  let working = state;
+  const events: GameEvent[] = [];
+  const collidedItemIds = new Set<string>();
+
+  for (const item of state.items) {
+    const onCollide = getItemBehavior(item.type).onCollide;
+
+    if (onCollide === undefined) {
+      continue;
+    }
+
+    const target = findCollisionTarget(item, working.players);
+
+    if (target === undefined) {
+      continue;
+    }
+
+    const interaction = onCollide(item, target, working, rng);
+
+    // Effect pickup (shield/vitamin/easter egg) by drifting into it: grant the timed effect (report
+    // `effectGranted`, not `eaten`) and apply any heal mass delta it carries. Vitamin/egg heal; shield doesn't.
+    if (interaction.effects !== undefined && interaction.effects.length > 0) {
+      const applications = resolveGrants(interaction.effects, now);
+
+      working = applyEffects(working, applications);
+
+      const resolved = applyMassDeltas(working, interaction.massDeltas);
+
+      working = resolved.state;
+
+      for (const application of applications) {
+        events.push({
+          type: 'effectGranted',
+          playerId: application.playerId,
+          effect: application.effect,
+          itemId: item.id,
+        });
+      }
+
+      events.push(...resolved.events);
+
+      if (interaction.consumed) {
+        collidedItemIds.add(item.id);
+      }
+
+      continue;
+    }
+
+    const resolved = applyMassDeltas(working, interaction.massDeltas);
+
+    working = resolved.state;
+
+    if (interaction.explodes) {
+      // A bomb that bumps a Pokémon detonates over the whole area — not a one-on-one "eat".
+      events.push(detonated(item, interaction.massDeltas));
+    } else {
+      const newMass = resolved.state.players.find((player) => player.id === target.id)?.mass ?? 0;
+
+      events.push({
+        type: 'eaten',
+        itemId: item.id,
+        itemType: item.type,
+        playerId: target.id,
+        newMass,
+        delta: newMass - target.mass,
+        x: item.x,
+        y: item.y,
+      });
+    }
+
+    events.push(...resolved.events);
+
+    if (interaction.consumed) {
+      collidedItemIds.add(item.id);
+    }
+  }
+
+  if (collidedItemIds.size > 0) {
+    working = { ...working, items: working.items.filter((item) => !collidedItemIds.has(item.id)) };
+  }
+
+  return { state: working, events };
+}

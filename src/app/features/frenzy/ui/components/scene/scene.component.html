@@ -5,59 +5,84 @@
   aria-label="Feeding frenzy scene"
   (pointerdown)="onScenePointerDown($event)"
 >
-  <left-paw-aquarium-decor />
+  <div
+    class="scene__world"
+    #world
+    [style.width.px]="worldWidth"
+    [style.height.px]="worldHeight"
+    [style.--scene-item-size]="itemSize"
+  >
+    <left-paw-aquarium-decor />
 
-  @for (item of renderedItems(); track item.id) {
-    <button
-      class="scene__item"
-      type="button"
-      [leftPawScenePosition]="{ x: item.x, y: item.y }"
-      (click)="onItemClick(item, $event)"
-    >
-      <img
-        class="scene__item-sprite"
-        [class.scene__item-sprite--spin]="item.type !== 'bomb'"
-        [style.animation-duration.ms]="item.spinDurationMs"
-        [style.animation-direction]="item.spinReverse ? 'reverse' : 'normal'"
-        [style.animation-play-state]="item.landed ? 'paused' : 'running'"
-        [src]="item.type | itemSprite"
-        draggable="false"
-        alt=""
+    @for (item of renderedItems(); track item.id) {
+      <button
+        class="scene__item"
+        type="button"
+        [leftPawScenePosition]="{ x: item.x, y: item.y }"
+        [scenePositionTransform]="true"
+        (click)="onItemClick(item, $event)"
+      >
+        <img
+          class="scene__item-sprite"
+          [class.scene__item-sprite--spin]="item.type !== 'bomb'"
+          [style.animation-duration.ms]="item.spinDurationMs"
+          [style.animation-direction]="item.spinReverse ? 'reverse' : 'normal'"
+          [style.animation-play-state]="item.landed ? 'paused' : 'running'"
+          [src]="item.type | itemSprite"
+          draggable="false"
+          alt=""
+        />
+      </button>
+    }
+
+    @for (float of orphanFloats(); track float.id) {
+      <left-paw-floating-text
+        [leftPawScenePosition]="{ x: float.x, y: float.y }"
+        [scenePositionClampX]="true"
+        [icon]="float.icon"
+        [who]="float.who"
+        [text]="t(float.textKey)"
+        [delta]="float.delta"
+        [tone]="float.tone"
+        [durationMs]="float.durationMs"
       />
-    </button>
-  }
+    }
 
-  @for (float of orphanFloats(); track float.id) {
-    <left-paw-floating-text
-      [leftPawScenePosition]="{ x: float.x, y: float.y }"
-      [scenePositionClampX]="true"
-      [icon]="float.icon"
-      [who]="float.who"
-      [text]="t(float.textKey)"
-      [delta]="float.delta"
-      [tone]="float.tone"
-      [durationMs]="float.durationMs"
-    />
-  }
-
-  @for (player of renderedPlayers(); track player.id) {
-    <div
-      class="scene__player"
-      [class.scene__player--me]="player.isMe"
-      [class.scene__player--disconnected]="player.isDisconnected"
-      [style.--scene-sprite-height]="player.spriteHeight"
-      [leftPawScenePosition]="{ x: player.x, y: player.y }"
-    >
-      @if (player.hasShield) {
-        <span class="scene__shield" aria-hidden="true"></span>
-      }
-      @if (player.isMe) {
-        <button
-          class="scene__poke"
-          type="button"
-          [attr.aria-label]="t('pokeAriaLabel')"
-          (click)="onSelfPoke()"
-        >
+    @for (player of renderedPlayers(); track player.id) {
+      <div
+        class="scene__player"
+        [class.scene__player--me]="player.isMe"
+        [class.scene__player--disconnected]="player.isDisconnected"
+        [style.--scene-sprite-height]="player.spriteHeight"
+        [leftPawScenePosition]="{ x: player.x, y: player.y }"
+        [scenePositionTransform]="true"
+      >
+        @for (aura of player.effectAuras; track aura) {
+          @if (aura === shieldAuraClass) {
+            <span [class]="aura" leftPawBubbleSkin aria-hidden="true"></span>
+          } @else {
+            <span [class]="aura" aria-hidden="true"></span>
+          }
+        }
+        @if (player.isMe) {
+          <button
+            class="scene__poke"
+            type="button"
+            [attr.aria-label]="t('pokeAriaLabel')"
+            (click)="onSelfPoke()"
+          >
+            <span class="scene__sprite-flip" [class.scene__sprite-flip--right]="player.facingRight">
+              <img
+                class="scene__sprite"
+                [class.scene__sprite--evolving]="player.isEvolving"
+                [class.scene__sprite--sad]="player.isSad"
+                [src]="player.appearance | pokemonSprite: player.stage"
+                [alt]="player.label"
+                draggable="false"
+              />
+            </span>
+          </button>
+        } @else {
           <span class="scene__sprite-flip" [class.scene__sprite-flip--right]="player.facingRight">
             <img
               class="scene__sprite"
@@ -68,62 +93,55 @@
               draggable="false"
             />
           </span>
-        </button>
-      } @else {
-        <span class="scene__sprite-flip" [class.scene__sprite-flip--right]="player.facingRight">
-          <img
-            class="scene__sprite"
-            [class.scene__sprite--evolving]="player.isEvolving"
-            [class.scene__sprite--sad]="player.isSad"
-            [src]="player.appearance | pokemonSprite: player.stage"
-            [alt]="player.label"
-            draggable="false"
+        }
+        <span class="scene__label">{{ player.label }}</span>
+        @if (!player.isMe) {
+          <progress
+            tuiProgressBar
+            class="scene__mass-bar"
+            size="xs"
+            [value]="player.mass"
+            [max]="maxMass"
+            [color]="player.mass | massToneColor"
+          ></progress>
+        }
+        @for (float of floatsByOwner().get(player.id) ?? []; track float.id) {
+          <left-paw-floating-text
+            class="scene__player-float"
+            [icon]="float.icon"
+            [who]="float.who"
+            [text]="t(float.textKey)"
+            [delta]="float.delta"
+            [tone]="float.tone"
+            [durationMs]="float.durationMs"
           />
-        </span>
-      }
-      <span class="scene__label">{{ player.label }}</span>
-      @if (!player.isMe) {
-        <progress
-          tuiProgressBar
-          class="scene__mass-bar"
-          size="xs"
-          [value]="player.mass"
-          [max]="maxMass"
-          [color]="player.mass | massToneColor"
-        ></progress>
-      }
-      @for (float of floatsByOwner().get(player.id) ?? []; track float.id) {
-        <left-paw-floating-text
-          class="scene__player-float"
-          [style.--float-lane]="float.lane"
-          [icon]="float.icon"
-          [who]="float.who"
-          [text]="t(float.textKey)"
-          [delta]="float.delta"
-          [tone]="float.tone"
-          [durationMs]="float.durationMs"
-        />
-      }
-    </div>
-  }
+        }
+      </div>
+    }
 
-  @for (burst of bursts(); track burst.id) {
-    <left-paw-bubble-burst [leftPawScenePosition]="{ x: burst.x, y: burst.y }" />
-  }
+    @for (burst of bursts(); track burst.id) {
+      <left-paw-bubble-burst [leftPawScenePosition]="{ x: burst.x, y: burst.y }" />
+    }
 
-  @for (blast of blasts(); track blast.id) {
-    <div
-      class="scene__blast"
-      aria-hidden="true"
-      [leftPawScenePosition]="{ x: blast.x, y: blast.y }"
-      [style.width.%]="blast.radius * 200"
-    >
-      <span class="scene__blast-ring"></span>
-      <span class="scene__blast-ring scene__blast-ring--secondary"></span>
-      <span class="scene__blast-smoke"></span>
-      <span class="scene__blast-core"></span>
-      <span class="scene__blast-flash"></span>
-      <span class="scene__blast-sparks"></span>
-    </div>
-  }
+    @for (blast of blasts(); track blast.id) {
+      <div
+        class="scene__blast"
+        aria-hidden="true"
+        [leftPawScenePosition]="{ x: blast.x, y: blast.y }"
+        [style.width.%]="blast.radius * 200"
+      >
+        <span class="scene__blast-ring"></span>
+        <span class="scene__blast-ring scene__blast-ring--secondary"></span>
+        <span class="scene__blast-smoke"></span>
+        <span class="scene__blast-core"></span>
+        <span class="scene__blast-flash"></span>
+        <span class="scene__blast-sparks"></span>
+      </div>
+    }
+  </div>
+
+  <!-- Foreground parallax: faint particle layers in front of the world that scroll faster than it (camera-driven
+       via background-position), giving a depth/direction cue over uniform mid-water. Decorative only. -->
+  <div class="scene__parallax scene__parallax--mid" #parallaxMid aria-hidden="true"></div>
+  <div class="scene__parallax scene__parallax--near" #parallaxNear aria-hidden="true"></div>
 </section>

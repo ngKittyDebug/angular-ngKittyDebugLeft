@@ -7,15 +7,55 @@
   touch-action: manipulation;
   user-select: none;
 
+  // Fixed-size world (aquarium) layer (px size from GAME.world via inline binding) — the positioned offsetParent
+  // every child anchors against. The camera applies `transform: translate + scale` per-frame; `.scene` clips it.
+  &__world {
+    position: relative;
+    transform-origin: 0 0;
+    will-change: transform;
+  }
+
+  // Foreground parallax particle layers (in front of the world; drift via background-position set per-frame from
+  // the CAMERA offset). Decorative, never interactive.
+  &__parallax {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-repeat: repeat;
+    will-change: background-position;
+  }
+
+  // Near layer: a few soft specks on a roomy tile — gentle camera-driven drift, not a swarm.
+  &__parallax--near {
+    background-image:
+      radial-gradient(circle at 18% 30%, rgba(215, 244, 255, 0.6) 0, transparent 2.6px),
+      radial-gradient(circle at 67% 14%, rgba(215, 244, 255, 0.5) 0, transparent 2px),
+      radial-gradient(circle at 84% 72%, rgba(215, 244, 255, 0.55) 0, transparent 3px);
+    background-size: 200px 200px;
+    opacity: 0.55;
+  }
+
+  // Mid layer: smaller, denser specks moving slower — faint depth behind the near layer.
+  &__parallax--mid {
+    background-image:
+      radial-gradient(circle at 25% 60%, rgba(195, 232, 252, 0.45) 0, transparent 1.8px),
+      radial-gradient(circle at 72% 32%, rgba(195, 232, 252, 0.4) 0, transparent 1.5px);
+    background-size: 125px 125px;
+    opacity: 0.4;
+  }
+
   &__player {
     position: absolute;
+    top: 0;
+    left: 0;
     z-index: 1;
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
     align-items: center;
-    // Position (left/top) is driven per-frame by rAF extrapolation — no CSS transition, like items.
-    // translateZ(0) promotes its own layer so per-frame repositioning repaints cleanly (no flicker).
+    // Position is driven per-frame via the independent `translate` CSS property (set by the scene-position
+    // directive in transform mode) → a compositor-only move, no per-frame layout. This `transform` is just the
+    // static anchor; translateZ(0) promotes its own layer so the repositioning composites cleanly.
     transform: translate(-50%, -50%) translateZ(0);
     backface-visibility: hidden;
     pointer-events: none;
@@ -26,33 +66,76 @@
   // the float's `translate(-50%, …)` to centre it over the sprite.
   &__player-float {
     position: absolute;
-    // Each float sits in its own vertical lane above the head (set per message via `--float-lane`),
-    // so several co-existing quips of one player wedge into free slots instead of overlapping.
-    bottom: calc(100% + var(--float-lane, 0) * 1.6rem);
+    // All floats anchor at the same spot above the head; the rise animation plus the release queue's
+    // stagger spread co-existing quips of one player into a column over time instead of overlapping here.
+    bottom: 100%;
     left: 50%;
   }
 
-  // decayShield aura: a soft cyan ring centred on the sprite while the shield is active. Sits behind the
-  // sprite (the player box paints it first; no z-index needed) and is purely decorative (aria-hidden).
+  // shield bubble: a glassy soap-bubble encasing the sprite while the full-invulnerability ward is active, so
+  // the Pokémon reads as sealed inside a sphere rather than ringed by a flat halo. The glass itself (cyan
+  // fill brightening to the rim, specular highlight, volume shadow) is painted by the shared leftPawBubbleSkin
+  // directive from `--left-paw-bubble-tint`; here we only own the circle's size, placement and pulse. Sits
+  // behind the sprite (translucent, the sprite shows through) and is purely decorative (aria-hidden).
   &__shield {
+    --left-paw-bubble-tint: rgba(120, 220, 255, 0.9);
     position: absolute;
     top: calc(var(--scene-sprite-height, 96px) / 2);
     left: 50%;
     width: calc(var(--scene-sprite-height, 96px) * 1.5);
     height: calc(var(--scene-sprite-height, 96px) * 1.5);
     border-radius: 50%;
-    border: 2px solid rgba(120, 220, 255, 0.85);
+    transform: translate(-50%, -50%);
+    animation: scene-shield-pulse 2.6s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  // wellFed aura: a soft healthy-green ring while the vitamin's decay-pause buff is active. Gentler than the
+  // shield bubble — it only stalls decay, so it signals "kept fed", not "invulnerable".
+  &__well-fed {
+    position: absolute;
+    top: calc(var(--scene-sprite-height, 96px) / 2);
+    left: 50%;
+    width: calc(var(--scene-sprite-height, 96px) * 1.45);
+    height: calc(var(--scene-sprite-height, 96px) * 1.45);
+    border-radius: 50%;
+    border: 2px solid rgba(150, 230, 150, 0.8);
     background: radial-gradient(
       circle,
-      rgba(120, 220, 255, 0) 55%,
-      rgba(120, 220, 255, 0.22) 80%,
-      rgba(120, 220, 255, 0) 100%
+      rgba(150, 230, 150, 0) 58%,
+      rgba(150, 230, 150, 0.2) 82%,
+      rgba(150, 230, 150, 0) 100%
     );
     box-shadow:
-      0 0 12px rgba(120, 220, 255, 0.6),
-      inset 0 0 12px rgba(120, 220, 255, 0.35);
+      0 0 12px rgba(150, 230, 150, 0.55),
+      inset 0 0 12px rgba(150, 230, 150, 0.3);
     transform: translate(-50%, -50%);
-    animation: scene-shield-pulse 1.8s ease-in-out infinite;
+    animation: scene-shield-pulse 2.2s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  // laying aura: a festive multicolour ring that slowly spins, signalling the easter-egg item-spewing buff.
+  &__laying {
+    position: absolute;
+    top: calc(var(--scene-sprite-height, 96px) / 2);
+    left: 50%;
+    width: calc(var(--scene-sprite-height, 96px) * 1.6);
+    height: calc(var(--scene-sprite-height, 96px) * 1.6);
+    border-radius: 50%;
+    border: 2px solid rgba(255, 170, 210, 0.85);
+    background: conic-gradient(
+      from 0deg,
+      rgba(255, 120, 120, 0.28),
+      rgba(255, 210, 120, 0.28),
+      rgba(140, 220, 150, 0.28),
+      rgba(120, 190, 255, 0.28),
+      rgba(210, 140, 255, 0.28),
+      rgba(255, 120, 120, 0.28)
+    );
+    mask: radial-gradient(circle, transparent 56%, #000 60%, #000 88%, transparent 100%);
+    box-shadow: 0 0 14px rgba(255, 170, 210, 0.6);
+    transform: translate(-50%, -50%);
+    animation: scene-laying-spin 3s linear infinite;
     pointer-events: none;
   }
 
@@ -129,35 +212,39 @@
 
   &__item {
     position: absolute;
+    top: 0;
+    left: 0;
     z-index: 1;
-    // Anchor by the bottom edge (translateY -100%) so `y` is the item's foot: it stays fully visible
-    // while falling and lies wholly on the floor (y = 1) without needing its height in scene units.
+    // Position is the independent `translate` property (compositor, no per-frame layout). This `transform` is just
+    // the bottom-edge anchor so `y` is the item's foot (fully visible falling, resting wholly on the floor at y=1).
+    // Hover/active use the separate `scale` property so its transition never catches the per-frame move.
     transform: translate(-50%, -100%);
     padding: 12px;
     background: none;
     border: none;
     cursor: pointer;
-    transition: transform 0.08s ease;
+    transition: scale 0.08s ease;
     outline: none;
     user-select: none;
   }
 
   &__item:hover,
   &__item:focus-visible {
-    transform: translate(-50%, -100%) scale(1.1);
+    scale: 1.1;
   }
 
   &__item:active {
-    transform: translate(-50%, -100%) scale(0.95);
+    scale: 0.95;
   }
 
   &__item-sprite {
     display: block;
-    // Integer multiple of the 30px source (×2) so `pixelated` upscaling stays even — a fractional
-    // scale (e.g. 56px) makes nearest-neighbour shimmer/comb during the fall.
-    width: 60px;
-    height: 60px;
-    image-rendering: pixelated;
+    // Size comes from the shared physical-size contract (`--scene-item-size` ← GAME.physicalSizePx.item), so
+    // render size and the server's size-aware edge bounds stay in lockstep. Smooth scaling (no `image-rendering:
+    // pixelated`): the camera and item positions now translate sub-pixel, and nearest-neighbour would shimmer at
+    // fractional offsets — bilinear keeps the small tumbling sprite clean. This also unblocks the responsive zoom.
+    width: var(--scene-item-size, 60px);
+    height: var(--scene-item-size, 60px);
     pointer-events: none;
     -webkit-user-drag: none;
   }
@@ -426,14 +513,26 @@
   }
 }
 
+@keyframes scene-laying-spin {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
 // Respect reduced-motion: keep the explosion's light/colour but drop the big screen shake.
 @media (prefers-reduced-motion: reduce) {
   .scene--shaking {
     animation: none;
   }
 
-  // Keep the shield ring visible but static — its job is to signal the buff, not to animate.
-  .scene__shield {
+  // Keep the effect auras visible but static — their job is to signal the buff, not to animate.
+  .scene__shield,
+  .scene__well-fed,
+  .scene__laying {
     animation: none;
   }
 }

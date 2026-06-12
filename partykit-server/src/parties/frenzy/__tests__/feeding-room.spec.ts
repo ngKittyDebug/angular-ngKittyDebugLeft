@@ -1,12 +1,12 @@
 import type * as Party from 'partykit/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { GAME } from '@game/frenzy/constants';
+import { FRENZY } from '@game/frenzy/config';
 import type { ClientMessage, ServerMessage } from '@game/frenzy/types';
 
 import FeedingRoom from '../index';
 
-const TICK_MS = 1000 / GAME.tickRateHz;
+const TICK_MS = 1000 / FRENZY.tickRateHz;
 
 class FakeConnection {
   public readonly sent: ServerMessage[] = [];
@@ -80,7 +80,7 @@ describe('FeedingRoom orchestration', () => {
   it('rejects connections beyond maxPlayers with roomFull and closes them', () => {
     const { room, server } = setup();
 
-    for (let i = 0; i < GAME.maxPlayers; i += 1) {
+    for (let i = 0; i < FRENZY.maxPlayers; i += 1) {
       const conn = new FakeConnection(`c${i}`);
 
       server.onConnect(asParty(conn));
@@ -93,7 +93,7 @@ describe('FeedingRoom orchestration', () => {
 
     expect(overflow.closed).toBe(true);
     expect(overflow.sent.some((message) => message.type === 'roomFull')).toBe(true);
-    expect(latestSnapshot(room)?.state.players).toHaveLength(GAME.maxPlayers);
+    expect(latestSnapshot(room)?.state.players).toHaveLength(FRENZY.maxPlayers);
   });
 
   it('lets a player eat a spawned item (click path works end to end)', () => {
@@ -135,7 +135,7 @@ describe('FeedingRoom orchestration', () => {
     const item = byType(room, 'spawned')[0].item;
 
     // Exhaust the shared per-session budget through tab A on a non-existent item.
-    for (let i = 0; i < GAME.clickRateLimitMax; i += 1) {
+    for (let i = 0; i < FRENZY.clickRateLimitMax; i += 1) {
       send(server, tabA, { type: 'click', itemId: 'ghost' });
     }
 
@@ -158,7 +158,7 @@ describe('FeedingRoom orchestration', () => {
 
     expect(afterClose?.state.players[0].status).toBe('disconnected');
 
-    vi.advanceTimersByTime(GAME.graceMs + TICK_MS);
+    vi.advanceTimersByTime(FRENZY.graceMs + TICK_MS);
 
     expect(latestSnapshot(room)?.state.players).toHaveLength(0);
   });
@@ -180,7 +180,7 @@ describe('FeedingRoom orchestration', () => {
     expect(latestSnapshot(room)?.state.players[0].status).toBe('alive');
 
     // Grace timer was cancelled — advancing past it must not purge the restored player.
-    vi.advanceTimersByTime(GAME.graceMs + TICK_MS);
+    vi.advanceTimersByTime(FRENZY.graceMs + TICK_MS);
 
     expect(latestSnapshot(room)?.state.players).toHaveLength(1);
   });
@@ -215,7 +215,7 @@ describe('FeedingRoom orchestration', () => {
     joinPlayer(server, conn, 'token-1');
 
     const toDeathMs =
-      GAME.decayIntervalMs * (GAME.startingMass / GAME.decayPerTick) + GAME.decayIntervalMs;
+      FRENZY.decayIntervalMs * (FRENZY.startingMass / FRENZY.decayPerTick) + FRENZY.decayIntervalMs;
 
     vi.advanceTimersByTime(toDeathMs);
 
@@ -240,7 +240,7 @@ describe('FeedingRoom orchestration', () => {
     joinPlayer(server, first, 'token-1');
 
     const toDeathMs =
-      GAME.decayIntervalMs * (GAME.startingMass / GAME.decayPerTick) + GAME.decayIntervalMs;
+      FRENZY.decayIntervalMs * (FRENZY.startingMass / FRENZY.decayPerTick) + FRENZY.decayIntervalMs;
 
     vi.advanceTimersByTime(toDeathMs);
     expect(latestSnapshot(room)?.state.players).toHaveLength(0);
@@ -263,7 +263,7 @@ describe('FeedingRoom orchestration', () => {
     const conns: FakeConnection[] = [];
 
     // Idle connections (never join) — bounded by maxConnections, not maxPlayers.
-    for (let i = 0; i < GAME.maxConnections; i += 1) {
+    for (let i = 0; i < FRENZY.maxConnections; i += 1) {
       const conn = new FakeConnection(`idle-${i}`);
 
       server.onConnect(asParty(conn));

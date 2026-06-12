@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { GAME } from '@game/frenzy/constants';
+import { FRENZY } from '@game/frenzy/config';
 import type { Player } from '@game/frenzy/types';
 
 import { createPlayer } from '../engine/create-player';
@@ -37,7 +37,7 @@ describe('createPlayer', () => {
       name: 'Ash',
       appearance: 'caterpie',
       stage: 1,
-      mass: GAME.startingMass,
+      mass: FRENZY.startingMass,
       status: 'alive',
       disconnectedAt: null,
       joinedAt: 1700000000,
@@ -45,7 +45,7 @@ describe('createPlayer', () => {
   });
 
   it('places the player within the drift zone', () => {
-    const { minX, maxX, minY, maxY } = GAME.playerDriftZone;
+    const { minX, maxX, minY, maxY } = FRENZY.playerDriftZone;
     const player = createPlayer({
       sessionToken: 'tok-1',
       name: 'Ash',
@@ -67,7 +67,7 @@ describe('createPlayer', () => {
       now: 0,
     });
 
-    expect(Math.hypot(player.vx, player.vy)).toBeCloseTo(GAME.playerDriftSpeed, 6);
+    expect(Math.hypot(player.vx, player.vy)).toBeCloseTo(FRENZY.playerDriftSpeed, 6);
   });
 
   it('keeps at least playerSpawnMinDistance from existing players when a free spot is found', () => {
@@ -85,7 +85,7 @@ describe('createPlayer', () => {
     });
 
     expect(Math.hypot(player.x - occupied.x, player.y - occupied.y)).toBeGreaterThanOrEqual(
-      GAME.playerSpawnMinDistance,
+      FRENZY.playerSpawnMinDistance,
     );
   });
 });

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { GAME } from '@game/frenzy/constants';
+import { FRENZY } from '@game/frenzy/config';
 import type { Item, ItemType, Player, ServerState } from '@game/frenzy/types';
 
 import { getItemBehavior } from '../engine/item-behaviors';
@@ -9,7 +9,7 @@ const ITEM_TYPES: ItemType[] = ['food', 'rotten', 'rock', 'rareCandy', 'goldenBe
 const EMPTY_STATE: ServerState = { players: [], items: [], tick: 0 };
 
 function item(type: ItemType): Item {
-  return { id: 'i1', type, x: 0.5, y: 0.5, vy: GAME.fallSpeed[type] };
+  return { id: 'i1', type, x: 0.5, y: 0.5, vy: FRENZY.fallSpeed[type] };
 }
 
 const PLAYER: Player = {
@@ -34,7 +34,9 @@ describe('item behaviors', () => {
       const interaction = getItemBehavior(type).onClick(item(type), 'p1', EMPTY_STATE);
 
       expect(interaction.consumed).toBe(true);
-      expect(interaction.massDeltas).toEqual([{ playerId: 'p1', amount: GAME.itemEffects[type] }]);
+      expect(interaction.massDeltas).toEqual([
+        { playerId: 'p1', amount: FRENZY.itemEffects[type] },
+      ]);
     }
   });
 
@@ -50,7 +52,7 @@ describe('item behaviors', () => {
 
       expect(interaction).toEqual({
         consumed: true,
-        massDeltas: [{ playerId: 'p1', amount: GAME.itemEffects[type] }],
+        massDeltas: [{ playerId: 'p1', amount: FRENZY.itemEffects[type] }],
       });
     }
   });
@@ -60,7 +62,7 @@ describe('item behaviors', () => {
 
     expect(interaction).toEqual({
       consumed: true,
-      massDeltas: [{ playerId: 'p1', amount: GAME.collision.rockDamage }],
+      massDeltas: [{ playerId: 'p1', amount: FRENZY.collision.rockDamage }],
     });
   });
 
@@ -69,7 +71,7 @@ describe('item behaviors', () => {
 
     expect(interaction).toEqual({
       consumed: true,
-      massDeltas: [{ playerId: 'p1', amount: GAME.itemEffects.rotten }],
+      massDeltas: [{ playerId: 'p1', amount: FRENZY.itemEffects.rotten }],
     });
   });
 });
@@ -93,15 +95,15 @@ describe('bomb behavior', () => {
   it('caps an oversized bat displacement', () => {
     const interaction = getItemBehavior('bomb').onClick(bombAt(0.5), 'p1', EMPTY_STATE, 1);
 
-    expect(interaction.nudgeX).toBe(GAME.bomb.maxNudge);
+    expect(interaction.nudgeX).toBe(FRENZY.bomb.maxNudge);
   });
 
   it('without a displacement, a click bats the bomb away from the nearest edge (fallback)', () => {
     const fromLeft = getItemBehavior('bomb').onClick(bombAt(0.3), 'p1', EMPTY_STATE);
     const fromRight = getItemBehavior('bomb').onClick(bombAt(0.7), 'p1', EMPTY_STATE);
 
-    expect(fromLeft.nudgeX).toBe(GAME.bomb.nudgeStep);
-    expect(fromRight.nudgeX).toBe(-GAME.bomb.nudgeStep);
+    expect(fromLeft.nudgeX).toBe(FRENZY.bomb.nudgeStep);
+    expect(fromRight.nudgeX).toBe(-FRENZY.bomb.nudgeStep);
   });
 
   it('explodes on landing and damages every alive Pokémon in range, owner included', () => {
@@ -120,8 +122,8 @@ describe('bomb behavior', () => {
     expect(interaction?.consumed).toBe(true);
     expect(interaction?.explodes).toBe(true);
     expect(interaction?.massDeltas).toEqual([
-      { playerId: 'owner', amount: GAME.bomb.damage },
-      { playerId: 'near', amount: GAME.bomb.damage },
+      { playerId: 'owner', amount: FRENZY.bomb.damage },
+      { playerId: 'near', amount: FRENZY.bomb.damage },
     ]);
   });
 
@@ -135,7 +137,18 @@ describe('bomb behavior', () => {
 
     const interaction = getItemBehavior('bomb').onLand?.(bombAt(0.5), state);
 
-    expect(interaction?.massDeltas).toEqual([{ playerId: 'owner', amount: GAME.bomb.damage }]);
+    expect(interaction?.massDeltas).toEqual([{ playerId: 'owner', amount: FRENZY.bomb.damage }]);
+  });
+
+  it('spares the bomb owner from their own laid bomb but still hits nearby rivals', () => {
+    const layer = playerAt('layer', 0.5, 1);
+    const rival = playerAt('rival', 0.55, 1);
+    const ownedBomb: Item = { ...bombAt(0.5), ownerId: 'layer' };
+    const state: ServerState = { players: [layer, rival], items: [], tick: 0 };
+
+    const interaction = getItemBehavior('bomb').onLand?.(ownedBomb, state);
+
+    expect(interaction?.massDeltas).toEqual([{ playerId: 'rival', amount: FRENZY.bomb.damage }]);
   });
 
   it('also detonates on mid-air collision — same area blast, not a one-on-one hit', () => {
@@ -153,24 +166,24 @@ describe('bomb behavior', () => {
     expect(interaction?.consumed).toBe(true);
     expect(interaction?.explodes).toBe(true);
     expect(interaction?.massDeltas).toEqual([
-      { playerId: 'touched', amount: GAME.bomb.damage },
-      { playerId: 'bystander', amount: GAME.bomb.damage },
+      { playerId: 'touched', amount: FRENZY.bomb.damage },
+      { playerId: 'bystander', amount: FRENZY.bomb.damage },
     ]);
   });
 });
 
 describe('vitamin behavior', () => {
-  it('grabbing a vitamin grants the clicker a shield and consumes it, with no mass delta', () => {
+  it('grabbing a vitamin heals its hp and grants wellFed (decay pause), consuming it', () => {
     const interaction = getItemBehavior('vitamin').onClick(item('vitamin'), 'p1', EMPTY_STATE);
 
     expect(interaction).toEqual({
       consumed: true,
-      massDeltas: [],
-      effects: [{ playerId: 'p1', kind: 'shield', durationMs: GAME.vitamin.shieldMs }],
+      massDeltas: [{ playerId: 'p1', amount: FRENZY.vitamin.hp }],
+      effects: [{ playerId: 'p1', kind: 'wellFed', durationMs: FRENZY.vitamin.decayPauseMs }],
     });
   });
 
-  it('drifting into a vitamin shields the colliding Pokémon the same way', () => {
+  it('drifting into a vitamin heals and grants wellFed the same way', () => {
     const interaction = getItemBehavior('vitamin').onCollide?.(
       item('vitamin'),
       PLAYER,
@@ -179,15 +192,37 @@ describe('vitamin behavior', () => {
 
     expect(interaction).toEqual({
       consumed: true,
+      massDeltas: [{ playerId: 'p1', amount: FRENZY.vitamin.hp }],
+      effects: [{ playerId: 'p1', kind: 'wellFed', durationMs: FRENZY.vitamin.decayPauseMs }],
+    });
+  });
+});
+
+describe('shield behavior', () => {
+  it('grabbing a shield grants the clicker the shield ward and consumes it, with no mass delta', () => {
+    const interaction = getItemBehavior('shield').onClick(item('shield'), 'p1', EMPTY_STATE);
+
+    expect(interaction).toEqual({
+      consumed: true,
       massDeltas: [],
-      effects: [{ playerId: 'p1', kind: 'shield', durationMs: GAME.vitamin.shieldMs }],
+      effects: [{ playerId: 'p1', kind: 'shield', durationMs: FRENZY.shield.shieldMs }],
+    });
+  });
+
+  it('drifting into a shield wards the colliding Pokémon the same way', () => {
+    const interaction = getItemBehavior('shield').onCollide?.(item('shield'), PLAYER, EMPTY_STATE);
+
+    expect(interaction).toEqual({
+      consumed: true,
+      massDeltas: [],
+      effects: [{ playerId: 'p1', kind: 'shield', durationMs: FRENZY.shield.shieldMs }],
     });
   });
 });
 
 describe('mushroom gamble behavior', () => {
   // gambleDelta(rng) = minDelta + floor(rng * (maxDelta - minDelta + 1)); with [-20, 40] that's -20 + floor(rng * 61).
-  const span = GAME.mushroom.maxDelta - GAME.mushroom.minDelta + 1;
+  const span = FRENZY.mushroom.maxDelta - FRENZY.mushroom.minDelta + 1;
 
   it('a click rolls a delta within range, credits the clicker, and consumes the mushroom', () => {
     const lowest = getItemBehavior('mushroom').onClick(
@@ -207,11 +242,11 @@ describe('mushroom gamble behavior', () => {
 
     expect(lowest).toEqual({
       consumed: true,
-      massDeltas: [{ playerId: 'p1', amount: GAME.mushroom.minDelta }],
+      massDeltas: [{ playerId: 'p1', amount: FRENZY.mushroom.minDelta }],
     });
     expect(highest).toEqual({
       consumed: true,
-      massDeltas: [{ playerId: 'p1', amount: GAME.mushroom.maxDelta }],
+      massDeltas: [{ playerId: 'p1', amount: FRENZY.mushroom.maxDelta }],
     });
   });
 
@@ -225,7 +260,7 @@ describe('mushroom gamble behavior', () => {
 
     expect(interaction).toEqual({
       consumed: true,
-      massDeltas: [{ playerId: 'p1', amount: GAME.mushroom.minDelta + Math.floor(0.5 * span) }],
+      massDeltas: [{ playerId: 'p1', amount: FRENZY.mushroom.minDelta + Math.floor(0.5 * span) }],
     });
   });
 
@@ -240,8 +275,34 @@ describe('mushroom gamble behavior', () => {
         rng,
       ).massDeltas[0];
 
-      expect(amount).toBeGreaterThanOrEqual(GAME.mushroom.minDelta);
-      expect(amount).toBeLessThanOrEqual(GAME.mushroom.maxDelta);
+      expect(amount).toBeGreaterThanOrEqual(FRENZY.mushroom.minDelta);
+      expect(amount).toBeLessThanOrEqual(FRENZY.mushroom.maxDelta);
     }
+  });
+});
+
+describe('easter egg behavior', () => {
+  it('grabbing an easter egg heals its hp and grants the laying aura, consuming it', () => {
+    const interaction = getItemBehavior('easterEgg').onClick(item('easterEgg'), 'p1', EMPTY_STATE);
+
+    expect(interaction).toEqual({
+      consumed: true,
+      massDeltas: [{ playerId: 'p1', amount: FRENZY.easterEgg.hpOnPickup }],
+      effects: [{ playerId: 'p1', kind: 'laying', durationMs: FRENZY.easterEgg.durationMs }],
+    });
+  });
+
+  it('drifting into an easter egg heals and grants the laying aura the same way', () => {
+    const interaction = getItemBehavior('easterEgg').onCollide?.(
+      item('easterEgg'),
+      PLAYER,
+      EMPTY_STATE,
+    );
+
+    expect(interaction).toEqual({
+      consumed: true,
+      massDeltas: [{ playerId: 'p1', amount: FRENZY.easterEgg.hpOnPickup }],
+      effects: [{ playerId: 'p1', kind: 'laying', durationMs: FRENZY.easterEgg.durationMs }],
+    });
   });
 });

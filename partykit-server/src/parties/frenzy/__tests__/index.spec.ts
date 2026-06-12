@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { GAME } from '@game/frenzy/constants';
+import { FRENZY } from '@game/frenzy/config';
 
 describe('@game/frenzy/* alias resolution', () => {
-  it('imports GAME constants from shared-game/', () => {
-    expect(GAME.startingMass).toBe(100);
-    expect(GAME.maxPlayers).toBe(20);
-    expect(GAME.thresholds.stage2).toBeLessThan(GAME.thresholds.stage3);
+  it('imports FRENZY constants from shared-game/', () => {
+    expect(FRENZY.startingMass).toBe(100);
+    expect(FRENZY.maxPlayers).toBe(20);
+    expect(FRENZY.thresholds.stage2).toBeLessThan(FRENZY.thresholds.stage3);
   });
 });

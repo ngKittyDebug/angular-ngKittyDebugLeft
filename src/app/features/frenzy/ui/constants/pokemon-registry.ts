@@ -1,3 +1,4 @@
+import { FRENZY } from '@game/frenzy/config';
 import type { ItemType, Stage } from '@game/frenzy/types';
 
 // The Pokémon roster is client-owned: the server only relays an opaque `appearance` id (`Player.appearance`)
@@ -49,14 +50,8 @@ const ITEM_SPRITES: Record<ItemType, string> = {
   crumb: 'berry-crumb.svg',
   mushroom: 'tiny-mushroom.svg',
   vitamin: 'vitamin.svg',
-};
-
-// On-screen sprite height (px) per evolution stage — the single knob for tuning Pokémon size.
-// Width follows the source aspect ratio; bigger stages read as growth on evolution.
-const STAGE_SPRITE_HEIGHT_PX: Record<Stage, number> = {
-  1: 72,
-  2: 96,
-  3: 120,
+  shield: 'shield.svg',
+  easterEgg: 'easter-egg.svg',
 };
 
 export function spritePathFor(appearance: string, stage: Stage = 1): string {
@@ -65,8 +60,11 @@ export function spritePathFor(appearance: string, stage: Stage = 1): string {
   return `/sprites/${filename}.gif`;
 }
 
+// On-screen sprite height (px) per evolution stage — sourced from the shared physical-size contract so render
+// size and the server's size-aware bounds (`FRENZY.physicalSizePx`) stay in lockstep. Width follows the source
+// aspect ratio; bigger stages read as growth on evolution.
 export function spriteHeightFor(stage: Stage = 1): string {
-  return `${STAGE_SPRITE_HEIGHT_PX[stage]}px`;
+  return `${FRENZY.physicalSizePx.player[stage]}px`;
 }
 
 export function itemSpritePathFor(type: ItemType): string {

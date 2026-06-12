@@ -1,4 +1,5 @@
-import { GAME } from '@game/frenzy/constants';
+import { FRENZY } from '@game/frenzy/config';
+import { steerVelocity } from '@game/frenzy/steer-velocity';
 import type { ServerState } from '@game/frenzy/types';
 
 // Steering: add a velocity impulse toward the tapped point on top of the steerer's current drift, then cap the
@@ -19,22 +20,12 @@ export function applySteer(
 
   const dx = x - steerer.x;
   const dy = y - steerer.y;
-  const distance = Math.hypot(dx, dy);
 
-  if (distance === 0) {
+  if (dx === 0 && dy === 0) {
     return state;
   }
 
-  const { impulse, maxSpeed } = GAME.steer;
-  let vx = steerer.vx + (dx / distance) * impulse;
-  let vy = steerer.vy + (dy / distance) * impulse;
-  const speed = Math.hypot(vx, vy);
-
-  if (speed > maxSpeed) {
-    vx = (vx / speed) * maxSpeed;
-    vy = (vy / speed) * maxSpeed;
-  }
-
+  const { vx, vy } = steerVelocity(steerer, dx, dy, FRENZY.steer);
   const players = state.players.map((player) =>
     player.id === steererId ? { ...player, vx, vy } : player,
   );

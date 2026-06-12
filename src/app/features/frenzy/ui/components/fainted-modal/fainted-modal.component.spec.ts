@@ -17,6 +17,8 @@ const STATS: FaintedStats = {
     crumb: 0,
     mushroom: 0,
     vitamin: 0,
+    shield: 0,
+    easterEgg: 0,
   },
   lifespanSeconds: 42,
   maxMass: 230,

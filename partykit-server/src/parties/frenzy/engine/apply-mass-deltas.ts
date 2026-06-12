@@ -8,6 +8,50 @@ export interface MassDeltaResult {
   events: GameEvent[];
 }
 
+/** Outcome of applying a player's net mass change: the updated player (absent when they fainted) and any event it produced. */
+interface PlayerMassOutcome {
+  player?: Player;
+  event?: GameEvent;
+}
+
+/** Sums the deltas per player, so one target hit by several deltas in a tick resolves against a single net amount. */
+function aggregateByPlayer(deltas: readonly MassDelta[]): Map<string, number> {
+  const amountByPlayer = new Map<string, number>();
+
+  for (const delta of deltas) {
+    amountByPlayer.set(delta.playerId, (amountByPlayer.get(delta.playerId) ?? 0) + delta.amount);
+  }
+
+  return amountByPlayer;
+}
+
+/**
+ * Applies one player's net mass change: clamps at 0, recomputes stage. A `shield` (vitamin ward) nullifies a
+ * net-negative amount — the player keeps their mass and can't faint from a hit (covers rock, rotten and negative
+ * mushroom rolls; bomb is already filtered at the blast). Positive deltas still apply, so feeding through a
+ * shield still grows. Returns no player (and a `fainted` event) when the mass reaches 0, an `evolved` event when
+ * a stage threshold is crossed.
+ */
+function resolvePlayerMass(player: Player, amount: number): PlayerMassOutcome {
+  const shielded = player.effects.some((effect) => effect.kind === 'shield');
+
+  if (shielded && amount < 0) {
+    return { player };
+  }
+
+  const newMass = Math.max(0, player.mass + amount);
+
+  if (newMass <= 0) {
+    return { event: { type: 'fainted', playerId: player.id } };
+  }
+
+  const newStage = calculateStage(newMass);
+  const event: GameEvent | undefined =
+    newStage > player.stage ? { type: 'evolved', playerId: player.id, newStage } : undefined;
+
+  return { player: { ...player, mass: newMass, stage: newStage }, event };
+}
+
 /**
  * Applies mass changes to players: clamps at 0, recomputes stage, removes anyone who hits 0.
  * Emits `evolved` when a player crosses a stage threshold and `fainted` when they reach 0.
@@ -18,12 +62,7 @@ export function applyMassDeltas(state: ServerState, deltas: MassDelta[]): MassDe
     return { state, events: [] };
   }
 
-  const amountByPlayer = new Map<string, number>();
-
-  for (const delta of deltas) {
-    amountByPlayer.set(delta.playerId, (amountByPlayer.get(delta.playerId) ?? 0) + delta.amount);
-  }
-
+  const amountByPlayer = aggregateByPlayer(deltas);
   const events: GameEvent[] = [];
   const players: Player[] = [];
 
@@ -35,30 +74,15 @@ export function applyMassDeltas(state: ServerState, deltas: MassDelta[]): MassDe
       continue;
     }
 
-    // A `shield` (vitamin) wards off all incoming damage — net-negative deltas are nullified, so the player
-    // keeps their mass and can't faint from a hit (bomb is already filtered at the blast; this covers rock,
-    // rotten and negative mushroom rolls). Positive deltas still apply, so feeding through a shield still grows.
-    const shielded = player.effects.some((effect) => effect.kind === 'shield');
+    const outcome = resolvePlayerMass(player, amount);
 
-    if (shielded && amount < 0) {
-      players.push(player);
-      continue;
+    if (outcome.player !== undefined) {
+      players.push(outcome.player);
     }
 
-    const newMass = Math.max(0, player.mass + amount);
-
-    if (newMass <= 0) {
-      events.push({ type: 'fainted', playerId: player.id });
-      continue;
+    if (outcome.event !== undefined) {
+      events.push(outcome.event);
     }
-
-    const newStage = calculateStage(newMass);
-
-    if (newStage > player.stage) {
-      events.push({ type: 'evolved', playerId: player.id, newStage });
-    }
-
-    players.push({ ...player, mass: newMass, stage: newStage });
   }
 
   return { state: { ...state, players }, events };

@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 
-import { GAME } from '@game/frenzy/constants';
+import { FRENZY } from '@game/frenzy/config';
 import type { ServerMessage } from '@game/frenzy/types';
 
 import type { Blast } from '../../models/blast';
@@ -45,14 +45,15 @@ export class DetonationEffect implements FrenzyEffect {
     // still around, so a Pokémon the bomb finished off simply shows the "died" quip instead.
     for (const playerId of message.playerIds) {
       const index = Math.floor(Math.random() * FLOATING_TEXT_PHRASE_COUNT);
-      const entry: Omit<OwnedFloat, 'lane'> = {
+      const entry: OwnedFloat = {
         id: createTransientId(),
         ownerId: playerId,
         tone: 'negative',
         textKey: `floatingText.bomb.${index}`,
         durationMs: BOMB_FLOAT_TTL_MS,
         icon: '@tui.bomb',
-        delta: GAME.bomb.damage,
+        delta: FRENZY.bomb.damage,
+        priority: message.priority ?? FRENZY.floatPriority.detonated,
       };
 
       this.floats.pushOwned(entry);

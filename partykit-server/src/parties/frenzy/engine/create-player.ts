@@ -1,4 +1,4 @@
-import { GAME } from '@game/frenzy/constants';
+import { FRENZY } from '@game/frenzy/config';
 import type { Player } from '@game/frenzy/types';
 
 export interface CreatePlayerInput {
@@ -16,7 +16,7 @@ interface Point {
 }
 
 function randomPointInZone(rng: () => number): Point {
-  const { minX, maxX, minY, maxY } = GAME.playerDriftZone;
+  const { minX, maxX, minY, maxY } = FRENZY.playerDriftZone;
 
   return {
     x: minX + rng() * (maxX - minX),
@@ -26,7 +26,7 @@ function randomPointInZone(rng: () => number): Point {
 
 function isFarEnough(point: Point, others: readonly Player[]): boolean {
   return others.every(
-    (other) => Math.hypot(point.x - other.x, point.y - other.y) >= GAME.playerSpawnMinDistance,
+    (other) => Math.hypot(point.x - other.x, point.y - other.y) >= FRENZY.playerSpawnMinDistance,
   );
 }
 
@@ -35,7 +35,7 @@ function isFarEnough(point: Point, others: readonly Player[]): boolean {
 function pickSpawnPoint(existingPlayers: readonly Player[], rng: () => number): Point {
   let point = randomPointInZone(rng);
 
-  for (let attempt = 1; attempt < GAME.playerSpawnMaxAttempts; attempt += 1) {
+  for (let attempt = 1; attempt < FRENZY.playerSpawnMaxAttempts; attempt += 1) {
     if (isFarEnough(point, existingPlayers)) {
       return point;
     }
@@ -62,11 +62,11 @@ export function createPlayer({
     name,
     appearance,
     stage: 1,
-    mass: GAME.startingMass,
+    mass: FRENZY.startingMass,
     x,
     y,
-    vx: Math.cos(angle) * GAME.playerDriftSpeed,
-    vy: Math.sin(angle) * GAME.playerDriftSpeed,
+    vx: Math.cos(angle) * FRENZY.playerDriftSpeed,
+    vy: Math.sin(angle) * FRENZY.playerDriftSpeed,
     status: 'alive',
     disconnectedAt: null,
     joinedAt: now,

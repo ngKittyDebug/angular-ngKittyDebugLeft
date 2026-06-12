@@ -1,9 +1,22 @@
 import { Injectable } from '@angular/core';
 
+import { FRENZY } from '@game/frenzy/config';
+
 import type { FloatingTone, OrphanFloat, OwnedFloat } from '../../models/floating-message';
+import { OwnerReleaseQueue } from './owner-release-queue';
 import { createTransientId, TransientList } from './transient-list';
 
-type StatusKind = 'evolved' | 'happy' | 'sad' | 'dying' | 'appeared' | 'died' | 'poke' | 'shield';
+type StatusKind =
+  | 'evolved'
+  | 'happy'
+  | 'sad'
+  | 'dying'
+  | 'appeared'
+  | 'died'
+  | 'poke'
+  | 'shield'
+  | 'wellFed'
+  | 'laying';
 
 interface StatusConfig {
   tone: FloatingTone;
@@ -18,11 +31,8 @@ interface StatusBase {
   textKey: string;
   durationMs: number;
   icon: string;
+  priority: number;
 }
-
-// Distinct vertical slots above a head before we start reusing the lowest — keeps a flurry of floats
-// stacked legibly without marching off the top of the scene.
-const MAX_FLOAT_LANES = 4;
 
 // Status floats rise and fade like eat texts, but live longer so they can be read.
 const STATUS_CONFIG: Record<StatusKind, StatusConfig> = {
@@ -34,6 +44,8 @@ const STATUS_CONFIG: Record<StatusKind, StatusConfig> = {
   died: { tone: 'neutral', icon: '@tui.skull', durationMs: 5500, phraseCount: 4 },
   poke: { tone: 'neutral', icon: '@tui.laugh', durationMs: 1400, phraseCount: 12 },
   shield: { tone: 'positive', icon: '@tui.shield', durationMs: 2500, phraseCount: 4 },
+  wellFed: { tone: 'positive', icon: '@tui.heart', durationMs: 2500, phraseCount: 4 },
+  laying: { tone: 'positive', icon: '@tui.egg', durationMs: 2500, phraseCount: 4 },
 };
 
 /**
@@ -45,14 +57,17 @@ const STATUS_CONFIG: Record<StatusKind, StatusConfig> = {
 export class FloatingMessagesStore {
   private readonly owned = new TransientList<OwnedFloat>();
   private readonly orphans = new TransientList<OrphanFloat>();
+  // Owned floats queue per owner and release one at a time into the visible list, so a flurry chases up a
+  // single column instead of overlapping at the head.
+  private readonly queue = new OwnerReleaseQueue<OwnedFloat>((float) =>
+    this.owned.add(float, float.durationMs),
+  );
 
   public readonly ownedMessages = this.owned.items;
   public readonly orphanMessages = this.orphans.items;
 
-  public pushOwned(entry: Omit<OwnedFloat, 'lane'>): void {
-    const placed: OwnedFloat = { ...entry, lane: this.freeLaneFor(entry.ownerId) };
-
-    this.owned.add(placed, placed.durationMs);
+  public pushOwned(entry: OwnedFloat): void {
+    this.queue.enqueue(entry);
   }
 
   public pushOrphan(entry: OrphanFloat): void {
@@ -60,13 +75,26 @@ export class FloatingMessagesStore {
   }
 
   public remove(id: string): void {
+    // A live quip's id may still be pending (not yet released) — drop it there first; only if it already
+    // surfaced do we pull it from the visible list. Keeps dying-clear / poke-replace correct in both states.
+    if (this.queue.removePending(id)) {
+      return;
+    }
+
+    const removed = this.owned.items().find((float) => float.id === id);
+
     this.owned.remove(id);
+
+    // Removing a released float frees its column slot — let any pending replacement surface at once.
+    if (removed !== undefined) {
+      this.queue.notifyRemoved(removed.ownerId);
+    }
   }
 
   // Status quip anchored to a live sprite. Returns the id so callers that own a single live quip
   // (dying, poke) can replace or clear it.
   public pushOwnedStatus(kind: StatusKind, ownerId: string, who?: string): string {
-    const entry: Omit<OwnedFloat, 'lane'> = { ...this.statusBase(kind), ownerId, who };
+    const entry: OwnedFloat = { ...this.statusBase(kind), ownerId, who };
 
     this.pushOwned(entry);
 
@@ -76,25 +104,6 @@ export class FloatingMessagesStore {
   // Death quip for a player already gone — stamped at its last-known scene position.
   public pushOrphanStatus(kind: StatusKind, x: number, y: number, who?: string): void {
     this.pushOrphan({ ...this.statusBase(kind), x, y, who });
-  }
-
-  // Smallest vertical slot not currently taken by another live float of the same player, so a new float
-  // wedges into a free gap instead of stacking on a neighbour. Falls back to wrapping once all lanes fill.
-  private freeLaneFor(ownerId: string): number {
-    const taken = new Set(
-      this.owned
-        .items()
-        .filter((float) => float.ownerId === ownerId)
-        .map((float) => float.lane),
-    );
-
-    for (let lane = 0; lane < MAX_FLOAT_LANES; lane++) {
-      if (!taken.has(lane)) {
-        return lane;
-      }
-    }
-
-    return taken.size % MAX_FLOAT_LANES;
   }
 
   private statusBase(kind: StatusKind): StatusBase {
@@ -107,6 +116,7 @@ export class FloatingMessagesStore {
       textKey: `statusMessage.${kind}.${index}`,
       durationMs: config.durationMs,
       icon: config.icon,
+      priority: FRENZY.floatPriority[kind],
     };
   }
 }

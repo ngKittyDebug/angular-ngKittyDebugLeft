@@ -13,12 +13,14 @@ import { FrenzySocketService } from './data/services/frenzy-socket.service';
 import { SessionTokenService } from './data/services/session-token.service';
 import { AudioEngineService } from './data/services/sound/audio-engine.service';
 import { BadEatSoundService } from './data/services/sound/bad-eat-sound.service';
+import { EasterEggSoundService } from './data/services/sound/easter-egg-sound.service';
 import { EatSoundService } from './data/services/sound/eat-sound.service';
 import { EvolveSoundService } from './data/services/sound/evolve-sound.service';
 import { ExplosionSoundService } from './data/services/sound/explosion-sound.service';
 import { RockSoundService } from './data/services/sound/rock-sound.service';
 import { ShieldSoundService } from './data/services/sound/shield-sound.service';
 import { SoundSettingsService } from './data/services/sound/sound-settings.service';
+import { WellFedSoundService } from './data/services/sound/well-fed-sound.service';
 import { FrenzyStatsStore } from './data/store/frenzy-stats.store';
 import { FrenzyStore } from './data/store/frenzy.store';
 import { FrenzyPageFacade } from './ui/components/frenzy-page/frenzy-page.facade';
@@ -48,12 +50,14 @@ export const frenzyRoutes: Routes = [
       SessionTokenService,
       AudioEngineService,
       BadEatSoundService,
+      EasterEggSoundService,
       EatSoundService,
       EvolveSoundService,
       ExplosionSoundService,
       RockSoundService,
       ShieldSoundService,
       SoundSettingsService,
+      WellFedSoundService,
     ],
   },
 ];

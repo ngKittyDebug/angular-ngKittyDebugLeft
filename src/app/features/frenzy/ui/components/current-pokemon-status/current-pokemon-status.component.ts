@@ -3,14 +3,14 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import { TuiIcon } from '@taiga-ui/core';
 import { TuiProgressBar } from '@taiga-ui/kit';
 
-import { GAME } from '@game/frenzy/constants';
+import { FRENZY } from '@game/frenzy/config';
 import type { Stage } from '@game/frenzy/types';
 
 import { getMood, type PokemonMood } from '../../../data/logic/pokemon-mood';
 import { MassToneColorPipe } from '../../pipes/mass-tone-color.pipe';
 import { StageRomanPipe } from '../../pipes/stage-roman.pipe';
 
-const MAX_VISUAL_MASS = GAME.thresholds.stage3;
+const MAX_VISUAL_MASS = FRENZY.thresholds.stage3;
 
 interface MoodVisual {
   icon: string;

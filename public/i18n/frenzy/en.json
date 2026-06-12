@@ -1,6 +1,5 @@
 {
   "currentPokemonStatus": {
-    "label": "Mass",
     "stage": "Stage {{stage}}",
     "ariaLabel": "Your Pokémon status",
     "mood": {
@@ -167,9 +166,21 @@
       },
       "shield": {
         "0": "Shielded!",
+        "1": "Invincible!",
+        "2": "In a bubble!",
+        "3": "Bounced off!"
+      },
+      "wellFed": {
+        "0": "Well fed!",
         "1": "No decay!",
-        "2": "Protected!",
-        "3": "Holding strong!"
+        "2": "Nourished!",
+        "3": "Staying strong!"
+      },
+      "laying": {
+        "0": "Egg-cellent!",
+        "1": "Laying eggs!",
+        "2": "Surprise!",
+        "3": "Spewing stuff!"
       }
     }
   }

@@ -1,4 +1,4 @@
-import { GAME } from '@game/frenzy/constants';
+import { FRENZY } from '@game/frenzy/config';
 import type { Stage } from '@game/frenzy/types';
 
 export type PokemonMood = 'starving' | 'hungry' | 'content' | 'happy';
@@ -13,7 +13,7 @@ const HUNGRY_BELOW: Record<Stage, number> = { 1: 100, 2: 250, 3: 600 };
 const HAPPY_AT: Record<Stage, number> = { 1: 160, 2: 420, 3: 800 };
 
 export function getMood(mass: number, stage: Stage): PokemonMood {
-  if (mass <= GAME.lowMassWarningThreshold) {
+  if (mass <= FRENZY.lowMassWarningThreshold) {
     return 'starving';
   }
 

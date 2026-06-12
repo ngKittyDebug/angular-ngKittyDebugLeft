@@ -1,9 +1,10 @@
 import type * as Party from 'partykit/server';
 
-import { GAME } from '@game/frenzy/constants';
+import { FRENZY } from '@game/frenzy/config';
 import type { Item, Player, ServerMessage, ServerState } from '@game/frenzy/types';
 
 import { applyClick } from './engine/apply-click';
+import { applyEmissions } from './engine/apply-emissions';
 import { applySteer } from './engine/apply-steer';
 import { applyTick } from './engine/apply-tick';
 import { checkClickRate } from './engine/check-click-rate';
@@ -13,9 +14,9 @@ import { pickItemType } from './engine/pick-item-type';
 import { restoreConnected } from './engine/restore-connected';
 import { parseClientMessage } from './parse-client-message';
 
-const TICK_INTERVAL_MS = 1000 / GAME.tickRateHz;
-const TICK_DELTA_SECONDS = 1 / GAME.tickRateHz;
-const DECAY_EVERY_N_TICKS = (GAME.decayIntervalMs / 1000) * GAME.tickRateHz;
+const TICK_INTERVAL_MS = 1000 / FRENZY.tickRateHz;
+const TICK_DELTA_SECONDS = 1 / FRENZY.tickRateHz;
+const DECAY_EVERY_N_TICKS = (FRENZY.decayIntervalMs / 1000) * FRENZY.tickRateHz;
 
 export default class FeedingRoom implements Party.Server {
   // Click history keyed by sessionToken (per player), so opening extra tabs can't multiply the click budget.
@@ -38,7 +39,10 @@ export default class FeedingRoom implements Party.Server {
   }
 
   public onConnect(conn: Party.Connection): void {
-    if (this.players.length >= GAME.maxPlayers || this.connections.size >= GAME.maxConnections) {
+    if (
+      this.players.length >= FRENZY.maxPlayers ||
+      this.connections.size >= FRENZY.maxConnections
+    ) {
       this.sendTo(conn, { type: 'roomFull' });
       conn.close();
 
@@ -164,6 +168,17 @@ export default class FeedingRoom implements Party.Server {
       return;
     }
 
+    // Easter-egg emissions: players under the `laying` aura randomly drop items from themselves this tick.
+    const emission = applyEmissions(this.currentState());
+
+    if (emission.spawned.length > 0) {
+      this.syncState(emission.state);
+
+      for (const item of emission.spawned) {
+        this.broadcast({ type: 'spawned', item });
+      }
+    }
+
     const now = Date.now();
 
     if (now >= this.nextSpawnAt) {
@@ -171,7 +186,7 @@ export default class FeedingRoom implements Party.Server {
       this.nextSpawnAt = now + this.nextSpawnDelayMs();
     }
 
-    if (this.tick % GAME.snapshotEveryNTicks === 0) {
+    if (this.tick % FRENZY.snapshotEveryNTicks === 0) {
       this.broadcast(this.snapshot());
     }
   }
@@ -312,14 +327,14 @@ export default class FeedingRoom implements Party.Server {
   }
 
   private spawnItem(): void {
-    const [minX, maxX] = GAME.itemSpawnXRange;
+    const [minX, maxX] = FRENZY.itemSpawnXRange;
     const type = pickItemType(Math.random);
     const item: Item = {
       id: crypto.randomUUID(),
       type,
       x: minX + Math.random() * (maxX - minX),
       y: 0,
-      vy: GAME.fallSpeed[type],
+      vy: FRENZY.fallSpeed[type],
     };
 
     this.items = [...this.items, item];
@@ -328,14 +343,14 @@ export default class FeedingRoom implements Party.Server {
 
   // Spawn rate scales with active players so per-capita food income stays ~constant (calibrated at spawnReferencePlayers).
   private nextSpawnDelayMs(): number {
-    const [minMs, maxMs] = GAME.spawnIntervalMsRange;
+    const [minMs, maxMs] = FRENZY.spawnIntervalMsRange;
     const baseDelay = minMs + Math.random() * (maxMs - minMs);
     const activeCount = Math.max(
       1,
       this.players.filter((player) => player.status === 'alive').length,
     );
 
-    return (baseDelay * GAME.spawnReferencePlayers) / activeCount;
+    return (baseDelay * FRENZY.spawnReferencePlayers) / activeCount;
   }
 
   private startLoop(): void {
@@ -367,7 +382,7 @@ export default class FeedingRoom implements Party.Server {
       if (this.players.length === 0) {
         this.stopLoop();
       }
-    }, GAME.graceMs);
+    }, FRENZY.graceMs);
 
     this.graceTimers.set(sessionToken, timer);
   }
