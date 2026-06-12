@@ -81,14 +81,25 @@ function ignoreUnhandledMessage(_message: never, state: ServerState | null): Ser
   return state;
 }
 
-// Messages that carry no game-state change: connection lifecycle (`rejoined`/`roomFull`), the join-refusal reason
+// Messages that carry no game-state change: connection lifecycle (`rejoined`/`roomFull`/`joined`/
+// `identifyRejected` — the latter two are handled in the store's message fan-out: my-id capture and token
+// rotation), the join-refusal reason
 // (recorded elsewhere in the store), the FX-only collision quip (`bumped` — its float lives in the effects service;
 // the damaged-but-alive hp reconciles on the next snapshot, faints arrive via their own `fainted` event), and the
 // liveness heartbeat (`ping`). Splitting them out as a type guard keeps the state switch within its complexity
 // budget and lets its `never` default still prove every state-changing message is handled.
 type StatelessMessage = Extract<
   ServerMessage,
-  { type: 'rejoined' | 'roomFull' | 'joinRejected' | 'bumped' | 'ping' }
+  {
+    type:
+      | 'rejoined'
+      | 'roomFull'
+      | 'joinRejected'
+      | 'joined'
+      | 'identifyRejected'
+      | 'bumped'
+      | 'ping';
+  }
 >;
 
 function isStatelessMessage(message: ServerMessage): message is StatelessMessage {
@@ -96,6 +107,8 @@ function isStatelessMessage(message: ServerMessage): message is StatelessMessage
     message.type === 'rejoined' ||
     message.type === 'roomFull' ||
     message.type === 'joinRejected' ||
+    message.type === 'joined' ||
+    message.type === 'identifyRejected' ||
     message.type === 'bumped' ||
     message.type === 'ping'
   );

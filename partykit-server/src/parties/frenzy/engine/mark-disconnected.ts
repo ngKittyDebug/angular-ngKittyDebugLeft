@@ -1,13 +1,9 @@
 import type { Player, ServerState } from '@game/frenzy/types';
 
-export function markDisconnected(
-  state: ServerState,
-  sessionToken: string,
-  now: number,
-): ServerState {
+export function markDisconnected(state: ServerState, playerId: string, now: number): ServerState {
   let changed = false;
   const players: Player[] = state.players.map((player) => {
-    if (player.id !== sessionToken || player.status !== 'alive') {
+    if (player.id !== playerId || player.status !== 'alive') {
       return player;
     }
 

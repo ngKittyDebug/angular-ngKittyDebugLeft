@@ -50,6 +50,17 @@ export class PlayerPersistenceService {
     return fresh;
   }
 
+  // Replace this tab's session token with a fresh one. Used when the server rejects `identify` because the token
+  // is already bound to another live connection — a duplicated tab clones sessionStorage, so the copy rotates and
+  // plays as its own Pokémon instead of fighting the original over one identity.
+  public rotateToken(): string {
+    const fresh = globalThis.crypto.randomUUID();
+
+    globalThis.sessionStorage?.setItem(SESSION_KEY, fresh);
+
+    return fresh;
+  }
+
   public saveAppearance(appearance: string): void {
     this.merge({ appearance });
   }

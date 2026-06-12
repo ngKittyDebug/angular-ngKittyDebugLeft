@@ -4,13 +4,15 @@ import type { Player, PlayerBody } from '@game/frenzy/types';
 import { calculateStage } from './calculate-stage';
 
 export interface CreatePlayerInput {
-  sessionToken: string;
   name: string;
   appearance: string;
   body: PlayerBody;
   now: number;
   existingPlayers?: readonly Player[];
   rng?: () => number;
+  // Public player id generator, injectable for deterministic tests. The id is broadcast in every snapshot, so it
+  // must NOT be the session token (issue #124) — the room adapter keeps the token→id mapping private.
+  createId?: () => string;
 }
 
 interface Point {
@@ -50,13 +52,13 @@ function pickSpawnPoint(existingPlayers: readonly Player[], rng: () => number): 
 }
 
 export function createPlayer({
-  sessionToken,
   name,
   appearance,
   body,
   now,
   existingPlayers = [],
   rng = Math.random,
+  createId = () => crypto.randomUUID(),
 }: CreatePlayerInput): Player {
   const { x, y } = pickSpawnPoint(existingPlayers, rng);
   const angle = rng() * Math.PI * 2;
@@ -67,7 +69,7 @@ export function createPlayer({
 
   return {
     kind: 'human',
-    id: sessionToken,
+    id: createId(),
     name,
     appearance,
     body,

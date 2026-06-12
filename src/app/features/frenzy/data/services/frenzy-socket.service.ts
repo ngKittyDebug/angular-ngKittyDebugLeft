@@ -7,6 +7,7 @@ import { FRENZY } from '@game/frenzy/config';
 import type { ClientMessage, ServerMessage } from '@game/frenzy/types';
 
 import { environment } from '@environments/environment';
+import { parseServerMessage } from './parse-server-message';
 import { shouldForceReconnect } from './socket-liveness';
 
 export type SocketStatus = 'idle' | 'connecting' | 'open' | 'closed' | 'error';
@@ -51,8 +52,15 @@ export class FrenzySocketService {
       this.lastMessageAt = Date.now();
     });
     socket.addEventListener('message', (event: MessageEvent<string>) => {
+      // Any frame proves the pipe is alive (liveness first), but only a parseable, known-shaped message reaches
+      // the store — a malformed frame used to throw right here, and an unknown type (deploy skew) hit the reducer.
       this.lastMessageAt = Date.now();
-      this.messagesSubject.next(JSON.parse(event.data) as ServerMessage);
+
+      const message = parseServerMessage(event.data);
+
+      if (message !== null) {
+        this.messagesSubject.next(message);
+      }
     });
     socket.addEventListener('close', () => this._status.set('closed'));
     socket.addEventListener('error', (event) => {

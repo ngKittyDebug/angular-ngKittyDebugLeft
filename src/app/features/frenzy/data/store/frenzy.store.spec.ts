@@ -139,3 +139,59 @@ describe('FrenzyStore — NPC excluded from human-facing UI (D11)', () => {
     expect(send).toHaveBeenCalledWith({ type: 'pokeNpc', npcId: 'bomb' });
   });
 });
+
+describe('FrenzyStore — session identity (issue #124)', () => {
+  let messages$: Subject<ServerMessage>;
+  let send: ReturnType<typeof vi.fn>;
+  let rotateToken: ReturnType<typeof vi.fn>;
+  let store: InstanceType<typeof FrenzyStore>;
+
+  function setup(): void {
+    messages$ = new Subject<ServerMessage>();
+    send = vi.fn();
+    rotateToken = vi.fn(() => 'fresh-token');
+    TestBed.configureTestingModule({
+      providers: [
+        FrenzyStore,
+        {
+          provide: FrenzySocketService,
+          useValue: {
+            messages$: messages$.asObservable(),
+            status: signal('open'),
+            stale: signal(false),
+            connect: vi.fn(),
+            disconnect: vi.fn(),
+            send,
+          },
+        },
+        {
+          provide: PlayerPersistenceService,
+          useValue: {
+            getOrCreateToken: () => 'secret-token',
+            rotateToken,
+            saveName: vi.fn(),
+            saveAppearance: vi.fn(),
+          },
+        },
+      ],
+    });
+    store = TestBed.inject(FrenzyStore);
+  }
+
+  it('adopts the public id from the joined ack — myId is never the session token', () => {
+    setup();
+    messages$.next({ type: 'joined', playerId: 'pub-1' });
+    messages$.next(snapshot([human('pub-1', 80), human('other', 50)]));
+
+    expect(store.myId()).toBe('pub-1');
+    expect(store.me()?.id).toBe('pub-1');
+  });
+
+  it('rotates the token and re-identifies when the server rejects identify', () => {
+    setup();
+    messages$.next({ type: 'identifyRejected' });
+
+    expect(rotateToken).toHaveBeenCalledTimes(1);
+    expect(send).toHaveBeenCalledWith({ type: 'identify', sessionToken: 'fresh-token' });
+  });
+});

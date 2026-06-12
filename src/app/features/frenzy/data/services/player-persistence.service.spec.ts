@@ -26,6 +26,17 @@ describe('PlayerPersistenceService', () => {
     expect(second).toBe(first);
   });
 
+  it('rotateToken replaces the per-tab token and persists the fresh one', () => {
+    const service = TestBed.inject(PlayerPersistenceService);
+    const original = service.getOrCreateToken();
+    const rotated = service.rotateToken();
+
+    expect(rotated).not.toBe(original);
+    expect(rotated).toMatch(/^[0-9a-f-]{36}$/i);
+    expect(sessionStorage.getItem('frenzy-session')).toBe(rotated);
+    expect(service.getOrCreateToken()).toBe(rotated);
+  });
+
   it('persists and reads player name from localStorage', () => {
     const service = TestBed.inject(PlayerPersistenceService);
 

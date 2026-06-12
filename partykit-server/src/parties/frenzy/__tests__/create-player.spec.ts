@@ -30,7 +30,7 @@ const occupiedPlayer = (overrides: Partial<HumanPlayer>): Player => ({
 describe('createPlayer', () => {
   it('creates a stage-1 player with starting hp and alive status', () => {
     const player = createPlayer({
-      sessionToken: 'tok-1',
+      createId: () => 'p-new',
       name: 'Ash',
       appearance: 'caterpie',
       body: TEST_BODY,
@@ -39,7 +39,7 @@ describe('createPlayer', () => {
     });
 
     expect(player).toMatchObject({
-      id: 'tok-1',
+      id: 'p-new',
       name: 'Ash',
       appearance: 'caterpie',
       stage: 1,
@@ -52,7 +52,7 @@ describe('createPlayer', () => {
 
   it('grants a spawn-protection shield ward expiring after spawnShieldMs', () => {
     const player = createPlayer({
-      sessionToken: 'tok-1',
+      createId: () => 'p-new',
       name: 'Ash',
       appearance: 'caterpie',
       body: TEST_BODY,
@@ -66,7 +66,7 @@ describe('createPlayer', () => {
 
   it('starts with empty (sparse) scores', () => {
     const player = createPlayer({
-      sessionToken: 'tok-1',
+      createId: () => 'p-new',
       name: 'Ash',
       appearance: 'caterpie',
       body: TEST_BODY,
@@ -79,7 +79,7 @@ describe('createPlayer', () => {
   it('places the player within the drift zone', () => {
     const { minX, maxX, minY, maxY } = FRENZY.playerDriftZone;
     const player = createPlayer({
-      sessionToken: 'tok-1',
+      createId: () => 'p-new',
       name: 'Ash',
       appearance: 'pidgey',
       body: TEST_BODY,
@@ -94,7 +94,7 @@ describe('createPlayer', () => {
 
   it('gives the player an initial velocity with magnitude of stage-1 cruising speed', () => {
     const player = createPlayer({
-      sessionToken: 'tok-1',
+      createId: () => 'p-new',
       name: 'Ash',
       appearance: 'pidgey',
       body: TEST_BODY,
@@ -110,7 +110,7 @@ describe('createPlayer', () => {
     const queue = [0.9, 0.9, 0];
     const rng = (): number => queue.shift() ?? 0;
     const player = createPlayer({
-      sessionToken: 'tok-2',
+      createId: () => 'p-new',
       name: 'Misty',
       appearance: 'pidgey',
       body: TEST_BODY,

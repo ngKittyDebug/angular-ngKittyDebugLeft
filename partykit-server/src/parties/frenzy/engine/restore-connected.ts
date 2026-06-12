@@ -1,9 +1,9 @@
 import type { Player, ServerState } from '@game/frenzy/types';
 
-export function restoreConnected(state: ServerState, sessionToken: string): ServerState {
+export function restoreConnected(state: ServerState, playerId: string): ServerState {
   let changed = false;
   const players: Player[] = state.players.map((player) => {
-    if (player.id !== sessionToken || player.status !== 'disconnected') {
+    if (player.id !== playerId || player.status !== 'disconnected') {
       return player;
     }
 

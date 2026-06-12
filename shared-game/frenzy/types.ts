@@ -318,6 +318,15 @@ export type ServerMessage =
   | { type: 'spawned'; item: Item }
   | { type: 'roomFull' }
   | { type: 'joinRejected'; reason: JoinRejectReason }
+  // Connection-scoped ack carrying YOUR public player id — the only way a client learns which snapshot player is
+  // "me". Sent to the joining connection on a successful `join` and to a reconnecting one when `identify` finds
+  // its session's player. The session token itself never appears in any server message (see issue #124): the
+  // public id is server-generated and unrelated to the secret the client identifies with.
+  | { type: 'joined'; playerId: string }
+  // Connection-scoped refusal of `identify`: the session token is already bound to another live connection (e.g.
+  // a duplicated tab cloned sessionStorage). The client should rotate to a fresh token and identify again — the
+  // duplicate then plays as its own Pokémon instead of hijacking the original's.
+  | { type: 'identifyRejected' }
   | { type: 'rejoined'; playerId: string }
   // Liveness heartbeat (carries no state) — lets the client tell a live-but-idle socket from a stalled one.
   | { type: 'ping' };

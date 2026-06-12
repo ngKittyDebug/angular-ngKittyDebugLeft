@@ -58,6 +58,11 @@ export default class FeedingRoom implements Party.Server {
   // D4). Anger gain is superlinear in the per-window poke count; the NPC's own `clickTimestamps` budget rate-limits.
   private readonly npcPokeTimestamps = new Map<string, number[]>();
   private readonly connectionToSession = new Map<string, string>();
+  // Private session-secret → public player-id mapping (issue #124): the snapshot/event wire carries only the
+  // server-generated public id, never the token a connection identifies with — so seeing the wire gives nobody
+  // the credential to hijack a player. Entries die with the player (leave / grace purge); a fainted player's
+  // stale entry is harmlessly overwritten by the session's next join.
+  private readonly sessionToPlayerId = new Map<string, string>();
   private readonly graceTimers = new Map<string, ReturnType<typeof setTimeout>>();
   // Accepted connection ids — bounds total connections (incl. idle/not-yet-joined) beyond the player cap.
   private readonly connections = new Set<string>();
@@ -111,7 +116,7 @@ export default class FeedingRoom implements Party.Server {
 
     switch (message.type) {
       case 'identify': {
-        this.handleIdentify(sender.id, message.sessionToken);
+        this.handleIdentify(sender, message.sessionToken);
         break;
       }
       case 'join': {
@@ -161,7 +166,7 @@ export default class FeedingRoom implements Party.Server {
     );
 
     if (stillUsedByOtherConnection) {
-      this.log(`[party] disconnected: ${conn.id} (session=${sessionToken}, other tabs open)`);
+      this.log(`[party] disconnected: ${conn.id} (other tabs open)`);
 
       return;
     }
@@ -169,19 +174,21 @@ export default class FeedingRoom implements Party.Server {
     // Last connection for this session is gone — no other tab can share its click history.
     this.clickTimestamps.delete(sessionToken);
 
-    if (!this.players.some((player) => player.id === sessionToken)) {
-      this.log(`[party] disconnected: ${conn.id} (session=${sessionToken}, no active player)`);
+    const playerId = this.sessionToPlayerId.get(sessionToken);
+
+    if (playerId === undefined || !this.players.some((player) => player.id === playerId)) {
+      this.log(`[party] disconnected: ${conn.id} (no active player)`);
 
       return;
     }
 
-    const next = markDisconnected(this.currentState(), sessionToken, Date.now());
+    const next = markDisconnected(this.currentState(), playerId, Date.now());
 
     this.syncState(next);
     this.broadcast(this.snapshot());
     this.scheduleGracePurge(sessionToken);
 
-    this.log(`[party] disconnected: ${conn.id} (session=${sessionToken}, grace started)`);
+    this.log(`[party] disconnected: ${conn.id} (player=${playerId}, grace started)`);
   }
 
   private broadcast(message: ServerMessage): void {
@@ -307,7 +314,13 @@ export default class FeedingRoom implements Party.Server {
       return;
     }
 
-    const result = applyClick(this.currentState(), sessionToken, itemId, nudgeX, nudgeY);
+    const playerId = this.sessionToPlayerId.get(sessionToken);
+
+    if (playerId === undefined) {
+      return;
+    }
+
+    const result = applyClick(this.currentState(), playerId, itemId, nudgeX, nudgeY);
 
     if (result.events.length === 0) {
       return;
@@ -341,8 +354,14 @@ export default class FeedingRoom implements Party.Server {
       return;
     }
 
+    const playerId = this.sessionToPlayerId.get(sessionToken);
+
+    if (playerId === undefined) {
+      return;
+    }
+
     const state = this.currentState();
-    const next = applySteer(state, sessionToken, x, y);
+    const next = applySteer(state, playerId, x, y);
 
     // applySteer returns the same state reference when nothing changed (unknown/dead player, zero direction).
     if (next === state) {
@@ -354,7 +373,7 @@ export default class FeedingRoom implements Party.Server {
     // A tiny delta event instead of a full snapshot (steers fire up to the click budget — broadcasting ~4KB
     // snapshots per tap dominated downstream traffic). The guard is for the type only: applySteer changing
     // state proves the steerer exists.
-    const steerer = next.players.find((player) => player.id === sessionToken);
+    const steerer = next.players.find((player) => player.id === playerId);
 
     if (steerer !== undefined) {
       this.broadcast({
@@ -406,12 +425,38 @@ export default class FeedingRoom implements Party.Server {
     this.broadcast({ type: 'npcAngered', npcId, mana });
   }
 
-  private handleIdentify(connectionId: string, sessionToken: string): void {
-    this.connectionToSession.set(connectionId, sessionToken);
+  // Binds a connection to its session secret. First-bind-guard (issue #124): a token already held by another
+  // live connection is refused — rebinding is only legal when no live connection holds it (the grace-window
+  // reconnect). The guard's one false positive is a reconnect racing its own dying socket's onClose; PartySocket
+  // tears the old socket down before dialing, so in practice the close lands first, and the client recovers from
+  // a stray rejection by rotating to a fresh token (playing on as a new Pokémon rather than being locked out).
+  private handleIdentify(conn: Party.Connection, sessionToken: string): void {
+    const boundElsewhere = [...this.connectionToSession.entries()].some(
+      ([connectionId, token]) => token === sessionToken && connectionId !== conn.id,
+    );
 
-    const existing = this.players.find((player) => player.id === sessionToken);
+    if (boundElsewhere) {
+      this.sendTo(conn, { type: 'identifyRejected' });
+      this.log(`[party] identify rejected: ${conn.id} (session already bound)`);
 
-    if (existing === undefined || existing.status !== 'disconnected') {
+      return;
+    }
+
+    this.connectionToSession.set(conn.id, sessionToken);
+
+    const playerId = this.sessionToPlayerId.get(sessionToken);
+    const existing =
+      playerId === undefined ? undefined : this.players.find((player) => player.id === playerId);
+
+    if (playerId === undefined || existing === undefined) {
+      return;
+    }
+
+    // The session's player is still in the room — ack the public id so the reconnecting client knows which
+    // snapshot player is "me" (it never sees the id↔token link anywhere else).
+    this.sendTo(conn, { type: 'joined', playerId });
+
+    if (existing.status !== 'disconnected') {
       return;
     }
 
@@ -422,10 +467,10 @@ export default class FeedingRoom implements Party.Server {
       this.graceTimers.delete(sessionToken);
     }
 
-    this.syncState(restoreConnected(this.currentState(), sessionToken));
-    this.broadcast({ type: 'rejoined', playerId: sessionToken });
+    this.syncState(restoreConnected(this.currentState(), playerId));
+    this.broadcast({ type: 'rejoined', playerId });
     this.broadcast(this.snapshot());
-    this.log(`[party] rejoined: ${connectionId} (session=${sessionToken})`);
+    this.log(`[party] rejoined: ${conn.id} (player=${playerId})`);
   }
 
   private handleJoin(
@@ -440,7 +485,11 @@ export default class FeedingRoom implements Party.Server {
       return;
     }
 
-    if (this.players.some((player) => player.id === sessionToken)) {
+    // One live player per session: ignore a re-join while this session's player is still in the room (a fainted
+    // or purged player has already left `players[]`, so its stale mapping doesn't block the next join).
+    const mappedId = this.sessionToPlayerId.get(sessionToken);
+
+    if (mappedId !== undefined && this.players.some((player) => player.id === mappedId)) {
       return;
     }
 
@@ -454,7 +503,6 @@ export default class FeedingRoom implements Party.Server {
 
     const now = Date.now();
     const player = createPlayer({
-      sessionToken,
       name: name.trim().slice(0, 24),
       appearance,
       body,
@@ -462,6 +510,10 @@ export default class FeedingRoom implements Party.Server {
       existingPlayers: this.players,
     });
 
+    this.sessionToPlayerId.set(sessionToken, player.id);
+    // Ack the public id to the joiner BEFORE the roster snapshot below — same socket, ordered delivery — so the
+    // client knows which player is "me" by the time the snapshot renders.
+    this.sendTo(conn, { type: 'joined', playerId: player.id });
     this.players = [...this.players, player];
 
     // Room just went from 0 to 1 human — arm the initial NPC spawn window (a random delay, the gameTick spawns it).
@@ -485,9 +537,17 @@ export default class FeedingRoom implements Party.Server {
       return;
     }
 
+    const playerId = this.sessionToPlayerId.get(sessionToken);
+
+    if (playerId === undefined) {
+      return;
+    }
+
+    this.sessionToPlayerId.delete(sessionToken);
+
     const before = this.players.length;
 
-    this.players = this.players.filter((player) => player.id !== sessionToken);
+    this.players = this.players.filter((player) => player.id !== playerId);
 
     // Last human gone: stop the loop first (clears the NPC + items via clearNpc) so the leave snapshot below reflects
     // the emptied room. Otherwise broadcast the human's departure as usual.
@@ -602,14 +662,16 @@ export default class FeedingRoom implements Party.Server {
     const timer = setTimeout(() => {
       this.graceTimers.delete(sessionToken);
 
-      const player = this.players.find((candidate) => candidate.id === sessionToken);
+      const playerId = this.sessionToPlayerId.get(sessionToken);
+      const player = this.players.find((candidate) => candidate.id === playerId);
 
       if (player === undefined || player.status !== 'disconnected') {
         return;
       }
 
-      this.players = this.players.filter((candidate) => candidate.id !== sessionToken);
-      this.log(`[party] grace expired, purged session=${sessionToken}`);
+      this.sessionToPlayerId.delete(sessionToken);
+      this.players = this.players.filter((candidate) => candidate.id !== playerId);
+      this.log(`[party] grace expired, purged player=${playerId}`);
 
       // Stop BEFORE broadcasting when the room emptied, so `stopLoop`→`clearNpc` drops the NPC first and the
       // final snapshot is genuinely empty (no dangling NPC sprite on clients) — mirrors handleLeave/gameTick.

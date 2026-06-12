@@ -145,9 +145,9 @@ export const FrenzyStore = signalStore(
         socket.send({ type: 'click', itemId, nudgeX, nudgeY });
       },
       connect(roomId = 'feeding-frenzy'): void {
-        const token = persistence.getOrCreateToken();
-
-        patchState(store, { myId: token });
+        // `myId` is no longer the session token: the public id arrives in the server's `joined` ack (the token is
+        // a secret the wire never echoes back — issue #124). Until the ack lands there is simply no "me".
+        patchState(store, { myId: null });
         socket.connect(roomId);
       },
       disconnect(): void {
@@ -178,12 +178,23 @@ export const FrenzyStore = signalStore(
   withHooks({
     onInit(store) {
       const socket = inject(FrenzySocketService);
+      const persistence = inject(PlayerPersistenceService);
       const consume = rxMethod<ServerMessage>(
         tap((message) => {
+          // The session token is already claimed by another live connection (a duplicated tab cloned
+          // sessionStorage) — rotate to a fresh one and identify again, playing on as a new Pokémon.
+          if (message.type === 'identifyRejected') {
+            socket.send({ type: 'identify', sessionToken: persistence.rotateToken() });
+          }
+
           patchState(store, (current) => {
             const next: Partial<FrenzyState> = {
               state: applyServerMessage(current.state, message),
             };
+
+            if (message.type === 'joined') {
+              next.myId = message.playerId;
+            }
 
             if (message.type === 'roomFull') {
               next.roomFull = true;
@@ -215,11 +226,11 @@ export const FrenzyStore = signalStore(
 
       consume(socket.messages$);
 
+      // Identify on every socket open (initial connect AND each auto-reconnect): the per-tab token comes straight
+      // from persistence, not from `myId` — myId is the server-assigned public id and never doubles as the secret.
       effect(() => {
-        const token = store.myId();
-
-        if (token !== null && socket.status() === 'open') {
-          socket.send({ type: 'identify', sessionToken: token });
+        if (socket.status() === 'open') {
+          socket.send({ type: 'identify', sessionToken: persistence.getOrCreateToken() });
         }
       });
     },

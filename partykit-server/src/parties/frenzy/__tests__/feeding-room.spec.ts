@@ -59,6 +59,22 @@ function joinPlayer(server: FeedingRoom, conn: FakeConnection, token: string): v
   });
 }
 
+// The public player id the server acked to this connection — the only place a test (like a real client) can
+// learn which snapshot player belongs to a session, since the token↔id link never rides the wire (issue #124).
+function publicIdOf(conn: FakeConnection): string {
+  const joined = conn.sent
+    .filter(
+      (message): message is Extract<ServerMessage, { type: 'joined' }> => message.type === 'joined',
+    )
+    .at(-1);
+
+  if (joined === undefined) {
+    throw new Error(`no joined ack on connection ${conn.id}`);
+  }
+
+  return joined.playerId;
+}
+
 function byType<T extends ServerMessage['type']>(
   room: FakeRoom,
   type: T,
@@ -135,32 +151,59 @@ describe('FeedingRoom orchestration', () => {
     const eaten = byType(room, 'eaten');
 
     expect(eaten).toHaveLength(1);
-    expect(eaten[0].playerId).toBe('token-1');
+    expect(eaten[0].playerId).toBe(publicIdOf(conn));
     expect(eaten[0].itemId).toBe(spawned[0].item.id);
   });
 
-  it('shares the click budget across tabs of the same session (no rate-limit bypass)', () => {
+  it('rejects identify for a session already bound to a live connection (issue #124)', () => {
     const { room, server } = setup();
     const tabA = new FakeConnection('tab-a');
     const tabB = new FakeConnection('tab-b');
 
     server.onConnect(asParty(tabA));
     joinPlayer(server, tabA, 'shared-token');
+    // A duplicated tab (or an attacker replaying a sniffed token) identifies while tab A's connection is live.
     server.onConnect(asParty(tabB));
     send(server, tabB, { type: 'identify', sessionToken: 'shared-token' });
 
-    vi.advanceTimersByTime(TICK_MS);
-    const item = byType(room, 'spawned')[0].item;
+    expect(tabB.sent.some((message) => message.type === 'identifyRejected')).toBe(true);
 
-    // Exhaust the shared per-session budget through tab A on a non-existent item.
-    for (let i = 0; i < FRENZY.clickRateLimitMax; i += 1) {
-      send(server, tabA, { type: 'click', itemId: 'ghost' });
-    }
+    // The rejected connection holds no session — its input must not drive tab A's Pokémon.
+    send(server, tabB, { type: 'steer', x: 0.9, y: 0.1 });
 
-    // Tab B tries to grab a real item — must be blocked by the shared budget.
-    send(server, tabB, { type: 'click', itemId: item.id });
+    expect(byType(room, 'steered')).toHaveLength(0);
+  });
 
-    expect(byType(room, 'eaten')).toHaveLength(0);
+  it('never echoes the session token in any outbound frame (issue #124)', () => {
+    const token = 'super-secret-session-token';
+    const { room, server } = setup();
+    const conn = new FakeConnection('c1');
+
+    server.onConnect(asParty(conn));
+    joinPlayer(server, conn, token);
+    // Run the message surface: scheduled slim + spawned via ticks, steered, then disconnect (rejoined-style
+    // grace snapshot) — every broadcast and every connection-scoped frame must stay token-free.
+    vi.advanceTimersByTime(TICK_MS * FRENZY.snapshotEveryNTicks);
+    send(server, conn, { type: 'steer', x: 0.9, y: 0.1 });
+    server.onClose(asParty(conn));
+
+    const frames = [...room.broadcasts, ...conn.sent].map((message) => JSON.stringify(message));
+
+    expect(frames.length).toBeGreaterThan(0);
+    expect(frames.some((frame) => frame.includes(token))).toBe(false);
+  });
+
+  it('acks join with a server-generated public id distinct from the session token', () => {
+    const { room, server } = setup();
+    const conn = new FakeConnection('c1');
+
+    server.onConnect(asParty(conn));
+    joinPlayer(server, conn, 'token-1');
+
+    const id = publicIdOf(conn);
+
+    expect(id).not.toBe('token-1');
+    expect(latestSnapshot(room)?.state.players.some((player) => player.id === id)).toBe(true);
   });
 
   it('broadcasts a steered delta event instead of a full snapshot when a player steers', () => {
@@ -180,7 +223,7 @@ describe('FeedingRoom orchestration', () => {
     const steered = byType(room, 'steered');
 
     expect(steered).toHaveLength(1);
-    expect(steered[0].playerId).toBe('token-1');
+    expect(steered[0].playerId).toBe(publicIdOf(conn));
     expect(Math.hypot(steered[0].vx, steered[0].vy)).toBeGreaterThan(0);
     // The whole point: player input no longer multiplies full-snapshot traffic.
     expect(byType(room, 'snapshot')).toHaveLength(snapshotsBefore);
@@ -208,7 +251,7 @@ describe('FeedingRoom orchestration', () => {
     expect(slim).toHaveLength(1);
 
     // Dynamic-only payload: the static half never rides the slim wire.
-    const wirePlayer = slim[0].state.players.find((player) => player.id === 'token-1');
+    const wirePlayer = slim[0].state.players.find((player) => player.id === publicIdOf(conn));
 
     expect(wirePlayer).toBeDefined();
     expect(wirePlayer?.hp).toBeGreaterThan(0);
@@ -252,7 +295,12 @@ describe('FeedingRoom orchestration', () => {
     server.onConnect(asParty(second));
     send(server, second, { type: 'identify', sessionToken: 'token-1' });
 
-    expect(byType(room, 'rejoined').some((message) => message.playerId === 'token-1')).toBe(true);
+    const restoredId = publicIdOf(first);
+
+    expect(byType(room, 'rejoined').some((message) => message.playerId === restoredId)).toBe(true);
+    // The reconnecting socket gets its own `joined` ack carrying the SAME public id — how the client re-learns
+    // which player is "me" after a refresh.
+    expect(publicIdOf(second)).toBe(restoredId);
     expect(latestSnapshot(room)?.state.players[0].status).toBe('alive');
 
     // Grace timer was cancelled — advancing past it must not purge the restored player.
@@ -296,7 +344,9 @@ describe('FeedingRoom orchestration', () => {
 
     vi.advanceTimersByTime(toDeathMs);
 
-    expect(byType(room, 'fainted').some((message) => message.playerId === 'token-1')).toBe(true);
+    expect(byType(room, 'fainted').some((message) => message.playerId === publicIdOf(conn))).toBe(
+      true,
+    );
     expect(latestSnapshot(room)?.state.players).toHaveLength(0);
 
     const frozen = gameBroadcasts(room).length;
