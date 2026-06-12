@@ -20,6 +20,7 @@ const PLAYER: Player = {
   disconnectedAt: null,
   joinedAt: 0,
   effects: [],
+  scores: {},
 };
 
 const SNAPSHOT_STATE: ServerState = { players: [PLAYER], items: [], tick: 0 };

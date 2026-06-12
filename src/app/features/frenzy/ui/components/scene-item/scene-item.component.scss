@@ -40,11 +40,11 @@
 
 // A rested item looks buried ~a quarter into the seabed: PUSH it down so its lower part dips past the sand line
 // (a mask alone just trimmed the sprite — it still sat on top at full height, so nothing read as "sunk"), then
-// CLIP that part off. Both props are on the (non-rotated) button, so the cut runs along the WORLD-horizontal sand
-// line — a tumbled item still buries flat, not along its frozen tilt. Cheap: two static props, only while landed.
+// CLIP that part off. The clip itself is the per-item wavy `polygon(...)` bound inline (`buriedClip` — an uneven
+// sand line, not a blade-straight cut); both props are on the (non-rotated) button, so the cut runs along the
+// WORLD-horizontal sand line — a tumbled item still buries flat, not along its frozen tilt. Cheap: only while landed.
 .scene__item--landed {
   transform: translateY(16%);
-  clip-path: inset(0 0 30% 0);
   // Ease the sink+clip IN so the item settles into the sand naturally — a soft easeOutQuint (quick at first, then
   // a long gentle slow-down to rest, like sinking into yielding sand) instead of snapping down on the landing frame.
   // The sink is purely vertical and the clip runs along the world-horizontal sand line, so an item launched in at an

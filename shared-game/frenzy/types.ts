@@ -35,6 +35,15 @@ export type ItemType =
   | 'poop';
 export type PlayerStatus = 'alive' | 'disconnected';
 
+/**
+ * A session score axis tracked on top of hp. `kills` — every attributed kill (+1 each, the honest tally).
+ * `crownKills` — the subset of those that toppled the hp-leader (the crown); it's a bonus accumulator, not a
+ * separate displayed counter, weighted extra in `totalScore` so dethroning pays more. `timeAlive` — seconds
+ * survived since `joinedAt`, materialized server-side into the snapshot projection (the client lacks the server
+ * clock to derive it). The union grows per concern; add a kind + a weight in `config/score`, the engine is untouched.
+ */
+export type ScoreKind = 'kills' | 'crownKills' | 'timeAlive';
+
 // Timed buffs/debuffs a Pokémon carries. `shield` suspends hp decay AND wards off all incoming damage
 // (bomb blast, rock bonk, rotten/negative-mushroom) — full invulnerability inside a bubble. `wellFed`
 // (vitamin) only suspends decay (damage still lands). `laying` (easterEgg) makes the Pokémon randomly emit
@@ -68,6 +77,12 @@ export interface Player {
   joinedAt: number;
   /** Active timed effects, always present (default `[]`). Carried in snapshots; refreshed via `effectGranted`. */
   effects: PlayerEffect[];
+  /** Session score accumulators by axis (see `ScoreKind`). Sparse: only non-default kinds are present. `kills`/
+   * `crownKills` accrue server-side on attributed faints; `timeAlive` is stamped into the snapshot projection.
+   * Reset implicitly on death/leave (the player is removed and re-created). Read via the `totalScore` helper.
+   * NOTE: no production consumer ranks by this yet — the leaderboard still sorts by hp; `scores` accrue ahead of a
+   * forthcoming score/medals UI, so an unused `totalScore` is expected, not a wiring bug. */
+  scores: Partial<Record<ScoreKind, number>>;
 }
 
 export interface Item {

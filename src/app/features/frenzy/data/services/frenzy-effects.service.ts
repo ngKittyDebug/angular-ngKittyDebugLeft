@@ -9,6 +9,7 @@ import { EvolutionEffect } from './effects/evolution-effect.service';
 import type { FrenzyEffect } from './effects/frenzy-effect';
 import { FloatingMessagesStore } from './effects/floating-messages.store';
 import { HitBurstEffect } from './effects/hit-burst-effect.service';
+import { IntroQuipsEffect } from './effects/intro-quips-effect.service';
 import { PlayerEffectsTracker } from './effects/player-effects-tracker.service';
 import { PresenceTracker } from './effects/presence-tracker.service';
 import { SelfMoodEffect } from './effects/self-mood-effect.service';
@@ -35,6 +36,8 @@ export class FrenzyEffectsService {
   private readonly playerEffects = inject(PlayerEffectsTracker);
   private readonly emissionSound = inject(EmissionSoundEffect);
   private readonly selfMood = inject(SelfMoodEffect);
+  // Injected only to construct it — its `effect()` floats the random intro quips on each spawn on its own.
+  private readonly introQuips = inject(IntroQuipsEffect);
   private readonly handlers: readonly FrenzyEffect[] = [
     this.eat,
     this.evolution,

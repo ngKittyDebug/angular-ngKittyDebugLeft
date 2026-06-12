@@ -21,6 +21,7 @@ const occupiedPlayer = (overrides: Partial<Player>): Player => ({
   disconnectedAt: null,
   joinedAt: 0,
   effects: [],
+  scores: {},
   ...overrides,
 });
 
@@ -45,6 +46,32 @@ describe('createPlayer', () => {
       disconnectedAt: null,
       joinedAt: 1700000000,
     });
+  });
+
+  it('grants a spawn-protection shield ward expiring after spawnShieldMs', () => {
+    const player = createPlayer({
+      sessionToken: 'tok-1',
+      name: 'Ash',
+      appearance: 'caterpie',
+      body: TEST_BODY,
+      now: 1700000000,
+    });
+
+    expect(player.effects).toEqual([
+      { kind: 'shield', expiresAt: 1700000000 + FRENZY.shield.spawnShieldMs },
+    ]);
+  });
+
+  it('starts with empty (sparse) scores', () => {
+    const player = createPlayer({
+      sessionToken: 'tok-1',
+      name: 'Ash',
+      appearance: 'caterpie',
+      body: TEST_BODY,
+      now: 0,
+    });
+
+    expect(player.scores).toEqual({});
   });
 
   it('places the player within the drift zone', () => {

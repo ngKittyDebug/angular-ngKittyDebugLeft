@@ -32,6 +32,7 @@ function player(id: string, partial: Partial<Player> = {}): Player {
     disconnectedAt: null,
     joinedAt: 0,
     effects: [],
+    scores: {},
     ...partial,
   };
 }

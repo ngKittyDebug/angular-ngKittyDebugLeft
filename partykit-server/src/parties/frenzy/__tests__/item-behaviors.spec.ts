@@ -28,6 +28,7 @@ const PLAYER: Player = {
   disconnectedAt: null,
   joinedAt: 0,
   effects: [],
+  scores: {},
 };
 
 describe('item behaviors', () => {

@@ -35,7 +35,7 @@ export const SPAWN = {
   poopEmitWeights: {
     rock: 10,
     brick: 20,
-    bomb: 10,
+    bomb: 7,
   },
   /** `[min, max]` ms between item spawns at `spawnReferencePlayers`; the actual interval is picked randomly within the range, then scaled by active-player count. Shortened ~×1.5 alongside the world widening (1600→2400) so the wider arena keeps the same item density per unit width rather than reading sparse. */
   spawnIntervalMsRange: [480, 880],

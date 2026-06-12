@@ -120,6 +120,9 @@ export class SceneComponent {
   public readonly items = input.required<readonly Item[]>();
   public readonly myId = input<string | null>(null);
   public readonly players = input.required<readonly Player[]>();
+  // The crowned player id (alive hp-leader; null when there's no meaningful leader, e.g. a lone survivor). Gated
+  // and resolved upstream via the shared `crownIdOf`, so the scene marker matches the pill and minimap exactly.
+  public readonly crownId = input<string | null>(null);
   public readonly selfPoke = output<void>();
   public readonly steer = output<{ x: number; y: number }>();
 
@@ -154,7 +157,6 @@ export class SceneComponent {
   protected readonly sparksByOwner = computed(() => groupByOwner(this.ownedSparks()));
   // Shield-ward cues grouped by the warded player, so each `.scene__player` pulses its bubble + clinks in place.
   protected readonly shieldBlocksByOwner = computed(() => groupByOwner(this.ownedShieldBlocks()));
-
   public constructor() {
     // Re-anchor item/player baselines from each snapshot and paint immediately (before the rAF loop starts).
     // Reading evolving/myId here too keeps the first paint consistent with them.

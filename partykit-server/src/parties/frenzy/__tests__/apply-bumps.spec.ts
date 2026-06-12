@@ -23,6 +23,7 @@ function makePlayer(overrides: Partial<Player> = {}): Player {
     disconnectedAt: null,
     joinedAt: 0,
     effects: [],
+    scores: {},
     ...overrides,
   };
 }

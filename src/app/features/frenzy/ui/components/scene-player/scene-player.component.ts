@@ -1,6 +1,7 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
+import { TuiIcon } from '@taiga-ui/core';
 import { TuiProgressBar } from '@taiga-ui/kit';
 
 import type { OwnedFloat } from '../../../data/models/floating-message';
@@ -29,6 +30,7 @@ import { SparkBurstComponent } from '../spark-burst/spark-burst.component';
     PokemonSpritePipe,
     SparkBurstComponent,
     TranslocoDirective,
+    TuiIcon,
     TuiProgressBar,
   ],
   templateUrl: './scene-player.component.html',
@@ -51,5 +53,7 @@ export class ScenePlayerComponent {
   public readonly shieldBlocks = input<readonly OwnedShieldBlock[]>([]);
   public readonly maxHp = input.required<number>();
   public readonly shieldAuraClass = input.required<string>();
+  /** Whether this player currently wears the crown (the alive hp-leader). Draws a crown marker over the head. */
+  public readonly isLeader = input(false);
   public readonly poke = output<void>();
 }

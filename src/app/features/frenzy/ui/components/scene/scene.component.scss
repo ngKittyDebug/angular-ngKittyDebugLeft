@@ -2,7 +2,11 @@
   position: relative;
   width: 100%;
   height: 100%;
-  overflow: hidden;
+  // `clip`, not `hidden`: the world holds focusable per-player poke buttons positioned far out in world space.
+  // An `overflow: hidden` box is still programmatically scrollable, so Tab-focusing one of those buttons fires the
+  // browser's scroll-into-view and drags the whole scene aside, exposing the empty area beyond it. `clip` makes
+  // this a non-scrollable clip box (the camera moves via `transform`, never scroll), so focus can't shift the view.
+  overflow: clip;
   background: var(--scene-bg, var(--gradient-bg));
   touch-action: manipulation;
   user-select: none;
@@ -25,6 +29,12 @@
     pointer-events: none;
     background-repeat: repeat;
     will-change: background-position;
+    // These are WATER-column specks (foreground, scroll faster than the world). They must not drift across the
+    // seabed: the sand is opaque and world-anchored (it carries its OWN grain that moves 1:1 with the camera), so
+    // a faster-moving speck sliding over it reads as the sand being see-through. Fade the layer out over the
+    // bottom band of the viewport — where the floor sits — so the parallax lives only in open water.
+    mask-image: linear-gradient(to bottom, #000 70%, transparent 88%);
+    -webkit-mask-image: linear-gradient(to bottom, #000 70%, transparent 88%);
   }
 
   // Near layer: a few soft specks on a roomy tile — gentle camera-driven drift, not a swarm. Speck colour is

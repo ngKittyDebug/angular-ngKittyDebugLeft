@@ -8,6 +8,15 @@
     <button type="button" class="minimap__pill" [attr.aria-label]="t('expand')" (click)="toggle()">
       <left-paw-online-participants [count]="online()" [compact]="true" />
       <left-paw-offline-participants [count]="disconnected()" [compact]="true" />
+      @if (leaderView(); as top) {
+        <span class="minimap__leader" [attr.aria-label]="t('leaderAriaLabel')">
+          <tui-icon icon="@tui.crown" class="minimap__leader-crown" />
+          <span class="minimap__leader-name" [class.minimap__leader-name--me]="top.isMe">{{
+            top.name
+          }}</span>
+          <span class="minimap__leader-hp">{{ top.hp }}</span>
+        </span>
+      }
       <tui-icon icon="@tui.map" class="minimap__pill-icon" />
     </button>
   } @else {
@@ -20,6 +29,15 @@
       >
         <left-paw-online-participants [count]="online()" [compact]="true" />
         <left-paw-offline-participants [count]="disconnected()" [compact]="true" />
+        @if (leaderView(); as top) {
+          <span class="minimap__leader" [attr.aria-label]="t('leaderAriaLabel')">
+            <tui-icon icon="@tui.crown" class="minimap__leader-crown" />
+            <span class="minimap__leader-name" [class.minimap__leader-name--me]="top.isMe">{{
+              top.name
+            }}</span>
+            <span class="minimap__leader-hp">{{ top.hp }}</span>
+          </span>
+        }
         <tui-icon icon="@tui.minimize-2" class="minimap__header-icon" />
       </button>
       <div class="minimap__map">
@@ -43,8 +61,13 @@
             <span
               class="minimap__player"
               [class.minimap__player--me]="dot.me"
+              [class.minimap__player--leader]="dot.isLeader"
               [leftPawScenePosition]="{ x: dot.x, y: dot.y }"
-            ></span>
+            >
+              @if (dot.isLeader) {
+                <tui-icon icon="@tui.crown" class="minimap__player-crown" aria-hidden="true" />
+              }
+            </span>
           }
         </div>
       </div>

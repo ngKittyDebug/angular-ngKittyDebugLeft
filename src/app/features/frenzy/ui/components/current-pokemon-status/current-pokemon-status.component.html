@@ -5,20 +5,32 @@
   [class.current-pokemon-status--compact]="compact()"
   [attr.aria-label]="t('ariaLabel')"
 >
-  <div
-    class="current-pokemon-status__avatar"
+  <!-- HP as a rounded corner badge (tinted by HP tone — green → amber → red, like the bar). Pulled out of the
+       foot row so a 3-digit value can never overflow the fixed-width card; pinned to the top-left corner. -->
+  <span
+    class="current-pokemon-status__hp-badge"
+    [style.background]="hp() | hpToneColor"
+    [leftPawHpFlash]="hp()"
+  >
+    <span class="current-pokemon-status__hp-value">{{ hp() }}</span>
+    <span class="current-pokemon-status__hp-unit">{{ t('hpLabel') }}</span>
+  </span>
+
+  <!-- Evolution stage as the mirror of the HP badge: same chip metrics + font (shared rule), pinned top-right. -->
+  <span class="current-pokemon-status__stage-badge">{{ t('stageBadge', { stage: stage() }) }}</span>
+
+  <span
+    tuiAvatar
     size="m"
-    [tuiAvatar]="moodVisual().icon"
-    [style.color]="moodVisual().color"
+    class="current-pokemon-status__avatar"
     [attr.aria-label]="t('mood.' + mood())"
-  ></div>
+  >
+    <img [src]="moodSprite()" alt="" draggable="false" />
+  </span>
 
   <div class="current-pokemon-status__body">
     <div class="current-pokemon-status__head">
       <span class="current-pokemon-status__name">{{ name() }}</span>
-      <span tuiBadge appearance="accent" size="s" class="current-pokemon-status__stage">
-        {{ t('stageBadge', { stage: stage() }) }}
-      </span>
     </div>
 
     <div class="current-pokemon-status__bar-wrap">
@@ -41,14 +53,12 @@
       }
     </div>
 
-    <div class="current-pokemon-status__foot">
-      <span class="current-pokemon-status__value" [leftPawHpFlash]="hp()">{{ hp() }}</span>
-      <span class="current-pokemon-status__hp-label">{{ t('hpLabel') }}</span>
-      @if (untilEvolution() !== null) {
+    @if (untilEvolution() !== null) {
+      <div class="current-pokemon-status__foot">
         <span class="current-pokemon-status__until">
           {{ t('untilEvolution', { value: untilEvolution() }) }}
         </span>
-      }
-    </div>
+      </div>
+    }
   </div>
 </section>

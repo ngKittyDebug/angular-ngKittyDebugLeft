@@ -21,6 +21,7 @@ function player(partial: Partial<Player> & Pick<Player, 'id'>): Player {
     disconnectedAt: null,
     joinedAt: 0,
     effects: [],
+    scores: {},
     ...partial,
   };
 }

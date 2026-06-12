@@ -54,6 +54,7 @@
         [shieldBlocks]="shieldBlocksByOwner().get(player.id) ?? []"
         [maxHp]="maxHp"
         [shieldAuraClass]="shieldAuraClass"
+        [isLeader]="player.id === crownId()"
         (poke)="onSelfPoke()"
       />
     }

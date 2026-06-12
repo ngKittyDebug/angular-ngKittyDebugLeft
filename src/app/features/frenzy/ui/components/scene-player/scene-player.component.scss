@@ -174,6 +174,22 @@
   pointer-events: none;
 }
 
+// Crown marker for the hp-leader: a golden crown bobbing just above the head, so the whole table can spot (and
+// gang up on) the leader at a glance. Anchored on the VISIBLE sprite top (same offset basis as the floats),
+// nudged up a touch so rising quips pass beneath it. Centred on the sprite, rides its drift, purely decorative.
+.scene__crown {
+  position: absolute;
+  bottom: calc(100% - var(--scene-sprite-offset-y, 0px) + 6px);
+  left: 50%;
+  color: #ffd23f;
+  font-size: 1.25rem;
+  transform: translateX(-50%);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.7));
+  animation: scene-crown-bob 1.8s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 3;
+}
+
 .scene__poke {
   padding: 0;
   background: none;
@@ -182,6 +198,13 @@
   cursor: pointer;
   // Re-enable clicks on top of the players layer (`:host` is `pointer-events: none`).
   pointer-events: auto;
+
+  // Keyboard focus only — the sprite is non-rectangular, so a rounded ring offset off the box reads cleanest.
+  &:focus-visible {
+    outline: 3px solid var(--tui-status-positive);
+    outline-offset: 4px;
+    border-radius: 12px;
+  }
 }
 
 .scene__sprite {
@@ -309,6 +332,17 @@
   }
 }
 
+@keyframes scene-crown-bob {
+  0%,
+  100% {
+    transform: translate(-50%, 0);
+  }
+
+  50% {
+    transform: translate(-50%, -3px);
+  }
+}
+
 @keyframes scene-evolve-pulse {
   0% {
     filter: brightness(1) drop-shadow(0 0 0 rgba(255, 255, 200, 0));
@@ -336,6 +370,10 @@
   }
 
   .scene__shield--pulse::after {
+    animation: none;
+  }
+
+  .scene__crown {
     animation: none;
   }
 }

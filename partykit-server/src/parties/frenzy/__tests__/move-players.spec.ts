@@ -21,6 +21,7 @@ const PLAYER: Player = {
   disconnectedAt: null,
   joinedAt: 0,
   effects: [],
+  scores: {},
 };
 
 // A body wide enough that its half-sprite inset exceeds the drift-zone side inset (so size-aware bounds bite).

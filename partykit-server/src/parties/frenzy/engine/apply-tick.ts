@@ -1,8 +1,10 @@
 import { isPlayerCollisionEnabled } from '@game/frenzy/config';
-import type { GameEvent, ServerState } from '@game/frenzy/types';
+import { crownIdOf } from '@game/frenzy/crown';
+import type { FaintedEvent, GameEvent, ServerState } from '@game/frenzy/types';
 
 import { applyBumpDamage } from './apply-bumps';
 import { applyImpulses } from './apply-impulses';
+import { applyKills } from './apply-scores';
 import { applyDecayStep } from './tick/apply-decay-step';
 import { armEmittedItems } from './tick/arm-emitted-items';
 import { moveItems } from './tick/move-items';
@@ -30,6 +32,9 @@ export function applyTick(
   rng: () => number = Math.random,
   now: number = Date.now(),
 ): TickResult {
+  // Snapshot the crown (hp-leader) from the PRE-tick players, before any faint removes it — so the score pass can
+  // tell whether a victim died wearing it (a bounty kill) regardless of what this tick's damage does.
+  const crownId = crownIdOf(state.players);
   const livePlayers = pruneExpiredEffects(state.players, now);
   const movedItems = moveItems(state.items, deltaSeconds);
   const survivors = movedItems.filter((item) => item.restMs === undefined || item.restMs > 0);
@@ -67,11 +72,21 @@ export function applyTick(
   working = landings.state;
   events.push(...landings.events);
 
-  if (!applyDecay) {
-    return { state: working, events };
+  if (applyDecay) {
+    const decay = applyDecayStep(working);
+
+    working = decay.state;
+    events.push(...decay.events);
   }
 
-  const decay = applyDecayStep(working);
+  // Score pass (last, so it sees every faint this tick): credit attributed kills to the survivors that caused them.
+  // Gated on an actual faint — on the common no-faint tick we skip the filter + map + re-spread entirely (mirrors
+  // how the steer/emission passes no-op without input), so the hot loop allocates nothing extra.
+  if (events.some((event) => event.type === 'fainted')) {
+    const faints = events.filter((event): event is FaintedEvent => event.type === 'fainted');
 
-  return { state: decay.state, events: [...events, ...decay.events] };
+    working = { ...working, players: applyKills(working.players, faints, crownId) };
+  }
+
+  return { state: working, events };
 }

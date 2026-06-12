@@ -20,6 +20,7 @@ const PLAYER: Player = {
   disconnectedAt: null,
   joinedAt: 0,
   effects: [],
+  scores: {},
 };
 
 function stateWith(players: Player[]): ServerState {

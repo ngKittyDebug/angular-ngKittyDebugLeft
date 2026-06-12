@@ -22,6 +22,7 @@ function player(id: string, effects: PlayerEffect[] = []): Player {
     disconnectedAt: null,
     joinedAt: 0,
     effects,
+    scores: {},
   };
 }
 

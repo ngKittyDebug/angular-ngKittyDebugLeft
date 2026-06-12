@@ -13,6 +13,35 @@ import type { ElementRef } from '@angular/core';
 import { ItemSpritePipe } from '../../pipes/item-sprite.pipe';
 import type { RenderedItem } from '../scene/scene-view-models';
 
+// Buried-item sand line. Replaces the old straight `inset(0 0 30% 0)` cut: the edge is sampled at a few points
+// across the width and each is jittered around the base depth, so a rested item dips into the sand along a wavy,
+// uneven line rather than a blade-straight one. The jitter is seeded from the item id (see buriedNoise), so each
+// item keeps its OWN shape and it never re-rolls between frames.
+const BURIED_CUT = 70; // % from the top where the sand line sits (matches the old 30%-from-bottom inset)
+const BURIED_SWING = 7; // % the line wanders above/below the cut at each sample
+const BURIED_SEGMENTS = 5; // samples across the width — few enough to read as irregular lumps, not a smooth sine
+
+// Stable 0..1 value from a seed + sample index (a cheap integer hash, no Math.random so it never flickers).
+function buriedNoise(seed: number, index: number): number {
+  let hash = Math.imul(seed ^ (index + 0x9e37_79b9), 2_654_435_761);
+
+  hash ^= hash >>> 15;
+
+  return (hash >>> 0) / 0xffff_ffff;
+}
+
+// FNV-1a hash of the item id → the per-item wave seed.
+function hashItemId(id: string): number {
+  let hash = 2_166_136_261;
+
+  for (let index = 0; index < id.length; index++) {
+    hash ^= id.charCodeAt(index);
+    hash = Math.imul(hash, 16_777_619);
+  }
+
+  return hash >>> 0;
+}
+
 /**
  * A single falling/resting item: the clickable sprite plus its per-item tumble/sway. Presentational — the scene
  * positions the host via `leftPawScenePosition` and turns the emitted click into an eat/bat command. The inner
@@ -52,6 +81,29 @@ export class SceneItemComponent {
   protected readonly breatheMs = 2600;
   protected readonly frozenTransform = this._frozenTransform.asReadonly();
   protected readonly frozen = computed(() => this._frozenTransform() !== null);
+
+  // Wavy clip-path for the buried sand line; null while the item is still falling (shows whole, no clip). The
+  // shape is stable per item (id-seeded), so it sits still once landed. The transform/sink + transition stay in SCSS.
+  protected readonly buriedClip = computed<string | null>(() => {
+    const item = this.item();
+
+    if (!item.landed) {
+      return null;
+    }
+
+    const seed = hashItemId(item.id);
+    const points = ['0% 0%', '100% 0%'];
+
+    // Walk the cut edge right→left, jittering each sample around the base depth so the line reads as uneven sand.
+    for (let index = 0; index <= BURIED_SEGMENTS; index++) {
+      const x = 100 - (100 / BURIED_SEGMENTS) * index;
+      const depth = BURIED_CUT + (buriedNoise(seed, index) - 0.5) * 2 * BURIED_SWING;
+
+      points.push(`${x.toFixed(1)}% ${depth.toFixed(1)}%`);
+    }
+
+    return `polygon(${points.join(', ')})`;
+  });
 
   public constructor() {
     effect(() => {

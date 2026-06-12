@@ -70,8 +70,17 @@ export class FrenzyPageFacade {
   public readonly isMobile = computed(() => this.breakpoint() === 'mobile');
   public readonly items = computed(() => this.store.state()?.items ?? []);
   public readonly leaderboard = this.store.leaderboard;
+  // The single current leader (top of the sorted leaderboard), or null when nobody's in — feeds the minimap header.
+  public readonly leader = computed(() => {
+    const entries = this.leaderboard();
+
+    return entries.length > 0 ? entries[0] : null;
+  });
   public readonly me = this.store.me;
   public readonly myId = this.store.myId;
+  // The crowned player id (alive hp-leader, shared selector) — gates the leaderboard pill's crown so it never
+  // disagrees with the scene marker.
+  public readonly crownId = this.store.crownId;
   public readonly players = computed(() => this.store.state()?.players ?? []);
   public readonly presenceCount = this.store.presenceCount;
   public readonly respawnReady = computed(() => this.cooldownLeftMs() === 0);

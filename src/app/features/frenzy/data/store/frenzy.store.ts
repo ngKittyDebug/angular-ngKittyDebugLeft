@@ -10,6 +10,7 @@ import {
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { tap } from 'rxjs';
 
+import { crownIdOf } from '@game/frenzy/crown';
 import type {
   FaintCause,
   JoinRejectReason,
@@ -87,9 +88,34 @@ export const FrenzyStore = signalStore(
         () =>
           store.state()?.players.filter((player) => player.status === 'disconnected').length ?? 0,
       ),
+      // Ranked alive-first, then by raw hp (the live threat order), NOT by `totalScore` — hp is the crown axis and
+      // the bounty target, score is a separate cumulative axis with no UI consumer landed yet (see Player.scores).
+      // Alive-first keeps rank #1 == the crown holder (`crownIdOf`): a disconnected ex-leader with higher hp still
+      // appears (greyed, below the living) but never outranks the actual alive leader, so the list, the collapsed
+      // pill and the scene crown all tell one story.
       leaderboard: computed(() =>
-        [...(store.state()?.players ?? [])].sort((a, b) => b.hp - a.hp).slice(0, 5),
+        [...(store.state()?.players ?? [])]
+          .sort((a, b) => {
+            const aDown = a.status === 'disconnected' ? 1 : 0;
+            const bDown = b.status === 'disconnected' ? 1 : 0;
+
+            return aDown - bDown || b.hp - a.hp;
+          })
+          .slice(0, 5),
       ),
+      // The crowned player (alive hp-leader, ties by id) via the shared selector — the single source the scene
+      // marker, the leaderboard pill and the minimap all agree on, so the crown can't show on one and not another.
+      // Gated to ≥2 alive players: with a lone survivor there's no rival to out-rank and no bounty target, so a
+      // crown would be meaningless noise — null hides it everywhere at once.
+      crownId: computed(() => {
+        const players = store.state()?.players ?? [];
+
+        if (players.filter((player) => player.status === 'alive').length < 2) {
+          return null;
+        }
+
+        return crownIdOf(players);
+      }),
       me: computed(() => {
         const id = store.myId();
 

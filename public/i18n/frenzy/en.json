@@ -24,7 +24,17 @@
   "picker": {
     "nameLabel": "Your name",
     "namePlaceholder": "trainer",
-    "submit": "Join the frenzy"
+    "submit": "Join the frenzy",
+    "howTo": {
+      "title": "How to play",
+      "move": "Tap the water to swim",
+      "eat": "Tap an item to eat it",
+      "grow": "Gain HP to grow and evolve"
+    },
+    "items": {
+      "eat": "Eat",
+      "avoid": "Avoid"
+    }
   },
   "faintedModal": {
     "lifespan": "Survived",
@@ -127,12 +137,40 @@
   "minimap": {
     "ariaLabel": "Arena minimap",
     "expand": "Expand map",
-    "collapse": "Collapse map"
+    "collapse": "Collapse map",
+    "leaderAriaLabel": "Current leader"
+  },
+  "legend": {
+    "title": "Summary",
+    "ariaLabel": "Item legend",
+    "expand": "Show item legend",
+    "collapse": "Hide item legend",
+    "group": {
+      "good": "Helpful",
+      "risky": "Gamble",
+      "bad": "Dangerous"
+    },
+    "items": {
+      "food": "Berry",
+      "crumb": "Crumb",
+      "goldenBerry": "Golden berry",
+      "rareCandy": "Rare candy",
+      "vitamin": "Vitamin",
+      "shield": "Shield",
+      "mushroom": "Mushroom",
+      "easterEgg": "Egg",
+      "rotten": "Rotten",
+      "rock": "Rock",
+      "brick": "Brick",
+      "bomb": "Sea mine",
+      "poop": "Poop"
+    }
   },
   "leaderboard": {
     "title": "Top 5",
     "ariaLabel": "Leaderboard, top 5 players by HP",
-    "empty": "No challengers yet",
+    "expand": "Show leaderboard",
+    "collapse": "Hide leaderboard",
     "you": "You",
     "disconnectedHint": "Disconnected — may return within 1 min",
     "stageHint": "Evolution stage {{stage}}"
@@ -144,6 +182,17 @@
   "scene": {
     "pokeAriaLabel": "Poke your Pokémon",
     "floorLabel": "Seabed",
+    "intro": {
+      "0": "Off we go for snacks!",
+      "1": "Tap the water to swim!",
+      "2": "Who's hungry here?",
+      "3": "Rule one: don't chew bombs.",
+      "4": "Nom nom, let's go!",
+      "5": "Today I evolve, for sure!",
+      "6": "Rocks aren't food. Noted.",
+      "7": "Where are my berries?",
+      "8": "Hungry and dangerous!"
+    },
     "floatingText": {
       "food": {
         "0": "Yum!",

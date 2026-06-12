@@ -30,6 +30,39 @@
     }
   </div>
 
+  <div class="picker__howto">
+    <span class="picker__howto-title">{{ t('howTo.title') }}</span>
+    <ul class="picker__howto-list">
+      <li class="picker__howto-item">
+        <tui-icon icon="@tui.pointer" class="picker__howto-icon" />
+        <span>{{ t('howTo.move') }}</span>
+      </li>
+      <li class="picker__howto-item">
+        <tui-icon icon="@tui.utensils" class="picker__howto-icon" />
+        <span>{{ t('howTo.eat') }}</span>
+      </li>
+      <li class="picker__howto-item">
+        <tui-icon icon="@tui.sparkles" class="picker__howto-icon" />
+        <span>{{ t('howTo.grow') }}</span>
+      </li>
+    </ul>
+  </div>
+
+  <div class="picker__items">
+    <span class="picker__items-group">
+      <span class="picker__items-label picker__items-label--good">{{ t('items.eat') }}</span>
+      @for (item of safeItems; track item) {
+        <img class="picker__items-sprite" [src]="item | itemSprite" alt="" draggable="false" />
+      }
+    </span>
+    <span class="picker__items-group">
+      <span class="picker__items-label picker__items-label--bad">{{ t('items.avoid') }}</span>
+      @for (item of dangerItems; track item) {
+        <img class="picker__items-sprite" [src]="item | itemSprite" alt="" draggable="false" />
+      }
+    </span>
+  </div>
+
   @if (error(); as reason) {
     <p class="picker__error" role="alert" *transloco="let t; prefix: 'frenzy.joinError'">
       {{ t(reason) }}

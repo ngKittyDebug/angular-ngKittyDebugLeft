@@ -5,6 +5,7 @@ import type { Item, Player, PlayerBody, ServerMessage, ServerState } from '@game
 
 import { applyClick } from './engine/apply-click';
 import { applyEmissions } from './engine/apply-emissions';
+import { projectTimeAlive } from './engine/apply-scores';
 import { applySteer } from './engine/apply-steer';
 import { applyTick } from './engine/apply-tick';
 import { checkClickRate } from './engine/check-click-rate';
@@ -369,7 +370,12 @@ export default class FeedingRoom implements Party.Server {
   }
 
   private snapshot(): ServerMessage {
-    return { type: 'snapshot', state: this.currentState() };
+    // Stamp `timeAlive` into the projection only (see `projectTimeAlive`) — kept out of `currentState` so it never
+    // leaks into the engine's stored scores; the formula lives with the other score logic and is unit-tested there.
+    const state = this.currentState();
+    const players = projectTimeAlive(state.players, Date.now());
+
+    return { type: 'snapshot', state: { ...state, players } };
   }
 
   private spawnItem(): void {

@@ -1,3 +1,5 @@
+@use 'utility/hud-pill' as *;
+
 :host {
   position: relative;
   display: flex;
@@ -65,7 +67,9 @@
   flex: 1;
   min-height: 0;
   width: 100%;
-  overflow: hidden;
+  // `clip` (not `hidden`) so a Tab-focused, off-screen scene element can't scroll the page aside — see the same
+  // note on `.scene`. The page never scrolls by design; this just blocks the focus-driven scroll.
+  overflow: clip;
   background: var(--gradient-bg);
   color: var(--tui-text-primary);
   touch-action: manipulation;
@@ -85,19 +89,20 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    // Desktop: stretch so the status bar and expanded map both fill the column (16.5rem — 25% narrower than the
-    // original 22rem so the status card and minimap take less of the play area).
+    // Desktop: stretch so the status bar and expanded map both fill the column. Kept deliberately narrow (13.5rem)
+    // so the status card and minimap claim little of the play area and falling items don't crowd against them.
     align-items: stretch;
-    width: min(16.5rem, calc(100% - 2rem));
+    width: min(13.5rem, calc(100% - 2rem));
     // Status is non-interactive; the minimap re-enables pointer events on itself.
     pointer-events: none;
   }
 
-  // Mobile: shrink to a compact column of left-aligned pills (status + minimap) so it doesn't collide
-  // with the right-hand HUD (sound/leaderboard).
+  // Mobile: a compact column of left-aligned pills (status + minimap) that doesn't collide with the right-hand
+  // HUD (sound/leaderboard). FIXED width (viewport-derived, NOT content-derived): with `width: auto` the column
+  // tracked the widest child's intrinsic width, so the status card's right edge jittered every time the HP digit
+  // count changed. A set width pins that edge; `calc(100% - 9rem)` still shrinks it on narrow phones.
   &--mobile &__hud-left {
-    width: auto;
-    max-width: calc(100% - 9rem);
+    width: min(16rem, calc(100% - 9rem));
     // Stretch so the status bar and the (full-width) minimap pill share the same width.
     align-items: stretch;
   }
@@ -110,6 +115,10 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    // One shared width for the right-hand HUD widgets so the sound toggle, legend pill and leaderboard pill line up
+    // (equal width → aligned edges). A custom property inherits across component boundaries, so each widget reads it
+    // instead of hardcoding the value. Only the desktop (non-compact) widget rules consume it.
+    --frenzy-hud-widget: 12rem;
     align-items: flex-end;
     pointer-events: none;
   }
@@ -137,10 +146,12 @@
   &__status {
     margin: 0;
     padding: 1rem 2rem;
-    background: rgba(0, 0, 0, 0.7);
     border-radius: 0.5rem;
-    color: #f5f5f5;
     font-size: 1.125rem;
+
+    // Theme-aware glass (was a hardcoded dark scrim + #f5f5f5 text) so the status box matches the rest of the HUD
+    // chrome and follows light/dark like everything else.
+    @include hud_pill;
   }
 
   // Non-blocking "reconnecting" pill pinned top-centre over the live scene — the inbound-stall recovery is
@@ -152,11 +163,12 @@
     margin: 0 auto;
     width: fit-content;
     padding: 0.375rem 1rem;
-    background: rgba(0, 0, 0, 0.7);
     border-radius: 1rem;
-    color: #f5f5f5;
     font-size: 0.875rem;
     pointer-events: none;
+
+    // Theme-aware glass, matching the connection status box and the rest of the HUD (was a hardcoded dark scrim).
+    @include hud_pill;
     z-index: 11;
   }
 
@@ -169,8 +181,18 @@
     backdrop-filter: blur(6px);
   }
 
+  // Mobile: the right column holds just two widgets (sound + legend; the leaderboard is desktop-only). Give them
+  // one shared height so the stack lines up with the left status card and the column stops looking jumpy — the
+  // sound switch is naturally taller than the legend pill, so without this they differ (39 vs 33px). 1.9rem each
+  // + the 0.5rem gap ≈ the status card's height.
+  &--mobile &__hud-top-right {
+    --frenzy-hud-row-h: 1.9rem;
+  }
+
+  // Centre the overlay content (fainted/disconnected modals, picker) on mobile too — bottom-pinning left a big
+  // empty gap above on tall phones. The picker also centres itself via its host; this aligns the plain modals.
   &--mobile &__overlay {
-    align-items: flex-end;
-    padding-block-end: max(1.5rem, env(safe-area-inset-bottom));
+    align-items: center;
+    padding-block: max(1rem, env(safe-area-inset-bottom));
   }
 }

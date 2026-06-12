@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { TuiAvatar, TuiBadge, TuiProgressBar } from '@taiga-ui/kit';
+import { TuiAvatar, TuiProgressBar } from '@taiga-ui/kit';
 
 import { FRENZY } from '@game/frenzy/config';
 import type { PlayerBody, Stage } from '@game/frenzy/types';
@@ -9,28 +9,18 @@ import { getMood, type PokemonMood } from '../../../data/logic/pokemon-mood';
 import { HpFlashDirective } from '../../directives/hp-flash.directive';
 import { HpToneColorPipe } from '../../pipes/hp-tone-color.pipe';
 
-interface MoodVisual {
-  icon: string;
-  color: string;
-}
-
-const MOOD_VISUAL: Record<PokemonMood, MoodVisual> = {
-  happy: { icon: '@tui.smile', color: 'var(--tui-status-positive)' },
-  content: { icon: '@tui.meh', color: 'var(--tui-text-secondary)' },
-  hungry: { icon: '@tui.frown', color: 'var(--tui-status-warning)' },
-  starving: { icon: '@tui.skull', color: 'var(--tui-status-negative)' },
+// Juicy 3D mood faces (Microsoft Fluent Emoji, same set as the item sprites) keyed by mood; far more expressive
+// than the flat Taiga line icons. Files live in public/frenzy/mood/<mood>.png.
+const MOOD_SPRITE: Record<PokemonMood, string> = {
+  happy: 'happy.png',
+  content: 'content.png',
+  hungry: 'hungry.png',
+  starving: 'starving.png',
 };
 
 @Component({
   selector: 'left-paw-current-pokemon-status',
-  imports: [
-    HpFlashDirective,
-    HpToneColorPipe,
-    TranslocoDirective,
-    TuiAvatar,
-    TuiBadge,
-    TuiProgressBar,
-  ],
+  imports: [HpFlashDirective, HpToneColorPipe, TranslocoDirective, TuiAvatar, TuiProgressBar],
   templateUrl: './current-pokemon-status.component.html',
   styleUrl: './current-pokemon-status.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -46,7 +36,9 @@ export class CurrentPokemonStatusComponent {
   // `untilEvolution` is the HP still needed to reach it — both vanish on the final stage (nothing left to reach).
   protected readonly maxHp = FRENZY.maxHp;
   protected readonly mood = computed<PokemonMood>(() => getMood(this.hp(), this.stage()));
-  protected readonly moodVisual = computed<MoodVisual>(() => MOOD_VISUAL[this.mood()]);
+  protected readonly moodSprite = computed<string>(
+    () => `/frenzy/mood/${MOOD_SPRITE[this.mood()]}`,
+  );
   protected readonly nextThreshold = computed<number>(() => {
     const body = this.body();
 

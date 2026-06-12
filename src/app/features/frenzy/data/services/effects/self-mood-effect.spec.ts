@@ -25,6 +25,7 @@ function me(hp: number): Player {
     disconnectedAt: null,
     joinedAt: 0,
     effects: [],
+    scores: {},
   };
 }
 

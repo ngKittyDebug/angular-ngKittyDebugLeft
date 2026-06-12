@@ -5,8 +5,10 @@ export const BUFFS = {
   /** Vitamin: a pickup that heals `hp` hp at once and grants `wellFed` for `decayPauseMs` — pausing only the
    * natural hp decay (incoming damage from bombs/rocks/rotten still lands). A steady "keep-fed" buff, not a ward. */
   vitamin: { hp: 20, decayPauseMs: 60_000 },
-  /** Shield: a pickup granting a `shield` for `shieldMs` — suspends decay AND wards off all incoming damage (bomb/rock/rotten). A short window of full invulnerability inside a bubble; rare on purpose. */
-  shield: { shieldMs: 15_000 },
+  /** Shield: a pickup granting a `shield` for `shieldMs` — suspends decay AND wards off all incoming damage (bomb/rock/rotten). A short window of full invulnerability inside a bubble; rare on purpose. `spawnShieldMs` is the
+   * SHORTER ward auto-granted on join/respawn (not a pickup) so a freshly-spawned Pokémon gets a brief grace
+   * window before it can be killed — reuses the same effect/aura, just a smaller duration. */
+  shield: { shieldMs: 15_000, spawnShieldMs: 3_000 },
   /** Easter egg: a pickup that heals `hpOnPickup` hp and grants `laying` for `durationMs`. While active, the
    * Pokémon drips one falling item from itself every `emitIntervalMs` (any type, incl. bombs) — a steady, predictable
    * count per aura (`durationMs / emitIntervalMs`) rather than a random per-tick burst. Each item spawns at the body's
@@ -61,8 +63,10 @@ export const BUFFS = {
     /** Hard cap on the bomb's overall drift speed `|v|` (normalized units/sec) — the absolute ceiling click shoves
      * and wall bounces are clamped to (see move-items + applyClick), so the mine never moves faster than this in any
      * direction. With no gravity the bomb's velocity only changes on a shove or a wall bounce, so this cap is the
-     * sole speed limit. */
-    maxDriftSpeed: 0.03,
+     * sole speed limit. Set above a Pokémon's cruising speed (~0.024–0.032) but a touch below their max steer cap
+     * (0.055–0.075), so a well-shoved mine runs down a drifting target — a real aimed weapon — yet a player actively
+     * fleeing at full tilt can still just outrun it. */
+    maxDriftSpeed: 0.05,
     /** Launch speed (normalized units/sec) for a bomb sprayed by the `pooping` aura — far gentler than the shared
      * `emitBackSpeed` (tuned for the lighter rock/brick), so the heavy mine eases out near its own drift cap rather
      * than shooting out at several times the cap and snapping back on the next tick. */

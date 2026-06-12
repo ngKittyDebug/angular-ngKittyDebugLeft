@@ -25,6 +25,7 @@ function player(id: string, name: string, x = 0.5, y = 0.5): Player {
     disconnectedAt: null,
     joinedAt: 0,
     effects: [],
+    scores: {},
   };
 }
 

@@ -1,74 +1,80 @@
-@if (compact()) {
+<div
+  *transloco="let t; prefix: 'frenzy.leaderboard'"
+  class="leaderboard"
+  [class.leaderboard--collapsed]="collapsed()"
+>
+  <!-- Toggle + collapse only exist when there's more than one player — with just you there's nothing to rank. -->
   @if (rows().length > 1) {
-    @if (leader(); as top) {
-      <div
-        *transloco="let t; prefix: 'frenzy.leaderboard'"
+    @if (collapsed()) {
+      <button
+        type="button"
         class="leaderboard__pill"
-        [attr.aria-label]="t('ariaLabel')"
+        [attr.aria-label]="t('expand')"
+        (click)="toggle($event)"
       >
-        <tui-icon icon="@tui.crown" class="leaderboard__crown" />
-        <span tuiAvatar class="leaderboard__avatar" size="xs">
-          <img [src]="top.appearance | pokemonSprite: top.stage" alt="" draggable="false" />
-        </span>
-        <span class="leaderboard__pill-stats">
+        <!-- rows().length > 1 guarantees a leader, so no empty-state branch is needed here. -->
+        @if (leader(); as top) {
+          <!-- Crown only when the top row is the actual alive crown (shared selector), so the pill never crowns a
+               disconnected top-hp player while the scene shows the crown elsewhere. -->
+          @if (top.id === crownId()) {
+            <tui-icon icon="@tui.crown" class="leaderboard__crown" />
+          }
           <span class="leaderboard__pill-name" [class.leaderboard__pill-name--me]="top.isMe">{{
             top.name
           }}</span>
           <span class="leaderboard__pill-hp">{{ top.hp }}</span>
-        </span>
-      </div>
+        }
+      </button>
+    } @else {
+      <section class="leaderboard__panel" [attr.aria-label]="t('ariaLabel')">
+        <button
+          type="button"
+          class="leaderboard__header"
+          [attr.aria-label]="t('collapse')"
+          (click)="toggle($event)"
+        >
+          <tui-icon icon="@tui.crown" class="leaderboard__crown" />
+          <h3 class="leaderboard__title">{{ t('title') }}</h3>
+          <tui-icon icon="@tui.minimize-2" class="leaderboard__header-icon" />
+        </button>
+        <ol class="leaderboard__list">
+          @for (row of rows(); track row.id) {
+            <li class="leaderboard__row" [class.leaderboard__row--me]="row.isMe">
+              <span class="leaderboard__rank">{{ row.rank }}</span>
+              <span
+                tuiAvatar
+                class="leaderboard__avatar"
+                size="s"
+                [class.leaderboard__avatar--disconnected]="row.isDisconnected"
+              >
+                <img [src]="row.appearance | pokemonSprite: row.stage" alt="" draggable="false" />
+              </span>
+              <span class="leaderboard__name">
+                <span class="leaderboard__name-text">{{ row.name }}</span>
+                @if (row.isMe) {
+                  <span class="leaderboard__you">{{ t('you') }}</span>
+                }
+                @if (row.isDisconnected) {
+                  <tui-icon
+                    icon="@tui.wifi-off"
+                    class="leaderboard__away"
+                    [tuiHint]="t('disconnectedHint')"
+                    [attr.aria-label]="t('disconnectedHint')"
+                  />
+                }
+              </span>
+              <span
+                class="leaderboard__stage"
+                [tuiHint]="t('stageHint', { stage: row.stage })"
+                [attr.aria-label]="t('stageHint', { stage: row.stage })"
+              >
+                {{ row.stage | stageRoman }}
+              </span>
+              <span class="leaderboard__hp">{{ row.hp }}</span>
+            </li>
+          }
+        </ol>
+      </section>
     }
   }
-} @else {
-  <section
-    *transloco="let t; prefix: 'frenzy.leaderboard'"
-    class="leaderboard"
-    [attr.aria-label]="t('ariaLabel')"
-  >
-    <header class="leaderboard__header">
-      <tui-icon icon="@tui.crown" class="leaderboard__crown" />
-      <h3 class="leaderboard__title">{{ t('title') }}</h3>
-    </header>
-    @if (rows().length === 0) {
-      <p class="leaderboard__empty">{{ t('empty') }}</p>
-    } @else {
-      <ol class="leaderboard__list">
-        @for (row of rows(); track row.id) {
-          <li class="leaderboard__row" [class.leaderboard__row--me]="row.isMe">
-            <span class="leaderboard__rank">{{ row.rank }}</span>
-            <span
-              tuiAvatar
-              class="leaderboard__avatar"
-              size="s"
-              [class.leaderboard__avatar--disconnected]="row.isDisconnected"
-            >
-              <img [src]="row.appearance | pokemonSprite: row.stage" alt="" draggable="false" />
-            </span>
-            <span class="leaderboard__name">
-              <span class="leaderboard__name-text">{{ row.name }}</span>
-              @if (row.isMe) {
-                <span class="leaderboard__you">{{ t('you') }}</span>
-              }
-              @if (row.isDisconnected) {
-                <tui-icon
-                  icon="@tui.wifi-off"
-                  class="leaderboard__away"
-                  [tuiHint]="t('disconnectedHint')"
-                  [attr.aria-label]="t('disconnectedHint')"
-                />
-              }
-            </span>
-            <span
-              class="leaderboard__stage"
-              [tuiHint]="t('stageHint', { stage: row.stage })"
-              [attr.aria-label]="t('stageHint', { stage: row.stage })"
-            >
-              {{ row.stage | stageRoman }}
-            </span>
-            <span class="leaderboard__hp">{{ row.hp }}</span>
-          </li>
-        }
-      </ol>
-    }
-  </section>
-}
+</div>

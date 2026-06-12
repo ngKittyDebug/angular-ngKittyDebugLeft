@@ -9,12 +9,22 @@ interface FrenzySession {
   name?: string;
   appearance?: string;
   minimapCollapsed?: boolean;
+  legendCollapsed?: boolean;
+  leaderboardCollapsed?: boolean;
 }
 
 @Injectable()
 export class PlayerPersistenceService {
   public getAppearance(): string {
     return this.read().appearance ?? '';
+  }
+
+  public getLeaderboardCollapsed(): boolean | null {
+    return this.read().leaderboardCollapsed ?? null;
+  }
+
+  public getLegendCollapsed(): boolean | null {
+    return this.read().legendCollapsed ?? null;
   }
 
   public getMinimapCollapsed(): boolean | null {
@@ -42,6 +52,14 @@ export class PlayerPersistenceService {
 
   public saveAppearance(appearance: string): void {
     this.merge({ appearance });
+  }
+
+  public saveLeaderboardCollapsed(leaderboardCollapsed: boolean): void {
+    this.merge({ leaderboardCollapsed });
+  }
+
+  public saveLegendCollapsed(legendCollapsed: boolean): void {
+    this.merge({ legendCollapsed });
   }
 
   public saveMinimapCollapsed(minimapCollapsed: boolean): void {

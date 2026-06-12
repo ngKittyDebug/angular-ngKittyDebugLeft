@@ -6,7 +6,9 @@
   class="scene__item"
   [class.scene__item--bomb]="item().type === 'bomb'"
   [class.scene__item--landed]="item().landed"
+  [style.clip-path]="buriedClip()"
   type="button"
+  tabindex="-1"
   (click)="clicked.emit($event)"
 >
   <img

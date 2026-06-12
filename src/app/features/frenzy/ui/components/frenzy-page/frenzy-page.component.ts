@@ -5,6 +5,7 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import { CurrentPokemonStatusComponent } from '../current-pokemon-status/current-pokemon-status.component';
 import { DisconnectedModalComponent } from '../disconnected-modal/disconnected-modal.component';
 import { FaintedModalComponent } from '../fainted-modal/fainted-modal.component';
+import { ItemLegendComponent } from '../item-legend/item-legend.component';
 import { LeaderboardComponent } from '../leaderboard/leaderboard.component';
 import { MinimapComponent } from '../minimap/minimap.component';
 import { PokemonPickerComponent } from '../pokemon-picker/pokemon-picker.component';
@@ -20,6 +21,7 @@ import { FrenzyPageFacade } from './frenzy-page.facade';
     CurrentPokemonStatusComponent,
     DisconnectedModalComponent,
     FaintedModalComponent,
+    ItemLegendComponent,
     LeaderboardComponent,
     MinimapComponent,
     PokemonPickerComponent,
@@ -48,7 +50,9 @@ export class FrenzyPageComponent implements OnInit {
   protected readonly joinError = this.facade.joinError;
   protected readonly isMobile = this.facade.isMobile;
   protected readonly items = this.facade.items;
+  protected readonly leader = this.facade.leader;
   protected readonly leaderboard = this.facade.leaderboard;
+  protected readonly crownId = this.facade.crownId;
   protected readonly me = this.facade.me;
   protected readonly myId = this.facade.myId;
   protected readonly players = this.facade.players;

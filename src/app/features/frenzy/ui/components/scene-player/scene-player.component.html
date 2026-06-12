@@ -12,6 +12,10 @@
     }
   }
 
+  @if (isLeader()) {
+    <tui-icon class="scene__crown" icon="@tui.crown" aria-hidden="true" />
+  }
+
   @if (player().isMe) {
     <button
       class="scene__poke"

@@ -1,5 +1,17 @@
 @use 'utility/hud-pill' as *;
 
+// The host is the overlay's flex item. `align-self: stretch` makes it fill the overlay's height (a definite
+// reference), so the card's `max-height: 100%` actually caps against the available area and scrolls its overflow
+// instead of growing unbounded and clipping its top behind the header. The host then places the card itself —
+// centred on desktop, pinned to the bottom on mobile (see the media query).
+:host {
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  justify-content: center;
+  min-height: 0;
+}
+
 .picker {
   position: relative;
   display: flex;
@@ -7,7 +19,8 @@
   gap: 1.25rem;
   align-items: stretch;
   width: min(440px, 92vw);
-  // Never grow past the overlay (short landscape fits 6 tiles only with internal scroll).
+  // Never grow past the available area (the host stretches to it); shrink + scroll instead of clipping the top.
+  min-height: 0;
   max-height: 100%;
   padding: 1.75rem 1.5rem 1.5rem;
   overflow-y: auto;
@@ -143,6 +156,93 @@
     font-weight: 500;
   }
 
+  // Compact "how to play" onboarding — three one-liners with Taiga icons, framed in a faint inset panel so it
+  // reads as a hint, not a control. Left-aligned (like the name field) against the otherwise centred picker.
+  &__howto {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 0.7rem 0.85rem;
+    text-align: left;
+    background: color-mix(in srgb, var(--tui-text-primary) 5%, transparent);
+    border: 1px solid color-mix(in srgb, var(--tui-text-primary) 10%, transparent);
+    border-radius: 0.75rem;
+  }
+
+  &__howto-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    opacity: 0.55;
+  }
+
+  &__howto-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__howto-item {
+    display: flex;
+    gap: 0.55rem;
+    align-items: center;
+    font-size: 0.85rem;
+  }
+
+  &__howto-icon {
+    flex: none;
+    block-size: 1.1rem;
+    inline-size: 1.1rem;
+    color: var(--tui-status-positive);
+  }
+
+  // Item primer (2.3): a one-line "eat this / avoid this" cheat-sheet with a couple of sprites each, framed like the
+  // how-to panel. A curated taste — the full good/risky/bad legend lives in the in-game HUD («Сводка»).
+  &__items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.1rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0.55rem 0.85rem;
+    background: color-mix(in srgb, var(--tui-text-primary) 5%, transparent);
+    border: 1px solid color-mix(in srgb, var(--tui-text-primary) 10%, transparent);
+    border-radius: 0.75rem;
+  }
+
+  &__items-group {
+    display: inline-flex;
+    gap: 0.4rem;
+    align-items: center;
+  }
+
+  &__items-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+
+    &--good {
+      color: var(--tui-status-positive);
+    }
+
+    &--bad {
+      color: var(--tui-status-negative);
+    }
+  }
+
+  &__items-sprite {
+    width: 26px;
+    height: 26px;
+    object-fit: contain;
+    // Smooth (bilinear) rendering for the Fluent 3D item art — NOT pixelated like the pokemon gif sprites above.
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
+  }
+
   &__error {
     margin: 0;
     color: var(--tui-status-negative);
@@ -156,7 +256,7 @@
     background: linear-gradient(
       135deg,
       var(--tui-status-positive),
-      color-mix(in srgb, var(--tui-status-positive) 65%, #0bbf8f)
+      color-mix(in srgb, var(--tui-status-positive) 65%, var(--tui-status-info))
     );
     border: none;
     border-radius: 0.75rem;
@@ -218,6 +318,48 @@
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+// Mobile/short screens: compact the card so the whole picker (name + 6 tiles + how-to + submit) fits a short
+// phone viewport instead of clipping its top off behind the header. Measured ~583px → ~456px content, which
+// fits a 375×667 screen with margin; the internal `overflow-y: auto` stays as the fallback on anything shorter.
+// Trigger on width (app's mobile breakpoint) OR a short viewport (landscape / small laptop window).
+@media (max-width: 800px), (max-height: 760px) {
+  .picker {
+    gap: 0.6rem;
+    padding: 1rem 1rem 1.1rem;
+
+    &__sprite {
+      height: 40px;
+    }
+
+    &__lines {
+      gap: 0.5rem;
+    }
+
+    &__line {
+      gap: 0.35rem;
+      padding: 0.5rem 0.4rem;
+    }
+
+    &__howto {
+      gap: 0.3rem;
+      padding: 0.55rem 0.7rem;
+    }
+
+    &__howto-list {
+      gap: 0.3rem;
+    }
+
+    &__items {
+      padding: 0.45rem 0.7rem;
+    }
+
+    &__items-sprite {
+      width: 22px;
+      height: 22px;
+    }
   }
 }
 

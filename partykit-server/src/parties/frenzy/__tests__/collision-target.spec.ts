@@ -21,6 +21,7 @@ const PLAYER: Player = {
   disconnectedAt: null,
   joinedAt: 0,
   effects: [],
+  scores: {},
 };
 
 function itemAt(x: number, y: number, overrides: Partial<Item> = {}): Item {

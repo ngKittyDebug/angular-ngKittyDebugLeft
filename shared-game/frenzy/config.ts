@@ -6,7 +6,7 @@
  * The flat `FRENZY` object is assembled from per-concern partials under `./config/*`; edit a partial to retune a
  * concern. `FRENZY.features` (see `./config/features`) gates which items take part — toggled via `isItemEnabled`.
  */
-import type { ItemType } from './types';
+import type { ItemType, ScoreKind } from './types';
 
 import { BUFFS } from './config/buffs';
 import { COLLISION } from './config/collision';
@@ -17,6 +17,7 @@ import { LOOP } from './config/loop';
 import { HP } from './config/hp';
 import { PLAYER } from './config/player';
 import { PLAYER_COLLISION } from './config/player-collision';
+import { SCORE } from './config/score';
 import { SPAWN } from './config/spawn';
 import { WORLD } from './config/world';
 
@@ -31,6 +32,7 @@ export const FRENZY = {
   ...PLAYER_COLLISION,
   ...LOOP,
   ...FLOATS,
+  ...SCORE,
   features: FEATURES,
 } as const;
 
@@ -49,6 +51,22 @@ export function halfExtentNorm(sizePx: number, dimensionPx: number): number {
  */
 export function isItemEnabled(type: ItemType): boolean {
   return FRENZY.features.items[type].enabled;
+}
+
+/**
+ * Weighted sum of a player's session `scores` by axis (see `FRENZY.score.weights`). The single way score is
+ * collapsed to one number for ranking/medals — computed identically on the server and the client (the wire
+ * carries the raw `scores`, never this total). Missing axes count as 0; `crownKills` stacks ON TOP of `kills`.
+ */
+export function totalScore(scores: Partial<Record<ScoreKind, number>>): number {
+  const { weights } = FRENZY.score;
+
+  // Data-driven over the weights record (typed `Record<ScoreKind, number>` in `config/score`), so a new `ScoreKind`
+  // is forced to carry a weight AND is summed here automatically — no axis can silently drop out of the total.
+  return (Object.keys(weights) as ScoreKind[]).reduce(
+    (sum, kind) => sum + (scores[kind] ?? 0) * weights[kind],
+    0,
+  );
 }
 
 /**

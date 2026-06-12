@@ -24,6 +24,11 @@
     cursor: pointer;
 
     @extend %minimap-surface;
+
+    &:focus-visible {
+      outline: 2px solid var(--tui-status-positive);
+      outline-offset: 2px;
+    }
   }
 
   &__pill-icon {
@@ -32,6 +37,41 @@
     block-size: 1rem;
     inline-size: 1rem;
     color: var(--tui-text-secondary);
+  }
+
+  // Current leader (the leaderboard folded into the minimap chrome): crown + name + HP, shown in the pill/header.
+  &__leader {
+    display: inline-flex;
+    gap: 0.3rem;
+    align-items: center;
+    min-width: 0;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  &__leader-crown {
+    flex: none;
+    block-size: 0.85rem;
+    inline-size: 0.85rem;
+    color: var(--tui-status-warning);
+  }
+
+  &__leader-name {
+    max-width: 7rem;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--tui-text-primary);
+
+    &--me {
+      color: var(--tui-status-positive);
+    }
+  }
+
+  &__leader-hp {
+    flex: none;
+    font-variant-numeric: tabular-nums;
+    color: var(--tui-status-positive);
   }
 
   // Mobile (compact): the pill becomes a full-width bar so it matches the status bar's width above it.
@@ -68,6 +108,11 @@
 
     border: none;
     border-bottom: 1px solid var(--tui-border-normal);
+
+    &:focus-visible {
+      outline: 2px solid var(--tui-status-positive);
+      outline-offset: -2px;
+    }
   }
 
   &__header-icon {
@@ -172,9 +217,31 @@
       0 0 7px 2px color-mix(in srgb, var(--tui-status-positive) 70%, transparent);
   }
 
+  // Leader blip: the crown IS the marker — drop the dot's circle (background + ring) so the crown stands in its
+  // place, lifted above neighbours so an adjacent dot never clips it.
+  &__player--leader {
+    z-index: 1;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  // The leader's crown, centered ON the blip point in place of the dot — same gold as the chrome leader chip,
+  // scaled to the map. Decorative (ignores pointer events); the drop-shadow keeps it legible over the live scene.
+  &__player-crown {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    block-size: 0.95rem;
+    inline-size: 0.95rem;
+    transform: translate(-50%, -50%);
+    color: var(--tui-status-warning);
+    filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.55));
+    pointer-events: none;
+  }
+
   // Dark scene: a brighter amber pops on the navy where the dark-yellow would go muddy (the "lighter on dark"
   // half of the contrast guideline). `:not(--me)` leaves your green dot untouched.
-  :host-context([tuiTheme='dark']) &__player:not(&__player--me) {
+  :host-context([tuiTheme='dark']) &__player:not(&__player--me):not(&__player--leader) {
     background: #fbbf24;
   }
 }

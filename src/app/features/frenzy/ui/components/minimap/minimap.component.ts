@@ -9,9 +9,10 @@ import {
 import { TranslocoDirective } from '@jsverse/transloco';
 import { TuiIcon } from '@taiga-ui/core';
 
-import type { Item, ItemType, Player } from '@game/frenzy/types';
+import type { Item, Player } from '@game/frenzy/types';
 
 import { PlayerPersistenceService } from '../../../data/services/player-persistence.service';
+import { ITEM_DOT_COLOR } from '../../constants/pokemon-registry';
 import { ScenePositionDirective } from '../../directives/scene-position.directive';
 import { OfflineParticipantsComponent } from '../offline-participants/offline-participants.component';
 import { OnlineParticipantsComponent } from '../online-participants/online-participants.component';
@@ -21,6 +22,7 @@ interface PlayerDot {
   x: number;
   y: number;
   me: boolean;
+  isLeader: boolean;
 }
 
 interface ItemDot {
@@ -91,24 +93,6 @@ const KELP_SILHOUETTE_PATH = ((): string => {
 
 const KELP_VIEW_BOX = `0 0 ${KELP_VIEW_WIDTH} ${KELP_VIEW_HEIGHT}`;
 
-// Blip colour per item type. Status tokens follow the theme where one fits the item's meaning;
-// the rest use fixed hues that stay legible on both the light and dark scene gradients.
-const ITEM_DOT_COLOR: Record<ItemType, string> = {
-  food: 'var(--tui-status-positive)',
-  crumb: '#9be15d',
-  goldenBerry: '#f5c518',
-  rareCandy: '#ff6fa5',
-  rotten: '#8a6d3b',
-  rock: '#9aa5b1',
-  brick: '#c1694f',
-  bomb: 'var(--tui-status-negative)',
-  mushroom: '#9b59b6',
-  vitamin: 'var(--tui-status-info)',
-  shield: '#22d3ee',
-  easterEgg: '#f0932b',
-  poop: '#7a5230',
-};
-
 @Component({
   selector: 'left-paw-minimap',
   imports: [
@@ -128,12 +112,32 @@ export class MinimapComponent {
   public readonly compact = input<boolean>(false);
   public readonly disconnected = input<number>(0);
   public readonly items = input.required<readonly Item[]>();
+  public readonly leader = input<Player | null>(null);
+  // The crowned player id (alive hp-leader; null when there's no meaningful leader, e.g. a lone survivor). Marks
+  // that player's blip with a crown and gates the compact leader chip — same gated source as the scene + pill.
+  public readonly crownId = input<string | null>(null);
   public readonly myId = input.required<string | null>();
   public readonly online = input.required<number>();
   public readonly players = input.required<readonly Player[]>();
 
   protected readonly kelpPath = KELP_SILHOUETTE_PATH;
   protected readonly kelpViewBox = KELP_VIEW_BOX;
+
+  // The leaderboard folded into the minimap chrome: just the current leader (name + rounded HP), shown in the
+  // header/pill with a crown. Only on mobile (`compact`) — desktop keeps the full ТОП-5 list widget, so showing
+  // the leader here too would be redundant. The full standings are read off the map's blips instead.
+  protected readonly leaderView = computed<{ name: string; hp: number; isMe: boolean } | null>(
+    () => {
+      const top = this.leader();
+
+      // Hidden unless there's a meaningful leader (`crownId` set ⇒ ≥2 alive) — solo, the chip would just crown you.
+      if (!this.compact() || top === null || this.crownId() === null) {
+        return null;
+      }
+
+      return { name: top.name, hp: Math.round(top.hp), isMe: top.id === this.myId() };
+    },
+  );
 
   // Restore the saved open/closed state; with none saved, default to expanded map on desktop and collapsed
   // pill on mobile (re-derives from `compact` on breakpoint change via linkedSignal). A manual toggle persists
@@ -144,12 +148,14 @@ export class MinimapComponent {
 
   protected readonly playerDots = computed<PlayerDot[]>(() => {
     const myId = this.myId();
+    const crownId = this.crownId();
 
     return this.players().map((player) => ({
       id: player.id,
       x: player.x,
       y: player.y,
       me: player.id === myId,
+      isLeader: player.id === crownId,
     }));
   });
 

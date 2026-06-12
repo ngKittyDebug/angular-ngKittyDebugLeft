@@ -20,6 +20,7 @@ const ALIVE_PLAYER: Player = {
   disconnectedAt: null,
   joinedAt: 0,
   effects: [],
+  scores: {},
 };
 
 const STATE: ServerState = { players: [ALIVE_PLAYER], items: [], tick: 0 };

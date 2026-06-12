@@ -79,6 +79,12 @@ export function createPlayer({
     status: 'alive',
     disconnectedAt: null,
     joinedAt: now,
-    effects: [],
+    // Spawn-protection ward: a brief shield on join/respawn so a fresh Pokémon can't be killed the instant it
+    // appears. Reuses the regular `shield` effect (same decay/damage immunity + bubble aura), just a shorter window.
+    // Only created here, so a network-blip reconnect (which restores the existing player, not re-creates) gets none.
+    effects: [{ kind: 'shield', expiresAt: now + FRENZY.shield.spawnShieldMs }],
+    // Sparse by contract (`Partial<Record<ScoreKind, number>>`): start empty — every reader coalesces a missing
+    // axis to 0, so there's nothing to seed and nothing to keep in sync with `ScoreKind` here.
+    scores: {},
   };
 }
