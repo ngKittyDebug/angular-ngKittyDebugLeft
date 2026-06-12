@@ -4,6 +4,7 @@ import { MainCatalogFacade } from './data/facades/main-catalog.facade';
 import { PokemonPaginationStorageService } from './data/services/pokemon-pagination-storage.service';
 import { PokemonPaginationService } from './data/services/pokemon-pagination.service';
 
+export const MAIN_PATH = '';
 export const mainCatalogRoutes: Routes = [
   {
     path: '',
