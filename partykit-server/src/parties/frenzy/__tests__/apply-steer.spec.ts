@@ -4,11 +4,13 @@ import { FRENZY } from '@game/frenzy/config';
 import type { Player, ServerState } from '@game/frenzy/types';
 
 import { applySteer } from '../engine/apply-steer';
+import { TEST_BODY } from './test-body';
 
 const PLAYER: Player = {
   id: 'p1',
   name: 'Ash',
   appearance: 'caterpie',
+  body: TEST_BODY,
   stage: 1,
   hp: 100,
   x: 0.5,
@@ -63,14 +65,15 @@ describe('applySteer', () => {
     expect(next.players[0].vx).toBeCloseTo(0.02 + FRENZY.steer.impulse, 5);
   });
 
-  it('caps the resulting speed at maxSpeed', () => {
-    const fast: Player = { ...PLAYER, vx: FRENZY.steer.maxSpeed, vy: 0 };
+  it('caps the resulting speed at the stage maxSpeed', () => {
+    const maxSpeed = TEST_BODY[PLAYER.stage].maxSpeed;
+    const fast: Player = { ...PLAYER, vx: maxSpeed, vy: 0 };
     const state = stateWith([fast]);
 
     const next = applySteer(state, PLAYER.id, 0.9, 0.5);
     const speed = Math.hypot(next.players[0].vx, next.players[0].vy);
 
-    expect(speed).toBeCloseTo(FRENZY.steer.maxSpeed, 5);
+    expect(speed).toBeCloseTo(maxSpeed, 5);
   });
 
   it('leaves other players untouched', () => {

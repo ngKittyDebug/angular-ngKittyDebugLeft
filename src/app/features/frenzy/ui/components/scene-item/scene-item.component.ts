@@ -19,4 +19,8 @@ import type { RenderedItem } from '../scene/scene-view-models';
 export class SceneItemComponent {
   public readonly item = input.required<RenderedItem>();
   public readonly clicked = output<MouseEvent>();
+
+  // Constant breathe cycle (ms) for the tumble's size-pulse — paired in the template with the per-item rotation
+  // duration so the spinning items don't all breathe at the same rate as they rotate.
+  protected readonly breatheMs = 2600;
 }

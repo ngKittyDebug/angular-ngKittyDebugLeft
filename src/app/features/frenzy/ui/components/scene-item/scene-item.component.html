@@ -1,3 +1,7 @@
+@if (item().landed) {
+  <span class="scene__item-shadow" aria-hidden="true"></span>
+}
+
 <button class="scene__item" type="button" (click)="clicked.emit($event)">
   <img
     class="scene__item-sprite"
@@ -7,7 +11,13 @@
     [class.scene__item-sprite--rock]="item().type === 'rock'"
     [class.scene__item-sprite--rotten]="item().type === 'rotten'"
     [class.scene__item-sprite--reverse]="item().type === 'bomb' && item().spinReverse"
-    [style.animation-duration.ms]="item().type === 'bomb' ? null : item().spinDurationMs"
+    [style.animation-duration]="
+      item().type === 'bomb'
+        ? null
+        : item().type === 'shield'
+          ? item().spinDurationMs + 'ms'
+          : item().spinDurationMs + 'ms, ' + breatheMs + 'ms'
+    "
     [style.animation-direction]="
       item().type === 'bomb' ? null : item().spinReverse ? 'reverse' : 'normal'
     "

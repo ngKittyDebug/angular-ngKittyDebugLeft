@@ -28,3 +28,10 @@ export const KELP_BLADES: readonly KelpBlade[] = [
 // Plant tints (theme-scoped vars from aquarium-theme.scss). Cycled in lockstep with KELP_BLADES by `index % 3`,
 // so a given silhouette always wears the same colour in both the scene and the minimap.
 export const KELP_COLORS = ['var(--aq-plant-a)', 'var(--aq-plant-b)', 'var(--aq-plant-c)'];
+
+// Slim-blade width (px) from its height: a fixed base plus a small fraction of the height, so taller fronds are
+// a touch broader without becoming ribbons. Shared by the in-world midground and backdrop layers (the foreground
+// uses a wider ~0.34 ratio of its own). Retune the blade silhouette proportions here once for both.
+export function kelpBladeWidth(height: number): number {
+  return Math.round(26 + height * 0.13);
+}

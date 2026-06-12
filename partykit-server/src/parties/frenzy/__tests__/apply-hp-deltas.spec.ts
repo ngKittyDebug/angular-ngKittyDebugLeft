@@ -4,12 +4,14 @@ import { FRENZY } from '@game/frenzy/config';
 import type { Player, ServerState } from '@game/frenzy/types';
 
 import { applyHpDeltas } from '../engine/apply-hp-deltas';
+import { TEST_BODY } from './test-body';
 
 function player(overrides: Partial<Player> = {}): Player {
   return {
     id: 'p1',
     name: 'Ash',
     appearance: 'caterpie',
+    body: TEST_BODY,
     stage: 1,
     hp: 100,
     x: 0.5,
@@ -55,6 +57,19 @@ describe('applyHpDeltas', () => {
 
     expect(result.state.players[0].stage).toBe(2);
     expect(result.events).toEqual([{ type: 'evolved', playerId: 'p1', newStage: 2 }]);
+  });
+
+  it('renormalizes velocity to the new stage cruising speed on evolution (keeping direction)', () => {
+    const moving = player({ hp: 195, stage: 1, vx: 0.04, vy: 0.03 });
+    const state = stateWith([moving]);
+
+    const result = applyHpDeltas(state, [{ playerId: 'p1', amount: 10 }]);
+    const { vx, vy } = result.state.players[0];
+    const cruise = TEST_BODY[2].speed;
+
+    expect(Math.hypot(vx, vy)).toBeCloseTo(cruise, 6);
+    // Direction preserved: components scale by the same factor.
+    expect(vy / vx).toBeCloseTo(0.03 / 0.04, 6);
   });
 
   it('clamps at zero, removes the player and emits fainted', () => {

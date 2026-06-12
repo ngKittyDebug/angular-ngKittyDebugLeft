@@ -3,12 +3,14 @@ import { describe, expect, it } from 'vitest';
 import { FRENZY } from '@game/frenzy/config';
 
 import { applyClick } from '../engine/apply-click';
+import { TEST_BODY } from './test-body';
 import type { Item, Player, ServerState } from '@game/frenzy/types';
 
 const PLAYER: Player = {
   id: 'p1',
   name: 'Ash',
   appearance: 'caterpie',
+  body: TEST_BODY,
   stage: 1,
   hp: 100,
   x: 0.5,
@@ -72,6 +74,7 @@ describe('applyClick', () => {
         delta: 10,
         x: 0.5,
         y: 0.5,
+        via: 'click',
       },
     ]);
   });
@@ -93,8 +96,9 @@ describe('applyClick', () => {
         delta: -10,
         x: 0.5,
         y: 0.5,
+        via: 'click',
       },
-      { type: 'fainted', playerId: 'p1' },
+      { type: 'fainted', playerId: 'p1', cause: { by: 'item', itemType: 'rotten' } },
     ]);
   });
 
@@ -150,6 +154,9 @@ describe('applyClick', () => {
         playerId: 'p1',
         effect: { kind: 'wellFed', expiresAt: 1000 + FRENZY.vitamin.decayPauseMs },
         itemId: 'i1',
+        x: 0.5,
+        y: 0.5,
+        via: 'click',
       },
     ]);
   });
@@ -177,6 +184,9 @@ describe('applyClick', () => {
         playerId: 'p1',
         effect: { kind: 'shield', expiresAt: 1000 + FRENZY.shield.shieldMs },
         itemId: 'i1',
+        x: 0.5,
+        y: 0.5,
+        via: 'click',
       },
     ]);
   });
@@ -198,6 +208,7 @@ describe('applyClick', () => {
         delta: 0,
         x: 0.5,
         y: 0.5,
+        via: 'click',
       },
     ]);
   });

@@ -5,8 +5,12 @@ import { FRENZY } from '@game/frenzy/config';
 
 import type { FaintedStats } from '../../../data/models/fainted-stats';
 import { FrenzyEffectsService } from '../../../data/services/frenzy-effects.service';
+import { PlayerPersistenceService } from '../../../data/services/player-persistence.service';
 import { FrenzyStatsStore } from '../../../data/store/frenzy-stats.store';
 import { FrenzyStore } from '../../../data/store/frenzy.store';
+import { bodyForAppearance, knownLine } from '../../constants/pokemon-registry';
+import { DeathEpitaphService } from '../../services/death-epitaph.service';
+import type { Epitaph } from '../../services/death-epitaph.service';
 import type { PickerSubmission } from '../pokemon-picker/pokemon-picker.component';
 import type { ItemClick } from '../scene/scene-view-models';
 
@@ -19,8 +23,10 @@ export class FrenzyPageFacade {
   private readonly breakpoint = inject(TUI_BREAKPOINT);
   private readonly destroyRef = inject(DestroyRef);
   private readonly effects = inject(FrenzyEffectsService);
+  private readonly epitaphs = inject(DeathEpitaphService);
   private readonly lastSubmission = signal<PickerSubmission | null>(null);
   private readonly nowMs = signal(Date.now());
+  private readonly persistence = inject(PlayerPersistenceService);
   private readonly stats = inject(FrenzyStatsStore);
   private readonly store = inject(FrenzyStore);
   private readonly cooldownLeftMs = computed(() => {
@@ -37,6 +43,8 @@ export class FrenzyPageFacade {
   public readonly cooldownSeconds = computed(() => Math.ceil(this.cooldownLeftMs() / 1000));
   public readonly disconnectedCount = this.store.disconnectedCount;
   public readonly evolvingPlayers = this.effects.evolvingPlayers;
+  public readonly hitBursts = this.effects.hitBursts;
+  public readonly ownedSparks = this.effects.ownedSparks;
   public readonly faintedStats = computed<FaintedStats>(() => ({
     eatenByType: this.stats.eatenByType(),
     lifespanSeconds: this.stats.lifespanSeconds(),
@@ -44,8 +52,14 @@ export class FrenzyPageFacade {
     maxStage: this.stats.maxStage(),
     totalEaten: this.stats.totalEaten(),
   }));
+  // Rolled once per death: the computed only re-runs when the captured cause/killer change (at the next faint),
+  // so the obituary phrase stays fixed while the modal re-renders on the respawn-cooldown ticker.
+  public readonly faintedEpitaph = computed<Epitaph>(() =>
+    this.epitaphs.compose(this.store.myFaintCause(), this.store.myKillerName()),
+  );
   public readonly orphanFloats = this.effects.orphanFloats;
   public readonly ownedFloats = this.effects.ownedFloats;
+  public readonly joinError = this.store.joinError;
   public readonly isMobile = computed(() => this.breakpoint() === 'mobile');
   public readonly items = computed(() => this.store.state()?.items ?? []);
   public readonly leaderboard = this.store.leaderboard;
@@ -105,16 +119,31 @@ export class FrenzyPageFacade {
   public join(payload: PickerSubmission): void {
     this.lastSubmission.set(payload);
     this.stats.startSession();
-    this.store.join(payload.name, payload.line);
+    this.store.join(payload.name, payload.line, bodyForAppearance(payload.line));
   }
 
   public respawn(): void {
-    const last = this.lastSubmission();
+    // Prefer this session's picker submission, but fall back to the persisted identity (name + appearance are
+    // saved on every join and survive a reload). Without this, reaching the fainted modal without having used
+    // the picker THIS session — e.g. a page reload while alive, where the player is restored from the server's
+    // grace window — left `lastSubmission` null and the button silently did nothing.
+    const submission = this.lastSubmission() ?? this.persistedSubmission();
 
-    if (last === null) {
+    if (submission === null) {
+      // No identity to rejoin with at all (truly fresh load straight into a fainted state) — open the picker
+      // instead of leaving the button dead.
+      this.chooseNew();
+
       return;
     }
 
-    this.join(last);
+    this.join(submission);
+  }
+
+  private persistedSubmission(): PickerSubmission | null {
+    const name = this.persistence.getName().trim();
+    const line = knownLine(this.persistence.getAppearance());
+
+    return name.length > 0 && line !== null ? { name, line } : null;
   }
 }

@@ -3,8 +3,10 @@ import { provideTranslocoScope } from '@jsverse/transloco';
 
 import { DetonationEffect } from './data/services/effects/detonation-effect.service';
 import { EatEffect } from './data/services/effects/eat-effect.service';
+import { EmissionSoundEffect } from './data/services/effects/emission-sound-effect.service';
 import { EvolutionEffect } from './data/services/effects/evolution-effect.service';
 import { FloatingMessagesStore } from './data/services/effects/floating-messages.store';
+import { HitBurstEffect } from './data/services/effects/hit-burst-effect.service';
 import { PlayerEffectsTracker } from './data/services/effects/player-effects-tracker.service';
 import { PresenceTracker } from './data/services/effects/presence-tracker.service';
 import { SelfMoodEffect } from './data/services/effects/self-mood-effect.service';
@@ -16,8 +18,11 @@ import { BadEatSoundService } from './data/services/sound/bad-eat-sound.service'
 import { BrickSoundService } from './data/services/sound/brick-sound.service';
 import { EasterEggSoundService } from './data/services/sound/easter-egg-sound.service';
 import { EatSoundService } from './data/services/sound/eat-sound.service';
+import { EggEmissionSoundService } from './data/services/sound/egg-emission-sound.service';
 import { EvolveSoundService } from './data/services/sound/evolve-sound.service';
 import { ExplosionSoundService } from './data/services/sound/explosion-sound.service';
+import { PoopEatSoundService } from './data/services/sound/poop-eat-sound.service';
+import { PoopEmissionSoundService } from './data/services/sound/poop-emission-sound.service';
 import { RockSoundService } from './data/services/sound/rock-sound.service';
 import { ShieldSoundService } from './data/services/sound/shield-sound.service';
 import { SoundSettingsService } from './data/services/sound/sound-settings.service';
@@ -25,6 +30,7 @@ import { WellFedSoundService } from './data/services/sound/well-fed-sound.servic
 import { FrenzyStatsStore } from './data/store/frenzy-stats.store';
 import { FrenzyStore } from './data/store/frenzy.store';
 import { FrenzyPageFacade } from './ui/components/frenzy-page/frenzy-page.facade';
+import { DeathEpitaphService } from './ui/services/death-epitaph.service';
 
 export const FRENZY_PATH = 'frenzy';
 export const frenzyRoutes: Routes = [
@@ -46,19 +52,25 @@ export const frenzyRoutes: Routes = [
       EatEffect,
       EvolutionEffect,
       DetonationEffect,
+      HitBurstEffect,
       PresenceTracker,
       PlayerEffectsTracker,
+      EmissionSoundEffect,
       SelfMoodEffect,
       FrenzyEffectsService,
       FrenzyPageFacade,
+      DeathEpitaphService,
       PlayerPersistenceService,
       AudioEngineService,
       BadEatSoundService,
       BrickSoundService,
       EasterEggSoundService,
       EatSoundService,
+      EggEmissionSoundService,
       EvolveSoundService,
       ExplosionSoundService,
+      PoopEatSoundService,
+      PoopEmissionSoundService,
       RockSoundService,
       ShieldSoundService,
       SoundSettingsService,

@@ -2,12 +2,14 @@ import { describe, expect, it } from 'vitest';
 
 import type { Player, ServerState } from '@game/frenzy/types';
 
+import { bodyForAppearance } from '../../ui/constants/pokemon-registry';
 import { applyServerMessage } from './apply-server-message';
 
 const PLAYER: Player = {
   id: 't1',
   name: 'Ash',
   appearance: 'caterpie',
+  body: bodyForAppearance('caterpie'),
   stage: 1,
   hp: 100,
   x: 0.5,
@@ -44,6 +46,7 @@ describe('applyServerMessage', () => {
       delta: 50,
       x: 0.5,
       y: 0.5,
+      via: 'click',
     });
 
     expect(next?.players[0].hp).toBe(150);
@@ -94,6 +97,9 @@ describe('applyServerMessage', () => {
       playerId: 't1',
       effect: { kind: 'shield', expiresAt: 9000 },
       itemId: 'v1',
+      x: 0.3,
+      y: 0.4,
+      via: 'click',
     });
 
     expect(next?.items).toHaveLength(0);
@@ -108,6 +114,9 @@ describe('applyServerMessage', () => {
       playerId: 't1',
       effect: { kind: 'shield', expiresAt: 9000 },
       itemId: 'gone',
+      x: 0.5,
+      y: 0.5,
+      via: 'click',
     });
 
     expect(next?.players[0].effects).toEqual([{ kind: 'shield', expiresAt: 9000 }]);

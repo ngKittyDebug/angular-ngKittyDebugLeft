@@ -8,7 +8,8 @@ const BURST_LIFETIME_MS = 1000;
 /**
  * Owns the short-lived decorative bubble-burst spawned at each press point: the rendered list, the removal
  * timers and their teardown. The scene computes the normalized press point (it owns the world rect) and hands it
- * here; the burst self-removes after its CSS animation.
+ * here; the burst self-removes after its CSS animation. This is the *miss* cue (open water); the dense converging
+ * variant for a successful hit is driven separately, server-confirmed, via `HitBurstEffect`.
  */
 @Injectable()
 export class SceneBurstsService {

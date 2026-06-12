@@ -3,18 +3,19 @@ import { describe, expect, it } from 'vitest';
 import { cameraScale, centerCameraAxis, clampCameraAxis, deadZoneCameraAxis } from './camera-math';
 
 describe('cameraScale', () => {
-  it('uses the cover floor when comfort would letterbox a tall viewport', () => {
-    // comfort = clamp(800/1700, .55, .85) = .55; cover = max(800/1700, 600/1000) = .6 → cover wins.
-    expect(cameraScale(800, 600, 1700, 1000)).toBeCloseTo(0.6);
+  it('uses the cover floor (height term × vertical-fill) when comfort would letterbox a tall viewport', () => {
+    // comfort = clamp(800/1700, .55, .85) = .55; cover = max(800/1700, 600/1000 × 1.25 = .75) = .75 → cover wins.
+    expect(cameraScale(800, 600, 1700, 1000)).toBeCloseTo(0.75);
   });
 
-  it('caps the comfort zoom-out at MAX_SCALE when cover is not binding', () => {
-    // comfort = clamp(1700/1700, .55, .85) = .85; cover = max(1, 1) = 1 → cover (1) wins here.
-    expect(cameraScale(1700, 1000, 1700, 1000)).toBeCloseTo(1);
+  it('over-zooms past native size via the vertical-fill cover so the camera can scroll down', () => {
+    // comfort = clamp(1700/1700, .55, .85) = .85; cover = max(1, 1 × 1.25) = 1.25 → cover (1.25) wins.
+    expect(cameraScale(1700, 1000, 1700, 1000)).toBeCloseTo(1.25);
   });
 
   it('grows past native size to cover a very large viewport', () => {
-    expect(cameraScale(3400, 2000, 1700, 1000)).toBeCloseTo(2);
+    // cover = max(3400/1700 = 2, 2000/1000 × 1.25 = 2.5) = 2.5 → the height term (with vertical-fill) wins.
+    expect(cameraScale(3400, 2000, 1700, 1000)).toBeCloseTo(2.5);
   });
 });
 
@@ -40,21 +41,34 @@ describe('centerCameraAxis', () => {
   it('centres the focus point', () => {
     expect(centerCameraAxis(0.5, 1000, 2000)).toBe(-500);
   });
+
+  it('letterbox-centres a world smaller than the viewport', () => {
+    // world (500) < viewport (1000) → clamp centres it: (1000 - 500) / 2 = 250.
+    expect(centerCameraAxis(0.5, 1000, 500)).toBe(250);
+  });
 });
 
 describe('deadZoneCameraAxis', () => {
   it('holds the current offset while the focus stays inside the band', () => {
-    // screen = 0.3*2000 + (-100) = 500, inside [250, 750] → unchanged.
-    expect(deadZoneCameraAxis(-100, 0.3, 1000, 2000)).toBe(-100);
+    // screen = 0.3*2000 + (-100) = 500, inside [350, 650] → unchanged.
+    expect(deadZoneCameraAxis(-100, 0.3, 1000, 2000, 0.35, 0.65)).toBe(-100);
   });
 
   it('pins the focus to the low edge once it crosses it', () => {
-    // screen = 0.2*2000 + (-300) = 100 < 250 → offset = 250 - 400 = -150.
-    expect(deadZoneCameraAxis(-300, 0.2, 1000, 2000)).toBe(-150);
+    // screen = 0.2*2000 + (-300) = 100 < 350 → offset = 350 - 400 = -50.
+    expect(deadZoneCameraAxis(-300, 0.2, 1000, 2000, 0.35, 0.65)).toBe(-50);
   });
 
   it('pins the focus to the high edge once it crosses it', () => {
-    // screen = 0.7*2000 + 0 = 1400 > 750 → offset = 750 - 1400 = -650.
-    expect(deadZoneCameraAxis(0, 0.7, 1000, 2000)).toBe(-650);
+    // screen = 0.7*2000 + 0 = 1400 > 650 → offset = 650 - 1400 = -750.
+    expect(deadZoneCameraAxis(0, 0.7, 1000, 2000, 0.35, 0.65)).toBe(-750);
+  });
+
+  it('a tighter (vertical) band starts following sooner than a wider (horizontal) one', () => {
+    // Same focus/offset: screen = 0.5*2000 + (-400) = 600. The wide X band [350,650] still holds it (600 inside),
+    // while the tighter Y band [420,580] has already been crossed (600 > 580) → it pins to the high edge:
+    // offset = 580 - 0.5*2000 = -420 (scrolled 20px further to keep the focus framed).
+    expect(deadZoneCameraAxis(-400, 0.5, 1000, 2000, 0.35, 0.65)).toBe(-400);
+    expect(deadZoneCameraAxis(-400, 0.5, 1000, 2000, 0.42, 0.58)).toBe(-420);
   });
 });

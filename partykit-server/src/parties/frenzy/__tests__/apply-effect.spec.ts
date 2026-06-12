@@ -3,11 +3,13 @@ import { describe, expect, it } from 'vitest';
 import type { Player, ServerState } from '@game/frenzy/types';
 
 import { applyEffects, resolveGrants } from '../engine/apply-effect';
+import { TEST_BODY } from './test-body';
 
 const PLAYER: Player = {
   id: 'p1',
   name: 'Ash',
   appearance: 'caterpie',
+  body: TEST_BODY,
   stage: 1,
   hp: 100,
   x: 0.5,
@@ -59,5 +61,32 @@ describe('applyEffects', () => {
     ]);
 
     expect(next.players[0].effects).toEqual([{ kind: 'shield', expiresAt: 9000 }]);
+  });
+
+  it('clears the opposite emit aura — laying and pooping never coexist', () => {
+    const laying: Player = { ...PLAYER, effects: [{ kind: 'laying', expiresAt: 6000 }] };
+    const next = applyEffects(stateWith([laying]), [
+      { playerId: 'p1', effect: { kind: 'pooping', expiresAt: 9000 } },
+    ]);
+
+    expect(next.players[0].effects).toEqual([{ kind: 'pooping', expiresAt: 9000 }]);
+  });
+
+  it('clears the opposite aura but keeps unrelated effects (shield survives a laying grant)', () => {
+    const mixed: Player = {
+      ...PLAYER,
+      effects: [
+        { kind: 'shield', expiresAt: 6000 },
+        { kind: 'pooping', expiresAt: 6000 },
+      ],
+    };
+    const next = applyEffects(stateWith([mixed]), [
+      { playerId: 'p1', effect: { kind: 'laying', expiresAt: 9000 } },
+    ]);
+
+    expect(next.players[0].effects).toEqual([
+      { kind: 'shield', expiresAt: 6000 },
+      { kind: 'laying', expiresAt: 9000 },
+    ]);
   });
 });

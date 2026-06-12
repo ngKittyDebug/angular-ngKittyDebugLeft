@@ -4,6 +4,7 @@ import { TranslocoTestingModule } from '@jsverse/transloco';
 import type { Stage } from '@game/frenzy/types';
 import { describe, expect, it } from 'vitest';
 
+import { bodyForAppearance } from '../../constants/pokemon-registry';
 import { CurrentPokemonStatusComponent } from './current-pokemon-status.component';
 
 function createFixture(
@@ -41,6 +42,8 @@ function createFixture(
   fixture.componentRef.setInput('name', inputs.name);
   fixture.componentRef.setInput('hp', inputs.hp);
   fixture.componentRef.setInput('stage', inputs.stage);
+  // gates 200/500 (matches the 500 next-evolution threshold the assertions below expect).
+  fixture.componentRef.setInput('body', bodyForAppearance('caterpie'));
   fixture.detectChanges();
 
   return fixture;

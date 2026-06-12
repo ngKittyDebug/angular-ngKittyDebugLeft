@@ -5,6 +5,7 @@ import { brickBehavior } from './brick';
 import { easterEggBehavior } from './easter-egg';
 import { eatBehavior } from './eat';
 import { gambleBehavior } from './mushroom';
+import { poopBehavior } from './poop';
 import { rockBehavior } from './rock';
 import { shieldBehavior } from './shield';
 import type { ItemBehavior } from './types';
@@ -25,6 +26,7 @@ const ITEM_BEHAVIORS: Record<ItemType, ItemBehavior> = {
   vitamin: vitaminBehavior,
   shield: shieldBehavior,
   easterEgg: easterEggBehavior,
+  poop: poopBehavior,
 };
 
 /** The per-type rules for an item: how it reacts to a click, a mid-air collision and hitting the floor. */

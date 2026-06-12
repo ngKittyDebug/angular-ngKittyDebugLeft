@@ -1,14 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
-import { FRENZY, halfExtentNorm } from '@game/frenzy/config';
+import { FRENZY, halfExtentNorm, restYFor } from '@game/frenzy/config';
 import type { Item, Player, ServerState } from '@game/frenzy/types';
 
 import { applyTick } from '../engine/apply-tick';
+import { TEST_BODY } from './test-body';
 
 const PLAYER: Player = {
   id: 'p1',
   name: 'Ash',
   appearance: 'caterpie',
+  body: TEST_BODY,
   stage: 1,
   hp: 100,
   x: 0.5,
@@ -69,6 +71,26 @@ describe('applyTick', () => {
     expect(stoppedRight.items[0].vx).toBe(0);
   });
 
+  it('advances a landing launched item by only the pre-touchdown fraction of the tick', () => {
+    // Start just above the item's hashed rest line so it touches down partway through this tick. The horizontal
+    // travel must be scaled to that fraction (`vx * (restY - y0) / vy`), NOT a full tick's `vx` — otherwise the
+    // item overshoots and snaps back on the next snapshot (the angled-near-floor "hop" bug this guards).
+    const restY = restYFor('i1');
+    const vy = 0.3;
+    const vx = -0.1;
+    const startY = restY - 0.01;
+    const launched = makeItem({ x: 0.5, y: startY, vx, vy });
+
+    const { state: next } = applyTick(stateWith([PLAYER], [launched]), 0.1, false);
+    const fractionX = 0.5 + vx * ((restY - startY) / vy);
+
+    expect(next.items[0].x).toBeCloseTo(fractionX, 5);
+    // Strictly less travel than a full-tick advance (0.5 + vx * dt = 0.49) — proves the fraction is applied.
+    expect(next.items[0].x).toBeGreaterThan(0.49);
+    expect(next.items[0].y).toBeCloseTo(restY, 5);
+    expect(next.items[0].vy).toBe(0);
+  });
+
   it('leaves a plain item (no vx) horizontally fixed', () => {
     const { state: next } = applyTick(
       stateWith([PLAYER], [makeItem({ x: 0.5, vy: 0.3 })]),
@@ -80,13 +102,14 @@ describe('applyTick', () => {
     expect(next.items[0].vx).toBeUndefined();
   });
 
-  it('settles an item on the floor and starts its rest timer when it reaches the bottom', () => {
-    const state = stateWith([PLAYER], [makeItem({ y: 0.95, vy: 0.3 })]);
+  it('settles an item on its per-item seabed line and starts its rest timer when it reaches the floor', () => {
+    const state = stateWith([PLAYER], [makeItem({ y: 0.8, vy: 0.3 })]);
 
     const { state: next } = applyTick(state, 0.5, false);
 
     expect(next.items).toHaveLength(1);
-    expect(next.items[0].y).toBe(1);
+    // Settles at the hashed rest line for this id (within itemRestYRange), not a flat y=1.
+    expect(next.items[0].y).toBeCloseTo(restYFor('i1', FRENZY.itemRestYRange), 5);
     expect(next.items[0].vy).toBe(0);
     expect(next.items[0].restMs).toBe(FRENZY.itemRestMs);
   });
@@ -124,7 +147,7 @@ describe('applyTick', () => {
     const { state: next, events } = applyTick(state, 0.1, true);
 
     expect(next.players).toHaveLength(0);
-    expect(events).toEqual([{ type: 'fainted', playerId: 'p1' }]);
+    expect(events).toEqual([{ type: 'fainted', playerId: 'p1', cause: { by: 'decay' } }]);
   });
 
   it('drifts a player by velocity * delta on a non-decay tick', () => {
@@ -175,6 +198,7 @@ describe('applyTick', () => {
       delta: FRENZY.itemEffects.food,
       x: 0.5,
       y: 0.6,
+      via: 'collision',
     });
   });
 
@@ -207,10 +231,12 @@ describe('applyTick', () => {
   });
 
   it('gives a bigger (evolved) Pokémon a wider catch reach', () => {
-    // 0.075 * world.width (1600) = 120px: inside a stage-3 reach but outside a stage-1 reach.
+    // 120px horizontal gap (derived from world.width so it survives a world resize): inside a stage-3 reach
+    // (135px) but outside a stage-1 reach (99px).
+    const itemX = 0.5 + 120 / FRENZY.world.width;
     const small: Player = { ...PLAYER, stage: 1, x: 0.5, y: 0.6 };
     const smallRun = applyTick(
-      stateWith([small], [makeItem({ type: 'food', x: 0.575, y: 0.6, vy: 0 })]),
+      stateWith([small], [makeItem({ type: 'food', x: itemX, y: 0.6, vy: 0 })]),
       0.1,
       false,
     );
@@ -219,7 +245,7 @@ describe('applyTick', () => {
 
     const big: Player = { ...PLAYER, stage: 3, x: 0.5, y: 0.6 };
     const bigRun = applyTick(
-      stateWith([big], [makeItem({ type: 'food', x: 0.575, y: 0.6, vy: 0 })]),
+      stateWith([big], [makeItem({ type: 'food', x: itemX, y: 0.6, vy: 0 })]),
       0.1,
       false,
     );
@@ -229,7 +255,8 @@ describe('applyTick', () => {
 
   it('an owned (emitted) item skips its owner but still collides with a rival', () => {
     const owner: Player = { ...PLAYER, id: 'owner', x: 0.5, y: 0.6 };
-    const rival: Player = { ...PLAYER, id: 'rival', x: 0.56, y: 0.6 };
+    // 60px from the item (derived from world.width) — comfortably inside a stage-1 reach (99px) on any world size.
+    const rival: Player = { ...PLAYER, id: 'rival', x: 0.5 + 60 / FRENZY.world.width, y: 0.6 };
     const ownedFood = makeItem({ type: 'food', x: 0.5, y: 0.6, vy: 0, ownerId: 'owner' });
     const { state: next, events } = applyTick(stateWith([owner, rival], [ownedFood]), 0.1, false);
 
@@ -346,6 +373,9 @@ describe('applyTick', () => {
       playerId: 'p1',
       effect: { kind: 'wellFed', expiresAt: 1000 + FRENZY.vitamin.decayPauseMs },
       itemId: 'i1',
+      x: 0.5,
+      y: 0.6,
+      via: 'collision',
     });
   });
 
@@ -398,6 +428,10 @@ describe('applyTick', () => {
 
     expect(next.items).toHaveLength(0);
     expect(next.players).toHaveLength(0);
-    expect(events).toContainEqual({ type: 'fainted', playerId: 'p1' });
+    expect(events).toContainEqual({
+      type: 'fainted',
+      playerId: 'p1',
+      cause: { by: 'item', itemType: 'rock' },
+    });
   });
 });

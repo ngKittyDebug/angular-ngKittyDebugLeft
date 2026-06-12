@@ -2,12 +2,14 @@ import { describe, expect, it } from 'vitest';
 
 import type { Player } from '@game/frenzy/types';
 
+import { bodyForAppearance } from '../../constants/pokemon-registry';
 import { PlayerExtrapolatorService } from './player-extrapolator.service';
 
 function player(partial: Partial<Player> & Pick<Player, 'id'>): Player {
   return {
     name: 'Ash',
     appearance: 'pidgey',
+    body: bodyForAppearance('pidgey'),
     stage: 1,
     hp: 100,
     x: 0.5,

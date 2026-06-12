@@ -4,11 +4,13 @@ import { FRENZY } from '@game/frenzy/config';
 import type { Player } from '@game/frenzy/types';
 
 import { createPlayer } from '../engine/create-player';
+import { TEST_BODY } from './test-body';
 
 const occupiedPlayer = (overrides: Partial<Player>): Player => ({
   id: 'p1',
   name: 'Ash',
   appearance: 'caterpie',
+  body: TEST_BODY,
   stage: 1,
   hp: 100,
   x: 0.5,
@@ -28,6 +30,7 @@ describe('createPlayer', () => {
       sessionToken: 'tok-1',
       name: 'Ash',
       appearance: 'caterpie',
+      body: TEST_BODY,
       now: 1700000000,
       rng: () => 0,
     });
@@ -50,6 +53,7 @@ describe('createPlayer', () => {
       sessionToken: 'tok-1',
       name: 'Ash',
       appearance: 'pidgey',
+      body: TEST_BODY,
       now: 0,
     });
 
@@ -59,15 +63,16 @@ describe('createPlayer', () => {
     expect(player.y).toBeLessThanOrEqual(maxY);
   });
 
-  it('gives the player an initial velocity with magnitude playerDriftSpeed', () => {
+  it('gives the player an initial velocity with magnitude of stage-1 cruising speed', () => {
     const player = createPlayer({
       sessionToken: 'tok-1',
       name: 'Ash',
       appearance: 'pidgey',
+      body: TEST_BODY,
       now: 0,
     });
 
-    expect(Math.hypot(player.vx, player.vy)).toBeCloseTo(FRENZY.playerDriftSpeed, 6);
+    expect(Math.hypot(player.vx, player.vy)).toBeCloseTo(TEST_BODY[1].speed, 6);
   });
 
   it('keeps at least playerSpawnMinDistance from existing players when a free spot is found', () => {
@@ -79,6 +84,7 @@ describe('createPlayer', () => {
       sessionToken: 'tok-2',
       name: 'Misty',
       appearance: 'pidgey',
+      body: TEST_BODY,
       now: 0,
       existingPlayers: [occupied],
       rng,

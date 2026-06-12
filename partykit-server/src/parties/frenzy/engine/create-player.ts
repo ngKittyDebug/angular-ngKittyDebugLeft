@@ -1,10 +1,13 @@
 import { FRENZY } from '@game/frenzy/config';
-import type { Player } from '@game/frenzy/types';
+import type { Player, PlayerBody } from '@game/frenzy/types';
+
+import { calculateStage } from './calculate-stage';
 
 export interface CreatePlayerInput {
   sessionToken: string;
   name: string;
   appearance: string;
+  body: PlayerBody;
   now: number;
   existingPlayers?: readonly Player[];
   rng?: () => number;
@@ -50,23 +53,29 @@ export function createPlayer({
   sessionToken,
   name,
   appearance,
+  body,
   now,
   existingPlayers = [],
   rng = Math.random,
 }: CreatePlayerInput): Player {
   const { x, y } = pickSpawnPoint(existingPlayers, rng);
   const angle = rng() * Math.PI * 2;
+  // Stage and cruising speed come from the player's own descriptor, not a global — startingHp picks the entry
+  // stage via its hp gates, and that stage's `speed` sets the initial drift magnitude.
+  const stage = calculateStage(FRENZY.startingHp, body);
+  const speed = body[stage].speed;
 
   return {
     id: sessionToken,
     name,
     appearance,
-    stage: 1,
+    body,
+    stage,
     hp: FRENZY.startingHp,
     x,
     y,
-    vx: Math.cos(angle) * FRENZY.playerDriftSpeed,
-    vy: Math.sin(angle) * FRENZY.playerDriftSpeed,
+    vx: Math.cos(angle) * speed,
+    vy: Math.sin(angle) * speed,
     status: 'alive',
     disconnectedAt: null,
     joinedAt: now,

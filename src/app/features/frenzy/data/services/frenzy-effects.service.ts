@@ -3,9 +3,11 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { DetonationEffect } from './effects/detonation-effect.service';
 import { EatEffect } from './effects/eat-effect.service';
+import { EmissionSoundEffect } from './effects/emission-sound-effect.service';
 import { EvolutionEffect } from './effects/evolution-effect.service';
 import type { FrenzyEffect } from './effects/frenzy-effect';
 import { FloatingMessagesStore } from './effects/floating-messages.store';
+import { HitBurstEffect } from './effects/hit-burst-effect.service';
 import { PlayerEffectsTracker } from './effects/player-effects-tracker.service';
 import { PresenceTracker } from './effects/presence-tracker.service';
 import { SelfMoodEffect } from './effects/self-mood-effect.service';
@@ -24,20 +26,26 @@ export class FrenzyEffectsService {
   private readonly eat = inject(EatEffect);
   private readonly evolution = inject(EvolutionEffect);
   private readonly detonation = inject(DetonationEffect);
+  private readonly hitBurst = inject(HitBurstEffect);
   private readonly presence = inject(PresenceTracker);
   private readonly playerEffects = inject(PlayerEffectsTracker);
+  private readonly emissionSound = inject(EmissionSoundEffect);
   private readonly selfMood = inject(SelfMoodEffect);
   private readonly handlers: readonly FrenzyEffect[] = [
     this.eat,
     this.evolution,
     this.detonation,
+    this.hitBurst,
     this.presence,
     this.playerEffects,
+    this.emissionSound,
   ];
 
   public readonly ownedFloats = this.floats.ownedMessages;
   public readonly orphanFloats = this.floats.orphanMessages;
   public readonly blasts = this.detonation.blasts;
+  public readonly hitBursts = this.hitBurst.hitBursts;
+  public readonly ownedSparks = this.hitBurst.ownedSparks;
   public readonly evolvingPlayers = this.evolution.evolvingPlayers;
 
   public constructor() {

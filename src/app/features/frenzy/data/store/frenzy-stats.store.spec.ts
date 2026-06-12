@@ -10,7 +10,17 @@ import { FrenzyStore } from './frenzy.store';
 import { FrenzySocketService } from '../services/frenzy-socket.service';
 
 function eaten(playerId: string, itemType: ItemType, newHp: number): ServerMessage {
-  return { type: 'eaten', itemId: 'i', itemType, playerId, newHp, delta: 10, x: 0.5, y: 0.5 };
+  return {
+    type: 'eaten',
+    itemId: 'i',
+    itemType,
+    playerId,
+    newHp,
+    delta: 10,
+    x: 0.5,
+    y: 0.5,
+    via: 'click',
+  };
 }
 
 describe('FrenzyStatsStore', () => {
@@ -60,6 +70,7 @@ describe('FrenzyStatsStore', () => {
       vitamin: 0,
       shield: 0,
       easterEgg: 0,
+      poop: 0,
     });
     expect(store.totalEaten()).toBe(4);
     expect(store.maxHp()).toBe(150);

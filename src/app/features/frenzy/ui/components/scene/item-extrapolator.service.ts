@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 
-import { FRENZY, halfExtentNorm } from '@game/frenzy/config';
+import { FRENZY, halfExtentNorm, restYFor } from '@game/frenzy/config';
 import type { Item } from '@game/frenzy/types';
 
 import { spinFor } from './item-spin';
@@ -90,11 +90,14 @@ export class ItemExtrapolatorService {
       const vy = baseline?.vy ?? item.vy;
       const vStart = baseline?.vStart ?? now;
 
-      const y = Math.min(1, y0 + vy * ((now - vStart) / 1000));
+      // Per-item seabed line (same hash the server settles at, so the fall stops at the identical y — no snap on
+      // the confirming snapshot, and settled items scatter rather than stack on y=1).
+      const restY = restYFor(item.id);
+      const y = Math.min(restY, y0 + vy * ((now - vStart) / 1000));
       // Horizontal stops the moment the item lands: clamp the horizontal clock at the landing instant
-      // (when `y` would reach 1), so a launched item rides its arc down then sticks where it touches the
+      // (when `y` would reach `restY`), so a launched item rides its arc down then sticks where it touches the
       // floor instead of sliding. A server-rested item (restMs set) is already frozen at its anchor `x0`.
-      const landTimeMs = vy > 0 ? vStart + ((1 - y0) / vy) * 1000 : now;
+      const landTimeMs = vy > 0 ? vStart + ((restY - y0) / vy) * 1000 : now;
       const hEnd = item.restMs === undefined ? Math.min(now, landTimeMs) : hStart;
       const x = Math.min(
         Math.max(x0 + vx * (Math.max(0, hEnd - hStart) / 1000), ITEM_HALF_WIDTH),
@@ -107,8 +110,8 @@ export class ItemExtrapolatorService {
         type: item.type,
         x,
         y,
-        // Reached the floor (rendered or server-rested) → freeze the tumble.
-        landed: y >= 1 || item.restMs !== undefined,
+        // Reached its seabed line (rendered or server-rested) → freeze the tumble.
+        landed: y >= restY || item.restMs !== undefined,
         spinDurationMs: spin.durationMs,
         spinReverse: spin.reverse,
       };

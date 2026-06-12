@@ -1,7 +1,7 @@
 import type * as Party from 'partykit/server';
 
 import { FRENZY } from '@game/frenzy/config';
-import type { Item, Player, ServerMessage, ServerState } from '@game/frenzy/types';
+import type { Item, Player, PlayerBody, ServerMessage, ServerState } from '@game/frenzy/types';
 
 import { applyClick } from './engine/apply-click';
 import { applyEmissions } from './engine/apply-emissions';
@@ -13,6 +13,7 @@ import { markDisconnected } from './engine/mark-disconnected';
 import { pickItemType } from './engine/pick-item-type';
 import { restoreConnected } from './engine/restore-connected';
 import { parseClientMessage } from './parse-client-message';
+import { validateJoin } from './validate-join';
 
 const TICK_INTERVAL_MS = 1000 / FRENZY.tickRateHz;
 const TICK_DELTA_SECONDS = 1 / FRENZY.tickRateHz;
@@ -71,7 +72,7 @@ export default class FeedingRoom implements Party.Server {
         break;
       }
       case 'join': {
-        this.handleJoin(sender.id, message.name, message.appearance);
+        this.handleJoin(sender, message.name, message.appearance, message.body);
         break;
       }
       case 'leave': {
@@ -274,8 +275,13 @@ export default class FeedingRoom implements Party.Server {
     this.log(`[party] rejoined: ${connectionId} (session=${sessionToken})`);
   }
 
-  private handleJoin(connectionId: string, name: string, appearance: string): void {
-    const sessionToken = this.connectionToSession.get(connectionId);
+  private handleJoin(
+    conn: Party.Connection,
+    name: string,
+    appearance: string,
+    body: PlayerBody,
+  ): void {
+    const sessionToken = this.connectionToSession.get(conn.id);
 
     if (sessionToken === undefined) {
       return;
@@ -285,10 +291,19 @@ export default class FeedingRoom implements Party.Server {
       return;
     }
 
+    const reason = validateJoin(name, appearance, body);
+
+    if (reason !== null) {
+      this.sendTo(conn, { type: 'joinRejected', reason });
+
+      return;
+    }
+
     const player = createPlayer({
       sessionToken,
       name: name.trim().slice(0, 24),
       appearance,
+      body,
       now: Date.now(),
       existingPlayers: this.players,
     });

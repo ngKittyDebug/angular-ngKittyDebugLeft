@@ -106,6 +106,7 @@ const ITEM_DOT_COLOR: Record<ItemType, string> = {
   vitamin: 'var(--tui-status-info)',
   shield: '#22d3ee',
   easterEgg: '#f0932b',
+  poop: '#7a5230',
 };
 
 @Component({

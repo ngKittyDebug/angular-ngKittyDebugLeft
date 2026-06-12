@@ -8,8 +8,8 @@ describe('spinFor', () => {
   });
 
   it('derives a stable spin from the id for a tumbling item', () => {
-    // hash('a') = 97 → magnitude 97; spin = 2500 + 97 % 3500 = 2597; reverse = 97 & 1 = 1.
-    expect(spinFor('a', 'food')).toEqual({ durationMs: 2597, reverse: true });
+    // hash('a') = 97 → magnitude 97; spin = 1800 + 97 % 3700 = 1897; reverse = 97 & 1 = 1.
+    expect(spinFor('a', 'food')).toEqual({ durationMs: 1897, reverse: true });
   });
 
   it('uses the shorter sway range for the shield', () => {
@@ -21,8 +21,8 @@ describe('spinFor', () => {
     for (const id of ['x', 'yy', 'item-1', 'item-2', 'zzzzz']) {
       const spin = spinFor(id, 'rock');
 
-      expect(spin.durationMs).toBeGreaterThanOrEqual(2500);
-      expect(spin.durationMs).toBeLessThan(6000);
+      expect(spin.durationMs).toBeGreaterThanOrEqual(1800);
+      expect(spin.durationMs).toBeLessThan(5500);
 
       const sway = spinFor(id, 'shield');
 

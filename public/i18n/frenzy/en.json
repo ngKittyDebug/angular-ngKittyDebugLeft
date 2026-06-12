@@ -11,13 +11,17 @@
       "starving": "Starving"
     }
   },
+  "joinError": {
+    "invalidName": "Please enter a name.",
+    "invalidAppearance": "That Pokémon isn't available — pick another.",
+    "invalidBody": "Something's off with that Pokémon. Pick another."
+  },
   "faintedModal": {
-    "title": "Pokémon fainted!",
     "lifespan": "Survived",
     "lifespanValue": "{{seconds}} s",
     "maxHp": "Peak HP",
     "maxStage": "Top stage",
-    "totalEaten": "Items eaten",
+    "totalEaten": "Caught",
     "items": {
       "food": "Good berries",
       "rotten": "Rotten berries",
@@ -28,9 +32,76 @@
       "crumb": "Crumbs",
       "mushroom": "Mushrooms"
     },
+    "obituary": {
+      "unknown": {
+        "0": "Cause of death murky as deep-sea silt.",
+        "1": "Just up and fainted. It happens.",
+        "2": "The end came suddenly, no explanation given."
+      },
+      "decay": {
+        "0": "Forgot to eat and quietly dissolved into the deep.",
+        "1": "Hunger won — sailed off on an empty stomach.",
+        "2": "Spent too long deciding what to eat. Never did.",
+        "3": "Withered down to plankton and drifted away."
+      },
+      "rock": {
+        "0": "Mistook a rock for candy. Bad call.",
+        "1": "Rock to the noggin — and up it went, belly first.",
+        "2": "Geology, it turns out, is an inedible subject."
+      },
+      "brick": {
+        "0": "Caught a brick. Old-school playground style.",
+        "1": "A brick is not a snack. Learned that too late.",
+        "2": "The brick to the face made the highlight reel."
+      },
+      "rotten": {
+        "0": "Ate something rotten and never resurfaced.",
+        "1": "The expiry date, it turns out, was no joke.",
+        "2": "Stomach went on strike after that rotten berry.",
+        "3": "A tasting tour of spoilage ended in an obituary."
+      },
+      "bomb": {
+        "0": "Found a mine. The mine found them right back.",
+        "1": "Swam up to a bomb out of curiosity. Curiosity exploded.",
+        "2": "Kaboom — only a trail of bubbles remains.",
+        "3": "A sapper errs but once. This was the once."
+      },
+      "mushroom": {
+        "0": "Played mushroom roulette and lost.",
+        "1": "The mushroom was, sadly, the wrong mushroom.",
+        "2": "Gambled on a shroom. Luck firmly said no."
+      },
+      "item": {
+        "0": "Ate something. Something went horribly wrong.",
+        "1": "An unlucky run-in with a falling object.",
+        "2": "Picked up exactly the wrong thing."
+      },
+      "killer": {
+        "bomb": {
+          "0": "Blown sky-high by a mine {{killer}} dropped.",
+          "1": "{{killer}} mined the water — and it paid off.",
+          "2": "Thanks to {{killer}} for the fireworks. Very bright."
+        },
+        "thrown": {
+          "0": "{{killer}} pelted them with rocks. Ten-out-of-ten aim.",
+          "1": "Got a heavy little gift from {{killer}}. Rough day.",
+          "2": "{{killer}} proved throwing things is a fine art."
+        },
+        "generic": {
+          "0": "Fell to {{killer}}'s treacherous little offering.",
+          "1": "{{killer}} served a treat with a surprise inside. It worked.",
+          "2": "{{killer}} had a definite paw in this demise."
+        }
+      }
+    },
     "respawn": "Play again",
     "chooseNew": "Choose new Pokémon",
     "cooldownHint": "Ready in {{seconds}} s"
+  },
+  "disconnectedModal": {
+    "ariaLabel": "Connection lost",
+    "title": "Connection lost",
+    "message": "Trying to reconnect…"
   },
   "presence": {
     "online": "{{count}} online",
@@ -48,7 +119,7 @@
     "ariaLabel": "Leaderboard, top 5 players by HP",
     "empty": "No challengers yet",
     "you": "You",
-    "disconnectedHint": "Disconnected — may return within 15s",
+    "disconnectedHint": "Disconnected — may return within 1 min",
     "stageHint": "Evolution stage {{stage}}"
   },
   "sound": {
@@ -196,6 +267,12 @@
         "1": "Laying eggs!",
         "2": "Surprise!",
         "3": "Spewing stuff!"
+      },
+      "pooping": {
+        "0": "Oh crap!",
+        "1": "Spewing poop!",
+        "2": "Stinky!",
+        "3": "Number two!"
       }
     }
   }

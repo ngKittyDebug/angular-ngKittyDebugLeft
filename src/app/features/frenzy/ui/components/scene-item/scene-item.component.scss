@@ -1,13 +1,15 @@
 // Host is the positioned anchor the scene-position directive drives (it writes the `translate` CSS property);
-// `transform` is the static bottom-edge anchor so `y` is the item's foot (fully visible falling, resting wholly
-// on the floor at y=1). The clickable, padded button fills the host.
+// `transform` is the static centre anchor so `y` is the item's CENTRE — matching how the server treats item.y
+// in collision/blast (and how players are anchored), so the rendered sprite lines up with its hitbox. Resting
+// items still sit on the seabed because `itemRestYRange` is raised by half the item height to compensate. The
+// clickable, padded button fills the host.
 :host {
   position: absolute;
   top: 0;
   left: 0;
   z-index: 1;
   display: block;
-  transform: translate(-50%, -100%);
+  transform: translate(-50%, -50%);
 }
 
 .scene__item {
@@ -65,12 +67,15 @@
   -webkit-user-drag: none;
 }
 
-// Tumble while falling — duration and direction (animation-direction) are set per item inline so each spins at
-// its own speed, clockwise or counter-clockwise. The bomb opts out to keep its fuse readable.
+// Tumble while falling — two independent animations: an UNEVEN rotation (`scene-item-tumble`, on `transform`) so
+// the item speeds up and slows through each turn rather than spinning mechanically, plus a gentle size "breathe"
+// (`scene-item-breathe`, on the `scale` property so it never fights the rotation). Per item, the inline style
+// sets both durations (rotation = the id-derived `spinDurationMs`, breathe = a constant) and the shared
+// direction. The bomb opts out of the tumble (keeps the steady `scene-item-spin` so its fuse stays readable).
 .scene__item-sprite--spin {
-  animation-name: scene-item-spin;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
+  animation-name: scene-item-tumble, scene-item-breathe;
+  animation-timing-function: linear, ease-in-out;
+  animation-iteration-count: infinite, infinite;
 }
 
 // The shield opts out of the full tumble — a buff pickup reads better hovering upright. Instead it rocks gently
@@ -104,6 +109,38 @@
   }
 }
 
+// Uneven full turn (linear timing, but the angle is bunched): the item lingers near 65% then whips through the
+// last third, reading as a livelier wobble-tumble rather than a constant-rate spin.
+@keyframes scene-item-tumble {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  30% {
+    transform: rotate(150deg);
+  }
+
+  65% {
+    transform: rotate(200deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+// Soft size breathing (on `scale`, independent of the rotation `transform`), gentler than the bomb's pulse.
+@keyframes scene-item-breathe {
+  0%,
+  100% {
+    scale: 0.97;
+  }
+
+  50% {
+    scale: 1.04;
+  }
+}
+
 @keyframes scene-item-bomb-pulse {
   0%,
   100% {
@@ -123,5 +160,48 @@
 
   50% {
     transform: rotate(12deg);
+  }
+}
+
+// Soft shadow a RESTING item casts on the sand (shown only while `landed`). A blurred theme-aware ellipse drawn
+// BEHIND the sprite (z-index: -1) at the item's foot, peeking out around its base. Theme colour comes from
+// `--aq-item-shadow` (warm on the tan shallows, deep on the violet silt). Static aside from a short fade-in; it
+// lives and dies with the item (no timers) and rides the world/camera like the item. Reduced-motion skips the fade.
+.scene__item-shadow {
+  position: absolute;
+  // Lifted up to the sprite's base (the host foot is ~12px below the sprite art due to the button padding, so a
+  // foot-anchored shadow looked detached below a floating item). Size is driven by the item SPRITE size
+  // (`--scene-item-size`), not weight — a flat ellipse a touch wider than the sprite so it reads as the item
+  // sitting in it.
+  bottom: 6px;
+  left: 50%;
+  z-index: -1;
+  width: calc(var(--scene-item-size, 60px) * 1.55);
+  height: calc(var(--scene-item-size, 60px) * 0.32);
+  transform: translateX(-50%);
+  background: radial-gradient(
+    50% 50% at 50% 50%,
+    var(--aq-item-shadow, rgba(0, 0, 0, 0.35)) 0%,
+    transparent 72%
+  );
+  border-radius: 50%;
+  filter: blur(1.5px);
+  pointer-events: none;
+  animation: scene-item-shadow-in 150ms ease-out;
+}
+
+@keyframes scene-item-shadow-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene__item-shadow {
+    animation: none;
   }
 }

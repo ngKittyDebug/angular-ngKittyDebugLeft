@@ -8,6 +8,7 @@ import { BadEatSoundService } from '../sound/bad-eat-sound.service';
 import { BrickSoundService } from '../sound/brick-sound.service';
 import { EatSoundService } from '../sound/eat-sound.service';
 import { RockSoundService } from '../sound/rock-sound.service';
+import { bodyForAppearance } from '../../../ui/constants/pokemon-registry';
 import { FrenzyStore } from '../../store/frenzy.store';
 import { EatEffect } from './eat-effect.service';
 import { FloatingMessagesStore } from './floating-messages.store';
@@ -17,6 +18,7 @@ function player(id: string, name: string): Player {
     id,
     name,
     appearance: 'pidgey',
+    body: bodyForAppearance('pidgey'),
     stage: 1,
     hp: 100,
     x: 0.5,
@@ -40,6 +42,7 @@ function eaten(partial: Partial<Extract<ServerMessage, { type: 'eaten' }>> = {})
     delta: 10,
     x: 0.9,
     y: 0.8,
+    via: 'click',
     ...partial,
   };
 }

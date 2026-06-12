@@ -13,12 +13,24 @@ export const BUFFS = {
    * centre) and is launched backward at `emitBackSpeed` (opposite the heading) — it sprays out behind, like it's
    * being flung. Emitted items carry the layer's `ownerId`, so they never collide with or blast their owner. */
   easterEgg: {
-    durationMs: 8000,
-    emitChancePerTick: 0.12,
+    durationMs: 10_000,
+    emitChancePerTick: 0.15,
     hpOnPickup: 10,
     emitBack: 0.05,
     emitDown: 0.03,
-    emitBackSpeed: 0.12,
+    emitBackSpeed: 0.1,
+  },
+  /** Poop: the cursed twin of the easter egg. Eating it deals `hpOnPickup` (negative) damage and grants `pooping`
+   * for `durationMs` — same emission loop as `laying`, but the Pokémon only sprays rock/brick/bomb (the nasty pool)
+   * out behind itself each tick at `emitChancePerTick`. Shares the egg's launch geometry (`emitBack`/`emitDown`/
+   * `emitBackSpeed`). Emitted items carry the layer's `ownerId`, so they never collide with or blast their owner. */
+  poop: {
+    durationMs: 10_000,
+    emitChancePerTick: 0.15,
+    hpOnPickup: -10,
+    emitBack: 0.05,
+    emitDown: 0.03,
+    emitBackSpeed: 0.1,
   },
   /** Bomb tunables: a slow-falling item juggled by clicks that explodes on contact, hitting everyone in range (incl. its owner). */
   bomb: {

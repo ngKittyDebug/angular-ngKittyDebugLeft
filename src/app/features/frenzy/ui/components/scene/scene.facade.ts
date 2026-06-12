@@ -6,6 +6,7 @@ import { ItemExtrapolatorService } from './item-extrapolator.service';
 import { PlayerExtrapolatorService } from './player-extrapolator.service';
 import { SceneBurstsService } from './scene-bursts.service';
 import { SceneCameraService } from './scene-camera.service';
+import { SceneSandPuffsService } from './scene-sand-puffs.service';
 
 /**
  * Single entry point for the scene's render-loop logic, grouping the extrapolation, camera and burst services so
@@ -18,10 +19,12 @@ export class SceneFacade {
   private readonly players = inject(PlayerExtrapolatorService);
   private readonly camera = inject(SceneCameraService);
   private readonly burstsService = inject(SceneBurstsService);
+  private readonly sandPuffsService = inject(SceneSandPuffsService);
 
   public readonly renderedItems = this.items.rendered;
   public readonly renderedPlayers = this.players.rendered;
   public readonly bursts = this.burstsService.bursts;
+  public readonly sandPuffs = this.sandPuffsService.puffs;
 
   public ingestItems(items: readonly Item[], now: number): void {
     this.items.ingest(items, now);
@@ -38,6 +41,8 @@ export class SceneFacade {
 
   public tickItems(items: readonly Item[], now: number): void {
     this.items.tick(items, now);
+    // Rising-edge sand puffs are driven off the freshly extrapolated items (touchdowns), so detect right after.
+    this.sandPuffsService.observe(this.items.rendered());
   }
 
   public tickPlayers(
@@ -53,8 +58,9 @@ export class SceneFacade {
     world: HTMLElement,
     parallaxNear: HTMLElement | undefined,
     parallaxMid: HTMLElement | undefined,
+    foregroundKelp: HTMLElement | undefined,
   ): void {
-    this.camera.update(world, parallaxNear, parallaxMid);
+    this.camera.update(world, parallaxNear, parallaxMid, foregroundKelp);
   }
 
   public spawnBurst(x: number, y: number): void {

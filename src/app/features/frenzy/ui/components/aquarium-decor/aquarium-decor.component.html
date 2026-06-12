@@ -38,8 +38,10 @@
         [style.color]="plant.color"
         [style.z-index]="plant.zIndex"
         [style.--h]="plant.height + 'px'"
+        [style.--w]="plant.width + 'px'"
+        [style.--root]="plant.root + '%'"
         [style.--rot]="plant.rotation + 'deg'"
-        [style.filter]="'brightness(' + plant.brightness + ')'"
+        [style.filter]="'brightness(' + plant.brightness + ') blur(' + plant.blur + 'px)'"
         [style.animation-duration.s]="plant.duration"
         [style.animation-delay.s]="plant.delay"
       >

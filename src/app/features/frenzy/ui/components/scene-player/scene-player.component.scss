@@ -28,8 +28,22 @@
   position: absolute;
   // All floats anchor at the same spot above the head; the rise animation plus the release queue's
   // stagger spread co-existing quips of one player into a column over time instead of overlapping here.
-  bottom: 100%;
+  // `100% − var(offset-y)` lifts the anchor to the VISIBLE sprite's top (the host box is the un-offset render
+  // box), so on winged/offset sprites the quip still sits above the head, not above empty canvas.
+  bottom: calc(100% - var(--scene-sprite-offset-y, 0px));
   left: 50%;
+}
+
+// Rock/brick impact sparks burst from just above the head (where the falling block bonked it), centred on the
+// sprite and riding its drift. Sits above the actors briefly so the starburst isn't clipped by neighbours.
+.scene__player-spark {
+  position: absolute;
+  // Same lift as floats: sit the bonk sparks on the VISIBLE sprite's head (follow the centring offset), not the
+  // un-offset render-box top.
+  bottom: calc(100% - var(--scene-sprite-offset-y, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
 }
 
 // shield bubble: a glassy soap-bubble encasing the sprite while the full-invulnerability ward is active, so
@@ -40,7 +54,9 @@
 .scene__shield {
   --left-paw-bubble-tint: rgba(120, 220, 255, 0.9);
   position: absolute;
-  top: calc(var(--scene-sprite-height, 96px) / 2);
+  // Centre on the VISIBLE sprite, not the bare body point: follow the same vertical centring offset the sprite
+  // uses (`--scene-sprite-offset-y` = −spriteOffsetY) so the ring/bubble wraps the art on winged/offset sprites.
+  top: calc(var(--scene-sprite-height, 96px) / 2 + var(--scene-sprite-offset-y, 0px));
   left: 50%;
   width: calc(var(--scene-sprite-height, 96px) * 1.5);
   height: calc(var(--scene-sprite-height, 96px) * 1.5);
@@ -54,7 +70,9 @@
 // shield bubble — it only stalls decay, so it signals "kept fed", not "invulnerable".
 .scene__well-fed {
   position: absolute;
-  top: calc(var(--scene-sprite-height, 96px) / 2);
+  // Centre on the VISIBLE sprite, not the bare body point: follow the same vertical centring offset the sprite
+  // uses (`--scene-sprite-offset-y` = −spriteOffsetY) so the ring/bubble wraps the art on winged/offset sprites.
+  top: calc(var(--scene-sprite-height, 96px) / 2 + var(--scene-sprite-offset-y, 0px));
   left: 50%;
   width: calc(var(--scene-sprite-height, 96px) * 1.45);
   height: calc(var(--scene-sprite-height, 96px) * 1.45);
@@ -77,7 +95,9 @@
 // laying aura: a festive multicolour ring that slowly spins, signalling the easter-egg item-spewing buff.
 .scene__laying {
   position: absolute;
-  top: calc(var(--scene-sprite-height, 96px) / 2);
+  // Centre on the VISIBLE sprite, not the bare body point: follow the same vertical centring offset the sprite
+  // uses (`--scene-sprite-offset-y` = −spriteOffsetY) so the ring/bubble wraps the art on winged/offset sprites.
+  top: calc(var(--scene-sprite-height, 96px) / 2 + var(--scene-sprite-offset-y, 0px));
   left: 50%;
   width: calc(var(--scene-sprite-height, 96px) * 1.6);
   height: calc(var(--scene-sprite-height, 96px) * 1.6);
@@ -99,6 +119,34 @@
   pointer-events: none;
 }
 
+// pooping aura: the cursed twin of the laying ring — a murky brown spinning halo signalling the poop debuff
+// (the Pokémon sprays rock/brick/bomb). Same geometry/spin as `.scene__laying`, recoloured to muddy browns.
+.scene__poop {
+  position: absolute;
+  // Centre on the VISIBLE sprite, not the bare body point: follow the same vertical centring offset the sprite
+  // uses (`--scene-sprite-offset-y` = −spriteOffsetY) so the ring/bubble wraps the art on winged/offset sprites.
+  top: calc(var(--scene-sprite-height, 96px) / 2 + var(--scene-sprite-offset-y, 0px));
+  left: 50%;
+  width: calc(var(--scene-sprite-height, 96px) * 1.6);
+  height: calc(var(--scene-sprite-height, 96px) * 1.6);
+  border-radius: 50%;
+  border: 2px solid rgba(120, 85, 50, 0.85);
+  background: conic-gradient(
+    from 0deg,
+    rgba(90, 60, 35, 0.3),
+    rgba(140, 100, 60, 0.3),
+    rgba(110, 75, 45, 0.3),
+    rgba(70, 50, 30, 0.3),
+    rgba(140, 100, 60, 0.3),
+    rgba(90, 60, 35, 0.3)
+  );
+  mask: radial-gradient(circle, transparent 56%, #000 60%, #000 88%, transparent 100%);
+  box-shadow: 0 0 14px rgba(120, 85, 50, 0.6);
+  transform: translate(-50%, -50%);
+  animation: scene-laying-spin 3s linear infinite;
+  pointer-events: none;
+}
+
 .scene__poke {
   padding: 0;
   background: none;
@@ -110,11 +158,13 @@
 }
 
 .scene__sprite {
-  // Animated BW sprites are non-square; height drives the size (per evolution stage, set via the
-  // `--scene-sprite-height` custom property on the host) and width follows the aspect ratio.
-  // No `image-rendering: pixelated` here — these detailed sprites read cleaner with smooth scaling.
-  width: auto;
+  // Explicit per-stage, per-line box (world px) set via the `--scene-sprite-width`/`--scene-sprite-height` custom
+  // properties on the host — sized to each sprite's real aspect, so the render matches the server's AABB hitbox.
+  // `object-fit: contain` is the safety net: if an authored box is slightly off-aspect the sprite letterboxes
+  // instead of squashing. No `image-rendering: pixelated` — these detailed sprites read cleaner smoothly scaled.
+  width: var(--scene-sprite-width, 96px);
   height: var(--scene-sprite-height, 96px);
+  object-fit: contain;
   transition:
     filter 0.4s ease,
     transform 0.2s ease;
@@ -126,6 +176,15 @@
 .scene__sprite-flip {
   display: inline-block;
   line-height: 0;
+}
+
+// Body-centring offset: translates the full art so its hitbox/body lands on the actor point (the art overhangs
+// around it — wings, tails). Its own element so it composes with the flip (outer) and the evolve pulse (on the
+// img) without clashing. Vars default to 0 (compact sprites, body ≈ art).
+.scene__sprite-offset {
+  display: inline-block;
+  line-height: 0;
+  transform: translate(var(--scene-sprite-offset-x, 0), var(--scene-sprite-offset-y, 0));
 }
 
 .scene__sprite-flip--right {
@@ -141,6 +200,14 @@
 }
 
 .scene__label {
+  // Out of flow, anchored just below the sprite. The host centers ONLY the sprite on the authoritative
+  // position (the name was the one other in-flow child — keeping it in flow shifted the column's centre down,
+  // so the sprite drew ~half-a-label above the physics point and never lined up with its hitbox).
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 0.25rem;
   color: #f5f5f5;
   font-size: 0.75rem;
   white-space: nowrap;
@@ -155,12 +222,15 @@
   font-weight: 600;
 }
 
-// Vertical health bar for other players, pinned to the right side of the 96px sprite.
+// Vertical health bar for other players: just to the right of the sprite with a small gap, centred on it. The
+// horizontal offset is half the sprite width (so it clears the sprite's right edge whatever its size) plus the
+// gap — the old hardcoded 58px only fit the former single 96px sprite. Host is centred on the actor's point, so
+// `50%` is the sprite centre; the bar length is fixed.
 .scene__hp-bar {
   position: absolute;
-  top: 48px;
-  left: calc(50% + 58px);
-  width: 72px;
+  top: 50%;
+  left: calc(50% + var(--scene-sprite-width, 96px) / 2 + 14px);
+  width: 64px;
   transform: translate(-50%, -50%) rotate(-90deg);
   transform-origin: center;
 }
@@ -209,7 +279,8 @@
 @media (prefers-reduced-motion: reduce) {
   .scene__shield,
   .scene__well-fed,
-  .scene__laying {
+  .scene__laying,
+  .scene__poop {
     animation: none;
   }
 }

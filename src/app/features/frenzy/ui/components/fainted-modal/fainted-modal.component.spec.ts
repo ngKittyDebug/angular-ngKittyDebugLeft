@@ -4,6 +4,7 @@ import { TranslocoTestingModule } from '@jsverse/transloco';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { FaintedStats } from '../../../data/models/fainted-stats';
+import type { Epitaph } from '../../services/death-epitaph.service';
 import { FaintedModalComponent } from './fainted-modal.component';
 
 const STATS: FaintedStats = {
@@ -20,12 +21,15 @@ const STATS: FaintedStats = {
     vitamin: 0,
     shield: 0,
     easterEgg: 0,
+    poop: 0,
   },
   lifespanSeconds: 42,
   maxHp: 230,
   maxStage: 2,
   totalEaten: 7,
 };
+
+const EPITAPH: Epitaph = { textKey: 'obituary.bomb.0', params: { killer: 'Rival' } };
 
 function createFixture(respawnReady: boolean): ComponentFixture<FaintedModalComponent> {
   TestBed.configureTestingModule({
@@ -36,13 +40,13 @@ function createFixture(respawnReady: boolean): ComponentFixture<FaintedModalComp
           en: {
             frenzy: {
               faintedModal: {
-                title: 'Pokémon fainted!',
                 lifespan: 'Survived',
                 lifespanValue: '{{seconds}} s',
                 maxHp: 'Peak hp',
                 maxStage: 'Top stage',
                 totalEaten: 'Items eaten',
                 items: { food: 'Berries', rotten: 'Rotten', rock: 'Rocks', rareCandy: 'Candy' },
+                obituary: { bomb: { '0': 'Blown up by a mine {{killer}} dropped.' } },
                 respawn: 'Play again',
                 chooseNew: 'Choose new Pokémon',
                 cooldownHint: 'Ready in {{seconds}} s',
@@ -58,6 +62,7 @@ function createFixture(respawnReady: boolean): ComponentFixture<FaintedModalComp
   const fixture = TestBed.createComponent(FaintedModalComponent);
 
   fixture.componentRef.setInput('stats', STATS);
+  fixture.componentRef.setInput('epitaph', EPITAPH);
   fixture.componentRef.setInput('respawnReady', respawnReady);
   fixture.componentRef.setInput('cooldownSeconds', respawnReady ? 0 : 3);
   fixture.detectChanges();
@@ -72,10 +77,10 @@ function buttonByText(element: HTMLElement, text: string): HTMLButtonElement | u
 }
 
 describe('FaintedModalComponent', () => {
-  it('renders session stats', () => {
+  it('renders the obituary title and session stats', () => {
     const text = (createFixture(true).nativeElement as HTMLElement).textContent ?? '';
 
-    expect(text).toContain('Pokémon fainted!');
+    expect(text).toContain('Blown up by a mine Rival dropped.');
     expect(text).toContain('42 s');
     expect(text).toContain('230');
     expect(text).toContain('II');

@@ -8,6 +8,8 @@
     [ownedFloats]="ownedFloats()"
     [orphanFloats]="orphanFloats()"
     [blasts]="blasts()"
+    [hitBursts]="hitBursts()"
+    [ownedSparks]="ownedSparks()"
     (itemClick)="handleItemClick($event)"
     (selfPoke)="handleSelfPoke()"
     (steer)="handleSteer($event)"
@@ -19,6 +21,7 @@
         [name]="myself.name"
         [hp]="myself.hp"
         [stage]="myself.stage"
+        [body]="myself.body"
         [compact]="isMobile()"
       />
       <left-paw-minimap
@@ -48,11 +51,13 @@
         <p class="frenzy-page__status">Room is full. Try again later.</p>
       }
       @case ('closed') {
-        <p class="frenzy-page__status">Disconnected.</p>
+        <div class="frenzy-page__backdrop"></div>
+        <left-paw-disconnected-modal />
       }
       @case ('fainted') {
         <left-paw-fainted-modal
           [stats]="faintedStats()"
+          [epitaph]="faintedEpitaph()"
           [respawnReady]="respawnReady()"
           [cooldownSeconds]="cooldownSeconds()"
           (respawn)="handleRespawn()"
@@ -60,7 +65,10 @@
         />
       }
       @case ('picking') {
-        <left-paw-pokemon-picker (submitPicker)="handlePickerSubmit($event)" />
+        <left-paw-pokemon-picker
+          [error]="joinError()"
+          (submitPicker)="handlePickerSubmit($event)"
+        />
       }
     }
   </div>

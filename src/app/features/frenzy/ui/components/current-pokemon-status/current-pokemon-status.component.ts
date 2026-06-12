@@ -3,7 +3,7 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import { TuiAvatar, TuiBadge, TuiProgressBar } from '@taiga-ui/kit';
 
 import { FRENZY } from '@game/frenzy/config';
-import type { Stage } from '@game/frenzy/types';
+import type { PlayerBody, Stage } from '@game/frenzy/types';
 
 import { getMood, type PokemonMood } from '../../../data/logic/pokemon-mood';
 import { HpFlashDirective } from '../../directives/hp-flash.directive';
@@ -40,18 +40,22 @@ export class CurrentPokemonStatusComponent {
   public readonly name = input.required<string>();
   public readonly hp = input.required<number>();
   public readonly stage = input.required<Stage>();
+  // My Pokémon's per-stage descriptor — the next-evolution threshold reads off its hp gates (no global thresholds).
+  public readonly body = input.required<PlayerBody>();
   // The bar uses one absolute scale (0 → hard ceiling); a tick marks the next-evolution threshold along it, and
   // `untilEvolution` is the HP still needed to reach it — both vanish on the final stage (nothing left to reach).
   protected readonly maxHp = FRENZY.maxHp;
   protected readonly mood = computed<PokemonMood>(() => getMood(this.hp(), this.stage()));
   protected readonly moodVisual = computed<MoodVisual>(() => MOOD_VISUAL[this.mood()]);
   protected readonly nextThreshold = computed<number>(() => {
+    const body = this.body();
+
     if (this.stage() === 1) {
-      return FRENZY.thresholds.stage2;
+      return body[2].hp;
     }
 
     if (this.stage() === 2) {
-      return FRENZY.thresholds.stage3;
+      return body[3].hp;
     }
 
     return FRENZY.maxHp;

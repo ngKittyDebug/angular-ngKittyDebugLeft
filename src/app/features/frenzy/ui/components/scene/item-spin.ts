@@ -4,8 +4,8 @@
 
 import type { ItemType } from '@game/frenzy/types';
 
-const ITEM_SPIN_MIN_MS = 2500;
-const ITEM_SPIN_MAX_MS = 6000;
+const ITEM_SPIN_MIN_MS = 1800;
+const ITEM_SPIN_MAX_MS = 5500;
 // The shield rocks rather than tumbles, and reads better swaying briskly — give it a shorter cycle than the spinners.
 const ITEM_SWAY_MIN_MS = 900;
 const ITEM_SWAY_MAX_MS = 1800;

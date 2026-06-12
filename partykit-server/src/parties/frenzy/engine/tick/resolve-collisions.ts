@@ -2,6 +2,7 @@ import type { GameEvent, ServerState } from '@game/frenzy/types';
 
 import { applyEffects, resolveGrants } from '../apply-effect';
 import { applyHpDeltas } from '../apply-hp-deltas';
+import { itemFaintCause } from '../faint-cause';
 import { getItemBehavior } from '../item-behaviors';
 import { findCollisionTarget } from './collision-target';
 import { detonated } from './detonated';
@@ -49,7 +50,7 @@ export function resolveCollisions(
 
       working = applyEffects(working, applications);
 
-      const resolved = applyHpDeltas(working, interaction.hpDeltas);
+      const resolved = applyHpDeltas(working, interaction.hpDeltas, itemFaintCause(item));
 
       working = resolved.state;
 
@@ -59,6 +60,9 @@ export function resolveCollisions(
           playerId: application.playerId,
           effect: application.effect,
           itemId: item.id,
+          x: item.x,
+          y: item.y,
+          via: 'collision',
         });
       }
 
@@ -71,7 +75,7 @@ export function resolveCollisions(
       continue;
     }
 
-    const resolved = applyHpDeltas(working, interaction.hpDeltas);
+    const resolved = applyHpDeltas(working, interaction.hpDeltas, itemFaintCause(item));
 
     working = resolved.state;
 
@@ -90,6 +94,7 @@ export function resolveCollisions(
         delta: newHp - target.hp,
         x: item.x,
         y: item.y,
+        via: 'collision',
       });
     }
 

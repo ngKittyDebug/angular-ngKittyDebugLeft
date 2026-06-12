@@ -24,7 +24,7 @@ export function applyDecayStep(state: ServerState): DecayResult {
     const newHp = Math.max(0, player.hp - FRENZY.decayPerTick);
 
     if (newHp <= 0) {
-      events.push({ type: 'fainted', playerId: player.id });
+      events.push({ type: 'fainted', playerId: player.id, cause: { by: 'decay' } });
       continue;
     }
 

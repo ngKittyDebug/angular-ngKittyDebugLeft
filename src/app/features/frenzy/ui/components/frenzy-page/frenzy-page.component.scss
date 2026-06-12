@@ -99,6 +99,15 @@
     font-size: 1.125rem;
   }
 
+  // Disconnected scrim: blurs + dims the frozen scene/HUD behind the modal and,
+  // as an interactive overlay child, swallows pointer events so the game is non-interactive.
+  &__backdrop {
+    position: absolute;
+    inset: 0;
+    background: color-mix(in srgb, var(--tui-background-base) 40%, transparent);
+    backdrop-filter: blur(6px);
+  }
+
   &--mobile &__overlay {
     align-items: flex-end;
     padding-block-end: max(1.5rem, env(safe-area-inset-bottom));

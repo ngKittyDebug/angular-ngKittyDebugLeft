@@ -5,7 +5,7 @@ import { steerVelocity } from '@game/frenzy/steer-velocity';
 import type { Player, PlayerEffectKind } from '@game/frenzy/types';
 
 import { isSad } from '../../../data/logic/is-sad';
-import { spriteHeightFor } from '../../constants/pokemon-registry';
+import { spriteRenderFor } from '../../constants/pokemon-registry';
 import { decayedOffset, OFFSET_DECAY_TAU_MS, reflect, reflectDirection } from './drift-math';
 import type { RenderedPlayer } from './scene-view-models';
 
@@ -14,6 +14,7 @@ const EFFECT_AURA_CLASS: Record<PlayerEffectKind, string> = {
   shield: 'scene__shield',
   wellFed: 'scene__well-fed',
   laying: 'scene__laying',
+  pooping: 'scene__poop',
 };
 
 // Which aura class wears the glassy bubble skin (the shield ward) — the rest are flat rings. Exposed so the
@@ -25,6 +26,9 @@ interface PlayerBaseline {
   y0: number;
   vx: number;
   vy: number;
+  // Steering cap for the local prediction (the player's per-stage `maxSpeed`), cached from the last snapshot so
+  // `predictSteer` uses the SAME cap the server will, without threading the body through every frame.
+  maxSpeed: number;
   clientStartTime: number;
   // Visual reconciliation gap (rendered − authoritative, normalized units) captured at the last re-anchor and
   // decayed toward 0 from `offsetStamp`, so a snapshot correction glides in instead of snapping. Zero in steady
@@ -90,13 +94,15 @@ export class PlayerExtrapolatorService {
     const renderedY =
       reflect(baseline.y0, baseline.vy, elapsed, zone.minY, zone.maxY) +
       decayedOffset(baseline.offsetY, now - baseline.offsetStamp, OFFSET_DECAY_TAU_MS);
-    const { vx, vy } = steerVelocity(baseline, x - renderedX, y - renderedY, FRENZY.steer);
+    const tuning = { impulse: FRENZY.steer.impulse, maxSpeed: baseline.maxSpeed };
+    const { vx, vy } = steerVelocity(baseline, x - renderedX, y - renderedY, tuning);
 
     this.baselines.set(myId, {
       x0: renderedX,
       y0: renderedY,
       vx,
       vy,
+      maxSpeed: baseline.maxSpeed,
       clientStartTime: now,
       offsetX: 0,
       offsetY: 0,
@@ -150,6 +156,7 @@ export class PlayerExtrapolatorService {
         y0: player.y,
         vx: player.vx,
         vy: player.vy,
+        maxSpeed: player.body[player.stage].maxSpeed,
         clientStartTime: now,
         offsetX,
         offsetY,
@@ -195,6 +202,10 @@ export class PlayerExtrapolatorService {
       const effectAuras = player.effects
         .filter((effect) => effect.expiresAt > wallNow)
         .map((effect) => EFFECT_AURA_CLASS[effect.kind]);
+      // Hitbox (collidable torso) comes from the authoritative `body`; the full-art render box + centring offset
+      // are client-only, looked up from the local roster by appearance/stage.
+      const hitbox = player.body[player.stage];
+      const render = spriteRenderFor(player.appearance, player.stage);
 
       return {
         appearance: player.appearance,
@@ -207,7 +218,16 @@ export class PlayerExtrapolatorService {
         isSad: isSad(player.hp, player.stage),
         label: player.name,
         hp: player.hp,
-        spriteHeight: spriteHeightFor(player.stage),
+        spriteWidth: `${render.width}px`,
+        spriteHeight: `${render.height}px`,
+        spriteOffsetX: render.offsetX,
+        spriteOffsetY: render.offsetY,
+        hitboxWidth: `${hitbox.width}px`,
+        hitboxHeight: `${hitbox.height}px`,
+        debugSpeed: Math.hypot(vx, vy).toFixed(2),
+        // Native box top (rel. point) = -offsetY - height/2; sit the readout's centre above it so the pill clears
+        // the box top with a small gap.
+        debugReadoutOffsetY: `${-render.offsetY - render.height / 2 - 16}px`,
         stage: player.stage,
         x: reflect(x0, vx, elapsed, zone.minX, zone.maxX) + decayX,
         y: reflect(y0, vy, elapsed, zone.minY, zone.maxY) + decayY,

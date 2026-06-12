@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import type { OnInit } from '@angular/core';
 
 import { CurrentPokemonStatusComponent } from '../current-pokemon-status/current-pokemon-status.component';
+import { DisconnectedModalComponent } from '../disconnected-modal/disconnected-modal.component';
 import { FaintedModalComponent } from '../fainted-modal/fainted-modal.component';
 import { LeaderboardComponent } from '../leaderboard/leaderboard.component';
 import { MinimapComponent } from '../minimap/minimap.component';
@@ -16,6 +17,7 @@ import { FrenzyPageFacade } from './frenzy-page.facade';
   selector: 'left-paw-frenzy-page',
   imports: [
     CurrentPokemonStatusComponent,
+    DisconnectedModalComponent,
     FaintedModalComponent,
     LeaderboardComponent,
     MinimapComponent,
@@ -34,9 +36,13 @@ export class FrenzyPageComponent implements OnInit {
   protected readonly cooldownSeconds = this.facade.cooldownSeconds;
   protected readonly disconnectedCount = this.facade.disconnectedCount;
   protected readonly evolvingPlayers = this.facade.evolvingPlayers;
+  protected readonly hitBursts = this.facade.hitBursts;
+  protected readonly ownedSparks = this.facade.ownedSparks;
   protected readonly faintedStats = this.facade.faintedStats;
+  protected readonly faintedEpitaph = this.facade.faintedEpitaph;
   protected readonly orphanFloats = this.facade.orphanFloats;
   protected readonly ownedFloats = this.facade.ownedFloats;
+  protected readonly joinError = this.facade.joinError;
   protected readonly isMobile = this.facade.isMobile;
   protected readonly items = this.facade.items;
   protected readonly leaderboard = this.facade.leaderboard;

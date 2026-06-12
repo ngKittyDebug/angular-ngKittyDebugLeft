@@ -133,6 +133,11 @@ export function applyServerMessage(
       return previous;
     }
 
+    // Join refusal carries no game state — the store records the reason separately for the picker.
+    case 'joinRejected': {
+      return previous;
+    }
+
     default: {
       return ignoreUnhandledMessage(message, previous);
     }

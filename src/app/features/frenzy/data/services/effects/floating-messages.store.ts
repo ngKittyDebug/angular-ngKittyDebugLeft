@@ -16,7 +16,8 @@ type StatusKind =
   | 'poke'
   | 'shield'
   | 'wellFed'
-  | 'laying';
+  | 'laying'
+  | 'pooping';
 
 interface StatusConfig {
   tone: FloatingTone;
@@ -46,6 +47,7 @@ const STATUS_CONFIG: Record<StatusKind, StatusConfig> = {
   shield: { tone: 'positive', icon: '@tui.shield', durationMs: 2500, phraseCount: 4 },
   wellFed: { tone: 'positive', icon: '@tui.heart', durationMs: 2500, phraseCount: 4 },
   laying: { tone: 'positive', icon: '@tui.egg', durationMs: 2500, phraseCount: 4 },
+  pooping: { tone: 'warning', icon: '@tui.wind', durationMs: 2500, phraseCount: 4 },
 };
 
 /**

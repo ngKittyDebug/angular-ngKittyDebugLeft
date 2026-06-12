@@ -1,0 +1,30 @@
+// Host is the debug pill itself, placed by the scene-position directive (it writes the `translate` CSS property);
+// this static `transform` is the centre anchor plus an upward nudge (`--debug-readout-offset-y`, set by the caller
+// to sit just above the native box; falls back to a fixed lift) so the chip floats above the sprite and its debug
+// boxes instead of overlapping them. Non-interactive — purely a readout.
+:host {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 6;
+  display: inline-flex;
+  gap: 0.25rem;
+  align-items: baseline;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.7);
+  font:
+    600 10px/1.4 ui-monospace,
+    monospace;
+  white-space: nowrap;
+  transform: translate(-50%, -50%) translateY(var(--debug-readout-offset-y, -72px));
+  pointer-events: none;
+}
+
+.debug-readout__label {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.debug-readout__value {
+  color: #fff;
+}

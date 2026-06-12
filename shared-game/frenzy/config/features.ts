@@ -27,6 +27,7 @@ export const ITEM_FEATURES: Record<ItemType, FeatureFlag> = {
   vitamin: { enabled: true },
   shield: { enabled: true },
   easterEgg: { enabled: true },
+  poop: { enabled: true },
 };
 
 /**

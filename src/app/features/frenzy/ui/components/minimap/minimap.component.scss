@@ -78,13 +78,13 @@
     color: var(--tui-text-secondary);
   }
 
-  // The scaled-down playfield. Aspect ratio mirrors the world (WORLD.world 1600×1000 = 16/10), so normalized
+  // The scaled-down playfield. Aspect ratio mirrors the world (WORLD.world 2400×900 = 8/3), so normalized
   // (0..1) blips land where they sit in the real arena. A faint tint + light blur keeps blips readable while
   // the live scene shows through.
   &__map {
     position: relative;
     width: 100%;
-    aspect-ratio: 16 / 10;
+    aspect-ratio: 2400 / 900;
     overflow: hidden;
     background: color-mix(in srgb, var(--tui-background-base) 45%, transparent);
     backdrop-filter: blur(2px);
@@ -146,8 +146,8 @@
   // Items: small dots — deliberately a fraction of the player size so a pokémon is never mistaken for an item
   // at a glance. Thin dark ring keeps the tiny blip crisp where it overlaps a translucent blade.
   &__item {
-    width: 5px;
-    height: 5px;
+    width: 4px;
+    height: 4px;
     box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.45);
   }
 

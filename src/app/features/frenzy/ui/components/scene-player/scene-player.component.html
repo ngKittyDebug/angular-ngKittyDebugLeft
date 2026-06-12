@@ -44,17 +44,25 @@
       [durationMs]="float.durationMs"
     />
   }
+
+  @for (spark of sparks(); track spark.id) {
+    <left-paw-spark-burst class="scene__player-spark" />
+  }
 </ng-container>
 
 <ng-template #sprite>
   <span class="scene__sprite-flip" [class.scene__sprite-flip--right]="player().facingRight">
-    <img
-      class="scene__sprite"
-      [class.scene__sprite--evolving]="player().isEvolving"
-      [class.scene__sprite--sad]="player().isSad"
-      [src]="player().appearance | pokemonSprite: player().stage"
-      [alt]="player().label"
-      draggable="false"
-    />
+    <!-- Centring offset: shifts the full art so the body (hitbox) sits on the actor point. Inside the flip wrapper
+         so the horizontal offset mirrors with facing; separate from the img's own evolve-pulse transform. -->
+    <span class="scene__sprite-offset">
+      <img
+        class="scene__sprite"
+        [class.scene__sprite--evolving]="player().isEvolving"
+        [class.scene__sprite--sad]="player().isSad"
+        [src]="player().appearance | pokemonSprite: player().stage"
+        [alt]="player().label"
+        draggable="false"
+      />
+    </span>
   </span>
 </ng-template>

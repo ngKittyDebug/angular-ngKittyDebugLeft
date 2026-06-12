@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { parseClientMessage } from '../parse-client-message';
+import { TEST_BODY } from './test-body';
 
 describe('parseClientMessage', () => {
   it('returns null for invalid JSON', () => {
@@ -31,26 +32,48 @@ describe('parseClientMessage', () => {
     expect(parseClientMessage(JSON.stringify({ type: 'identify', sessionToken: 5 }))).toBeNull();
   });
 
-  it('parses join with an appearance id and trimmable name', () => {
+  it('parses join with an appearance id, body and trimmable name', () => {
     expect(
-      parseClientMessage(JSON.stringify({ type: 'join', name: '  Ash ', appearance: 'magikarp' })),
-    ).toEqual({ type: 'join', name: '  Ash ', appearance: 'magikarp' });
+      parseClientMessage(
+        JSON.stringify({ type: 'join', name: '  Ash ', appearance: 'magikarp', body: TEST_BODY }),
+      ),
+    ).toEqual({ type: 'join', name: '  Ash ', appearance: 'magikarp', body: TEST_BODY });
   });
 
-  it('accepts any non-empty bounded appearance string (server is roster-agnostic)', () => {
-    // The server no longer knows the roster — an id it doesn't recognise still parses; the client maps it.
+  it('checks form only — name/appearance bounds are validate-join policy, not parse', () => {
+    // parse guarantees shape/types; emptiness, length caps and body bounds are game policy in validate-join.
     expect(
-      parseClientMessage(JSON.stringify({ type: 'join', name: 'Ash', appearance: 'dragonite' })),
-    ).toEqual({ type: 'join', name: 'Ash', appearance: 'dragonite' });
+      parseClientMessage(
+        JSON.stringify({ type: 'join', name: '   ', appearance: 'x'.repeat(99), body: TEST_BODY }),
+      ),
+    ).toEqual({ type: 'join', name: '   ', appearance: 'x'.repeat(99), body: TEST_BODY });
   });
 
-  it('rejects join with blank name or missing/oversized appearance', () => {
+  it('rejects join with a non-string name/appearance or a missing/malformed body', () => {
     expect(
-      parseClientMessage(JSON.stringify({ type: 'join', name: '   ', appearance: 'magikarp' })),
+      parseClientMessage(
+        JSON.stringify({ type: 'join', name: 5, appearance: 'magikarp', body: TEST_BODY }),
+      ),
     ).toBeNull();
-    expect(parseClientMessage(JSON.stringify({ type: 'join', name: 'Ash' }))).toBeNull();
     expect(
-      parseClientMessage(JSON.stringify({ type: 'join', name: 'Ash', appearance: 'x'.repeat(33) })),
+      parseClientMessage(JSON.stringify({ type: 'join', name: 'Ash', appearance: 'magikarp' })),
+    ).toBeNull();
+    expect(
+      parseClientMessage(
+        JSON.stringify({ type: 'join', name: 'Ash', appearance: 'magikarp', body: {} }),
+      ),
+    ).toBeNull();
+    const missingStage = { 1: TEST_BODY[1], 2: TEST_BODY[2] };
+    expect(
+      parseClientMessage(
+        JSON.stringify({ type: 'join', name: 'Ash', appearance: 'magikarp', body: missingStage }),
+      ),
+    ).toBeNull();
+    const nonNumeric = { ...TEST_BODY, 1: { ...TEST_BODY[1], width: 'big' } };
+    expect(
+      parseClientMessage(
+        JSON.stringify({ type: 'join', name: 'Ash', appearance: 'magikarp', body: nonNumeric }),
+      ),
     ).toBeNull();
   });
 

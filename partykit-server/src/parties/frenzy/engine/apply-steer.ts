@@ -25,7 +25,9 @@ export function applySteer(
     return state;
   }
 
-  const { vx, vy } = steerVelocity(steerer, dx, dy, FRENZY.steer);
+  // Steering cap is per-stage now (from the steerer's body); the per-tap impulse stays global.
+  const tuning = { impulse: FRENZY.steer.impulse, maxSpeed: steerer.body[steerer.stage].maxSpeed };
+  const { vx, vy } = steerVelocity(steerer, dx, dy, tuning);
   const players = state.players.map((player) =>
     player.id === steererId ? { ...player, vx, vy } : player,
   );

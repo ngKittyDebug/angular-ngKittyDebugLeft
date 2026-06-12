@@ -4,6 +4,7 @@ import { FRENZY } from '@game/frenzy/config';
 import type { Item, ItemType, Player, ServerState } from '@game/frenzy/types';
 
 import { getItemBehavior } from '../engine/item-behaviors';
+import { TEST_BODY } from './test-body';
 
 const ITEM_TYPES: ItemType[] = ['food', 'rotten', 'rock', 'rareCandy', 'goldenBerry', 'crumb'];
 const EMPTY_STATE: ServerState = { players: [], items: [], tick: 0 };
@@ -16,6 +17,7 @@ const PLAYER: Player = {
   id: 'p1',
   name: 'Ash',
   appearance: 'caterpie',
+  body: TEST_BODY,
   stage: 1,
   hp: 100,
   x: 0.5,

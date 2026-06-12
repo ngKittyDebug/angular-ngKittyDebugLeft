@@ -3,6 +3,7 @@ import type { EatenEvent, GameEvent, Item, Player, ServerState } from '@game/fre
 
 import { applyEffects, resolveGrants } from './apply-effect';
 import { applyHpDeltas } from './apply-hp-deltas';
+import { itemFaintCause } from './faint-cause';
 import { getItemBehavior } from './item-behaviors';
 import type { ItemInteraction } from './item-behaviors';
 
@@ -17,22 +18,25 @@ export interface ClickResult {
  */
 function grantEffectResult(
   state: ServerState,
-  itemId: string,
+  item: Item,
   interaction: ItemInteraction,
   now: number,
 ): ClickResult {
   const applications = resolveGrants(interaction.effects ?? [], now);
   const withEffects = applyEffects(state, applications);
-  const resolved = applyHpDeltas(withEffects, interaction.hpDeltas);
+  const resolved = applyHpDeltas(withEffects, interaction.hpDeltas, itemFaintCause(item));
   const items = interaction.consumed
-    ? resolved.state.items.filter((candidate) => candidate.id !== itemId)
+    ? resolved.state.items.filter((candidate) => candidate.id !== item.id)
     : resolved.state.items;
   const events: GameEvent[] = [
     ...applications.map((application) => ({
       type: 'effectGranted' as const,
       playerId: application.playerId,
       effect: application.effect,
-      itemId,
+      itemId: item.id,
+      x: item.x,
+      y: item.y,
+      via: 'click' as const,
     })),
     ...resolved.events,
   ];
@@ -63,7 +67,7 @@ function eatResult(
   clicker: Player,
   interaction: ItemInteraction,
 ): ClickResult {
-  const resolved = applyHpDeltas(state, interaction.hpDeltas);
+  const resolved = applyHpDeltas(state, interaction.hpDeltas, itemFaintCause(item));
   const updatedClicker = resolved.state.players.find((candidate) => candidate.id === clicker.id);
   const newHp = updatedClicker?.hp ?? 0;
 
@@ -76,6 +80,7 @@ function eatResult(
     delta: newHp - clicker.hp,
     x: item.x,
     y: item.y,
+    via: 'click',
   };
 
   const items = interaction.consumed
@@ -107,7 +112,7 @@ export function applyClick(
   const interaction = getItemBehavior(item.type).onClick(item, clickerId, state, nudgeX, rng);
 
   if (interaction.effects !== undefined && interaction.effects.length > 0) {
-    return grantEffectResult(state, itemId, interaction, now);
+    return grantEffectResult(state, item, interaction, now);
   }
 
   if (interaction.nudgeX !== undefined && !interaction.consumed) {

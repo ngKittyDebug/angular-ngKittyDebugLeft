@@ -1,4 +1,24 @@
 export type Stage = 1 | 2 | 3;
+
+/**
+ * Per-stage physical descriptor of a player's body, authored client-side per Pokémon line and relayed to the
+ * server on `join` as opaque numbers (the server never interprets the roster). Drives collision (AABB), the
+ * size-aware drift bounds and per-stage speed. `width`/`height` are the BODY hitbox in world px — the collidable
+ * torso, centred on the actor's point; for winged/long sprites it's smaller than the rendered art (the client
+ * keeps the full render size + a centring offset to itself, never sent here). `speed` is the cruising drift
+ * magnitude, `maxSpeed` the steering cap (both normalized units/sec). `hp` is the HP gate to ENTER this stage
+ * (not `Player.hp`, the current health) — stage 1 is the baseline (0), and the gates must not decrease across stages.
+ */
+export interface StageBody {
+  width: number;
+  height: number;
+  speed: number;
+  maxSpeed: number;
+  hp: number;
+}
+
+/** A player's full body descriptor: one `StageBody` per evolution stage. */
+export type PlayerBody = Record<Stage, StageBody>;
 export type ItemType =
   | 'food'
   | 'rotten'
@@ -11,14 +31,16 @@ export type ItemType =
   | 'mushroom'
   | 'vitamin'
   | 'shield'
-  | 'easterEgg';
+  | 'easterEgg'
+  | 'poop';
 export type PlayerStatus = 'alive' | 'disconnected';
 
 // Timed buffs/debuffs a Pokémon carries. `shield` suspends hp decay AND wards off all incoming damage
 // (bomb blast, rock bonk, rotten/negative-mushroom) — full invulnerability inside a bubble. `wellFed`
 // (vitamin) only suspends decay (damage still lands). `laying` (easterEgg) makes the Pokémon randomly emit
-// falling items (incl. bombs) from itself. The union grows per phase.
-export type PlayerEffectKind = 'shield' | 'wellFed' | 'laying';
+// falling items (incl. bombs) from itself. `pooping` (poop) is the cursed twin of `laying` — same emission
+// loop, but the Pokémon only sprays rock/brick/bomb. The union grows per phase.
+export type PlayerEffectKind = 'shield' | 'wellFed' | 'laying' | 'pooping';
 
 export interface PlayerEffect {
   kind: PlayerEffectKind;
@@ -32,6 +54,9 @@ export interface Player {
   /** Opaque appearance id the player chose. The server relays it but never interprets it; the client maps it
    * to a Pokémon line/sprite (with a fallback for unknown ids). Keeps the server independent of the roster. */
   appearance: string;
+  /** Per-stage physical descriptor (size/speed/stage-gates) the client sent on `join`. Opaque to the server —
+   * stored and applied (collision, bounds, drift speed, stage), echoed in snapshots so peers render it. */
+  body: PlayerBody;
   stage: Stage;
   hp: number;
   x: number;
@@ -68,6 +93,9 @@ export interface ServerState {
   tick: number;
 }
 
+/** How a pickup happened: the player tapped the item (`click`) or drifted into it (`collision`). */
+export type PickupVia = 'click' | 'collision';
+
 export interface EatenEvent {
   type: 'eaten';
   itemId: string;
@@ -77,6 +105,8 @@ export interface EatenEvent {
   delta: number;
   x: number;
   y: number;
+  /** Whether this eat came from a deliberate tap or a drift-in collision. */
+  via: PickupVia;
   /** Float-column release order, stamped at broadcast (see `FRENZY.floatPriority`); client falls back to a default. */
   priority?: number;
 }
@@ -88,9 +118,18 @@ export interface EvolvedEvent {
   priority?: number;
 }
 
+/**
+ * What ended a Pokémon's run, carried on the fainted event so the client can write an obituary.
+ * `decay` = starved out by hp decay (no item involved). `item` = a specific item dealt the killing blow;
+ * `itemType` is that item and `killerId` is the player who emitted it (easter-egg/poop aura) — absent for
+ * naturally spawned items. Optional overall: omitted only by legacy/unknown deaths the client treats generically.
+ */
+export type FaintCause = { by: 'decay' } | { by: 'item'; itemType: ItemType; killerId?: string };
+
 export interface FaintedEvent {
   type: 'fainted';
   playerId: string;
+  cause?: FaintCause;
   priority?: number;
 }
 
@@ -115,11 +154,15 @@ export interface DetonatedEvent {
 
 // A player picked up an effect item (e.g. vitamin → shield) and gained a timed effect. `itemId` is the
 // consumed pickup so clients drop its sprite at once; `effect` carries the kind and server-clock expiry for the aura.
+// `x, y` are the consumed item's position (so clients can mark the spot it vanished from); `via` how it was picked up.
 export interface EffectGrantedEvent {
   type: 'effectGranted';
   playerId: string;
   effect: PlayerEffect;
   itemId: string;
+  x: number;
+  y: number;
+  via: PickupVia;
 }
 
 // Gameplay events emitted by the engine (apply-click/apply-tick) — single source; ServerMessage reuses them.
@@ -133,7 +176,7 @@ export type GameEvent =
 
 export type ClientMessage =
   | { type: 'identify'; sessionToken: string }
-  | { type: 'join'; name: string; appearance: string }
+  | { type: 'join'; name: string; appearance: string; body: PlayerBody }
   // `nudgeX` is the bomb-bat input: the signed horizontal displacement (normalized 0..1) the player wants,
   // computed client-side from a fixed pixel step and the tapped side. Server caps/clamps it. Ignored for non-bomb items.
   | { type: 'click'; itemId: string; nudgeX?: number }
@@ -142,9 +185,17 @@ export type ClientMessage =
   | { type: 'steer'; x: number; y: number }
   | { type: 'leave' };
 
+/**
+ * Why a `join` was refused, so the client can show a localized message (`frenzy.joinError.<reason>`):
+ * `invalidName` — empty/blank after trim; `invalidAppearance` — empty or over the length cap;
+ * `invalidBody` — the per-stage descriptor failed bounds/monotonicity. Distinct from `roomFull` (capacity).
+ */
+export type JoinRejectReason = 'invalidName' | 'invalidAppearance' | 'invalidBody';
+
 export type ServerMessage =
   | GameEvent
   | { type: 'snapshot'; state: ServerState }
   | { type: 'spawned'; item: Item }
   | { type: 'roomFull' }
+  | { type: 'joinRejected'; reason: JoinRejectReason }
   | { type: 'rejoined'; playerId: string };

@@ -1,5 +1,5 @@
 import { FRENZY } from '@game/frenzy/config';
-import type { GameEvent, Player, ServerState } from '@game/frenzy/types';
+import type { FaintCause, GameEvent, Player, ServerState } from '@game/frenzy/types';
 
 import { calculateStage } from './calculate-stage';
 import type { HpDelta } from './item-behaviors';
@@ -13,6 +13,21 @@ export interface HpDeltaResult {
 interface PlayerHpOutcome {
   player?: Player;
   event?: GameEvent;
+}
+
+/**
+ * Rescales a velocity to the target speed, keeping its direction. Used on evolution so a grown Pokémon cruises
+ * at its new stage's `speed` instead of carrying the smaller stage's momentum. A near-zero velocity (parked) gets
+ * a default heading so it doesn't stay frozen at the new size.
+ */
+function renormalizeVelocity(vx: number, vy: number, speed: number): { vx: number; vy: number } {
+  const magnitude = Math.hypot(vx, vy);
+
+  if (magnitude === 0) {
+    return { vx: speed, vy: 0 };
+  }
+
+  return { vx: (vx / magnitude) * speed, vy: (vy / magnitude) * speed };
 }
 
 /** Sums the deltas per player, so one target hit by several deltas in a tick resolves against a single net amount. */
@@ -33,7 +48,7 @@ function aggregateByPlayer(deltas: readonly HpDelta[]): Map<string, number> {
  * shield still grows. Returns no player (and a `fainted` event) when the hp reaches 0, an `evolved` event when
  * a stage threshold is crossed.
  */
-function resolvePlayerHp(player: Player, amount: number): PlayerHpOutcome {
+function resolvePlayerHp(player: Player, amount: number, cause?: FaintCause): PlayerHpOutcome {
   const shielded = player.effects.some((effect) => effect.kind === 'shield');
 
   if (shielded && amount < 0) {
@@ -43,22 +58,37 @@ function resolvePlayerHp(player: Player, amount: number): PlayerHpOutcome {
   const newHp = Math.max(0, Math.min(FRENZY.maxHp, player.hp + amount));
 
   if (newHp <= 0) {
-    return { event: { type: 'fainted', playerId: player.id } };
+    return { event: { type: 'fainted', playerId: player.id, ...(cause && { cause }) } };
   }
 
-  const newStage = calculateStage(newHp);
-  const event: GameEvent | undefined =
-    newStage > player.stage ? { type: 'evolved', playerId: player.id, newStage } : undefined;
+  const newStage = calculateStage(newHp, player.body);
 
-  return { player: { ...player, hp: newHp, stage: newStage }, event };
+  if (newStage > player.stage) {
+    // Grew a stage: emit `evolved` and recruise at the new stage's speed so the bigger body doesn't keep the
+    // smaller one's momentum (or stay slow).
+    const { vx, vy } = renormalizeVelocity(player.vx, player.vy, player.body[newStage].speed);
+
+    return {
+      player: { ...player, hp: newHp, stage: newStage, vx, vy },
+      event: { type: 'evolved', playerId: player.id, newStage },
+    };
+  }
+
+  return { player: { ...player, hp: newHp, stage: newStage }, event: undefined };
 }
 
 /**
  * Applies hp changes to players: clamps at 0, recomputes stage, removes anyone who hits 0.
  * Emits `evolved` when a player crosses a stage threshold and `fainted` when they reach 0.
  * Shared by click (eating) and any landing/collateral effect, so it handles one or many targets.
+ * `cause` is the killing-blow attribution stamped on each `fainted` event: every call here resolves a single
+ * item interaction (one item → one cause), so the whole batch shares it; decay deaths are built elsewhere.
  */
-export function applyHpDeltas(state: ServerState, deltas: HpDelta[]): HpDeltaResult {
+export function applyHpDeltas(
+  state: ServerState,
+  deltas: HpDelta[],
+  cause?: FaintCause,
+): HpDeltaResult {
   if (deltas.length === 0) {
     return { state, events: [] };
   }
@@ -75,7 +105,7 @@ export function applyHpDeltas(state: ServerState, deltas: HpDelta[]): HpDeltaRes
       continue;
     }
 
-    const outcome = resolvePlayerHp(player, amount);
+    const outcome = resolvePlayerHp(player, amount, cause);
 
     if (outcome.player !== undefined) {
       players.push(outcome.player);

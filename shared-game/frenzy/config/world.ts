@@ -4,12 +4,11 @@ export const WORLD = {
    * Larger than a typical viewport: the client renders this fixed-size world and a camera scrolls it to follow
    * the player's Pokémon, so absolute sprite sizes (and thus target size/density) stay identical across screens.
    * The server stays in 0..1 and only reads it via `halfExtentNorm` for size-aware edge bounds. Tunable by playtest. */
-  world: { width: 1600, height: 1000 },
-  /** Physical sprite-box sizes in world px — single source for both render size (client) and the size-aware edge
-   * bounds (server, via `halfExtentNorm`). `item` is the falling-item sprite box; `player` is the Pokémon sprite
-   * height by stage. */
+  world: { width: 2400, height: 900 },
+  /** Physical sprite-box size in world px of a falling item — single source for both render size (client) and the
+   * size-aware collision reach (server). Per-player sprite sizes are no longer global: they're per-stage, per-line
+   * and arrive on `join` as `Player.body` (see `StageBody`), so the server stays roster-agnostic. */
   physicalSizePx: {
     item: 60,
-    player: { 1: 72, 2: 96, 3: 120 },
   },
 } as const;

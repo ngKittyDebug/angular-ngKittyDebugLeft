@@ -4,57 +4,72 @@ import { pickItemType } from '../engine/pick-item-type';
 
 describe('pickItemType', () => {
   // Cumulative weight bands over FRENZY.spawnWeights in insertion order:
-  // food=55 rotten=15 rock=20 brick=10 rareCandy=5 bomb=10 goldenBerry=5 crumb=35 mushroom=12 vitamin=8 shield=6 easterEgg=6 → total=187.
+  // food=55 rotten=15 rock=20 brick=10 rareCandy=5 bomb=10 goldenBerry=5 crumb=35 mushroom=12 vitamin=8 shield=6 easterEgg=6 poop=6 → total=193.
   // Multiplied roll bands: food<55, rotten<70, rock<90, brick<100, rareCandy<105, bomb<115, goldenBerry<120,
-  // crumb<155, mushroom<167, vitamin<175, shield<181, else easterEgg. Rolls below pick a representative point per band.
+  // crumb<155, mushroom<167, vitamin<175, shield<181, easterEgg<187, else poop. Rolls below pick a band midpoint.
   it('returns food for low rolls', () => {
     expect(pickItemType(() => 0)).toBe('food');
     expect(pickItemType(() => 0.2)).toBe('food');
   });
 
   it('returns rotten in the 55..70 roll band', () => {
-    expect(pickItemType(() => 0.34)).toBe('rotten');
+    expect(pickItemType(() => 0.324)).toBe('rotten');
   });
 
   it('returns rock in the 70..90 roll band', () => {
-    expect(pickItemType(() => 0.45)).toBe('rock');
+    expect(pickItemType(() => 0.414)).toBe('rock');
   });
 
   it('returns brick in the 90..100 roll band', () => {
-    expect(pickItemType(() => 0.5)).toBe('brick');
+    expect(pickItemType(() => 0.492)).toBe('brick');
   });
 
   it('returns rareCandy in the 100..105 roll band', () => {
-    expect(pickItemType(() => 0.55)).toBe('rareCandy');
+    expect(pickItemType(() => 0.531)).toBe('rareCandy');
   });
 
   it('returns bomb in the 105..115 roll band', () => {
-    expect(pickItemType(() => 0.59)).toBe('bomb');
+    expect(pickItemType(() => 0.57)).toBe('bomb');
   });
 
   it('returns goldenBerry in the 115..120 roll band', () => {
-    expect(pickItemType(() => 0.63)).toBe('goldenBerry');
+    expect(pickItemType(() => 0.609)).toBe('goldenBerry');
   });
 
   it('returns crumb in the 120..155 roll band', () => {
-    expect(pickItemType(() => 0.73)).toBe('crumb');
+    expect(pickItemType(() => 0.712)).toBe('crumb');
   });
 
   it('returns mushroom in the 155..167 roll band', () => {
-    expect(pickItemType(() => 0.86)).toBe('mushroom');
+    expect(pickItemType(() => 0.834)).toBe('mushroom');
   });
 
   it('returns vitamin in the 167..175 roll band', () => {
-    expect(pickItemType(() => 0.91)).toBe('vitamin');
+    expect(pickItemType(() => 0.886)).toBe('vitamin');
   });
 
   it('returns shield in the 175..181 roll band', () => {
-    expect(pickItemType(() => 0.952)).toBe('shield');
+    expect(pickItemType(() => 0.922)).toBe('shield');
   });
 
-  it('returns easterEgg at the top end', () => {
-    expect(pickItemType(() => 0.98)).toBe('easterEgg');
-    expect(pickItemType(() => 0.999)).toBe('easterEgg');
+  it('returns easterEgg in the 181..187 roll band', () => {
+    expect(pickItemType(() => 0.953)).toBe('easterEgg');
+    expect(pickItemType(() => 0.965)).toBe('easterEgg');
+  });
+
+  it('returns poop at the top end', () => {
+    expect(pickItemType(() => 0.99)).toBe('poop');
+    expect(pickItemType(() => 0.999)).toBe('poop');
+  });
+
+  it('honours a custom weight map (the poop emit pool) over the default spawn weights', () => {
+    // rock=10 brick=20 bomb=10 → total 40; bands: rock<10, brick<30, bomb<40.
+    const poolWeights = { rock: 10, brick: 20, bomb: 10 };
+    const all = (): boolean => true;
+
+    expect(pickItemType(() => 0.1, all, poolWeights)).toBe('rock'); // 4
+    expect(pickItemType(() => 0.5, all, poolWeights)).toBe('brick'); // 20
+    expect(pickItemType(() => 0.9, all, poolWeights)).toBe('bomb'); // 36
   });
 
   it('never returns a feature-flag-disabled item across the whole roll range', () => {

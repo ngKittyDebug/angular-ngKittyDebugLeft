@@ -5,6 +5,7 @@ import { FRENZY } from '@game/frenzy/config';
 import type { ClientMessage, ServerMessage } from '@game/frenzy/types';
 
 import FeedingRoom from '../index';
+import { TEST_BODY } from './test-body';
 
 const TICK_MS = 1000 / FRENZY.tickRateHz;
 
@@ -50,7 +51,12 @@ function send(server: FeedingRoom, conn: FakeConnection, message: ClientMessage)
 
 function joinPlayer(server: FeedingRoom, conn: FakeConnection, token: string): void {
   send(server, conn, { type: 'identify', sessionToken: token });
-  send(server, conn, { type: 'join', name: `Trainer-${token}`, appearance: 'caterpie' });
+  send(server, conn, {
+    type: 'join',
+    name: `Trainer-${token}`,
+    appearance: 'caterpie',
+    body: TEST_BODY,
+  });
 }
 
 function byType<T extends ServerMessage['type']>(

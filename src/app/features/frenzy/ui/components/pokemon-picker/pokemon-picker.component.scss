@@ -1,112 +1,235 @@
 @use 'utility/hud-pill' as *;
 
 .picker {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  align-items: center;
-  width: min(420px, 90vw);
+  gap: 1.25rem;
+  align-items: stretch;
+  width: min(440px, 92vw);
   // Never grow past the overlay (short landscape fits 6 tiles only with internal scroll).
   max-height: 100%;
-  padding: 1.5rem;
+  padding: 1.75rem 1.5rem 1.5rem;
   overflow-y: auto;
-  border-radius: 1rem;
+  border-radius: 1.25rem;
+  text-align: center;
 
   @include hud_pill;
 
-  &__title {
-    margin: 0;
-    font-size: 1.25rem;
-  }
+  // Deep-sea glass: stronger frost + a bioluminescent ambient halo (theme-driven --aq-glow) + lift.
+  backdrop-filter: blur(14px) saturate(1.2);
+  box-shadow:
+    0 18px 50px -12px rgba(0, 0, 0, 0.55),
+    0 0 42px -8px var(--aq-glow);
+  animation: picker-rise 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
 
   &__name {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.375rem;
     width: 100%;
+    text-align: left;
   }
 
   &__label {
-    font-size: 0.875rem;
-    opacity: 0.7;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    opacity: 0.6;
   }
 
   &__input {
     width: 100%;
     padding: 0.75rem 1rem;
     background: color-mix(in srgb, var(--tui-text-primary) 8%, transparent);
-    border: 1px solid color-mix(in srgb, var(--tui-text-primary) 20%, transparent);
-    border-radius: 0.5rem;
+    border: 1px solid color-mix(in srgb, var(--tui-text-primary) 18%, transparent);
+    border-radius: 0.625rem;
     color: inherit;
     font-size: 1rem;
+    transition:
+      border-color 0.15s,
+      box-shadow 0.15s,
+      background 0.15s;
+
+    &::placeholder {
+      opacity: 0.4;
+    }
 
     &:focus {
-      outline: 2px solid var(--tui-status-positive);
-      outline-offset: 2px;
+      outline: none;
+      background: color-mix(in srgb, var(--tui-text-primary) 11%, transparent);
+      border-color: var(--tui-status-positive);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--tui-status-positive) 25%, transparent);
     }
   }
 
   &__lines {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 0.5rem;
+    gap: 0.625rem;
     width: 100%;
   }
 
   &__line {
+    position: relative;
     display: flex;
     flex-direction: column;
-    gap: 0.375rem;
+    gap: 0.5rem;
     align-items: center;
-    padding: 0.5rem;
-    background: color-mix(in srgb, var(--tui-text-primary) 5%, transparent);
-    border: 2px solid transparent;
-    border-radius: 0.75rem;
+    padding: 0.75rem 0.5rem;
+    background: color-mix(in srgb, var(--tui-text-primary) 6%, transparent);
+    border: 1.5px solid color-mix(in srgb, var(--tui-text-primary) 10%, transparent);
+    border-radius: 0.875rem;
     color: inherit;
     cursor: pointer;
     transition:
-      background 0.15s,
-      border-color 0.15s;
+      transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+      background 0.18s,
+      border-color 0.18s,
+      box-shadow 0.18s;
+    animation: picker-tile-in 0.4s both;
 
     &:hover {
-      background: color-mix(in srgb, var(--tui-text-primary) 10%, transparent);
+      transform: translateY(-3px);
+      background: color-mix(in srgb, var(--tui-text-primary) 12%, transparent);
+      border-color: color-mix(in srgb, var(--tui-status-positive) 50%, transparent);
+      box-shadow: 0 8px 20px -10px var(--aq-glow);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--tui-status-positive);
+      outline-offset: 2px;
     }
 
     &--selected {
-      background: color-mix(in srgb, var(--tui-status-positive) 20%, transparent);
+      background: color-mix(in srgb, var(--tui-status-positive) 18%, transparent);
       border-color: var(--tui-status-positive);
+      box-shadow:
+        0 0 0 1px var(--tui-status-positive),
+        0 10px 24px -10px color-mix(in srgb, var(--tui-status-positive) 60%, transparent);
+
+      // Corner check badge — selection affordance (decorative, drawn in CSS).
+      &::after {
+        content: '';
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--tui-status-positive)
+          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 13l4 4L19 7'/%3E%3C/svg%3E")
+          center / 10px no-repeat;
+      }
     }
   }
 
   &__sprite {
     width: auto;
-    height: 48px;
+    height: 52px;
     object-fit: contain;
     image-rendering: pixelated;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.35));
+    transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  &__line:hover &__sprite {
+    transform: scale(1.08) translateY(-2px);
   }
 
   &__name-label {
     font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  &__error {
+    margin: 0;
+    color: var(--tui-status-negative);
+    font-size: 0.85rem;
+    font-weight: 600;
   }
 
   &__submit {
-    padding: 0.75rem 2rem;
-    background: var(--tui-status-positive);
+    margin-top: 0.25rem;
+    padding: 0.875rem 2rem;
+    background: linear-gradient(
+      135deg,
+      var(--tui-status-positive),
+      color-mix(in srgb, var(--tui-status-positive) 65%, #0bbf8f)
+    );
     border: none;
-    border-radius: 0.5rem;
-    color: #0a0a0a;
-    font-size: 1rem;
-    font-weight: 600;
+    border-radius: 0.75rem;
+    color: #04130d;
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
     cursor: pointer;
-    transition: opacity 0.15s;
+    box-shadow: 0 8px 22px -8px color-mix(in srgb, var(--tui-status-positive) 70%, transparent);
+    transition:
+      transform 0.15s,
+      box-shadow 0.15s,
+      filter 0.15s,
+      opacity 0.15s;
 
     &:disabled {
       cursor: not-allowed;
       opacity: 0.4;
+      box-shadow: none;
     }
 
     &:not(:disabled):hover {
-      background: color-mix(in srgb, var(--tui-status-positive) 80%, white);
+      transform: translateY(-2px);
+      filter: brightness(1.08);
+      box-shadow: 0 12px 28px -8px color-mix(in srgb, var(--tui-status-positive) 80%, transparent);
     }
+
+    &:not(:disabled):active {
+      transform: translateY(0);
+    }
+  }
+
+  // Staggered tile reveal on open.
+  @for $i from 1 through 12 {
+    &__line:nth-child(#{$i}) {
+      animation-delay: #{0.1 + 0.03 * $i}s;
+    }
+  }
+}
+
+@keyframes picker-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes picker-tile-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .picker,
+  .picker__line {
+    animation: none;
+  }
+
+  .picker__line,
+  .picker__line:hover .picker__sprite,
+  .picker__submit {
+    transition: none;
   }
 }

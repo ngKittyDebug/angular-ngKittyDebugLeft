@@ -20,6 +20,19 @@
     #e9cf97 38%,
     rgba(233, 207, 151, 0) 72%
   );
+  // Sandy seabed band (replaces the full-cover floor glow with a real bottom strip the kelp roots into):
+  // `--aq-sand` is the band's vertical gradient (lit tan crest → shaded bottom), `--aq-sand-grain` tints the
+  // speckle texture, `--aq-sand-crest` is the lit dune ridge along the uneven top edge.
+  --aq-sand: linear-gradient(180deg, #f3e1b0 0%, #e6c886 46%, #cda869 100%);
+  --aq-sand-grain: rgba(122, 88, 44, 0.2);
+  --aq-sand-crest: #f7e8bf;
+  // Ejected debris grains in the landing/explosion puff: a deep, saturated amber — clearly darker than the pale
+  // crest cloud and the bright shallows, so it reads against both — ringed by a DARK halo (not a light one, which
+  // vanished into the pale cloud) for a crisp edge wherever the grain lands.
+  --aq-sand-debris: #b96f12;
+  --aq-sand-debris-rim: rgba(40, 22, 0, 0.6);
+  // Soft shadow a resting item casts on the sand — warm brown so it reads as a shadow on the tan shallows.
+  --aq-item-shadow: rgba(70, 48, 18, 0.34);
   --aq-ray: rgba(255, 255, 255, 0.9);
   --aq-bubble: rgba(255, 255, 255, 0.95);
   // Bright-white specks (like the bubbles): motes + the foreground parallax are pure white, scaled up and lifted
@@ -54,6 +67,17 @@
     #160f33 42%,
     rgba(22, 15, 51, 0) 76%
   );
+  // Dark silt seabed — lifted to a distinct blue-violet band so it reads as a floor against the near-black abyss
+  // water (the earlier darker silt blended into the background). See the light block for what each var drives.
+  --aq-sand: linear-gradient(180deg, #443573 0%, #2e2154 52%, #1b1340 100%);
+  --aq-sand-grain: rgba(176, 158, 240, 0.22);
+  --aq-sand-crest: #5a4794;
+  // Debris grains: a bright warm gold that pops hard against both the muted-violet crest cloud and the near-black
+  // abyss water — warm-on-cool maximises contrast here — with a dark halo for a crisp edge over the cloud.
+  --aq-sand-debris: #ffc24d;
+  --aq-sand-debris-rim: rgba(0, 0, 0, 0.7);
+  // Deep shadow (darker than the violet silt so it still reads on the dark seabed).
+  --aq-item-shadow: rgba(8, 4, 26, 0.55);
   --aq-ray: rgba(120, 160, 255, 0.28);
   --aq-bubble: rgba(180, 210, 255, 0.6);
   --aq-plankton: rgba(150, 220, 255, 1);

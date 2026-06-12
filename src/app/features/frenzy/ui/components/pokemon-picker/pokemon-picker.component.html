@@ -1,6 +1,4 @@
 <section class="picker">
-  <h2 class="picker__title">Choose your Pokémon</h2>
-
   <label class="picker__name">
     <span class="picker__label">Your name</span>
     <input
@@ -31,6 +29,12 @@
       </button>
     }
   </div>
+
+  @if (error(); as reason) {
+    <p class="picker__error" role="alert" *transloco="let t; prefix: 'frenzy.joinError'">
+      {{ t(reason) }}
+    </p>
+  }
 
   <button type="button" class="picker__submit" [disabled]="!canSubmit()" (click)="submit()">
     Join the frenzy

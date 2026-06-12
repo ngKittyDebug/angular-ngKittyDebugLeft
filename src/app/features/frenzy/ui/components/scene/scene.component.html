@@ -23,6 +23,14 @@
       />
     }
 
+    @for (puff of sandPuffs(); track puff.id) {
+      <left-paw-sand-puff
+        [leftPawScenePosition]="{ x: puff.x, y: puff.y }"
+        [weight]="puff.weight"
+        [type]="puff.type"
+      />
+    }
+
     @for (float of orphanFloats(); track float.id) {
       <left-paw-floating-text
         [leftPawScenePosition]="{ x: float.x, y: float.y }"
@@ -42,14 +50,69 @@
         [scenePositionTransform]="true"
         [player]="player"
         [floats]="floatsByOwner().get(player.id) ?? []"
+        [sparks]="sparksByOwner().get(player.id) ?? []"
         [maxHp]="maxHp"
         [shieldAuraClass]="shieldAuraClass"
         (poke)="onSelfPoke()"
       />
     }
 
+    @if (debug) {
+      <!-- Debug hitbox overlay (?debug): each actor's physical box centred on its position — the source of the
+           server AABB — to tune authored sizes against the sprite silhouette. -->
+      @for (player of renderedPlayers(); track player.id) {
+        <!-- Yellow = full art box (render size), shifted by the same centring offset as the sprite. -->
+        <left-paw-debug-box
+          variant="art"
+          [leftPawScenePosition]="{ x: player.x, y: player.y }"
+          [scenePositionTransform]="true"
+          [width]="player.spriteWidth"
+          [height]="player.spriteHeight"
+          [offsetX]="-player.spriteOffsetX + 'px'"
+          [offsetY]="-player.spriteOffsetY + 'px'"
+        />
+        <!-- Green = body hitbox (what the server collides), centred on the actor point. -->
+        <left-paw-debug-box
+          variant="body"
+          [leftPawScenePosition]="{ x: player.x, y: player.y }"
+          [scenePositionTransform]="true"
+          [width]="player.hitboxWidth"
+          [height]="player.hitboxHeight"
+        />
+        <!-- Readout pill floating just above the native box — current drift speed for now, more fields later. -->
+        <left-paw-debug-readout
+          [leftPawScenePosition]="{ x: player.x, y: player.y }"
+          [scenePositionTransform]="true"
+          [style.--debug-readout-offset-y]="player.debugReadoutOffsetY"
+          label="v"
+          [value]="player.debugSpeed"
+        />
+      }
+
+      @for (item of renderedItems(); track item.id) {
+        <left-paw-debug-box
+          variant="item"
+          [leftPawScenePosition]="{ x: item.x, y: item.y }"
+          [scenePositionTransform]="true"
+          [width]="itemSize"
+          [height]="itemSize"
+        />
+      }
+    }
+
+    <!-- In-world near kelp drawn IN FRONT of the actors (its own z-index), so the Pokémon can duck behind it. -->
+    <left-paw-midground-kelp />
+
     @for (burst of bursts(); track burst.id) {
       <left-paw-bubble-burst [leftPawScenePosition]="{ x: burst.x, y: burst.y }" />
+    }
+
+    @for (hit of hitBursts(); track hit.id) {
+      <left-paw-bubble-burst
+        [leftPawScenePosition]="{ x: hit.x, y: hit.y }"
+        [variant]="hit.mode"
+        [mine]="hit.mine"
+      />
     }
 
     @for (blast of blasts(); track blast.id) {
@@ -73,4 +136,8 @@
        via background-position), giving a depth/direction cue over uniform mid-water. Decorative only. -->
   <div class="scene__parallax scene__parallax--mid" #parallaxMid aria-hidden="true"></div>
   <div class="scene__parallax scene__parallax--near" #parallaxNear aria-hidden="true"></div>
+
+  <!-- Foreground kelp: a screen-space near layer in FRONT of the actors (camera writes its width/transform each
+       frame), so the Pokémon swim between the seabed backdrop and these close fronds. Decorative only. -->
+  <left-paw-foreground-kelp #foregroundKelp />
 </section>

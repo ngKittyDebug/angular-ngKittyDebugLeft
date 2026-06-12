@@ -3,13 +3,17 @@ import {
   Component,
   computed,
   inject,
+  input,
   output,
   signal,
 } from '@angular/core';
+import { TranslocoDirective } from '@jsverse/transloco';
+
+import type { JoinRejectReason } from '@game/frenzy/types';
 
 import { PlayerPersistenceService } from '../../../data/services/player-persistence.service';
 import type { Line } from '../../constants/pokemon-registry';
-import { POKEMON_LINES } from '../../constants/pokemon-registry';
+import { knownLine, POKEMON_LINES } from '../../constants/pokemon-registry';
 import { PokemonSpritePipe } from '../../pipes/pokemon-sprite.pipe';
 
 export interface PickerSubmission {
@@ -17,21 +21,18 @@ export interface PickerSubmission {
   line: Line;
 }
 
-// Restore the last-played Pokémon only if it's still a known line — a stale/garbage stored value pre-selects
-// nothing rather than silently falling back to an arbitrary roster entry.
-function knownLine(appearance: string): Line | null {
-  return POKEMON_LINES.some((option) => option.id === appearance) ? (appearance as Line) : null;
-}
-
 @Component({
   selector: 'left-paw-pokemon-picker',
-  imports: [PokemonSpritePipe],
+  imports: [PokemonSpritePipe, TranslocoDirective],
   templateUrl: './pokemon-picker.component.html',
   styleUrl: './pokemon-picker.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PokemonPickerComponent {
   private readonly persistence = inject(PlayerPersistenceService);
+  // Server's reason for refusing the last join (null = none); shown localized so the player sees why submit
+  // didn't take. Cleared store-side on the next attempt.
+  public readonly error = input<JoinRejectReason | null>(null);
   public readonly submitPicker = output<PickerSubmission>();
   protected readonly canSubmit = computed(
     () => this.name().trim().length > 0 && this.selectedLine() !== null,

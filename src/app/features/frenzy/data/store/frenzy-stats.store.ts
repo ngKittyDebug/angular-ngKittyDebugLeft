@@ -26,7 +26,7 @@ interface FrenzyStatsState {
   startedAt: number | null;
 }
 
-// `bomb`, `vitamin`, `shield` and `easterEgg` are never "eaten" (bomb explodes; the others grant effects),
+// `bomb`, `vitamin`, `shield`, `easterEgg` and `poop` are never "eaten" (bomb explodes; the others grant effects),
 // so their counts stay 0 and the fainted breakdown skips them.
 function emptyCounts(): EatenCounts {
   return {
@@ -42,6 +42,7 @@ function emptyCounts(): EatenCounts {
     vitamin: 0,
     shield: 0,
     easterEgg: 0,
+    poop: 0,
   };
 }
 

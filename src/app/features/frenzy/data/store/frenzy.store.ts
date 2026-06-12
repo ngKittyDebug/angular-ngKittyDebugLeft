@@ -10,7 +10,13 @@ import {
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { tap } from 'rxjs';
 
-import type { ServerMessage, ServerState } from '@game/frenzy/types';
+import type {
+  FaintCause,
+  JoinRejectReason,
+  PlayerBody,
+  ServerMessage,
+  ServerState,
+} from '@game/frenzy/types';
 
 import { applyServerMessage } from './apply-server-message';
 import { FrenzySocketService } from '../services/frenzy-socket.service';
@@ -22,14 +28,24 @@ interface FrenzyState {
   state: ServerState | null;
   myId: string | null;
   myFaintedAt: number | null;
+  // Captured at the moment I faint (for the obituary in the fainted modal): the killing-blow cause and, when an
+  // item from another player landed it, that player's name resolved from the snapshot before they drift on.
+  myFaintCause: FaintCause | null;
+  myKillerName: string | null;
   roomFull: boolean;
+  // Set when the server refuses a join (bad name/appearance/body); cleared on the next join attempt. Surfaced in
+  // the picker so the player sees why instead of the submit silently doing nothing.
+  joinError: JoinRejectReason | null;
 }
 
 const initialState: FrenzyState = {
   state: null,
   myId: null,
   myFaintedAt: null,
+  myFaintCause: null,
+  myKillerName: null,
   roomFull: false,
+  joinError: null,
 };
 
 export const FrenzyStore = signalStore(
@@ -91,11 +107,16 @@ export const FrenzyStore = signalStore(
       dismissFainted(): void {
         patchState(store, { myFaintedAt: null });
       },
-      join(name: string, appearance: string): void {
+      join(name: string, appearance: string, body: PlayerBody): void {
         persistence.saveName(name);
         persistence.saveAppearance(appearance);
-        patchState(store, { myFaintedAt: null });
-        socket.send({ type: 'join', name, appearance });
+        patchState(store, {
+          myFaintedAt: null,
+          myFaintCause: null,
+          myKillerName: null,
+          joinError: null,
+        });
+        socket.send({ type: 'join', name, appearance, body });
       },
       steer(x: number, y: number): void {
         socket.send({ type: 'steer', x, y });
@@ -116,8 +137,22 @@ export const FrenzyStore = signalStore(
               next.roomFull = true;
             }
 
+            if (message.type === 'joinRejected') {
+              next.joinError = message.reason;
+            }
+
             if (message.type === 'fainted' && message.playerId === current.myId) {
+              const cause = message.cause ?? null;
+
               next.myFaintedAt = Date.now();
+              next.myFaintCause = cause;
+              // Resolve the culprit's name from the pre-removal snapshot (the killer is a different, still-present
+              // player); null unless an owned item (easter-egg/poop emission) dealt the blow.
+              next.myKillerName =
+                cause?.by === 'item' && cause.killerId !== undefined
+                  ? (current.state?.players.find((player) => player.id === cause.killerId)?.name ??
+                    null)
+                  : null;
             }
 
             return next;

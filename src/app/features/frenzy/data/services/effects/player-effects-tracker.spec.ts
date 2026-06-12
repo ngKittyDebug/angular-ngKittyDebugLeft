@@ -5,8 +5,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Player, PlayerEffectKind, ServerMessage, ServerState } from '@game/frenzy/types';
 
 import { EasterEggSoundService } from '../sound/easter-egg-sound.service';
+import { PoopEatSoundService } from '../sound/poop-eat-sound.service';
 import { ShieldSoundService } from '../sound/shield-sound.service';
 import { WellFedSoundService } from '../sound/well-fed-sound.service';
+import { bodyForAppearance } from '../../../ui/constants/pokemon-registry';
 import { FrenzyStore } from '../../store/frenzy.store';
 import { FloatingMessagesStore } from './floating-messages.store';
 import { PlayerEffectsTracker } from './player-effects-tracker.service';
@@ -16,6 +18,7 @@ function player(id: string, name: string): Player {
     id,
     name,
     appearance: 'pidgey',
+    body: bodyForAppearance('pidgey'),
     stage: 1,
     hp: 100,
     x: 0.5,
@@ -35,6 +38,9 @@ function granted(playerId: string, kind: PlayerEffectKind = 'shield'): ServerMes
     playerId,
     effect: { kind, expiresAt: 9000 },
     itemId: 'v1',
+    x: 0.5,
+    y: 0.5,
+    via: 'click',
   };
 }
 
@@ -44,12 +50,14 @@ describe('PlayerEffectsTracker', () => {
   let shieldPlay: ReturnType<typeof vi.fn>;
   let wellFedPlay: ReturnType<typeof vi.fn>;
   let layingPlay: ReturnType<typeof vi.fn>;
+  let poopPlay: ReturnType<typeof vi.fn>;
   let state: ReturnType<typeof signal<ServerState | null>>;
 
   beforeEach(() => {
     shieldPlay = vi.fn();
     wellFedPlay = vi.fn();
     layingPlay = vi.fn();
+    poopPlay = vi.fn();
     state = signal<ServerState | null>({
       players: [player('me', 'Me'), player('other', 'Ash')],
       items: [],
@@ -64,6 +72,7 @@ describe('PlayerEffectsTracker', () => {
         { provide: ShieldSoundService, useValue: { play: shieldPlay } },
         { provide: WellFedSoundService, useValue: { play: wellFedPlay } },
         { provide: EasterEggSoundService, useValue: { play: layingPlay } },
+        { provide: PoopEatSoundService, useValue: { play: poopPlay } },
       ],
     });
     tracker = TestBed.inject(PlayerEffectsTracker);
@@ -90,6 +99,16 @@ describe('PlayerEffectsTracker', () => {
     expect(messages[0].textKey).toContain('statusMessage.laying');
     expect(layingPlay).toHaveBeenCalledOnce();
     expect(shieldPlay).not.toHaveBeenCalled();
+  });
+
+  it('floats a pooping quip and plays the poop-eat sound for my own poop grant', () => {
+    tracker.handle(granted('me', 'pooping'));
+
+    const messages = floats.ownedMessages();
+
+    expect(messages[0].textKey).toContain('statusMessage.pooping');
+    expect(poopPlay).toHaveBeenCalledOnce();
+    expect(layingPlay).not.toHaveBeenCalled();
   });
 
   it('floats a wellFed quip and plays the wellFed sound for my own vitamin grant', () => {

@@ -28,14 +28,15 @@ describe('ItemExtrapolatorService', () => {
     expect(service.rendered()[0].x).toBeGreaterThan(0);
   });
 
-  it('marks an item landed once it reaches the floor', () => {
+  it('marks an item landed once it reaches its seabed line', () => {
     const service = new ItemExtrapolatorService();
-    const falling = item({ id: 'i1', y: 0.95, vy: 0.2 });
+    const falling = item({ id: 'i1', y: 0.5, vy: 0.2 });
 
     service.ingest([falling], 0);
     expect(service.rendered()[0].landed).toBe(false);
 
-    service.tick([falling], 1000); // y = min(1, 0.95 + 0.2)
+    // +3s at 0.2 u/s overshoots the rest line (~0.92 for this id), so it clamps there and reads as landed.
+    service.tick([falling], 3000);
     expect(service.rendered()[0].landed).toBe(true);
   });
 

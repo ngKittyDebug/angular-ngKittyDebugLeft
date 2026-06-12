@@ -2,18 +2,20 @@ import { FRENZY, isItemEnabled } from '@game/frenzy/config';
 import type { ItemType } from '@game/frenzy/types';
 
 /**
- * Weighted random pick over FRENZY.spawnWeights: walk the cumulative sum until the roll lands in a bucket.
- * Generic over the weight map so adding item types needs no change here — only a new weight entry.
+ * Weighted random pick over a weight map (defaults to `FRENZY.spawnWeights`): walk the cumulative sum until the
+ * roll lands in a bucket. Generic over the weight map so adding item types needs no change here — only a new weight
+ * entry — and so callers can pass a different pool (e.g. `FRENZY.poopEmitWeights` for the poop spray).
  *
  * Disabled items (see `FRENZY.features.items`) are filtered out before the walk, so a feature-flagged-off item
  * never spawns on any path. `isEnabled` is injected (defaults to the real flag check) so the gating is testable.
- * Invariant: at least one item stays enabled, so the pool is never empty.
+ * Invariant: at least one item in the map stays enabled, so the pool is never empty.
  */
 export function pickItemType(
   rng: () => number,
   isEnabled: (type: ItemType) => boolean = isItemEnabled,
+  weights: Partial<Record<ItemType, number>> = FRENZY.spawnWeights,
 ): ItemType {
-  const entries = (Object.entries(FRENZY.spawnWeights) as [ItemType, number][]).filter(
+  const entries = (Object.entries(weights) as [ItemType, number][]).filter(
     ([type, weight]) => weight > 0 && isEnabled(type),
   );
   const total = entries.reduce((sum, [, weight]) => sum + weight, 0);

@@ -48,3 +48,25 @@ export function halfExtentNorm(sizePx: number, dimensionPx: number): number {
 export function isItemEnabled(type: ItemType): boolean {
   return FRENZY.features.items[type].enabled;
 }
+
+/**
+ * Deterministic per-item resting y (normalized) within `range` (default `FRENZY.itemRestYRange`), hashed from the
+ * item id. Server-authoritative: the engine settles a landing item here, and the client extrapolator clamps the
+ * fall to the SAME value (so no snap on the confirming snapshot). Spreading rest y by id scatters settled items
+ * across the seabed instead of stacking them on one row.
+ */
+export function restYFor(
+  id: string,
+  range: readonly [number, number] = FRENZY.itemRestYRange,
+): number {
+  let hash = 0;
+
+  for (const character of id) {
+    hash = (hash * 31 + character.charCodeAt(0)) | 0;
+  }
+
+  const [min, max] = range;
+  const fraction = (Math.abs(hash) % 1000) / 1000;
+
+  return min + fraction * (max - min);
+}

@@ -8,9 +8,16 @@ export const CAMERA_LERP = 0.12;
 // Dead-zone band as a fraction of the viewport: the focus roams freely inside [low, high] without moving the
 // camera; only when it crosses an edge does the camera scroll to hold it at that edge. Calmer than always
 // centring — the camera stays still while the Pokémon drifts within the central band, which also removes the
-// constant micro-scroll that beat against pixel rounding. The band is the middle half of each viewport axis.
-export const CAMERA_DEAD_ZONE_LOW = 0.25;
-export const CAMERA_DEAD_ZONE_HIGH = 0.75;
+// constant micro-scroll that beat against pixel rounding. Narrower band → the camera starts following sooner
+// (the Pokémon reaches the edge with less drift).
+//
+// The band is PER-AXIS: horizontal is the middle ~third, vertical is TIGHTER still. The world has little
+// vertical slack (CAMERA_VERTICAL_FILL renders it only ~25% taller than the viewport), so following the Pokémon
+// up/down earlier keeps it comfortably framed instead of letting it ride near the top/bottom edge.
+export const CAMERA_DEAD_ZONE_X_LOW = 0.35;
+export const CAMERA_DEAD_ZONE_X_HIGH = 0.65;
+export const CAMERA_DEAD_ZONE_Y_LOW = 0.42;
+export const CAMERA_DEAD_ZONE_Y_HIGH = 0.58;
 
 // Responsive zoom: the world layer is scaled so small screens see MORE of the world (smaller on-screen sprites)
 // instead of a tiny zoomed-in slice, and large screens render a touch below native size. The server stays in
@@ -27,11 +34,27 @@ export const CAMERA_MAX_SCALE = 0.85;
 // relative to the camera; kept gentle so it never lurches opposite the motion. Render-only tunables.
 export const PARALLAX_NEAR = 0.6;
 export const PARALLAX_MID = 0.35;
+// Foreground kelp layer: it's the CLOSEST thing to the camera, so it pans clearly FASTER than the world (>1) for
+// a felt depth cue while the camera scrolls. Applied as a horizontal translate factor on the camera offset (see
+// SceneCameraService). This is the ONLY layer that parallaxes — the backdrop and midground kelp are in-world
+// (locked 1:1 to the camera so the Pokémon can hide in them), so the depth feel rides entirely on this factor;
+// keep it well above 1 (1.02 was imperceptible).
+export const PARALLAX_FRONT = 1.22;
+// The foreground layer is sized to the scaled world width × this margin: with PARALLAX_FRONT panning it faster
+// than the world, the margin guarantees its blades still span the viewport at the extremes of the scroll (so no
+// gap opens at an edge). Must be ≥ PARALLAX_FRONT; see the coverage note in SceneCameraService.
+export const FOREGROUND_WIDTH_FACTOR = 1.4;
+
+// Vertical over-zoom: how much taller than the viewport the scaled world is rendered, so there's slack for the
+// camera to actually scroll DOWN and follow the Pokémon (without it the height-cover term made the world fill the
+// viewport exactly on most aspect ratios, pinning the floor to the bottom edge with zero vertical travel). 1.25 =
+// 25% taller → the camera can hold the Pokémon off the bottom edge through its descent. Render-only tunable.
+export const CAMERA_VERTICAL_FILL = 1.25;
 
 // `comfort` is the width-driven zoom-out (`clamp(vw / REFERENCE, MIN, MAX)`); `cover` is the floor that keeps the
-// scaled world filling the viewport on BOTH axes, so there's never a letterbox band of page background around it.
-// Cover wins when the window is large or awkwardly-shaped relative to the world (sprites grow a touch to fill);
-// otherwise the comfort zoom-out applies.
+// scaled world filling the viewport on BOTH axes (so there's never a letterbox band), with the height term scaled
+// by `CAMERA_VERTICAL_FILL` to leave vertical scroll room for following the Pokémon down. Cover wins when the
+// window is large or awkwardly-shaped relative to the world (sprites grow a touch); otherwise comfort applies.
 export function cameraScale(
   viewportWidth: number,
   viewportHeight: number,
@@ -42,7 +65,10 @@ export function cameraScale(
     CAMERA_MAX_SCALE,
     Math.max(CAMERA_MIN_SCALE, viewportWidth / CAMERA_REFERENCE_WIDTH),
   );
-  const cover = Math.max(viewportWidth / worldWidth, viewportHeight / worldHeight);
+  const cover = Math.max(
+    viewportWidth / worldWidth,
+    (viewportHeight / worldHeight) * CAMERA_VERTICAL_FILL,
+  );
 
   return Math.max(comfort, cover);
 }
@@ -63,21 +89,24 @@ export function centerCameraAxis(focus: number, viewport: number, world: number)
   return clampCameraAxis(viewport / 2 - focus * world, viewport, world);
 }
 
-// One-axis dead-zone target (px): keep the current offset while the focus stays inside the central band; once it
-// crosses a band edge, return the offset that pins it back to that edge. Always clamped to the world bounds.
+// One-axis dead-zone target (px): keep the current offset while the focus stays inside the band [lowFraction,
+// highFraction] (fractions of the viewport); once it crosses a band edge, return the offset that pins it back to
+// that edge. Always clamped to the world bounds. The band is passed in so each axis can use its own width.
 export function deadZoneCameraAxis(
   currentOffset: number,
   focus: number,
   viewport: number,
   world: number,
+  lowFraction: number,
+  highFraction: number,
 ): number {
   if (world <= viewport) {
     return (viewport - world) / 2;
   }
 
   const screen = focus * world + currentOffset;
-  const low = viewport * CAMERA_DEAD_ZONE_LOW;
-  const high = viewport * CAMERA_DEAD_ZONE_HIGH;
+  const low = viewport * lowFraction;
+  const high = viewport * highFraction;
   let offset = currentOffset;
 
   if (screen < low) {

@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import type { Player } from '@game/frenzy/types';
 
+import { bodyForAppearance } from '../../../ui/constants/pokemon-registry';
 import { FrenzyStore } from '../../store/frenzy.store';
 import { FloatingMessagesStore } from './floating-messages.store';
 import { SelfMoodEffect } from './self-mood-effect.service';
@@ -13,6 +14,7 @@ function me(hp: number): Player {
     id: 'me',
     name: 'Me',
     appearance: 'pidgey',
+    body: bodyForAppearance('pidgey'),
     stage: 1,
     hp,
     x: 0.5,

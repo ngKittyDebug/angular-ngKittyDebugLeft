@@ -4,6 +4,7 @@ import type { PlayerEffectKind, ServerMessage } from '@game/frenzy/types';
 
 import type { SoundEffect } from '../../models/sound-effect';
 import { EasterEggSoundService } from '../sound/easter-egg-sound.service';
+import { PoopEatSoundService } from '../sound/poop-eat-sound.service';
 import { ShieldSoundService } from '../sound/shield-sound.service';
 import { WellFedSoundService } from '../sound/well-fed-sound.service';
 import { FrenzyStore } from '../../store/frenzy.store';
@@ -11,10 +12,11 @@ import type { FrenzyEffect } from './frenzy-effect';
 import { FloatingMessagesStore } from './floating-messages.store';
 
 // Status-float phrase set to play per granted effect kind (keys live under `frenzy.scene.statusMessage`).
-const STATUS_FOR_EFFECT: Record<PlayerEffectKind, 'shield' | 'wellFed' | 'laying'> = {
+const STATUS_FOR_EFFECT: Record<PlayerEffectKind, 'shield' | 'wellFed' | 'laying' | 'pooping'> = {
   shield: 'shield',
   wellFed: 'wellFed',
   laying: 'laying',
+  pooping: 'pooping',
 };
 
 /** Turns each `effectGranted` event into a status quip over the taker and (for effects landing on me) a sound cue. */
@@ -27,6 +29,7 @@ export class PlayerEffectsTracker implements FrenzyEffect {
     shield: inject(ShieldSoundService),
     wellFed: inject(WellFedSoundService),
     laying: inject(EasterEggSoundService),
+    pooping: inject(PoopEatSoundService),
   };
 
   public handle(message: ServerMessage): void {

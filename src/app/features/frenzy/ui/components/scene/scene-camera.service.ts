@@ -3,10 +3,16 @@ import { inject, Injectable, Renderer2 } from '@angular/core';
 import { FRENZY } from '@game/frenzy/config';
 
 import {
+  CAMERA_DEAD_ZONE_X_HIGH,
+  CAMERA_DEAD_ZONE_X_LOW,
+  CAMERA_DEAD_ZONE_Y_HIGH,
+  CAMERA_DEAD_ZONE_Y_LOW,
   CAMERA_LERP,
   cameraScale,
   centerCameraAxis,
   deadZoneCameraAxis,
+  FOREGROUND_WIDTH_FACTOR,
+  PARALLAX_FRONT,
   PARALLAX_MID,
   PARALLAX_NEAR,
 } from './camera-math';
@@ -37,6 +43,7 @@ export class SceneCameraService {
     world: HTMLElement,
     parallaxNear: HTMLElement | undefined,
     parallaxMid: HTMLElement | undefined,
+    foregroundKelp: HTMLElement | undefined,
   ): void {
     const viewport = world.parentElement;
 
@@ -61,12 +68,21 @@ export class SceneCameraService {
     if (this.cameraReady) {
       // Ease toward the dead-zone target: zero motion while the Pokémon stays in the central band, a gentle
       // follow once it crosses an edge.
-      const targetX = deadZoneCameraAxis(this.camX, focusX, viewport.clientWidth, screenWorldWidth);
+      const targetX = deadZoneCameraAxis(
+        this.camX,
+        focusX,
+        viewport.clientWidth,
+        screenWorldWidth,
+        CAMERA_DEAD_ZONE_X_LOW,
+        CAMERA_DEAD_ZONE_X_HIGH,
+      );
       const targetY = deadZoneCameraAxis(
         this.camY,
         focusY,
         viewport.clientHeight,
         screenWorldHeight,
+        CAMERA_DEAD_ZONE_Y_LOW,
+        CAMERA_DEAD_ZONE_Y_HIGH,
       );
 
       this.camX += (targetX - this.camX) * CAMERA_LERP;
@@ -92,6 +108,28 @@ export class SceneCameraService {
     // viewport scrolls (still during a dead-zone meander) — the subtle travel-direction cue.
     this.setParallax(parallaxNear, PARALLAX_NEAR);
     this.setParallax(parallaxMid, PARALLAX_MID);
+    this.setForegroundKelp(foregroundKelp, screenWorldWidth, screenWorldHeight);
+  }
+
+  // Drive the screen-space foreground kelp: pan horizontally a touch faster than the world (PARALLAX_FRONT) for a
+  // near-layer depth cue, and pin its baseline to the on-screen world-floor line (`camY + scaled world height`) so
+  // it sits on the seabed and slides off the bottom edge near the surface (floor far below the view). Sized to
+  // the scaled world width × a margin so the faster pan never opens a gap at a scroll extreme.
+  private setForegroundKelp(
+    layer: HTMLElement | undefined,
+    screenWorldWidth: number,
+    screenWorldHeight: number,
+  ): void {
+    if (layer === undefined) {
+      return;
+    }
+
+    this.renderer.setStyle(layer, 'width', `${screenWorldWidth * FOREGROUND_WIDTH_FACTOR}px`);
+    this.renderer.setStyle(
+      layer,
+      'transform',
+      `translate(${this.camX * PARALLAX_FRONT}px, ${this.camY + screenWorldHeight}px)`,
+    );
   }
 
   private setParallax(layer: HTMLElement | undefined, factor: number): void {
