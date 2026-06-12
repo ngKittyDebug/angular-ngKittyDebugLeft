@@ -1,3 +1,6 @@
 {
-  "filterInputName": "Имя Покемона"
+  "filterInputName": "Имя Покемона",
+  "filterAdvancedSearch": "Расширенный поиск",
+  "filterType": "Тип",
+  "filterGeneration": "Поколение"
 }

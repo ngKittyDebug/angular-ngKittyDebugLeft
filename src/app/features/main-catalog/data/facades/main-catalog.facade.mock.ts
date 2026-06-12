@@ -9,5 +9,7 @@ export const mainCatalogFacadeMock = {
   isLoadingPokemonPaginationData: signal<boolean>(false),
   paginatedPokemonList: signal<[]>([]),
   filterByName: signal<string>(''),
+  filterByTypes: signal<string[]>([]),
+  filterByGenerations: signal<string[]>([]),
   setPaginationCount: vi.fn(),
 } as const satisfies MockedObject<Partial<MainCatalogFacade>>;

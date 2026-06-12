@@ -8,6 +8,8 @@ export class PokemonPaginationService {
   private readonly _pokemonPagination = this.pokemonPaginationStorageService._pokemonPagination;
 
   public readonly filterByName = signal<string>('');
+  public readonly filterByTypes = signal<string[]>([]);
+  public readonly filterByGenerations = signal<string[]>([]);
 
   public readonly debounceFilter = debounced(this.filterByName, 500);
 

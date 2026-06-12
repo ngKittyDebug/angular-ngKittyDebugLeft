@@ -1,4 +1,69 @@
-<tui-textfield *transloco="let t">
-  <label tuiLabel for="filter-name">{{ t('main.filterInputName') }}</label>
-  <input id="filter-name" tuiInput (input)="onFilterInput($event)" />
-</tui-textfield>
+<div class="wrapper" *transloco="let t">
+  <div class="field">
+    <div class="field__row">
+      <input
+        class="field__input"
+        placeholder="{{ t('main.filterInputName') }}"
+        type="text"
+        (input)="filterByName($event.target.value)"
+      />
+      <button type="button" class="field__btn" (click)="onSearchClick()">
+        <tui-icon icon="@tui.search" />
+      </button>
+    </div>
+  </div>
+  <div class="accordion">
+    <button class="accordion__trigger" (click)="expanded.set(!expanded())">
+      <span class="accordion__title">
+        <tui-icon class="icon" icon="@tui.sliders-horizontal" />
+        {{ t('main.filterAdvancedSearch') }}
+        @if (selectedTypes.length + selectedGenerations.length) {
+          <span class="badge">
+            {{ selectedTypes.length + selectedGenerations.length }}
+          </span>
+        }
+      </span>
+      <span class="icon">
+        @if (expanded()) {
+          <tui-icon icon="@tui.circle-chevron-up" />
+        } @else {
+          <tui-icon icon="@tui.circle-chevron-down" />
+        }
+      </span>
+    </button>
+    @if (expanded()) {
+      <div class="accordion__body">
+        <div class="section">
+          <div class="section__title">{{ t('main.filterType') }}</div>
+          <div class="chips">
+            @for (type of types; track type) {
+              <button
+                type="button"
+                class="chip"
+                [class.active]="selectedTypes.includes(type)"
+                (click)="toggleType(type)"
+              >
+                {{ type }}
+              </button>
+            }
+          </div>
+        </div>
+        <div class="section">
+          <div class="section__title">{{ t('main.filterGeneration') }}</div>
+          <div class="chips">
+            @for (gen of generations; track gen) {
+              <button
+                type="button"
+                class="chip"
+                [class.active]="selectedGenerations.includes(gen)"
+                (click)="toggleGeneration(gen)"
+              >
+                {{ gen }}
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>
