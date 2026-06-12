@@ -14,13 +14,13 @@ import { FEATURES } from './config/features';
 import { FLOATS } from './config/floats';
 import { ITEMS } from './config/items';
 import { LOOP } from './config/loop';
-import { MASS } from './config/mass';
+import { HP } from './config/hp';
 import { PLAYER } from './config/player';
 import { SPAWN } from './config/spawn';
 import { WORLD } from './config/world';
 
 export const FRENZY = {
-  ...MASS,
+  ...HP,
   ...WORLD,
   ...COLLISION,
   ...ITEMS,

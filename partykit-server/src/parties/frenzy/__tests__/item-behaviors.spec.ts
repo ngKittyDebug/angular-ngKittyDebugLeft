@@ -17,7 +17,7 @@ const PLAYER: Player = {
   name: 'Ash',
   appearance: 'caterpie',
   stage: 1,
-  mass: 100,
+  hp: 100,
   x: 0.5,
   y: 0.5,
   vx: 0,
@@ -29,14 +29,12 @@ const PLAYER: Player = {
 };
 
 describe('item behaviors', () => {
-  it('grabbing any item gives the clicker its per-type mass delta and consumes it', () => {
+  it('grabbing any item gives the clicker its per-type hp delta and consumes it', () => {
     for (const type of ITEM_TYPES) {
       const interaction = getItemBehavior(type).onClick(item(type), 'p1', EMPTY_STATE);
 
       expect(interaction.consumed).toBe(true);
-      expect(interaction.massDeltas).toEqual([
-        { playerId: 'p1', amount: FRENZY.itemEffects[type] },
-      ]);
+      expect(interaction.hpDeltas).toEqual([{ playerId: 'p1', amount: FRENZY.itemEffects[type] }]);
     }
   });
 
@@ -46,13 +44,13 @@ describe('item behaviors', () => {
     }
   });
 
-  it('drifting into edible items (food, rareCandy, rotten, goldenBerry, crumb) applies their mass delta like a click', () => {
+  it('drifting into edible items (food, rareCandy, rotten, goldenBerry, crumb) applies their hp delta like a click', () => {
     for (const type of ['food', 'rareCandy', 'rotten', 'goldenBerry', 'crumb'] as ItemType[]) {
       const interaction = getItemBehavior(type).onCollide?.(item(type), PLAYER, EMPTY_STATE);
 
       expect(interaction).toEqual({
         consumed: true,
-        massDeltas: [{ playerId: 'p1', amount: FRENZY.itemEffects[type] }],
+        hpDeltas: [{ playerId: 'p1', amount: FRENZY.itemEffects[type] }],
       });
     }
   });
@@ -62,16 +60,26 @@ describe('item behaviors', () => {
 
     expect(interaction).toEqual({
       consumed: true,
-      massDeltas: [{ playerId: 'p1', amount: FRENZY.collision.rockDamage }],
+      hpDeltas: [{ playerId: 'p1', amount: FRENZY.collision.rockDamage }],
     });
   });
 
-  it('drifting into rotten poisons the Pokémon (its negative mass delta) and consumes it', () => {
+  it('a brick collision damages the Pokémon twice as hard as a rock and consumes the brick', () => {
+    const interaction = getItemBehavior('brick').onCollide?.(item('brick'), PLAYER, EMPTY_STATE);
+
+    expect(interaction).toEqual({
+      consumed: true,
+      hpDeltas: [{ playerId: 'p1', amount: FRENZY.collision.brickDamage }],
+    });
+    expect(FRENZY.collision.brickDamage).toBe(FRENZY.collision.rockDamage * 2);
+  });
+
+  it('drifting into rotten poisons the Pokémon (its negative hp delta) and consumes it', () => {
     const interaction = getItemBehavior('rotten').onCollide?.(item('rotten'), PLAYER, EMPTY_STATE);
 
     expect(interaction).toEqual({
       consumed: true,
-      massDeltas: [{ playerId: 'p1', amount: FRENZY.itemEffects.rotten }],
+      hpDeltas: [{ playerId: 'p1', amount: FRENZY.itemEffects.rotten }],
     });
   });
 });
@@ -89,7 +97,7 @@ describe('bomb behavior', () => {
   it('a click bats the bomb by the supplied displacement and never eats it', () => {
     const interaction = getItemBehavior('bomb').onClick(bombAt(0.5), 'p1', EMPTY_STATE, -0.1);
 
-    expect(interaction).toEqual({ massDeltas: [], consumed: false, nudgeX: -0.1 });
+    expect(interaction).toEqual({ hpDeltas: [], consumed: false, nudgeX: -0.1 });
   });
 
   it('caps an oversized bat displacement', () => {
@@ -121,7 +129,7 @@ describe('bomb behavior', () => {
 
     expect(interaction?.consumed).toBe(true);
     expect(interaction?.explodes).toBe(true);
-    expect(interaction?.massDeltas).toEqual([
+    expect(interaction?.hpDeltas).toEqual([
       { playerId: 'owner', amount: FRENZY.bomb.damage },
       { playerId: 'near', amount: FRENZY.bomb.damage },
     ]);
@@ -137,7 +145,7 @@ describe('bomb behavior', () => {
 
     const interaction = getItemBehavior('bomb').onLand?.(bombAt(0.5), state);
 
-    expect(interaction?.massDeltas).toEqual([{ playerId: 'owner', amount: FRENZY.bomb.damage }]);
+    expect(interaction?.hpDeltas).toEqual([{ playerId: 'owner', amount: FRENZY.bomb.damage }]);
   });
 
   it('spares the bomb owner from their own laid bomb but still hits nearby rivals', () => {
@@ -148,7 +156,7 @@ describe('bomb behavior', () => {
 
     const interaction = getItemBehavior('bomb').onLand?.(ownedBomb, state);
 
-    expect(interaction?.massDeltas).toEqual([{ playerId: 'rival', amount: FRENZY.bomb.damage }]);
+    expect(interaction?.hpDeltas).toEqual([{ playerId: 'rival', amount: FRENZY.bomb.damage }]);
   });
 
   it('also detonates on mid-air collision — same area blast, not a one-on-one hit', () => {
@@ -165,7 +173,7 @@ describe('bomb behavior', () => {
 
     expect(interaction?.consumed).toBe(true);
     expect(interaction?.explodes).toBe(true);
-    expect(interaction?.massDeltas).toEqual([
+    expect(interaction?.hpDeltas).toEqual([
       { playerId: 'touched', amount: FRENZY.bomb.damage },
       { playerId: 'bystander', amount: FRENZY.bomb.damage },
     ]);
@@ -178,7 +186,7 @@ describe('vitamin behavior', () => {
 
     expect(interaction).toEqual({
       consumed: true,
-      massDeltas: [{ playerId: 'p1', amount: FRENZY.vitamin.hp }],
+      hpDeltas: [{ playerId: 'p1', amount: FRENZY.vitamin.hp }],
       effects: [{ playerId: 'p1', kind: 'wellFed', durationMs: FRENZY.vitamin.decayPauseMs }],
     });
   });
@@ -192,19 +200,19 @@ describe('vitamin behavior', () => {
 
     expect(interaction).toEqual({
       consumed: true,
-      massDeltas: [{ playerId: 'p1', amount: FRENZY.vitamin.hp }],
+      hpDeltas: [{ playerId: 'p1', amount: FRENZY.vitamin.hp }],
       effects: [{ playerId: 'p1', kind: 'wellFed', durationMs: FRENZY.vitamin.decayPauseMs }],
     });
   });
 });
 
 describe('shield behavior', () => {
-  it('grabbing a shield grants the clicker the shield ward and consumes it, with no mass delta', () => {
+  it('grabbing a shield grants the clicker the shield ward and consumes it, with no hp delta', () => {
     const interaction = getItemBehavior('shield').onClick(item('shield'), 'p1', EMPTY_STATE);
 
     expect(interaction).toEqual({
       consumed: true,
-      massDeltas: [],
+      hpDeltas: [],
       effects: [{ playerId: 'p1', kind: 'shield', durationMs: FRENZY.shield.shieldMs }],
     });
   });
@@ -214,7 +222,7 @@ describe('shield behavior', () => {
 
     expect(interaction).toEqual({
       consumed: true,
-      massDeltas: [],
+      hpDeltas: [],
       effects: [{ playerId: 'p1', kind: 'shield', durationMs: FRENZY.shield.shieldMs }],
     });
   });
@@ -242,11 +250,11 @@ describe('mushroom gamble behavior', () => {
 
     expect(lowest).toEqual({
       consumed: true,
-      massDeltas: [{ playerId: 'p1', amount: FRENZY.mushroom.minDelta }],
+      hpDeltas: [{ playerId: 'p1', amount: FRENZY.mushroom.minDelta }],
     });
     expect(highest).toEqual({
       consumed: true,
-      massDeltas: [{ playerId: 'p1', amount: FRENZY.mushroom.maxDelta }],
+      hpDeltas: [{ playerId: 'p1', amount: FRENZY.mushroom.maxDelta }],
     });
   });
 
@@ -260,7 +268,7 @@ describe('mushroom gamble behavior', () => {
 
     expect(interaction).toEqual({
       consumed: true,
-      massDeltas: [{ playerId: 'p1', amount: FRENZY.mushroom.minDelta + Math.floor(0.5 * span) }],
+      hpDeltas: [{ playerId: 'p1', amount: FRENZY.mushroom.minDelta + Math.floor(0.5 * span) }],
     });
   });
 
@@ -273,7 +281,7 @@ describe('mushroom gamble behavior', () => {
         EMPTY_STATE,
         undefined,
         rng,
-      ).massDeltas[0];
+      ).hpDeltas[0];
 
       expect(amount).toBeGreaterThanOrEqual(FRENZY.mushroom.minDelta);
       expect(amount).toBeLessThanOrEqual(FRENZY.mushroom.maxDelta);
@@ -287,7 +295,7 @@ describe('easter egg behavior', () => {
 
     expect(interaction).toEqual({
       consumed: true,
-      massDeltas: [{ playerId: 'p1', amount: FRENZY.easterEgg.hpOnPickup }],
+      hpDeltas: [{ playerId: 'p1', amount: FRENZY.easterEgg.hpOnPickup }],
       effects: [{ playerId: 'p1', kind: 'laying', durationMs: FRENZY.easterEgg.durationMs }],
     });
   });
@@ -301,7 +309,7 @@ describe('easter egg behavior', () => {
 
     expect(interaction).toEqual({
       consumed: true,
-      massDeltas: [{ playerId: 'p1', amount: FRENZY.easterEgg.hpOnPickup }],
+      hpDeltas: [{ playerId: 'p1', amount: FRENZY.easterEgg.hpOnPickup }],
       effects: [{ playerId: 'p1', kind: 'laying', durationMs: FRENZY.easterEgg.durationMs }],
     });
   });

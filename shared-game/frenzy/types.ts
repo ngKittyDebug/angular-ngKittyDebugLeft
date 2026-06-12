@@ -3,6 +3,7 @@ export type ItemType =
   | 'food'
   | 'rotten'
   | 'rock'
+  | 'brick'
   | 'rareCandy'
   | 'bomb'
   | 'goldenBerry'
@@ -13,7 +14,7 @@ export type ItemType =
   | 'easterEgg';
 export type PlayerStatus = 'alive' | 'disconnected';
 
-// Timed buffs/debuffs a Pokémon carries. `shield` suspends mass decay AND wards off all incoming damage
+// Timed buffs/debuffs a Pokémon carries. `shield` suspends hp decay AND wards off all incoming damage
 // (bomb blast, rock bonk, rotten/negative-mushroom) — full invulnerability inside a bubble. `wellFed`
 // (vitamin) only suspends decay (damage still lands). `laying` (easterEgg) makes the Pokémon randomly emit
 // falling items (incl. bombs) from itself. The union grows per phase.
@@ -32,7 +33,7 @@ export interface Player {
    * to a Pokémon line/sprite (with a fallback for unknown ids). Keeps the server independent of the roster. */
   appearance: string;
   stage: Stage;
-  mass: number;
+  hp: number;
   x: number;
   y: number;
   vx: number;
@@ -72,7 +73,7 @@ export interface EatenEvent {
   itemId: string;
   itemType: ItemType;
   playerId: string;
-  newMass: number;
+  newHp: number;
   delta: number;
   x: number;
   y: number;
@@ -93,7 +94,7 @@ export interface FaintedEvent {
   priority?: number;
 }
 
-// A bomb was juggled by a click: it moved horizontally to `x` (no mass change). Clients snap the item there immediately.
+// A bomb was juggled by a click: it moved horizontally to `x` (no hp change). Clients snap the item there immediately.
 export interface ItemNudgedEvent {
   type: 'itemNudged';
   itemId: string;

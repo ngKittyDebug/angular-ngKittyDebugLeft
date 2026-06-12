@@ -62,7 +62,7 @@ export function createPlayer({
     name,
     appearance,
     stage: 1,
-    mass: FRENZY.startingMass,
+    hp: FRENZY.startingHp,
     x,
     y,
     vx: Math.cos(angle) * FRENZY.playerDriftSpeed,

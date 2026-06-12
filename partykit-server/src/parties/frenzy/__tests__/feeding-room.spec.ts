@@ -208,14 +208,14 @@ describe('FeedingRoom orchestration', () => {
     const conn = new FakeConnection('c1');
 
     // Force every spawn to rock (a non-feeding type — collisions only damage) so falling items can't
-    // passively feed the idle player — decay must drain startingMass to 0 and faint the last player.
+    // passively feed the idle player — decay must drain startingHp to 0 and faint the last player.
     vi.spyOn(Math, 'random').mockReturnValue(0.5);
 
     server.onConnect(asParty(conn));
     joinPlayer(server, conn, 'token-1');
 
     const toDeathMs =
-      FRENZY.decayIntervalMs * (FRENZY.startingMass / FRENZY.decayPerTick) + FRENZY.decayIntervalMs;
+      FRENZY.decayIntervalMs * (FRENZY.startingHp / FRENZY.decayPerTick) + FRENZY.decayIntervalMs;
 
     vi.advanceTimersByTime(toDeathMs);
 
@@ -240,7 +240,7 @@ describe('FeedingRoom orchestration', () => {
     joinPlayer(server, first, 'token-1');
 
     const toDeathMs =
-      FRENZY.decayIntervalMs * (FRENZY.startingMass / FRENZY.decayPerTick) + FRENZY.decayIntervalMs;
+      FRENZY.decayIntervalMs * (FRENZY.startingHp / FRENZY.decayPerTick) + FRENZY.decayIntervalMs;
 
     vi.advanceTimersByTime(toDeathMs);
     expect(latestSnapshot(room)?.state.players).toHaveLength(0);

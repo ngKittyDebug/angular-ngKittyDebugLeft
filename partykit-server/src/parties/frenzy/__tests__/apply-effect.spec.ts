@@ -9,7 +9,7 @@ const PLAYER: Player = {
   name: 'Ash',
   appearance: 'caterpie',
   stage: 1,
-  mass: 100,
+  hp: 100,
   x: 0.5,
   y: 0.5,
   vx: 0,

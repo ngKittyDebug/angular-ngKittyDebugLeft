@@ -1,0 +1,53 @@
+<div
+  *transloco="let t; prefix: 'frenzy.minimap'"
+  class="minimap"
+  [class.minimap--collapsed]="collapsed()"
+  [class.minimap--compact]="compact()"
+>
+  @if (collapsed()) {
+    <button type="button" class="minimap__pill" [attr.aria-label]="t('expand')" (click)="toggle()">
+      <left-paw-online-participants [count]="online()" [compact]="true" />
+      <left-paw-offline-participants [count]="disconnected()" [compact]="true" />
+      <tui-icon icon="@tui.map" class="minimap__pill-icon" />
+    </button>
+  } @else {
+    <section class="minimap__panel" [attr.aria-label]="t('ariaLabel')">
+      <button
+        type="button"
+        class="minimap__header"
+        [attr.aria-label]="t('collapse')"
+        (click)="toggle()"
+      >
+        <left-paw-online-participants [count]="online()" [compact]="true" />
+        <left-paw-offline-participants [count]="disconnected()" [compact]="true" />
+        <tui-icon icon="@tui.minimize-2" class="minimap__header-icon" />
+      </button>
+      <div class="minimap__map">
+        <!-- Schematic kelp band: one stretched silhouette with a jagged top, rooted at the bottom window edge
+             (in the map, not the inset field) and behind the field so blips always sit on top. The svg is
+             wrapped so positioning lives on the block div, not on the replaced <svg> element. -->
+        <div class="minimap__kelp" aria-hidden="true">
+          <svg class="minimap__kelp-shape" [attr.viewBox]="kelpViewBox" preserveAspectRatio="none">
+            <path [attr.d]="kelpPath" />
+          </svg>
+        </div>
+        <div class="minimap__field">
+          @for (dot of itemDots(); track dot.id) {
+            <span
+              class="minimap__item"
+              [leftPawScenePosition]="{ x: dot.x, y: dot.y }"
+              [style.background]="dot.color"
+            ></span>
+          }
+          @for (dot of playerDots(); track dot.id) {
+            <span
+              class="minimap__player"
+              [class.minimap__player--me]="dot.me"
+              [leftPawScenePosition]="{ x: dot.x, y: dot.y }"
+            ></span>
+          }
+        </div>
+      </div>
+    </section>
+  }
+</div>

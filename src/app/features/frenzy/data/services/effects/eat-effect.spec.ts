@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ItemType, Player, ServerMessage, ServerState } from '@game/frenzy/types';
 
 import { BadEatSoundService } from '../sound/bad-eat-sound.service';
+import { BrickSoundService } from '../sound/brick-sound.service';
 import { EatSoundService } from '../sound/eat-sound.service';
 import { RockSoundService } from '../sound/rock-sound.service';
 import { FrenzyStore } from '../../store/frenzy.store';
@@ -17,7 +18,7 @@ function player(id: string, name: string): Player {
     name,
     appearance: 'pidgey',
     stage: 1,
-    mass: 100,
+    hp: 100,
     x: 0.5,
     y: 0.5,
     vx: 0,
@@ -35,7 +36,7 @@ function eaten(partial: Partial<Extract<ServerMessage, { type: 'eaten' }>> = {})
     itemId: 'i1',
     itemType: 'food',
     playerId: 'me',
-    newMass: 110,
+    newHp: 110,
     delta: 10,
     x: 0.9,
     y: 0.8,
@@ -49,12 +50,14 @@ describe('EatEffect', () => {
   let eatSound: { play: ReturnType<typeof vi.fn> };
   let badEatSound: { play: ReturnType<typeof vi.fn> };
   let rockSound: { play: ReturnType<typeof vi.fn> };
+  let brickSound: { play: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
     vi.useFakeTimers();
     eatSound = { play: vi.fn() };
     badEatSound = { play: vi.fn() };
     rockSound = { play: vi.fn() };
+    brickSound = { play: vi.fn() };
 
     const state = signal<ServerState | null>({
       players: [player('other', 'Ash')],
@@ -69,6 +72,7 @@ describe('EatEffect', () => {
         { provide: EatSoundService, useValue: eatSound },
         { provide: BadEatSoundService, useValue: badEatSound },
         { provide: RockSoundService, useValue: rockSound },
+        { provide: BrickSoundService, useValue: brickSound },
         { provide: FrenzyStore, useValue: { myId: signal('me'), state } },
       ],
     });
@@ -103,6 +107,14 @@ describe('EatEffect', () => {
     effect.handle(eaten({ itemType: 'rock' as ItemType, delta: 0 }));
 
     expect(rockSound.play).toHaveBeenCalledOnce();
+    expect(eatSound.play).not.toHaveBeenCalled();
+  });
+
+  it('plays the brick thunk for a brick regardless of delta', () => {
+    effect.handle(eaten({ itemType: 'brick' as ItemType, delta: 0 }));
+
+    expect(brickSound.play).toHaveBeenCalledOnce();
+    expect(rockSound.play).not.toHaveBeenCalled();
     expect(eatSound.play).not.toHaveBeenCalled();
   });
 

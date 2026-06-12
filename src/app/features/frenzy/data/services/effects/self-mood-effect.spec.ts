@@ -8,13 +8,13 @@ import { FrenzyStore } from '../../store/frenzy.store';
 import { FloatingMessagesStore } from './floating-messages.store';
 import { SelfMoodEffect } from './self-mood-effect.service';
 
-function me(mass: number): Player {
+function me(hp: number): Player {
   return {
     id: 'me',
     name: 'Me',
     appearance: 'pidgey',
     stage: 1,
-    mass,
+    hp,
     x: 0.5,
     y: 0.5,
     vx: 0,

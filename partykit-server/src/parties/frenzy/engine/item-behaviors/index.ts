@@ -1,6 +1,7 @@
 import type { ItemType } from '@game/frenzy/types';
 
 import { bombBehavior } from './bomb';
+import { brickBehavior } from './brick';
 import { easterEggBehavior } from './easter-egg';
 import { eatBehavior } from './eat';
 import { gambleBehavior } from './mushroom';
@@ -9,12 +10,13 @@ import { shieldBehavior } from './shield';
 import type { ItemBehavior } from './types';
 import { vitaminBehavior } from './vitamin';
 
-export type { EffectGrant, ItemBehavior, ItemInteraction, MassDelta } from './types';
+export type { EffectGrant, ItemBehavior, ItemInteraction, HpDelta } from './types';
 
 const ITEM_BEHAVIORS: Record<ItemType, ItemBehavior> = {
   food: eatBehavior,
   rotten: eatBehavior,
   rock: rockBehavior,
+  brick: brickBehavior,
   rareCandy: eatBehavior,
   bomb: bombBehavior,
   goldenBerry: eatBehavior,

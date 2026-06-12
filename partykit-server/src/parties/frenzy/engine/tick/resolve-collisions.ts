@@ -1,7 +1,7 @@
 import type { GameEvent, ServerState } from '@game/frenzy/types';
 
 import { applyEffects, resolveGrants } from '../apply-effect';
-import { applyMassDeltas } from '../apply-mass-deltas';
+import { applyHpDeltas } from '../apply-hp-deltas';
 import { getItemBehavior } from '../item-behaviors';
 import { findCollisionTarget } from './collision-target';
 import { detonated } from './detonated';
@@ -43,13 +43,13 @@ export function resolveCollisions(
     const interaction = onCollide(item, target, working, rng);
 
     // Effect pickup (shield/vitamin/easter egg) by drifting into it: grant the timed effect (report
-    // `effectGranted`, not `eaten`) and apply any heal mass delta it carries. Vitamin/egg heal; shield doesn't.
+    // `effectGranted`, not `eaten`) and apply any heal hp delta it carries. Vitamin/egg heal; shield doesn't.
     if (interaction.effects !== undefined && interaction.effects.length > 0) {
       const applications = resolveGrants(interaction.effects, now);
 
       working = applyEffects(working, applications);
 
-      const resolved = applyMassDeltas(working, interaction.massDeltas);
+      const resolved = applyHpDeltas(working, interaction.hpDeltas);
 
       working = resolved.state;
 
@@ -71,23 +71,23 @@ export function resolveCollisions(
       continue;
     }
 
-    const resolved = applyMassDeltas(working, interaction.massDeltas);
+    const resolved = applyHpDeltas(working, interaction.hpDeltas);
 
     working = resolved.state;
 
     if (interaction.explodes) {
       // A bomb that bumps a Pokémon detonates over the whole area — not a one-on-one "eat".
-      events.push(detonated(item, interaction.massDeltas));
+      events.push(detonated(item, interaction.hpDeltas));
     } else {
-      const newMass = resolved.state.players.find((player) => player.id === target.id)?.mass ?? 0;
+      const newHp = resolved.state.players.find((player) => player.id === target.id)?.hp ?? 0;
 
       events.push({
         type: 'eaten',
         itemId: item.id,
         itemType: item.type,
         playerId: target.id,
-        newMass,
-        delta: newMass - target.mass,
+        newHp,
+        delta: newHp - target.hp,
         x: item.x,
         y: item.y,
       });

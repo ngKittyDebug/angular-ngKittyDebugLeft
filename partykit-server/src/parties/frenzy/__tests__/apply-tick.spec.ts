@@ -10,7 +10,7 @@ const PLAYER: Player = {
   name: 'Ash',
   appearance: 'caterpie',
   stage: 1,
-  mass: 100,
+  hp: 100,
   x: 0.5,
   y: 0.6,
   vx: 0,
@@ -100,12 +100,12 @@ describe('applyTick', () => {
     expect(next.items).toHaveLength(0);
   });
 
-  it('leaves player mass untouched when applyDecay is false', () => {
+  it('leaves player hp untouched when applyDecay is false', () => {
     const state = stateWith([PLAYER], []);
 
     const { state: next, events } = applyTick(state, 0.1, false);
 
-    expect(next.players[0].mass).toBe(PLAYER.mass);
+    expect(next.players[0].hp).toBe(PLAYER.hp);
     expect(events).toEqual([]);
   });
 
@@ -114,11 +114,11 @@ describe('applyTick', () => {
 
     const { state: next } = applyTick(state, 0.1, true);
 
-    expect(next.players[0].mass).toBe(98);
+    expect(next.players[0].hp).toBe(98);
   });
 
-  it('emits fainted and removes player when decay drops mass to zero', () => {
-    const dying: Player = { ...PLAYER, mass: 1 };
+  it('emits fainted and removes player when decay drops hp to zero', () => {
+    const dying: Player = { ...PLAYER, hp: 1 };
     const state = stateWith([dying], []);
 
     const { state: next, events } = applyTick(state, 0.1, true);
@@ -160,18 +160,18 @@ describe('applyTick', () => {
     expect(next.players[0].vy).toBeGreaterThan(0);
   });
 
-  it('eats food that overlaps a Pokémon (emits eaten, removes the item, grows the mass)', () => {
+  it('eats food that overlaps a Pokémon (emits eaten, removes the item, grows the hp)', () => {
     const food = makeItem({ type: 'food', x: 0.5, y: 0.6, vy: 0 });
     const { state: next, events } = applyTick(stateWith([PLAYER], [food]), 0.1, false);
 
     expect(next.items).toHaveLength(0);
-    expect(next.players[0].mass).toBe(PLAYER.mass + FRENZY.itemEffects.food);
+    expect(next.players[0].hp).toBe(PLAYER.hp + FRENZY.itemEffects.food);
     expect(events).toContainEqual({
       type: 'eaten',
       itemId: 'i1',
       itemType: 'food',
       playerId: 'p1',
-      newMass: PLAYER.mass + FRENZY.itemEffects.food,
+      newHp: PLAYER.hp + FRENZY.itemEffects.food,
       delta: FRENZY.itemEffects.food,
       x: 0.5,
       y: 0.6,
@@ -183,7 +183,7 @@ describe('applyTick', () => {
     const { state: next, events } = applyTick(stateWith([PLAYER], [rock]), 0.1, false);
 
     expect(next.items).toHaveLength(0);
-    expect(next.players[0].mass).toBe(PLAYER.mass + FRENZY.collision.rockDamage);
+    expect(next.players[0].hp).toBe(PLAYER.hp + FRENZY.collision.rockDamage);
     expect(events).toContainEqual(
       expect.objectContaining({
         type: 'eaten',
@@ -199,10 +199,10 @@ describe('applyTick', () => {
     const food = makeItem({ type: 'food', x: 0.53, y: 0.6, vy: 0 });
     const { state: next, events } = applyTick(stateWith([near, far], [food]), 0.1, false);
 
-    expect(next.players.find((player) => player.id === 'near')?.mass).toBe(
-      PLAYER.mass + FRENZY.itemEffects.food,
+    expect(next.players.find((player) => player.id === 'near')?.hp).toBe(
+      PLAYER.hp + FRENZY.itemEffects.food,
     );
-    expect(next.players.find((player) => player.id === 'far')?.mass).toBe(PLAYER.mass);
+    expect(next.players.find((player) => player.id === 'far')?.hp).toBe(PLAYER.hp);
     expect(events.filter((event) => event.type === 'eaten')).toHaveLength(1);
   });
 
@@ -233,9 +233,9 @@ describe('applyTick', () => {
     const ownedFood = makeItem({ type: 'food', x: 0.5, y: 0.6, vy: 0, ownerId: 'owner' });
     const { state: next, events } = applyTick(stateWith([owner, rival], [ownedFood]), 0.1, false);
 
-    expect(next.players.find((player) => player.id === 'owner')?.mass).toBe(PLAYER.mass);
-    expect(next.players.find((player) => player.id === 'rival')?.mass).toBe(
-      PLAYER.mass + FRENZY.itemEffects.food,
+    expect(next.players.find((player) => player.id === 'owner')?.hp).toBe(PLAYER.hp);
+    expect(next.players.find((player) => player.id === 'rival')?.hp).toBe(
+      PLAYER.hp + FRENZY.itemEffects.food,
     );
     expect(events.filter((event) => event.type === 'eaten')).toHaveLength(1);
   });
@@ -246,7 +246,7 @@ describe('applyTick', () => {
     const { state: next, events } = applyTick(stateWith([owner], [ownedFood]), 0.1, false);
 
     expect(next.items).toHaveLength(1);
-    expect(next.players[0].mass).toBe(PLAYER.mass);
+    expect(next.players[0].hp).toBe(PLAYER.hp);
     expect(events).toEqual([]);
   });
 
@@ -264,7 +264,7 @@ describe('applyTick', () => {
     const { state: next, events } = applyTick(stateWith([offline], [rock]), 0.1, false);
 
     expect(next.items).toHaveLength(1);
-    expect(next.players[0].mass).toBe(PLAYER.mass);
+    expect(next.players[0].hp).toBe(PLAYER.hp);
     expect(events).toEqual([]);
   });
 
@@ -275,7 +275,7 @@ describe('applyTick', () => {
     const { state: next, events } = applyTick(stateWith([victim], [bomb]), 0.5, false);
 
     expect(next.items).toHaveLength(0);
-    expect(next.players[0].mass).toBe(PLAYER.mass + FRENZY.bomb.damage);
+    expect(next.players[0].hp).toBe(PLAYER.hp + FRENZY.bomb.damage);
     expect(events).toContainEqual(
       expect.objectContaining({
         type: 'detonated',
@@ -293,28 +293,28 @@ describe('applyTick', () => {
     const { state: next, events } = applyTick(stateWith([hit, bystander], [bomb]), 0.1, false);
 
     expect(next.items).toHaveLength(0);
-    expect(next.players.find((player) => player.id === 'hit')?.mass).toBe(
-      PLAYER.mass + FRENZY.bomb.damage,
+    expect(next.players.find((player) => player.id === 'hit')?.hp).toBe(
+      PLAYER.hp + FRENZY.bomb.damage,
     );
-    expect(next.players.find((player) => player.id === 'bystander')?.mass).toBe(
-      PLAYER.mass + FRENZY.bomb.damage,
+    expect(next.players.find((player) => player.id === 'bystander')?.hp).toBe(
+      PLAYER.hp + FRENZY.bomb.damage,
     );
     expect(events.some((event) => event.type === 'eaten')).toBe(false);
     expect(events).toContainEqual(expect.objectContaining({ type: 'detonated' }));
   });
 
-  it('skips decay for a shielded player (mass holds while the shield is live)', () => {
+  it('skips decay for a shielded player (hp holds while the shield is live)', () => {
     const shielded: Player = { ...PLAYER, effects: [{ kind: 'shield', expiresAt: 10_000 }] };
     const { state: next } = applyTick(stateWith([shielded], []), 0.1, true, Math.random, 5000);
 
-    expect(next.players[0].mass).toBe(PLAYER.mass);
+    expect(next.players[0].hp).toBe(PLAYER.hp);
   });
 
   it('skips decay for a wellFed player (vitamin pauses the natural bleed)', () => {
     const fed: Player = { ...PLAYER, effects: [{ kind: 'wellFed', expiresAt: 100_000 }] };
     const { state: next } = applyTick(stateWith([fed], []), 0.1, true, Math.random, 5000);
 
-    expect(next.players[0].mass).toBe(PLAYER.mass);
+    expect(next.players[0].hp).toBe(PLAYER.hp);
   });
 
   it('prunes a lapsed effect and resumes decay once it expires', () => {
@@ -322,7 +322,7 @@ describe('applyTick', () => {
     const { state: next } = applyTick(stateWith([shielded], []), 0.1, true, Math.random, 5000);
 
     expect(next.players[0].effects).toEqual([]);
-    expect(next.players[0].mass).toBe(PLAYER.mass - FRENZY.decayPerTick);
+    expect(next.players[0].hp).toBe(PLAYER.hp - FRENZY.decayPerTick);
   });
 
   it('heals and grants wellFed (effectGranted, no eaten) when a Pokémon drifts into a vitamin', () => {
@@ -336,7 +336,7 @@ describe('applyTick', () => {
     );
 
     expect(next.items).toHaveLength(0);
-    expect(next.players[0].mass).toBe(PLAYER.mass + FRENZY.vitamin.hp);
+    expect(next.players[0].hp).toBe(PLAYER.hp + FRENZY.vitamin.hp);
     expect(next.players[0].effects).toEqual([
       { kind: 'wellFed', expiresAt: 1000 + FRENZY.vitamin.decayPauseMs },
     ]);
@@ -368,9 +368,9 @@ describe('applyTick', () => {
       5000,
     );
 
-    expect(next.players.find((player) => player.id === 'shielded')?.mass).toBe(PLAYER.mass);
-    expect(next.players.find((player) => player.id === 'exposed')?.mass).toBe(
-      PLAYER.mass + FRENZY.bomb.damage,
+    expect(next.players.find((player) => player.id === 'shielded')?.hp).toBe(PLAYER.hp);
+    expect(next.players.find((player) => player.id === 'exposed')?.hp).toBe(
+      PLAYER.hp + FRENZY.bomb.damage,
     );
     expect(events).toContainEqual(
       expect.objectContaining({ type: 'detonated', playerIds: ['exposed'] }),
@@ -388,11 +388,11 @@ describe('applyTick', () => {
     const { state: next } = applyTick(stateWith([shielded], [rock]), 0.1, false, Math.random, 5000);
 
     expect(next.items).toHaveLength(0);
-    expect(next.players[0].mass).toBe(PLAYER.mass);
+    expect(next.players[0].hp).toBe(PLAYER.hp);
   });
 
-  it('emits fainted when a rock collision drops mass to zero', () => {
-    const frail: Player = { ...PLAYER, mass: 10, x: 0.5, y: 0.6 };
+  it('emits fainted when a rock collision drops hp to zero', () => {
+    const frail: Player = { ...PLAYER, hp: 10, x: 0.5, y: 0.6 };
     const rock = makeItem({ type: 'rock', x: 0.5, y: 0.6, vy: 0 });
     const { state: next, events } = applyTick(stateWith([frail], [rock]), 0.1, false);
 

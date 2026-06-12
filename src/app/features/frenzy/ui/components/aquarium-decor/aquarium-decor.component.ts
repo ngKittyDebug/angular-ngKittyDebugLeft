@@ -8,6 +8,9 @@ import {
   signal,
 } from '@angular/core';
 
+import { KELP_BLADES, KELP_COLORS } from '../../constants/kelp-blades';
+import type { KelpBlade } from '../../constants/kelp-blades';
+
 /**
  * Purely decorative aquarium backdrop for the Frenzy scene.
  *
@@ -31,12 +34,11 @@ interface Plant {
   brightness: number;
   zIndex: number;
   color: string;
-  shape: number;
+  art: KelpBlade;
   duration: number;
   delay: number;
 }
 
-const PLANT_COLORS = ['var(--aq-plant-a)', 'var(--aq-plant-b)', 'var(--aq-plant-c)'];
 // Roughly one kelp blade per this many CSS px of scene width (blades are wider than this, so they
 // overlap into a dense forest). Lower = denser. The blade count is derived from the measured width.
 const KELP_SPACING_PX = 14;
@@ -48,19 +50,23 @@ function indices(length: number): number[] {
 }
 
 function buildPlants(count: number): Plant[] {
-  return indices(count).map((i) => ({
-    // Cell-centered across the full width (so the first/last blades hug the edges) plus a small
-    // deterministic wobble so the row doesn't read like a comb.
-    left: ((i - 0.5) / count) * 100 + (((i * 37) % 7) - 3),
-    height: 70 + ((i * 17) % 95),
-    rotation: -3 - (i % 4),
-    brightness: 0.85 + (i % 3) * 0.07,
-    zIndex: (i * 7) % 9,
-    color: PLANT_COLORS[(i - 1) % 3],
-    shape: (i - 1) % 3,
-    duration: 4.5 + (i % 4),
-    delay: -(i * 0.6),
-  }));
+  return indices(count).map((i) => {
+    const shape = (i - 1) % 3;
+
+    return {
+      // Cell-centered across the full width (so the first/last blades hug the edges) plus a small
+      // deterministic wobble so the row doesn't read like a comb.
+      left: ((i - 0.5) / count) * 100 + (((i * 37) % 7) - 3),
+      height: 70 + ((i * 17) % 95),
+      rotation: -3 - (i % 4),
+      brightness: 0.85 + (i % 3) * 0.07,
+      zIndex: (i * 7) % 9,
+      color: KELP_COLORS[shape],
+      art: KELP_BLADES[shape],
+      duration: 4.5 + (i % 4),
+      delay: -(i * 0.6),
+    };
+  });
 }
 
 @Component({

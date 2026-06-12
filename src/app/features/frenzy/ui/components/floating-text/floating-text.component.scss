@@ -12,8 +12,9 @@
   padding: 0.25rem 0.6rem;
   border-radius: 999px;
   // Dark base under the glassy bubble so light text stays legible over any scene/theme; the tinted glass
-  // (rim, highlight, volume) is layered on top by the leftPawBubbleSkin host directive.
-  background-color: rgba(0, 0, 0, 0.5);
+  // (rim, highlight, volume) is layered on top by the leftPawBubbleSkin host directive. Floor is deliberately
+  // opaque enough (0.58) that even a lightened tone clears WCAG AA against the brightest light-theme scene.
+  background-color: rgba(0, 0, 0, 0.58);
   color: #f5f5f5;
   font-weight: 700;
   font-size: 0.95rem;
@@ -29,14 +30,17 @@
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
 }
 
+// Text colour is DECOUPLED from the bubble tint: the saturated status token paints the glass (rim/volume via
+// leftPawBubbleSkin), but the readout itself is a lightened mix of that token toward white so it clears AA on the
+// dark glass in BOTH themes (a raw red/green/orange token sat too close to the floor in some tone×theme combos).
 :host(.floating-text--positive) {
   --left-paw-bubble-tint: var(--tui-status-positive);
-  color: var(--tui-status-positive);
+  color: color-mix(in srgb, var(--tui-status-positive) 45%, #ffffff);
 }
 
 :host(.floating-text--negative) {
   --left-paw-bubble-tint: var(--tui-status-negative);
-  color: var(--tui-status-negative);
+  color: color-mix(in srgb, var(--tui-status-negative) 50%, #ffffff);
 }
 
 :host(.floating-text--neutral) {
@@ -44,10 +48,10 @@
   color: rgba(255, 255, 255, 0.82);
 }
 
-// Death warning — brighter and more prominent than the rest.
+// Death warning — brighter and more prominent than the rest; lightened amber keeps the glow legible.
 :host(.floating-text--warning) {
   --left-paw-bubble-tint: var(--tui-status-warning);
-  color: var(--tui-status-warning);
+  color: color-mix(in srgb, var(--tui-status-warning) 50%, #ffffff);
   font-size: 1.05rem;
   text-shadow: 0 0 10px var(--tui-status-warning);
 }

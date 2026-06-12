@@ -10,7 +10,7 @@ const occupiedPlayer = (overrides: Partial<Player>): Player => ({
   name: 'Ash',
   appearance: 'caterpie',
   stage: 1,
-  mass: 100,
+  hp: 100,
   x: 0.5,
   y: 0.6,
   vx: 0,
@@ -23,7 +23,7 @@ const occupiedPlayer = (overrides: Partial<Player>): Player => ({
 });
 
 describe('createPlayer', () => {
-  it('creates a stage-1 player with starting mass and alive status', () => {
+  it('creates a stage-1 player with starting hp and alive status', () => {
     const player = createPlayer({
       sessionToken: 'tok-1',
       name: 'Ash',
@@ -37,7 +37,7 @@ describe('createPlayer', () => {
       name: 'Ash',
       appearance: 'caterpie',
       stage: 1,
-      mass: FRENZY.startingMass,
+      hp: FRENZY.startingHp,
       status: 'alive',
       disconnectedAt: null,
       joinedAt: 1700000000,

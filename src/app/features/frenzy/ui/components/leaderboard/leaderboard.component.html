@@ -14,7 +14,7 @@
           <span class="leaderboard__pill-name" [class.leaderboard__pill-name--me]="top.isMe">{{
             top.name
           }}</span>
-          <span class="leaderboard__pill-mass">{{ top.mass }}</span>
+          <span class="leaderboard__pill-hp">{{ top.hp }}</span>
         </span>
       </div>
     }
@@ -65,7 +65,7 @@
             >
               {{ row.stage | stageRoman }}
             </span>
-            <span class="leaderboard__mass">{{ row.mass }}</span>
+            <span class="leaderboard__hp">{{ row.hp }}</span>
           </li>
         }
       </ol>

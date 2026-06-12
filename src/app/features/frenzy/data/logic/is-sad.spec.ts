@@ -17,7 +17,7 @@ describe('isSad', () => {
     expect(isSad(400, 2)).toBe(false);
   });
 
-  it('marks stage 3 sad below 600 (own band above the stage3 mass floor)', () => {
+  it('marks stage 3 sad below 600 (own band above the stage3 hp floor)', () => {
     expect(isSad(500, 3)).toBe(true);
     expect(isSad(599, 3)).toBe(true);
     expect(isSad(600, 3)).toBe(false);

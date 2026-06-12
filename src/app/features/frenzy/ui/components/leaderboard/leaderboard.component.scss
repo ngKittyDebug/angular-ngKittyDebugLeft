@@ -127,7 +127,7 @@
     color: var(--tui-status-warning);
   }
 
-  &__mass {
+  &__hp {
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     color: var(--tui-status-positive);
@@ -146,7 +146,7 @@
     @include hud_pill;
   }
 
-  // Name and mass share a baseline so the champion line reads evenly (the crown and avatar
+  // Name and hp share a baseline so the champion line reads evenly (the crown and avatar
   // stay vertically centred against the taller pill via the parent's `align-items: center`).
   &__pill-stats {
     display: inline-flex;
@@ -166,7 +166,7 @@
     }
   }
 
-  &__pill-mass {
+  &__pill-hp {
     flex: 0 0 auto;
     font-variant-numeric: tabular-nums;
     color: var(--tui-status-positive);

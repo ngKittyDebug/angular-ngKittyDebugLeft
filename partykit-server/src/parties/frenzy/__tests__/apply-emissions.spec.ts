@@ -11,7 +11,7 @@ function player(id: string, effects: PlayerEffect[] = []): Player {
     name: id,
     appearance: 'caterpie',
     stage: 1,
-    mass: 100,
+    hp: 100,
     x: 0.4,
     y: 0.6,
     vx: 0,

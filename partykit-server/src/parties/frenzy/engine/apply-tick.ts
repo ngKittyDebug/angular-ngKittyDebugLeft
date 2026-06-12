@@ -15,7 +15,7 @@ export interface TickResult {
 /**
  * One authoritative game-loop step, composed from the per-pass helpers in `./tick/*`:
  * prune lapsed effects → move items (split into floor-survivors and just-expired) → drift players → resolve
- * mid-air/resting collisions → detonate landed explosives → (on decay ticks only) bleed mass. Pure: `rng` and
+ * mid-air/resting collisions → detonate landed explosives → (on decay ticks only) bleed hp. Pure: `rng` and
  * `now` are injected so the whole tick is deterministic in tests.
  */
 export function applyTick(

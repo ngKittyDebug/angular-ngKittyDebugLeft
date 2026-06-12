@@ -37,7 +37,7 @@ export function applyServerMessage(
             return player;
           }
 
-          return { ...player, mass: message.newMass };
+          return { ...player, hp: message.newHp };
         }),
       };
     }
@@ -93,7 +93,7 @@ export function applyServerMessage(
       }
 
       // Drop the bomb itself right away so its sprite doesn't linger until the next snapshot. FX + sound live
-      // in the effects service; damaged-but-alive masses reconcile on the next snapshot, faints via their events.
+      // in the effects service; damaged-but-alive hpes reconcile on the next snapshot, faints via their events.
       return {
         ...previous,
         items: previous.items.filter((item) => item.id !== message.itemId),

@@ -14,10 +14,19 @@
   />
 
   @if (me(); as myself) {
-    <div class="frenzy-page__hud-status">
+    <div class="frenzy-page__hud-left">
       <left-paw-current-pokemon-status
-        [mass]="myself.mass"
+        [name]="myself.name"
+        [hp]="myself.hp"
         [stage]="myself.stage"
+        [compact]="isMobile()"
+      />
+      <left-paw-minimap
+        [players]="players()"
+        [items]="items()"
+        [myId]="myId()"
+        [online]="presenceCount()"
+        [disconnected]="disconnectedCount()"
         [compact]="isMobile()"
       />
     </div>
@@ -26,11 +35,6 @@
   <div class="frenzy-page__hud-top-right">
     <div class="frenzy-page__hud-row">
       <left-paw-sound-toggle [compact]="isMobile()" />
-      <left-paw-presence-counter
-        [online]="presenceCount()"
-        [disconnected]="disconnectedCount()"
-        [compact]="isMobile()"
-      />
     </div>
     <left-paw-leaderboard [entries]="leaderboard()" [myId]="myId()" [compact]="isMobile()" />
   </div>

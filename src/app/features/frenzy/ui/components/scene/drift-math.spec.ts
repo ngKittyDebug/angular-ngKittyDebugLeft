@@ -50,7 +50,8 @@ describe('decayedOffset', () => {
   it('rendered position (reflect + decayed offset) converges to the authoritative track', () => {
     const authoritative = reflect(0.5, 0.06, 1, 0.04, 0.96);
     const withFreshOffset = authoritative + decayedOffset(0.05, 0, OFFSET_DECAY_TAU_MS);
-    const withAgedOffset = authoritative + decayedOffset(0.05, 10 * OFFSET_DECAY_TAU_MS, OFFSET_DECAY_TAU_MS);
+    const withAgedOffset =
+      authoritative + decayedOffset(0.05, 10 * OFFSET_DECAY_TAU_MS, OFFSET_DECAY_TAU_MS);
 
     expect(Math.abs(withFreshOffset - authoritative)).toBeGreaterThan(0.01);
     expect(withAgedOffset).toBeCloseTo(authoritative, 4);

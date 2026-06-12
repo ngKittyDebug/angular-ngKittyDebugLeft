@@ -1,16 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { TuiIcon } from '@taiga-ui/core';
-import { TuiProgressBar } from '@taiga-ui/kit';
+import { TuiAvatar, TuiBadge, TuiProgressBar } from '@taiga-ui/kit';
 
 import { FRENZY } from '@game/frenzy/config';
 import type { Stage } from '@game/frenzy/types';
 
 import { getMood, type PokemonMood } from '../../../data/logic/pokemon-mood';
-import { MassToneColorPipe } from '../../pipes/mass-tone-color.pipe';
-import { StageRomanPipe } from '../../pipes/stage-roman.pipe';
-
-const MAX_VISUAL_MASS = FRENZY.thresholds.stage3;
+import { HpFlashDirective } from '../../directives/hp-flash.directive';
+import { HpToneColorPipe } from '../../pipes/hp-tone-color.pipe';
 
 interface MoodVisual {
   icon: string;
@@ -26,16 +23,47 @@ const MOOD_VISUAL: Record<PokemonMood, MoodVisual> = {
 
 @Component({
   selector: 'left-paw-current-pokemon-status',
-  imports: [MassToneColorPipe, StageRomanPipe, TranslocoDirective, TuiIcon, TuiProgressBar],
+  imports: [
+    HpFlashDirective,
+    HpToneColorPipe,
+    TranslocoDirective,
+    TuiAvatar,
+    TuiBadge,
+    TuiProgressBar,
+  ],
   templateUrl: './current-pokemon-status.component.html',
   styleUrl: './current-pokemon-status.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CurrentPokemonStatusComponent {
   public readonly compact = input<boolean>(false);
-  public readonly mass = input.required<number>();
+  public readonly name = input.required<string>();
+  public readonly hp = input.required<number>();
   public readonly stage = input.required<Stage>();
-  protected readonly max = MAX_VISUAL_MASS;
-  protected readonly mood = computed<PokemonMood>(() => getMood(this.mass(), this.stage()));
+  // The bar uses one absolute scale (0 → hard ceiling); a tick marks the next-evolution threshold along it, and
+  // `untilEvolution` is the HP still needed to reach it — both vanish on the final stage (nothing left to reach).
+  protected readonly maxHp = FRENZY.maxHp;
+  protected readonly mood = computed<PokemonMood>(() => getMood(this.hp(), this.stage()));
   protected readonly moodVisual = computed<MoodVisual>(() => MOOD_VISUAL[this.mood()]);
+  protected readonly nextThreshold = computed<number>(() => {
+    if (this.stage() === 1) {
+      return FRENZY.thresholds.stage2;
+    }
+
+    if (this.stage() === 2) {
+      return FRENZY.thresholds.stage3;
+    }
+
+    return FRENZY.maxHp;
+  });
+  protected readonly thresholdPercent = computed<number>(
+    () => (this.nextThreshold() / FRENZY.maxHp) * 100,
+  );
+  protected readonly untilEvolution = computed<number | null>(() => {
+    if (this.stage() === 3) {
+      return null;
+    }
+
+    return this.nextThreshold() - this.hp();
+  });
 }

@@ -1,0 +1,127 @@
+// Host is the positioned anchor the scene-position directive drives (it writes the `translate` CSS property);
+// `transform` is the static bottom-edge anchor so `y` is the item's foot (fully visible falling, resting wholly
+// on the floor at y=1). The clickable, padded button fills the host.
+:host {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  display: block;
+  transform: translate(-50%, -100%);
+}
+
+.scene__item {
+  display: block;
+  padding: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  // Hover/active use the `scale` property so its transition never catches the host's per-frame move.
+  transition: scale 0.08s ease;
+  outline: none;
+  user-select: none;
+}
+
+.scene__item:active {
+  scale: 0.95;
+}
+
+// Hover/focus highlights the sprite (brighten + glowing rim) rather than scaling it up — a clearer "this one is
+// captured and clickable" cue that doesn't bump the item's footprint around. The glow lives on the sprite so it
+// composes with the tumble/sway transform instead of fighting the item box's own `scale`.
+.scene__item:hover .scene__item-sprite,
+.scene__item:focus-visible .scene__item-sprite {
+  filter: brightness(1.2) drop-shadow(0 0 5px rgba(255, 255, 255, 0.95))
+    drop-shadow(0 0 11px rgba(120, 220, 255, 0.75));
+}
+
+// Rock and the rotten bone read too warm — desaturate them toward grey stone. Kept grey on hover too (the
+// highlight glow still composes), so they never flash back to their original colour while captured.
+.scene__item-sprite--rock,
+.scene__item-sprite--rotten {
+  // Already fully desaturated (grayscale 1); darkened + higher contrast so it reads as proper stone grey rather
+  // than a pale tan-grey.
+  filter: grayscale(1) contrast(1.18) brightness(0.78);
+}
+
+.scene__item:hover .scene__item-sprite--rock,
+.scene__item:hover .scene__item-sprite--rotten,
+.scene__item:focus-visible .scene__item-sprite--rock,
+.scene__item:focus-visible .scene__item-sprite--rotten {
+  filter: grayscale(1) contrast(1.18) brightness(0.95)
+    drop-shadow(0 0 5px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 11px rgba(120, 220, 255, 0.75));
+}
+
+.scene__item-sprite {
+  display: block;
+  transition: filter 0.12s ease;
+  // Size comes from the shared physical-size contract (`--scene-item-size` ← GAME.physicalSizePx.item, set on
+  // `.scene__world` and inherited here), so render size and the server's size-aware edge bounds stay in lockstep.
+  // Smooth scaling (no `image-rendering: pixelated`): the camera and item positions translate sub-pixel, and
+  // nearest-neighbour would shimmer at fractional offsets — bilinear keeps the small tumbling sprite clean.
+  width: var(--scene-item-size, 60px);
+  height: var(--scene-item-size, 60px);
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+// Tumble while falling — duration and direction (animation-direction) are set per item inline so each spins at
+// its own speed, clockwise or counter-clockwise. The bomb opts out to keep its fuse readable.
+.scene__item-sprite--spin {
+  animation-name: scene-item-spin;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+// The shield opts out of the full tumble — a buff pickup reads better hovering upright. Instead it rocks gently
+// back and forth on the z-axis (the per-item duration/direction still apply, so each shield sways at its own pace
+// and pauses on landing like the spinners).
+.scene__item-sprite--sway {
+  animation-name: scene-item-sway;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+// The bomb (sea mine) keeps its own slow tumble — two stacked animations on independent properties: a steady
+// rotation (`transform`) plus a gentle size breathing (`scale`, so it never fights the rotation). Spin direction
+// is randomised per item via the `--reverse` modifier; the pulse stays `alternate` either way. Pauses on landing
+// through the shared inline `animation-play-state`.
+.scene__item-sprite--bomb {
+  animation-name: scene-item-spin, scene-item-bomb-pulse;
+  animation-duration: 7s, 2.2s;
+  animation-timing-function: linear, ease-in-out;
+  animation-iteration-count: infinite, infinite;
+  animation-direction: normal, alternate;
+}
+
+.scene__item-sprite--bomb.scene__item-sprite--reverse {
+  animation-direction: reverse, alternate;
+}
+
+@keyframes scene-item-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes scene-item-bomb-pulse {
+  0%,
+  100% {
+    scale: 0.94;
+  }
+
+  50% {
+    scale: 1.06;
+  }
+}
+
+@keyframes scene-item-sway {
+  0%,
+  100% {
+    transform: rotate(-12deg);
+  }
+
+  50% {
+    transform: rotate(12deg);
+  }
+}

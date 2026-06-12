@@ -8,7 +8,7 @@ import { FloatingMessagesStore } from './floating-messages.store';
 
 /**
  * Watches the player's own Pokémon and floats mood quips on transitions: sad ↔ happy and a sticky
- * "dying" warning while mass is critically low. Plus `pokeSelf` — a click-to-quip easter egg.
+ * "dying" warning while hp is critically low. Plus `pokeSelf` — a click-to-quip easter egg.
  * Signal-driven (not message-driven), so it is constructed for its `effect()` rather than dispatched.
  */
 @Injectable()
@@ -24,9 +24,9 @@ export class SelfMoodEffect {
   public constructor() {
     effect(() => {
       const me = this.store.me();
-      const alive = me !== null && me.mass > 0;
-      const dyingNow = alive && me.mass <= FRENZY.lowMassWarningThreshold;
-      const sadNow = alive && !dyingNow && isSad(me.mass, me.stage);
+      const alive = me !== null && me.hp > 0;
+      const dyingNow = alive && me.hp <= FRENZY.lowHpWarningThreshold;
+      const sadNow = alive && !dyingNow && isSad(me.hp, me.stage);
 
       if (me !== null && sadNow && !this.wasSad) {
         this.replaceMood('sad', me.id);

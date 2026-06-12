@@ -10,7 +10,7 @@ const PLAYER: Player = {
   name: 'Ash',
   appearance: 'caterpie',
   stage: 1,
-  mass: 100,
+  hp: 100,
   x: 0.5,
   y: 0.5,
   vx: 0,
@@ -61,14 +61,14 @@ describe('applyClick', () => {
     const { state: next, events } = applyClick(state, PLAYER.id, 'i1');
 
     expect(next.items).toHaveLength(0);
-    expect(next.players[0].mass).toBe(110);
+    expect(next.players[0].hp).toBe(110);
     expect(events).toEqual([
       {
         type: 'eaten',
         itemId: 'i1',
         itemType: 'food',
         playerId: 'p1',
-        newMass: 110,
+        newHp: 110,
         delta: 10,
         x: 0.5,
         y: 0.5,
@@ -76,9 +76,9 @@ describe('applyClick', () => {
     ]);
   });
 
-  it('clamps mass at zero and emits fainted', () => {
-    const lowMass: Player = { ...PLAYER, mass: 10 };
-    const state = stateWith([lowMass], [makeItem({ type: 'rotten' })]);
+  it('clamps hp at zero and emits fainted', () => {
+    const lowHp: Player = { ...PLAYER, hp: 10 };
+    const state = stateWith([lowHp], [makeItem({ type: 'rotten' })]);
 
     const { state: next, events } = applyClick(state, PLAYER.id, 'i1');
 
@@ -89,7 +89,7 @@ describe('applyClick', () => {
         itemId: 'i1',
         itemType: 'rotten',
         playerId: 'p1',
-        newMass: 0,
+        newHp: 0,
         delta: -10,
         x: 0.5,
         y: 0.5,
@@ -98,8 +98,8 @@ describe('applyClick', () => {
     ]);
   });
 
-  it('emits evolved when mass crosses stage threshold', () => {
-    const heavy: Player = { ...PLAYER, mass: 195 };
+  it('emits evolved when hp crosses stage threshold', () => {
+    const heavy: Player = { ...PLAYER, hp: 195 };
     const state = stateWith([heavy], [makeItem({ type: 'food' })]);
 
     const { state: next, events } = applyClick(state, PLAYER.id, 'i1');
@@ -116,14 +116,14 @@ describe('applyClick', () => {
     expect(events.some((event) => event.type === 'evolved')).toBe(false);
   });
 
-  it('batting a bomb slides it by the supplied displacement without eating it or changing mass', () => {
+  it('batting a bomb slides it by the supplied displacement without eating it or changing hp', () => {
     const state = stateWith([PLAYER], [makeItem({ type: 'bomb', x: 0.5 })]);
 
     const { state: next, events } = applyClick(state, PLAYER.id, 'i1', -0.1);
 
     expect(next.items).toHaveLength(1);
     expect(next.items[0].x).toBeCloseTo(0.4, 5);
-    expect(next.players[0].mass).toBe(100);
+    expect(next.players[0].hp).toBe(100);
     expect(events).toEqual([{ type: 'itemNudged', itemId: 'i1', x: expect.closeTo(0.4, 5) }]);
   });
 
@@ -140,7 +140,7 @@ describe('applyClick', () => {
     );
 
     expect(next.items).toHaveLength(0);
-    expect(next.players[0].mass).toBe(100 + FRENZY.vitamin.hp);
+    expect(next.players[0].hp).toBe(100 + FRENZY.vitamin.hp);
     expect(next.players[0].effects).toEqual([
       { kind: 'wellFed', expiresAt: 1000 + FRENZY.vitamin.decayPauseMs },
     ]);
@@ -154,7 +154,7 @@ describe('applyClick', () => {
     ]);
   });
 
-  it('grabbing a shield wards the clicker (effectGranted, no mass change), removes the item', () => {
+  it('grabbing a shield wards the clicker (effectGranted, no hp change), removes the item', () => {
     const state = stateWith([PLAYER], [makeItem({ type: 'shield' })]);
 
     const { state: next, events } = applyClick(
@@ -167,7 +167,7 @@ describe('applyClick', () => {
     );
 
     expect(next.items).toHaveLength(0);
-    expect(next.players[0].mass).toBe(100);
+    expect(next.players[0].hp).toBe(100);
     expect(next.players[0].effects).toEqual([
       { kind: 'shield', expiresAt: 1000 + FRENZY.shield.shieldMs },
     ]);
@@ -181,20 +181,20 @@ describe('applyClick', () => {
     ]);
   });
 
-  it('rock leaves mass unchanged but still removes item', () => {
+  it('rock leaves hp unchanged but still removes item', () => {
     const state = stateWith([PLAYER], [makeItem({ type: 'rock' })]);
 
     const { state: next, events } = applyClick(state, PLAYER.id, 'i1');
 
     expect(next.items).toHaveLength(0);
-    expect(next.players[0].mass).toBe(100);
+    expect(next.players[0].hp).toBe(100);
     expect(events).toEqual([
       {
         type: 'eaten',
         itemId: 'i1',
         itemType: 'rock',
         playerId: 'p1',
-        newMass: 100,
+        newHp: 100,
         delta: 0,
         x: 0.5,
         y: 0.5,

@@ -14,7 +14,7 @@ import type { ServerMessage, ServerState } from '@game/frenzy/types';
 
 import { applyServerMessage } from './apply-server-message';
 import { FrenzySocketService } from '../services/frenzy-socket.service';
-import { SessionTokenService } from '../services/session-token.service';
+import { PlayerPersistenceService } from '../services/player-persistence.service';
 
 export type ConnectionStatus = 'idle' | 'connecting' | 'open' | 'closed' | 'roomFull';
 
@@ -60,7 +60,7 @@ export const FrenzyStore = signalStore(
           store.state()?.players.filter((player) => player.status === 'disconnected').length ?? 0,
       ),
       leaderboard: computed(() =>
-        [...(store.state()?.players ?? [])].sort((a, b) => b.mass - a.mass).slice(0, 5),
+        [...(store.state()?.players ?? [])].sort((a, b) => b.hp - a.hp).slice(0, 5),
       ),
       me: computed(() => {
         const id = store.myId();
@@ -71,12 +71,16 @@ export const FrenzyStore = signalStore(
     };
   }),
   withMethods(
-    (store, socket = inject(FrenzySocketService), sessionTokens = inject(SessionTokenService)) => ({
+    (
+      store,
+      socket = inject(FrenzySocketService),
+      persistence = inject(PlayerPersistenceService),
+    ) => ({
       click(itemId: string, nudgeX?: number): void {
         socket.send({ type: 'click', itemId, nudgeX });
       },
       connect(roomId = 'feeding-frenzy'): void {
-        const token = sessionTokens.getOrCreateToken();
+        const token = persistence.getOrCreateToken();
 
         patchState(store, { myId: token });
         socket.connect(roomId);
@@ -88,7 +92,8 @@ export const FrenzyStore = signalStore(
         patchState(store, { myFaintedAt: null });
       },
       join(name: string, appearance: string): void {
-        sessionTokens.saveName(name);
+        persistence.saveName(name);
+        persistence.saveAppearance(appearance);
         patchState(store, { myFaintedAt: null });
         socket.send({ type: 'join', name, appearance });
       },

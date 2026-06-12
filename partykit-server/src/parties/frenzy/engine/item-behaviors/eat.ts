@@ -2,7 +2,7 @@ import { eat } from './shared';
 import type { ItemBehavior } from './types';
 
 /**
- * Edible items: grabbing or drifting into one applies its per-type mass delta, then it's gone.
+ * Edible items: grabbing or drifting into one applies its per-type hp delta, then it's gone.
  * Covers good berries/candy (positive) and rotten "poison" berries (negative) alike — a Pokémon that
  * drifts into a rotten berry is poisoned by it, same as eating one on click.
  */

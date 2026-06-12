@@ -16,7 +16,12 @@ export interface SteerTuning {
  * reconciliation tiny. Adds an impulse toward (dx, dy) onto the current velocity, then caps the total
  * speed at maxSpeed. A zero direction (tap on self) returns the current velocity unchanged.
  */
-export function steerVelocity(current: Velocity, dx: number, dy: number, tuning: SteerTuning): Velocity {
+export function steerVelocity(
+  current: Velocity,
+  dx: number,
+  dy: number,
+  tuning: SteerTuning,
+): Velocity {
   const distance = Math.hypot(dx, dy);
 
   if (distance === 0) {

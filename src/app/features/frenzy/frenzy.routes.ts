@@ -10,9 +10,10 @@ import { PresenceTracker } from './data/services/effects/presence-tracker.servic
 import { SelfMoodEffect } from './data/services/effects/self-mood-effect.service';
 import { FrenzyEffectsService } from './data/services/frenzy-effects.service';
 import { FrenzySocketService } from './data/services/frenzy-socket.service';
-import { SessionTokenService } from './data/services/session-token.service';
+import { PlayerPersistenceService } from './data/services/player-persistence.service';
 import { AudioEngineService } from './data/services/sound/audio-engine.service';
 import { BadEatSoundService } from './data/services/sound/bad-eat-sound.service';
+import { BrickSoundService } from './data/services/sound/brick-sound.service';
 import { EasterEggSoundService } from './data/services/sound/easter-egg-sound.service';
 import { EatSoundService } from './data/services/sound/eat-sound.service';
 import { EvolveSoundService } from './data/services/sound/evolve-sound.service';
@@ -29,6 +30,9 @@ export const FRENZY_PATH = 'frenzy';
 export const frenzyRoutes: Routes = [
   {
     path: 'frenzy',
+    // Immersive, fixed-viewport shell: the layout pins itself to a definite viewport height so the
+    // full-bleed, no-scroll play area never overflows (see LayoutComponent).
+    data: { immersive: true },
     loadComponent: () =>
       import('./ui/components/frenzy-page/frenzy-page.component').then(
         (m) => m.FrenzyPageComponent,
@@ -47,9 +51,10 @@ export const frenzyRoutes: Routes = [
       SelfMoodEffect,
       FrenzyEffectsService,
       FrenzyPageFacade,
-      SessionTokenService,
+      PlayerPersistenceService,
       AudioEngineService,
       BadEatSoundService,
+      BrickSoundService,
       EasterEggSoundService,
       EatSoundService,
       EvolveSoundService,

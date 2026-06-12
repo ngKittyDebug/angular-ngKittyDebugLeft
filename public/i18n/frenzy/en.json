@@ -1,6 +1,8 @@
 {
   "currentPokemonStatus": {
-    "stage": "Stage {{stage}}",
+    "stageBadge": "STAGE {{stage}}",
+    "untilEvolution": "to evolve {{value}}",
+    "hpLabel": "HP",
     "ariaLabel": "Your Pokémon status",
     "mood": {
       "happy": "Happy",
@@ -13,13 +15,14 @@
     "title": "Pokémon fainted!",
     "lifespan": "Survived",
     "lifespanValue": "{{seconds}} s",
-    "maxMass": "Peak mass",
+    "maxHp": "Peak HP",
     "maxStage": "Top stage",
     "totalEaten": "Items eaten",
     "items": {
       "food": "Good berries",
       "rotten": "Rotten berries",
       "rock": "Rocks",
+      "brick": "Bricks",
       "rareCandy": "Rare candy",
       "goldenBerry": "Golden berries",
       "crumb": "Crumbs",
@@ -35,9 +38,14 @@
     "onlineAriaLabel": "Players online",
     "disconnectedAriaLabel": "Players disconnected, may reconnect"
   },
+  "minimap": {
+    "ariaLabel": "Arena minimap",
+    "expand": "Expand map",
+    "collapse": "Collapse map"
+  },
   "leaderboard": {
     "title": "Top 5",
-    "ariaLabel": "Leaderboard, top 5 players by mass",
+    "ariaLabel": "Leaderboard, top 5 players by HP",
     "empty": "No challengers yet",
     "you": "You",
     "disconnectedHint": "Disconnected — may return within 15s",
@@ -70,6 +78,13 @@
         "2": "Hmm…",
         "3": "Huh",
         "4": "Why?"
+      },
+      "brick": {
+        "0": "Heavy!",
+        "1": "A brick?!",
+        "2": "Oof!",
+        "3": "Bonk!",
+        "4": "Ow ow!"
       },
       "rareCandy": {
         "0": "Whoa!",

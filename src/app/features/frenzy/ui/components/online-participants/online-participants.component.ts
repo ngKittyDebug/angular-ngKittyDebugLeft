@@ -3,15 +3,14 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import { TuiHintDirective, TuiIcon } from '@taiga-ui/core';
 
 @Component({
-  selector: 'left-paw-presence-counter',
+  selector: 'left-paw-online-participants',
   imports: [TranslocoDirective, TuiHintDirective, TuiIcon],
-  templateUrl: './presence-counter.component.html',
-  styleUrl: './presence-counter.component.scss',
+  templateUrl: './online-participants.component.html',
+  styleUrl: './online-participants.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PresenceCounterComponent {
+export class OnlineParticipantsComponent {
   // Mobile shows just icon + number (no label text) and drops the hover-only hint.
   public readonly compact = input<boolean>(false);
-  public readonly disconnected = input<number>(0);
-  public readonly online = input.required<number>();
+  public readonly count = input.required<number>();
 }

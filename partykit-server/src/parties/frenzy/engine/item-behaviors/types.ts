@@ -1,7 +1,7 @@
 import type { Item, Player, PlayerEffectKind, ServerState } from '@game/frenzy/types';
 
-/** A mass change targeted at one player. Negative amounts are damage. */
-export interface MassDelta {
+/** A hp change targeted at one player. Negative amounts are damage. */
+export interface HpDelta {
   playerId: string;
   amount: number;
 }
@@ -13,9 +13,9 @@ export interface EffectGrant {
   durationMs: number;
 }
 
-/** Outcome of interacting with an item: which mass changes happen and whether the item leaves the field. */
+/** Outcome of interacting with an item: which hp changes happen and whether the item leaves the field. */
 export interface ItemInteraction {
-  massDeltas: MassDelta[];
+  hpDeltas: HpDelta[];
   consumed: boolean;
   /** Horizontal shift (normalized) to apply to the item instead of eating it — used by the bomb's juggle click. */
   nudgeX?: number;

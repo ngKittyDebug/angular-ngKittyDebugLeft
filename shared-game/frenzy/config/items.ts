@@ -1,10 +1,11 @@
-/** Falling-item physics and the fixed per-type mass payoff of eating one. */
+/** Falling-item physics and the fixed per-type hp payoff of eating one. */
 export const ITEMS = {
-  /** Mass delta when an item is eaten, by type: + food/candy, − rotten, 0 for rock. `bomb` is never eaten (it nudges on click, damages via blast on land) and `mushroom` rolls a random delta in `bomb`-style — the 0 only keeps this map total over `ItemType`. */
+  /** Hp delta when an item is eaten, by type: + food/candy, − rotten, 0 for rock. `bomb` is never eaten (it nudges on click, damages via blast on land) and `mushroom` rolls a random delta in `bomb`-style — the 0 only keeps this map total over `ItemType`. */
   itemEffects: {
     food: 10,
     rotten: -15,
     rock: 0,
+    brick: 0,
     rareCandy: 30,
     bomb: 0,
     goldenBerry: 25,
@@ -19,6 +20,7 @@ export const ITEMS = {
     food: 0.15,
     rotten: 0.15,
     rock: 0.2,
+    brick: 0.22,
     rareCandy: 0.15,
     bomb: 0.035,
     goldenBerry: 0.18,

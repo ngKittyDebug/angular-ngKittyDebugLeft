@@ -20,14 +20,22 @@
     #e9cf97 38%,
     rgba(233, 207, 151, 0) 72%
   );
-  --aq-ray: rgba(255, 255, 255, 0.5);
-  --aq-bubble: rgba(255, 255, 255, 0.85);
-  --aq-plankton: rgba(255, 255, 255, 0.9);
+  --aq-ray: rgba(255, 255, 255, 0.9);
+  --aq-bubble: rgba(255, 255, 255, 0.95);
+  // Bright-white specks (like the bubbles): motes + the foreground parallax are pure white, scaled up and lifted
+  // by a strong white glow so they read clearly against the cyan shallows. Dark theme keeps its subtler look.
+  --aq-plankton: rgba(255, 255, 255, 1);
   --aq-plant-a: #2f9e6f;
   --aq-plant-b: #57c98c;
   --aq-plant-c: #8bd5a6;
   --aq-vignette: rgba(8, 70, 96, 0.32);
-  --aq-glow: rgba(255, 255, 255, 0.5);
+  --aq-glow: rgba(255, 255, 255, 0.9);
+  --aq-mote-scale: 1.8;
+  --scene-parallax-near: rgb(255, 255, 255);
+  --scene-parallax-mid: rgb(255, 255, 255);
+  --scene-parallax-scale: 1.6;
+  --scene-parallax-near-opacity: 0.9;
+  --scene-parallax-mid-opacity: 0.7;
 }
 
 /* 🌑  DARK  →  Variant C · Bioluminescent Abyss (on-brand violet #7c3aed) */
@@ -54,4 +62,12 @@
   --aq-plant-c: #2bb6d8;
   --aq-vignette: rgba(2, 4, 18, 0.7);
   --aq-glow: rgba(124, 90, 237, 0.5);
+  // Foreground parallax keeps its existing light-blue specks on the dark abyss (unchanged look): no extra scale,
+  // original layer opacities.
+  --scene-parallax-near: rgb(215, 244, 255);
+  --scene-parallax-mid: rgb(195, 232, 252);
+  --aq-mote-scale: 1;
+  --scene-parallax-scale: 1;
+  --scene-parallax-near-opacity: 0.55;
+  --scene-parallax-mid-opacity: 0.4;
 }

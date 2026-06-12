@@ -1,7 +1,7 @@
 import { FRENZY } from '@game/frenzy/config';
 import type { Item, ServerState } from '@game/frenzy/types';
 
-import type { ItemBehavior, ItemInteraction, MassDelta } from './types';
+import type { ItemBehavior, ItemInteraction, HpDelta } from './types';
 
 /**
  * The blast: every alive, unshielded Pokémon within the radius takes damage — friendly fire hits the batter too.
@@ -11,7 +11,7 @@ import type { ItemBehavior, ItemInteraction, MassDelta } from './types';
  */
 function bombBlast(item: Item, state: ServerState): ItemInteraction {
   const radiusSquared = FRENZY.bomb.blastRadius * FRENZY.bomb.blastRadius;
-  const massDeltas: MassDelta[] = [];
+  const hpDeltas: HpDelta[] = [];
 
   for (const player of state.players) {
     if (
@@ -26,11 +26,11 @@ function bombBlast(item: Item, state: ServerState): ItemInteraction {
     const dy = player.y - item.y;
 
     if (dx * dx + dy * dy <= radiusSquared) {
-      massDeltas.push({ playerId: player.id, amount: FRENZY.bomb.damage });
+      hpDeltas.push({ playerId: player.id, amount: FRENZY.bomb.damage });
     }
   }
 
-  return { massDeltas, consumed: true, explodes: true };
+  return { hpDeltas, consumed: true, explodes: true };
 }
 
 /**
@@ -44,12 +44,12 @@ export const bombBehavior: ItemBehavior = {
     if (nudgeX !== undefined && Number.isFinite(nudgeX) && nudgeX !== 0) {
       const capped = Math.max(-FRENZY.bomb.maxNudge, Math.min(FRENZY.bomb.maxNudge, nudgeX));
 
-      return { massDeltas: [], consumed: false, nudgeX: capped };
+      return { hpDeltas: [], consumed: false, nudgeX: capped };
     }
 
     const direction = item.x < 0.5 ? 1 : -1;
 
-    return { massDeltas: [], consumed: false, nudgeX: direction * FRENZY.bomb.nudgeStep };
+    return { hpDeltas: [], consumed: false, nudgeX: direction * FRENZY.bomb.nudgeStep };
   },
   onCollide: (item, _player, state) => bombBlast(item, state),
   onLand: (item, state) => bombBlast(item, state),

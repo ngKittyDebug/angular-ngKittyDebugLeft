@@ -1,0 +1,60 @@
+<ng-container *transloco="let t; prefix: 'frenzy.scene'">
+  @for (aura of player().effectAuras; track aura) {
+    @if (aura === shieldAuraClass()) {
+      <span [class]="aura" leftPawBubbleSkin aria-hidden="true"></span>
+    } @else {
+      <span [class]="aura" aria-hidden="true"></span>
+    }
+  }
+
+  @if (player().isMe) {
+    <button
+      class="scene__poke"
+      type="button"
+      [attr.aria-label]="t('pokeAriaLabel')"
+      (click)="poke.emit()"
+    >
+      <ng-container [ngTemplateOutlet]="sprite" />
+    </button>
+  } @else {
+    <ng-container [ngTemplateOutlet]="sprite" />
+  }
+
+  <span class="scene__label">{{ player().label }}</span>
+
+  @if (!player().isMe) {
+    <progress
+      tuiProgressBar
+      class="scene__hp-bar"
+      size="xs"
+      [value]="player().hp"
+      [max]="maxHp()"
+      [color]="player().hp | hpToneColor"
+    ></progress>
+  }
+
+  @for (float of floats(); track float.id) {
+    <left-paw-floating-text
+      class="scene__player-float"
+      [icon]="float.icon"
+      [who]="float.who"
+      [text]="t(float.textKey)"
+      [delta]="float.delta"
+      [tone]="float.tone"
+      [durationMs]="float.durationMs"
+    />
+  }
+</ng-container>
+
+<ng-template #sprite>
+  <span class="scene__sprite-flip" [class.scene__sprite-flip--right]="player().facingRight">
+    <img
+      class="scene__sprite"
+      [class.scene__sprite--evolving]="player().isEvolving"
+      [class.scene__sprite--sad]="player().isSad"
+      [src]="player().appearance | pokemonSprite: player().stage"
+      [alt]="player().label"
+      draggable="false"
+    />
+  </span>
+</ng-template>

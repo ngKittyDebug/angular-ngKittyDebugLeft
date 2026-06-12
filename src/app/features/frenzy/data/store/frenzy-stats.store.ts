@@ -21,7 +21,7 @@ type EatenCounts = Record<ItemType, number>;
 interface FrenzyStatsState {
   eatenByType: EatenCounts;
   endedAt: number | null;
-  maxMass: number;
+  maxHp: number;
   maxStage: Stage;
   startedAt: number | null;
 }
@@ -33,6 +33,7 @@ function emptyCounts(): EatenCounts {
     food: 0,
     rotten: 0,
     rock: 0,
+    brick: 0,
     rareCandy: 0,
     bomb: 0,
     goldenBerry: 0,
@@ -47,7 +48,7 @@ function emptyCounts(): EatenCounts {
 const initialState: FrenzyStatsState = {
   eatenByType: emptyCounts(),
   endedAt: null,
-  maxMass: 0,
+  maxHp: 0,
   maxStage: 1,
   startedAt: null,
 };
@@ -60,7 +61,7 @@ function accumulate(current: FrenzyStatsState, message: ServerMessage): Partial<
           ...current.eatenByType,
           [message.itemType]: current.eatenByType[message.itemType] + 1,
         },
-        maxMass: Math.max(current.maxMass, message.newMass),
+        maxHp: Math.max(current.maxHp, message.newHp),
       };
     }
 
@@ -110,7 +111,7 @@ export const FrenzyStatsStore = signalStore(
       patchState(store, {
         eatenByType: emptyCounts(),
         endedAt: null,
-        maxMass: FRENZY.startingMass,
+        maxHp: FRENZY.startingHp,
         maxStage: 1,
         startedAt: Date.now(),
       });

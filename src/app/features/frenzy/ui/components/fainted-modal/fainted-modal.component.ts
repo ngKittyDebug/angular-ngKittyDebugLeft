@@ -22,6 +22,7 @@ const BREAKDOWN_ORDER: readonly ItemType[] = [
   'mushroom',
   'rotten',
   'rock',
+  'brick',
 ];
 
 @Component({

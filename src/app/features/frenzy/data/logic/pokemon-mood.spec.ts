@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { getMood } from './pokemon-mood';
 
 describe('getMood', () => {
-  it('is starving at or below the low-mass warning threshold, regardless of stage', () => {
+  it('is starving at or below the low-hp warning threshold, regardless of stage', () => {
     expect(getMood(6, 1)).toBe('starving');
     expect(getMood(1, 1)).toBe('starving');
     expect(getMood(6, 3)).toBe('starving');

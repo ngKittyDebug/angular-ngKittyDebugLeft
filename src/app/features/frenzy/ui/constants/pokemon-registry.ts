@@ -39,19 +39,22 @@ function resolveLine(appearance: string): Line {
   return appearance in STAGE_SPRITES ? (appearance as Line) : FALLBACK_LINE;
 }
 
-// Filenames include the extension since item art is mixed: pixel berries/rock are PNG, vector items (bomb, the new food trio) are SVG placeholders.
+// Item art is mostly Microsoft Fluent Emoji (3D), downscaled to 120px PNG. A few are hand-picked SVG where the
+// Fluent glyph didn't read (rock — Fluent 3D boulder; brick — Twemoji; shield & bomb — custom SVG, since no
+// Unicode/Fluent glyph reads as a spiked sea mine). See CLAUDE.md ("Frenzy item art pipeline").
 const ITEM_SPRITES: Record<ItemType, string> = {
-  food: 'oran-berry.png',
-  rotten: 'pecha-berry.png',
-  rock: 'hard-stone.png',
+  food: 'food.png',
+  rotten: 'rotten.png',
+  rock: 'rock.png',
+  brick: 'brick.svg',
   rareCandy: 'rare-candy.png',
   bomb: 'bomb.svg',
-  goldenBerry: 'sitrus-berry.svg',
-  crumb: 'berry-crumb.svg',
-  mushroom: 'tiny-mushroom.svg',
-  vitamin: 'vitamin.svg',
+  goldenBerry: 'golden-berry.png',
+  crumb: 'crumb.png',
+  mushroom: 'mushroom.png',
+  vitamin: 'vitamin.png',
   shield: 'shield.svg',
-  easterEgg: 'easter-egg.svg',
+  easterEgg: 'easter-egg.png',
 };
 
 export function spritePathFor(appearance: string, stage: Stage = 1): string {

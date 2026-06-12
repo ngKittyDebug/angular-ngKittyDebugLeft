@@ -9,7 +9,7 @@ const PLAYER: Player = {
   name: 'Ash',
   appearance: 'caterpie',
   stage: 1,
-  mass: 100,
+  hp: 100,
   x: 0.5,
   y: 0.6,
   vx: 0,
@@ -34,19 +34,19 @@ describe('applyServerMessage', () => {
     expect(next).toEqual(SNAPSHOT_STATE);
   });
 
-  it('updates player mass on eaten', () => {
+  it('updates player hp on eaten', () => {
     const next = applyServerMessage(SNAPSHOT_STATE, {
       type: 'eaten',
       itemId: 'i1',
       itemType: 'food',
       playerId: 't1',
-      newMass: 150,
+      newHp: 150,
       delta: 50,
       x: 0.5,
       y: 0.5,
     });
 
-    expect(next?.players[0].mass).toBe(150);
+    expect(next?.players[0].hp).toBe(150);
   });
 
   it('removes player on fainted', () => {

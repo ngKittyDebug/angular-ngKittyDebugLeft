@@ -5,26 +5,50 @@
   [class.current-pokemon-status--compact]="compact()"
   [attr.aria-label]="t('ariaLabel')"
 >
-  <span class="current-pokemon-status__value">{{ mass() }}</span>
-  <progress
-    tuiProgressBar
-    class="current-pokemon-status__bar"
-    size="s"
-    [value]="mass()"
-    [max]="max"
-    [color]="mass() | massToneColor"
-  ></progress>
-  <p class="current-pokemon-status__mood" [attr.aria-label]="t('mood.' + mood())">
-    <tui-icon
-      class="current-pokemon-status__mood-icon"
-      [icon]="moodVisual().icon"
-      [style.color]="moodVisual().color"
-    />
-    @if (!compact()) {
-      <span class="current-pokemon-status__mood-label">{{ t('mood.' + mood()) }}</span>
-    }
-  </p>
-  <span class="current-pokemon-status__stage" [attr.aria-label]="t('stage', { stage: stage() })">
-    {{ stage() | stageRoman }}
-  </span>
+  <div
+    class="current-pokemon-status__avatar"
+    size="m"
+    [tuiAvatar]="moodVisual().icon"
+    [style.color]="moodVisual().color"
+    [attr.aria-label]="t('mood.' + mood())"
+  ></div>
+
+  <div class="current-pokemon-status__body">
+    <div class="current-pokemon-status__head">
+      <span class="current-pokemon-status__name">{{ name() }}</span>
+      <span tuiBadge appearance="accent" size="s" class="current-pokemon-status__stage">
+        {{ t('stageBadge', { stage: stage() }) }}
+      </span>
+    </div>
+
+    <div class="current-pokemon-status__bar-wrap">
+      <progress
+        tuiProgressBar
+        class="current-pokemon-status__bar"
+        size="s"
+        [value]="hp()"
+        [max]="maxHp"
+        [color]="hp() | hpToneColor"
+      ></progress>
+      <!-- Evolution marker: a notch on the absolute 0→max bar at the next-evolution threshold; gone on the
+           final stage (along with the "until evolution" line). -->
+      @if (untilEvolution() !== null) {
+        <span
+          class="current-pokemon-status__tick"
+          aria-hidden="true"
+          [style.left.%]="thresholdPercent()"
+        ></span>
+      }
+    </div>
+
+    <div class="current-pokemon-status__foot">
+      <span class="current-pokemon-status__value" [leftPawHpFlash]="hp()">{{ hp() }}</span>
+      <span class="current-pokemon-status__hp-label">{{ t('hpLabel') }}</span>
+      @if (untilEvolution() !== null) {
+        <span class="current-pokemon-status__until">
+          {{ t('untilEvolution', { value: untilEvolution() }) }}
+        </span>
+      }
+    </div>
+  </div>
 </section>

@@ -33,20 +33,29 @@
     display: block;
   }
 
-  // Satiety status: a wide bar pinned to the top-left corner of the scene.
-  &__hud-status {
+  // Left HUD column pinned top-left: satiety status bar on top, minimap below it.
+  &__hud-left {
     position: absolute;
     top: 1rem;
     left: 1rem;
     z-index: 5;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    // Desktop: stretch so the status bar and expanded map both fill the 22rem column.
+    align-items: stretch;
     width: min(22rem, calc(100% - 2rem));
+    // Status is non-interactive; the minimap re-enables pointer events on itself.
     pointer-events: none;
   }
 
-  // Mobile: shrink to a compact pill so it doesn't collide with the right-hand HUD (sound/presence/leaderboard).
-  &--mobile &__hud-status {
+  // Mobile: shrink to a compact column of left-aligned pills (status + minimap) so it doesn't collide
+  // with the right-hand HUD (sound/leaderboard).
+  &--mobile &__hud-left {
     width: auto;
     max-width: calc(100% - 9rem);
+    // Stretch so the status bar and the (full-width) minimap pill share the same width.
+    align-items: stretch;
   }
 
   &__hud-top-right {

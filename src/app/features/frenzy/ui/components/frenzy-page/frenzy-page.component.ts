@@ -4,11 +4,11 @@ import type { OnInit } from '@angular/core';
 import { CurrentPokemonStatusComponent } from '../current-pokemon-status/current-pokemon-status.component';
 import { FaintedModalComponent } from '../fainted-modal/fainted-modal.component';
 import { LeaderboardComponent } from '../leaderboard/leaderboard.component';
+import { MinimapComponent } from '../minimap/minimap.component';
 import { PokemonPickerComponent } from '../pokemon-picker/pokemon-picker.component';
 import type { PickerSubmission } from '../pokemon-picker/pokemon-picker.component';
-import { PresenceCounterComponent } from '../presence-counter/presence-counter.component';
 import { SceneComponent } from '../scene/scene.component';
-import type { ItemClick } from '../scene/scene.component';
+import type { ItemClick } from '../scene/scene-view-models';
 import { SoundToggleComponent } from '../sound-toggle/sound-toggle.component';
 import { FrenzyPageFacade } from './frenzy-page.facade';
 
@@ -18,8 +18,8 @@ import { FrenzyPageFacade } from './frenzy-page.facade';
     CurrentPokemonStatusComponent,
     FaintedModalComponent,
     LeaderboardComponent,
+    MinimapComponent,
     PokemonPickerComponent,
-    PresenceCounterComponent,
     SceneComponent,
     SoundToggleComponent,
   ],

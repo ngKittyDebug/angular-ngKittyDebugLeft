@@ -18,6 +18,7 @@ export const ITEM_FEATURES: Record<ItemType, FeatureFlag> = {
   food: { enabled: true },
   rotten: { enabled: true },
   rock: { enabled: true },
+  brick: { enabled: true },
   rareCandy: { enabled: true },
   bomb: { enabled: true },
   goldenBerry: { enabled: true },

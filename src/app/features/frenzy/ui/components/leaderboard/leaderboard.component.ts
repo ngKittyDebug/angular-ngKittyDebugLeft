@@ -13,7 +13,7 @@ interface LeaderboardRow {
   id: string;
   isDisconnected: boolean;
   isMe: boolean;
-  mass: number;
+  hp: number;
   name: string;
   rank: number;
   stage: Stage;
@@ -45,7 +45,7 @@ export class LeaderboardComponent {
       id: player.id,
       isDisconnected: player.status === 'disconnected',
       isMe: player.id === id,
-      mass: Math.round(player.mass),
+      hp: Math.round(player.hp),
       name: player.name,
       rank: index + 1,
       stage: player.stage,

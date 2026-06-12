@@ -6,6 +6,7 @@ import type { ServerMessage } from '@game/frenzy/types';
 import type { FloatingTone, OwnedFloat } from '../../models/floating-message';
 import { type SoundEffect } from '../../models/sound-effect';
 import { BadEatSoundService } from '../sound/bad-eat-sound.service';
+import { BrickSoundService } from '../sound/brick-sound.service';
 import { EatSoundService } from '../sound/eat-sound.service';
 import { RockSoundService } from '../sound/rock-sound.service';
 import { FrenzyStore } from '../../store/frenzy.store';
@@ -22,6 +23,7 @@ const FLOATING_TEXT_PHRASE_COUNT = 5;
 @Injectable()
 export class EatEffect implements FrenzyEffect {
   private readonly badEatSound = inject(BadEatSoundService);
+  private readonly brickSound = inject(BrickSoundService);
   private readonly eatSound = inject(EatSoundService);
   private readonly floats = inject(FloatingMessagesStore);
   private readonly rockSound = inject(RockSoundService);
@@ -64,7 +66,11 @@ export class EatEffect implements FrenzyEffect {
   }
 
   private eatenSoundFor(message: EatenMessage): SoundEffect {
-    // A rock always thunks — whether clicked (delta 0) or it bonked the Pokémon on collision (delta < 0).
+    // A rock/brick always thunks — whether clicked (delta 0) or it bonked the Pokémon on collision (delta < 0).
+    if (message.itemType === 'brick') {
+      return this.brickSound;
+    }
+
     if (message.itemType === 'rock') {
       return this.rockSound;
     }

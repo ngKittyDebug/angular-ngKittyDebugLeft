@@ -68,6 +68,8 @@
     border-radius: 50%;
     background: var(--aq-plankton);
     box-shadow: 0 0 6px var(--aq-glow);
+    // `scale` (independent of the drift `transform`) enlarges motes in the light theme; 1 in dark = unchanged.
+    scale: var(--aq-mote-scale, 1);
     animation: aq-mote-drift 16s ease-in-out infinite alternate;
 
     // Per-mote variety (was inline vars from the component).

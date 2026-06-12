@@ -7,7 +7,7 @@ export interface DecayResult {
 }
 
 /**
- * Decay step: drains `FRENZY.decayPerTick` mass from every alive Pokémon, fainting anyone who hits 0. A `shield`
+ * Decay step: drains `FRENZY.decayPerTick` hp from every alive Pokémon, fainting anyone who hits 0. A `shield`
  * (full ward) or `wellFed` (vitamin) suspends the bleed entirely while active — they differ on damage (shield
  * blocks it, wellFed doesn't), but not on decay. Only invoked on decay ticks (the loop schedules them).
  */
@@ -21,14 +21,14 @@ export function applyDecayStep(state: ServerState): DecayResult {
       continue;
     }
 
-    const newMass = Math.max(0, player.mass - FRENZY.decayPerTick);
+    const newHp = Math.max(0, player.hp - FRENZY.decayPerTick);
 
-    if (newMass <= 0) {
+    if (newHp <= 0) {
       events.push({ type: 'fainted', playerId: player.id });
       continue;
     }
 
-    survivors.push({ ...player, mass: newMass });
+    survivors.push({ ...player, hp: newHp });
   }
 
   return { state: { ...state, players: survivors }, events };

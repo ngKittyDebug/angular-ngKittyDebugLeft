@@ -4,7 +4,13 @@
 
 // Closed-form reflective ("ping-pong") drift along one axis: mirrors the server's bounce so the
 // client can extrapolate between snapshots smoothly instead of stepping each snapshot.
-export function reflect(p0: number, v: number, elapsedSeconds: number, min: number, max: number): number {
+export function reflect(
+  p0: number,
+  v: number,
+  elapsedSeconds: number,
+  min: number,
+  max: number,
+): number {
   const span = max - min;
 
   if (span <= 0) {

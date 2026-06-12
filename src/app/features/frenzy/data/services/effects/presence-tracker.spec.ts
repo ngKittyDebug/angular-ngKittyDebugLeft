@@ -14,7 +14,7 @@ function player(id: string, name: string, x = 0.5, y = 0.5): Player {
     name,
     appearance: 'pidgey',
     stage: 1,
-    mass: 100,
+    hp: 100,
     x,
     y,
     vx: 0,

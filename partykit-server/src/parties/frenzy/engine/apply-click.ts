@@ -2,7 +2,7 @@ import { FRENZY } from '@game/frenzy/config';
 import type { EatenEvent, GameEvent, Item, Player, ServerState } from '@game/frenzy/types';
 
 import { applyEffects, resolveGrants } from './apply-effect';
-import { applyMassDeltas } from './apply-mass-deltas';
+import { applyHpDeltas } from './apply-hp-deltas';
 import { getItemBehavior } from './item-behaviors';
 import type { ItemInteraction } from './item-behaviors';
 
@@ -12,7 +12,7 @@ export interface ClickResult {
 }
 
 /**
- * Effect pickup (shield/vitamin/easter egg): no eating — grant the timed effect, apply any heal mass delta it
+ * Effect pickup (shield/vitamin/easter egg): no eating — grant the timed effect, apply any heal hp delta it
  * carries (vitamin/egg heal; shield doesn't), drop the item, report `effectGranted` (+ any evolved/fainted).
  */
 function grantEffectResult(
@@ -23,7 +23,7 @@ function grantEffectResult(
 ): ClickResult {
   const applications = resolveGrants(interaction.effects ?? [], now);
   const withEffects = applyEffects(state, applications);
-  const resolved = applyMassDeltas(withEffects, interaction.massDeltas);
+  const resolved = applyHpDeltas(withEffects, interaction.hpDeltas);
   const items = interaction.consumed
     ? resolved.state.items.filter((candidate) => candidate.id !== itemId)
     : resolved.state.items;
@@ -41,7 +41,7 @@ function grantEffectResult(
 }
 
 /**
- * Juggle (bomb): no eating, no mass change — slide the item horizontally (clamped to the spawn range) and tell clients.
+ * Juggle (bomb): no eating, no hp change — slide the item horizontally (clamped to the spawn range) and tell clients.
  */
 function nudgeResult(state: ServerState, item: Item, interaction: ItemInteraction): ClickResult {
   const [minX, maxX] = FRENZY.itemSpawnXRange;
@@ -54,7 +54,7 @@ function nudgeResult(state: ServerState, item: Item, interaction: ItemInteractio
 }
 
 /**
- * Eating (default path): apply the item's mass delta to the clicker, report `eaten` (+ any evolved/fainted) and
+ * Eating (default path): apply the item's hp delta to the clicker, report `eaten` (+ any evolved/fainted) and
  * remove the item when consumed.
  */
 function eatResult(
@@ -63,17 +63,17 @@ function eatResult(
   clicker: Player,
   interaction: ItemInteraction,
 ): ClickResult {
-  const resolved = applyMassDeltas(state, interaction.massDeltas);
+  const resolved = applyHpDeltas(state, interaction.hpDeltas);
   const updatedClicker = resolved.state.players.find((candidate) => candidate.id === clicker.id);
-  const newMass = updatedClicker?.mass ?? 0;
+  const newHp = updatedClicker?.hp ?? 0;
 
   const eaten: EatenEvent = {
     type: 'eaten',
     itemId: item.id,
     itemType: item.type,
     playerId: clicker.id,
-    newMass,
-    delta: newMass - clicker.mass,
+    newHp,
+    delta: newHp - clicker.hp,
     x: item.x,
     y: item.y,
   };

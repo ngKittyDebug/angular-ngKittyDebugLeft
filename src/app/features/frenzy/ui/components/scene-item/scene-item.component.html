@@ -1,0 +1,19 @@
+<button class="scene__item" type="button" (click)="clicked.emit($event)">
+  <img
+    class="scene__item-sprite"
+    [class.scene__item-sprite--spin]="item().type !== 'bomb' && item().type !== 'shield'"
+    [class.scene__item-sprite--sway]="item().type === 'shield'"
+    [class.scene__item-sprite--bomb]="item().type === 'bomb'"
+    [class.scene__item-sprite--rock]="item().type === 'rock'"
+    [class.scene__item-sprite--rotten]="item().type === 'rotten'"
+    [class.scene__item-sprite--reverse]="item().type === 'bomb' && item().spinReverse"
+    [style.animation-duration.ms]="item().type === 'bomb' ? null : item().spinDurationMs"
+    [style.animation-direction]="
+      item().type === 'bomb' ? null : item().spinReverse ? 'reverse' : 'normal'
+    "
+    [style.animation-play-state]="item().landed ? 'paused' : 'running'"
+    [src]="item().type | itemSprite"
+    draggable="false"
+    alt=""
+  />
+</button>

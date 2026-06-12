@@ -9,8 +9,8 @@ import { FrenzyStatsStore } from './frenzy-stats.store';
 import { FrenzyStore } from './frenzy.store';
 import { FrenzySocketService } from '../services/frenzy-socket.service';
 
-function eaten(playerId: string, itemType: ItemType, newMass: number): ServerMessage {
-  return { type: 'eaten', itemId: 'i', itemType, playerId, newMass, delta: 10, x: 0.5, y: 0.5 };
+function eaten(playerId: string, itemType: ItemType, newHp: number): ServerMessage {
+  return { type: 'eaten', itemId: 'i', itemType, playerId, newHp, delta: 10, x: 0.5, y: 0.5 };
 }
 
 describe('FrenzyStatsStore', () => {
@@ -37,10 +37,10 @@ describe('FrenzyStatsStore', () => {
     messages$.next(eaten('t1', 'food', 110));
 
     expect(store.totalEaten()).toBe(0);
-    expect(store.maxMass()).toBe(0);
+    expect(store.maxHp()).toBe(0);
   });
 
-  it('counts eaten items by type and tracks peak mass for my player', () => {
+  it('counts eaten items by type and tracks peak hp for my player', () => {
     store.startSession();
     messages$.next(eaten('t1', 'food', 110));
     messages$.next(eaten('t1', 'food', 120));
@@ -51,6 +51,7 @@ describe('FrenzyStatsStore', () => {
       food: 2,
       rotten: 0,
       rock: 0,
+      brick: 0,
       rareCandy: 2,
       bomb: 0,
       goldenBerry: 0,
@@ -61,7 +62,7 @@ describe('FrenzyStatsStore', () => {
       easterEgg: 0,
     });
     expect(store.totalEaten()).toBe(4);
-    expect(store.maxMass()).toBe(150);
+    expect(store.maxHp()).toBe(150);
   });
 
   it('ignores events for other players', () => {
@@ -69,7 +70,7 @@ describe('FrenzyStatsStore', () => {
     messages$.next(eaten('other', 'food', 999));
 
     expect(store.totalEaten()).toBe(0);
-    expect(store.maxMass()).toBe(100);
+    expect(store.maxHp()).toBe(100);
   });
 
   it('records the highest reached stage on evolved', () => {
@@ -99,7 +100,7 @@ describe('FrenzyStatsStore', () => {
     store.startSession();
 
     expect(store.totalEaten()).toBe(0);
-    expect(store.maxMass()).toBe(100);
+    expect(store.maxHp()).toBe(100);
     expect(store.maxStage()).toBe(1);
   });
 });

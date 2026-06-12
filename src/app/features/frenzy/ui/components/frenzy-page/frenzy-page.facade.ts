@@ -8,7 +8,7 @@ import { FrenzyEffectsService } from '../../../data/services/frenzy-effects.serv
 import { FrenzyStatsStore } from '../../../data/store/frenzy-stats.store';
 import { FrenzyStore } from '../../../data/store/frenzy.store';
 import type { PickerSubmission } from '../pokemon-picker/pokemon-picker.component';
-import type { ItemClick } from '../scene/scene.component';
+import type { ItemClick } from '../scene/scene-view-models';
 
 export type UiState = 'connecting' | 'roomFull' | 'picking' | 'playing' | 'fainted' | 'closed';
 
@@ -40,7 +40,7 @@ export class FrenzyPageFacade {
   public readonly faintedStats = computed<FaintedStats>(() => ({
     eatenByType: this.stats.eatenByType(),
     lifespanSeconds: this.stats.lifespanSeconds(),
-    maxMass: Math.round(this.stats.maxMass()),
+    maxHp: Math.round(this.stats.maxHp()),
     maxStage: this.stats.maxStage(),
     totalEaten: this.stats.totalEaten(),
   }));
@@ -73,7 +73,7 @@ export class FrenzyPageFacade {
       return 'playing';
     }
 
-    return this.store.myFaintedAt() !== null ? 'fainted' : 'picking';
+    return this.store.myFaintedAt() === null ? 'picking' : 'fainted';
   });
 
   public constructor() {

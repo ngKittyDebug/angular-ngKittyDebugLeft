@@ -4,7 +4,7 @@ import { grantEffect } from './shared';
 import type { ItemBehavior } from './types';
 
 /**
- * Easter egg: heals `hpOnPickup` mass and gives the taker the `laying` aura — for its duration the Pokémon
+ * Easter egg: heals `hpOnPickup` hp and gives the taker the `laying` aura — for its duration the Pokémon
  * randomly sprays falling items (incl. bombs) out behind itself (handled by applyEmissions in the game loop).
  */
 export const easterEggBehavior: ItemBehavior = {

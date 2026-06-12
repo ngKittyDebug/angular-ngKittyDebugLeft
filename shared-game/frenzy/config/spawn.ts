@@ -5,6 +5,7 @@ export const SPAWN = {
     food: 55,
     rotten: 15,
     rock: 20,
+    brick: 10,
     rareCandy: 5,
     bomb: 10,
     goldenBerry: 5,
