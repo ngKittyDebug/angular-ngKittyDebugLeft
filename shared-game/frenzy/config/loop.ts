@@ -2,8 +2,8 @@
 export const LOOP = {
   /** Server game-loop frequency, ticks/sec. Moves items and schedules decay/snapshots. */
   tickRateHz: 10,
-  /** Every Nth tick the server broadcasts a full snapshot to heal drift; between snapshots clients rely on delta events and velocity extrapolation. At 10 Hz, 3 ≈ 3.3 snapshots/sec — frequent enough that the client's reconciliation corrections stay small (and remote heading changes surface fast), while delta events still carry the gaps. */
-  snapshotEveryNTicks: 3,
+  /** Every Nth tick the server broadcasts a (slim) snapshot to heal drift; between snapshots clients rely on delta events and velocity extrapolation. At 10 Hz, 5 = 2 snapshots/sec — since steer became its own delta event the snapshot only heals drift and refreshes hp/scores, so the sparser cadence holds as long as reconciliation corrections stay invisible (throttled-playtest gated; revert to 3 if remote motion shows snapping). */
+  snapshotEveryNTicks: 5,
   /** Server liveness heartbeat, ms: a tiny `ping` broadcast on this cadence while any connection is open, independent of the game loop. Gives the client a steady inbound signal even in the lobby/idle (where no snapshots flow) so it can detect a stalled (half-open) socket and reconnect. */
   heartbeatMs: 2_000,
   /** Grace period after disconnect, ms: the Pokémon stays in the room (greyed out, decay continues) and may rejoin on reconnection; purged afterward. */

@@ -1,6 +1,78 @@
-import type { ServerMessage, ServerState } from '@game/frenzy/types';
+import type {
+  NpcAngeredMessage,
+  Player,
+  ServerMessage,
+  ServerState,
+  SlimServerState,
+  SteeredMessage,
+} from '@game/frenzy/types';
 
 const EMPTY_STATE: ServerState = { players: [], items: [], tick: 0 };
+
+// Patches one player by id, leaving everyone else (and an unknown id — e.g. an event for someone who joined
+// between snapshots) untouched.
+function patchPlayer(
+  state: ServerState,
+  playerId: string,
+  patch: (player: Player) => Player,
+): ServerState {
+  return {
+    ...state,
+    players: state.players.map((player) => (player.id === playerId ? patch(player) : player)),
+  };
+}
+
+// Room-level per-player delta messages (`steered`/`npcAngered`): each re-syncs a couple of fields on one player
+// so the input shows at once instead of waiting for the scheduled snapshot. Split out of the main switch to keep
+// it within its complexity budget (same move as `isStatelessMessage`).
+function applyPlayerDelta(
+  previous: ServerState | null,
+  message: SteeredMessage | NpcAngeredMessage,
+): ServerState | null {
+  if (previous === null) {
+    return previous;
+  }
+
+  if (message.type === 'steered') {
+    // A steer re-syncs the authoritative position and the new drift velocity; the extrapolator re-anchors
+    // from all four so the heading change shows at once (mirrors itemNudged for bombs).
+    return patchPlayer(previous, message.playerId, (player) => ({
+      ...player,
+      x: message.x,
+      y: message.y,
+      vx: message.vx,
+      vy: message.vy,
+    }));
+  }
+
+  return patchPlayer(previous, message.npcId, (player) => ({ ...player, mana: message.mana }));
+}
+
+// Periodic slim snapshot: dynamic fields only — the static half (name/appearance/body/joinedAt, kind) merges in
+// from the previously cached full player by id. Slim membership is authoritative (an absent player drops out,
+// same as a full snapshot). An unknown id is dropped until the announcing full snapshot arrives — the server
+// guarantees that full one precedes any slim referencing the id on the ordered socket, so this is a vanish-proof
+// safety net, not the normal path. A pre-bootstrap slim (null previous) is ignored for the same reason.
+function applySlimSnapshot(
+  previous: ServerState | null,
+  state: SlimServerState,
+): ServerState | null {
+  if (previous === null) {
+    return previous;
+  }
+
+  const knownById = new Map(previous.players.map((player) => [player.id, player]));
+
+  return {
+    tick: state.tick,
+    items: state.items,
+    players: state.players.flatMap((slim) => {
+      const known = knownById.get(slim.id);
+
+      return known === undefined ? [] : [{ ...known, ...slim }];
+    }),
+  };
+}
 
 // A typed no-op for the switch's `default`: the `never` parameter enforces that every state-changing ServerMessage
 // variant is handled above — a newly added one would fail to compile here, naming the missing type —
@@ -40,6 +112,10 @@ export function applyServerMessage(
   switch (message.type) {
     case 'snapshot': {
       return message.state;
+    }
+
+    case 'slimSnapshot': {
+      return applySlimSnapshot(previous, message.state);
     }
 
     case 'spawned': {
@@ -92,6 +168,14 @@ export function applyServerMessage(
         ...previous,
         players: previous.players.filter((player) => player.id !== message.playerId),
       };
+    }
+
+    case 'steered': {
+      return applyPlayerDelta(previous, message);
+    }
+
+    case 'npcAngered': {
+      return applyPlayerDelta(previous, message);
     }
 
     case 'itemNudged': {

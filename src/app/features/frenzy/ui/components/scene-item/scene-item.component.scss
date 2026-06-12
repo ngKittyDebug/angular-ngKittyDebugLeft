@@ -10,6 +10,9 @@
   z-index: 1;
   display: block;
   transform: translate(-50%, -50%);
+  // Fixed-content absolute box whose insides never affect outside layout — containment lets the engine skip the
+  // ancestors when the sprite's tumble/breathe animate. NOT `paint`: the hover glow draws past the box.
+  contain: layout style;
 }
 
 // The bomb is the one item you actively shove, so it must win the tap over the Pokémon layer (both default to

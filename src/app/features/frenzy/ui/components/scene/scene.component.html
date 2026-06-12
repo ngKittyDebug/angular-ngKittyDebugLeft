@@ -132,10 +132,15 @@
     }
   </div>
 
-  <!-- Foreground parallax: faint particle layers in front of the world that scroll faster than it (camera-driven
-       via background-position), giving a depth/direction cue over uniform mid-water. Decorative only. -->
-  <div class="scene__parallax scene__parallax--mid" #parallaxMid aria-hidden="true"></div>
-  <div class="scene__parallax scene__parallax--near" #parallaxNear aria-hidden="true"></div>
+  <!-- Foreground parallax: faint particle layers in front of the world that scroll faster than it, giving a
+       depth/direction cue over uniform mid-water. The wrapper clips; the camera translates the oversized inner
+       tile sheet each frame (compositor-only, no repaint). Decorative only. -->
+  <div class="scene__parallax scene__parallax--mid" aria-hidden="true">
+    <div class="scene__parallax-inner scene__parallax-inner--mid" #parallaxMid></div>
+  </div>
+  <div class="scene__parallax scene__parallax--near" aria-hidden="true">
+    <div class="scene__parallax-inner scene__parallax-inner--near" #parallaxNear></div>
+  </div>
 
   <!-- Foreground kelp: a screen-space near layer in FRONT of the actors (camera writes its width/transform each
        frame), so the Pokémon swim between the seabed backdrop and these close fronds. Decorative only. -->

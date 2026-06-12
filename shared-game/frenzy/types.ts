@@ -137,6 +137,22 @@ export interface ServerState {
   tick: number;
 }
 
+/** Fields immutable after join — sent only in full snapshots (bootstrap + roster changes), never in slim ones.
+ * The `kind`/`npcKind` discriminators are static too and likewise live only in the full flavor. */
+type PlayerStaticKeys = 'name' | 'appearance' | 'body' | 'joinedAt';
+
+/** Dynamic projection of a player for the periodic slim snapshot; `id` is the merge key — the client folds a
+ * slim entry over its cached full player (see the `slimSnapshot` reducer case). */
+export type SlimPlayer = Omit<PlayerBase, PlayerStaticKeys>;
+
+/** Periodic tick-cadence state: same items/tick, but players stripped to their dynamic half (~100B vs ~400B
+ * each on the wire). Membership stays authoritative — a player absent here has left, same as a full snapshot. */
+export interface SlimServerState {
+  players: SlimPlayer[];
+  items: Item[];
+  tick: number;
+}
+
 /** How a pickup happened: the player tapped the item (`click`) or drifted into it (`collision`). */
 export type PickupVia = 'click' | 'collision';
 
@@ -249,6 +265,27 @@ export type GameEvent =
   | EffectGrantedEvent
   | BumpedEvent;
 
+// A player steered (tapped empty water) and the room applied a velocity impulse. `x`/`y` are the steerer's
+// authoritative position at steer time, `vx`/`vy` the new drift velocity — clients re-anchor their extrapolation
+// baseline from all four (mirrors `itemNudged`), so a steer no longer needs a full-snapshot broadcast.
+// Room-level message (built by the party adapter, not the engine) — hence not part of `GameEvent`.
+export interface SteeredMessage {
+  type: 'steered';
+  playerId: string;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+}
+
+// The NPC absorbed a poke and its anger meter moved. Carries just the new mana so the anger visual reacts on the
+// poke itself; everything else about the NPC reconciles on the scheduled snapshot. Room-level message, like `steered`.
+export interface NpcAngeredMessage {
+  type: 'npcAngered';
+  npcId: string;
+  mana: number;
+}
+
 export type ClientMessage =
   | { type: 'identify'; sessionToken: string }
   | { type: 'join'; name: string; appearance: string; body: PlayerBody }
@@ -274,7 +311,10 @@ export type JoinRejectReason = 'invalidName' | 'invalidAppearance' | 'invalidBod
 
 export type ServerMessage =
   | GameEvent
+  | SteeredMessage
+  | NpcAngeredMessage
   | { type: 'snapshot'; state: ServerState }
+  | { type: 'slimSnapshot'; state: SlimServerState }
   | { type: 'spawned'; item: Item }
   | { type: 'roomFull' }
   | { type: 'joinRejected'; reason: JoinRejectReason }

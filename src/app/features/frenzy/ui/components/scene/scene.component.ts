@@ -101,7 +101,8 @@ export class SceneComponent {
   // Optional (not `.required`): the template root sits under `*transloco`, which renders asynchronously, so the
   // ref is absent for the first few frames. Reading it before then must not throw and kill the rAF loop.
   private readonly worldRef = viewChild<ElementRef<HTMLElement>>('world');
-  // Foreground parallax layers (optional like worldRef — absent for the first frames under async *transloco).
+  // Foreground parallax INNER tile sheets — the elements the camera translates each frame (their wrappers clip).
+  // Optional like worldRef — absent for the first frames under async *transloco.
   private readonly parallaxNearRef = viewChild<ElementRef<HTMLElement>>('parallaxNear');
   private readonly parallaxMidRef = viewChild<ElementRef<HTMLElement>>('parallaxMid');
   // A component element, so read its host ElementRef explicitly (a bare viewChild would yield the component

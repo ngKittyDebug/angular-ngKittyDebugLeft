@@ -15,6 +15,9 @@ import {
   PARALLAX_FRONT,
   PARALLAX_MID,
   PARALLAX_NEAR,
+  PARALLAX_TILE_MID,
+  PARALLAX_TILE_NEAR,
+  wrapParallaxPhase,
 } from './camera-math';
 import { PlayerExtrapolatorService } from './player-extrapolator.service';
 
@@ -58,6 +61,9 @@ export class SceneCameraService {
   private scale = 1;
   private viewportWidth = 0;
   private viewportHeight = 0;
+  // Last width written to the foreground kelp layer — it only changes on resize/zoom, so the per-frame
+  // same-value style write is skipped.
+  private lastKelpWidth = '';
 
   // Eases the camera offset toward the focus (my Pokémon, or world centre when I'm absent — spectating, pre-join
   // or fainted) and writes it as a sub-pixel translate + responsive scale on the world layer.
@@ -133,8 +139,8 @@ export class SceneCameraService {
 
     // Foreground parallax: shift each layer's tiled pattern by the camera offset, so it drifts only while the
     // viewport scrolls (still during a dead-zone meander) — the subtle travel-direction cue.
-    this.setParallax(parallaxNear, PARALLAX_NEAR);
-    this.setParallax(parallaxMid, PARALLAX_MID);
+    this.setParallax(parallaxNear, PARALLAX_NEAR, PARALLAX_TILE_NEAR);
+    this.setParallax(parallaxMid, PARALLAX_MID, PARALLAX_TILE_MID);
     this.setForegroundKelp(foregroundKelp, screenWorldWidth, screenWorldHeight);
   }
 
@@ -164,7 +170,13 @@ export class SceneCameraService {
       return;
     }
 
-    this.renderer.setStyle(layer, 'width', `${screenWorldWidth * FOREGROUND_WIDTH_FACTOR}px`);
+    const width = `${screenWorldWidth * FOREGROUND_WIDTH_FACTOR}px`;
+
+    if (width !== this.lastKelpWidth) {
+      this.renderer.setStyle(layer, 'width', width);
+      this.lastKelpWidth = width;
+    }
+
     this.renderer.setStyle(
       layer,
       'transform',
@@ -172,15 +184,17 @@ export class SceneCameraService {
     );
   }
 
-  private setParallax(layer: HTMLElement | undefined, factor: number): void {
+  // Translate a parallax layer's inner tile sheet by the camera offset × the layer's speed factor, wrapped to
+  // one tile period (the repeating pattern makes a whole-period jump invisible). A compositor-only transform —
+  // the previous `background-position` write repainted the whole viewport-sized layer every frame.
+  private setParallax(layer: HTMLElement | undefined, factor: number, tile: number): void {
     if (layer === undefined) {
       return;
     }
 
-    this.renderer.setStyle(
-      layer,
-      'background-position',
-      `${this.camX * factor}px ${this.camY * factor}px`,
-    );
+    const x = wrapParallaxPhase(this.camX * factor, tile);
+    const y = wrapParallaxPhase(this.camY * factor, tile);
+
+    this.renderer.setStyle(layer, 'transform', `translate3d(${x}px, ${y}px, 0)`);
   }
 }

@@ -41,14 +41,15 @@
 
   // Debug outline boxes (?debug only) live in their own `left-paw-debug-box` component now.
 
-  // Foreground parallax particle layers (in front of the world; drift via background-position set per-frame from
-  // the CAMERA offset). Decorative, never interactive.
+  // Foreground parallax particle layers (in front of the world; drift from the CAMERA offset). The wrapper only
+  // clips and carries the layer-wide mask/opacity/scale; the camera's per-frame write is a compositor-only
+  // `transform` on the oversized inner tile sheet below (a `background-position` write here repainted the whole
+  // viewport-sized layer every frame). Decorative, never interactive.
   &__parallax {
     position: absolute;
     inset: 0;
+    overflow: clip;
     pointer-events: none;
-    background-repeat: repeat;
-    will-change: background-position;
     // These are WATER-column specks (foreground, scroll faster than the world). They must not drift across the
     // seabed: the sand is opaque and world-anchored (it carries its OWN grain that moves 1:1 with the camera), so
     // a faster-moving speck sliding over it reads as the sand being see-through. Fade the layer out over the
@@ -57,10 +58,30 @@
     -webkit-mask-image: linear-gradient(to bottom, #000 70%, transparent 88%);
   }
 
+  // Inner tile sheet: one tile larger than the wrapper on each axis, because the camera wraps its translate to
+  // one tile period (the pattern repeats — a whole-period jump is invisible; see `wrapParallaxPhase`), so this
+  // margin is all it ever exposes. Per-layer size below MUST stay = 100% + the layer's `background-size` tile,
+  // which in turn MUST match `PARALLAX_TILE_NEAR`/`PARALLAX_TILE_MID` in camera-math.ts.
+  &__parallax-inner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-repeat: repeat;
+    will-change: transform;
+  }
+
   // Near layer: a few soft specks on a roomy tile — gentle camera-driven drift, not a swarm. Speck colour is
   // theme-aware via `--scene-parallax-near` (light-blue on the dark abyss, deep teal on the bright shallows);
   // per-speck alpha comes from color-mix toward transparent.
   &__parallax--near {
+    opacity: var(--scene-parallax-near-opacity, 0.55);
+    // Enlarges the specks in the light theme (where white-on-cyan needs more presence); 1 in dark = unchanged.
+    scale: var(--scene-parallax-scale, 1);
+  }
+
+  &__parallax-inner--near {
+    width: calc(100% + 200px);
+    height: calc(100% + 200px);
     background-image:
       radial-gradient(
         circle at 18% 30%,
@@ -78,13 +99,17 @@
         transparent 3px
       );
     background-size: 200px 200px;
-    opacity: var(--scene-parallax-near-opacity, 0.55);
-    // Enlarges the specks in the light theme (where white-on-cyan needs more presence); 1 in dark = unchanged.
-    scale: var(--scene-parallax-scale, 1);
   }
 
   // Mid layer: smaller, denser specks moving slower — faint depth behind the near layer.
   &__parallax--mid {
+    opacity: var(--scene-parallax-mid-opacity, 0.4);
+    scale: var(--scene-parallax-scale, 1);
+  }
+
+  &__parallax-inner--mid {
+    width: calc(100% + 125px);
+    height: calc(100% + 125px);
     background-image:
       radial-gradient(
         circle at 25% 60%,
@@ -97,8 +122,6 @@
         transparent 1.5px
       );
     background-size: 125px 125px;
-    opacity: var(--scene-parallax-mid-opacity, 0.4);
-    scale: var(--scene-parallax-scale, 1);
   }
 
   // Bomb explosion. The element is just a positioning box sized to the exact damage zone (width % from the

@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { cameraScale, centerCameraAxis, clampCameraAxis, deadZoneCameraAxis } from './camera-math';
+import {
+  cameraScale,
+  centerCameraAxis,
+  clampCameraAxis,
+  deadZoneCameraAxis,
+  wrapParallaxPhase,
+} from './camera-math';
 
 describe('cameraScale', () => {
   it('uses the cover floor (height term × vertical-fill) when comfort would letterbox a tall viewport', () => {
@@ -70,5 +76,34 @@ describe('deadZoneCameraAxis', () => {
     // offset = 580 - 0.5*2000 = -420 (scrolled 20px further to keep the focus framed).
     expect(deadZoneCameraAxis(-400, 0.5, 1000, 2000, 0.35, 0.65)).toBe(-400);
     expect(deadZoneCameraAxis(-400, 0.5, 1000, 2000, 0.42, 0.58)).toBe(-420);
+  });
+});
+
+describe('wrapParallaxPhase', () => {
+  it('keeps an offset already within one tile period', () => {
+    expect(wrapParallaxPhase(-50, 200)).toBe(-50);
+  });
+
+  it('wraps a deep negative offset by whole tile periods', () => {
+    // -450 = -2×200 - 50 → same pattern phase as -50.
+    expect(wrapParallaxPhase(-450, 200)).toBe(-50);
+  });
+
+  it('maps an exact period multiple to zero', () => {
+    expect(wrapParallaxPhase(-400, 200)).toBeCloseTo(0);
+  });
+
+  it('wraps a positive offset into the same (-tile, 0] range', () => {
+    // +50 ≡ -150 (mod 200): the same phase expressed inside the inner sheet's one-tile margin.
+    expect(wrapParallaxPhase(50, 200)).toBe(-150);
+  });
+
+  it('never leaves the one-tile margin the inner sheet provides', () => {
+    for (const offset of [-1234.5, -125, -0.01, 0, 0.01, 321.7]) {
+      const phase = wrapParallaxPhase(offset, 125);
+
+      expect(phase).toBeGreaterThan(-125);
+      expect(phase).toBeLessThanOrEqual(0);
+    }
   });
 });

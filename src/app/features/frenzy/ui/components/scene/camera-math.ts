@@ -34,6 +34,11 @@ export const CAMERA_MAX_SCALE = 0.85;
 // relative to the camera; kept gentle so it never lurches opposite the motion. Render-only tunables.
 export const PARALLAX_NEAR = 0.6;
 export const PARALLAX_MID = 0.35;
+// Tile period (px) of each parallax layer's repeating speck pattern — MUST match the `background-size` of
+// `.scene__parallax-inner--near/mid` in scene.component.scss. The camera wraps its translate to this period
+// (see `wrapParallaxPhase`), so the inner sheet only needs a one-tile oversize to never expose an edge.
+export const PARALLAX_TILE_NEAR = 200;
+export const PARALLAX_TILE_MID = 125;
 // Foreground kelp layer: it's the CLOSEST thing to the camera, so it pans clearly FASTER than the world (>1) for
 // a felt depth cue while the camera scrolls. Applied as a horizontal translate factor on the camera offset (see
 // SceneCameraService). This is the ONLY layer that parallaxes — the backdrop and midground kelp are in-world
@@ -87,6 +92,13 @@ export function clampCameraAxis(offset: number, viewport: number, world: number)
 // starts centred on the Pokémon rather than at a world corner.
 export function centerCameraAxis(focus: number, viewport: number, world: number): number {
   return clampCameraAxis(viewport / 2 - focus * world, viewport, world);
+}
+
+// Wrap a parallax translate offset (px) to one tile period, yielding a value in (-tile, 0]: the layer's pattern
+// repeats every `tile` px, so jumping by a whole period is invisible, and the bounded output lets the inner
+// sheet stay a single tile larger than its clipping wrapper instead of covering the camera's full travel range.
+export function wrapParallaxPhase(offset: number, tile: number): number {
+  return ((offset % tile) - tile) % tile;
 }
 
 // One-axis dead-zone target (px): keep the current offset while the focus stays inside the band [lowFraction,

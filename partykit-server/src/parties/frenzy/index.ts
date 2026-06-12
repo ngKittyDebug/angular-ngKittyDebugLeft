@@ -1,7 +1,14 @@
 import type * as Party from 'partykit/server';
 
 import { FRENZY, isNpcEnabled } from '@game/frenzy/config';
-import type { Item, Player, PlayerBody, ServerMessage, ServerState } from '@game/frenzy/types';
+import type {
+  Item,
+  Player,
+  PlayerBody,
+  ServerMessage,
+  ServerState,
+  SlimPlayer,
+} from '@game/frenzy/types';
 
 import { applyClick } from './engine/apply-click';
 import { applyEmissions } from './engine/apply-emissions';
@@ -16,12 +23,33 @@ import { createNpc } from './engine/npc/angry-bomb/create-npc';
 import { pickItemType } from './engine/pick-item-type';
 import { restoreConnected } from './engine/restore-connected';
 import { parseClientMessage } from './parse-client-message';
+import { serializeServerMessage } from './serialize-server-message';
 import { validateJoin } from './validate-join';
 
 const HEARTBEAT_INTERVAL_MS = FRENZY.heartbeatMs;
 const TICK_INTERVAL_MS = 1000 / FRENZY.tickRateHz;
 const TICK_DELTA_SECONDS = 1 / FRENZY.tickRateHz;
 const DECAY_EVERY_N_TICKS = (FRENZY.decayIntervalMs / 1000) * FRENZY.tickRateHz;
+
+// Dynamic projection of a player for the slim snapshot. An explicit pick, not a rest-destructure: a future
+// dynamic field added to PlayerBase fails this return type until listed here, while the static half
+// (name/appearance/body/joinedAt + kind/npcKind) can never leak onto the slim wire by accident.
+function toSlimPlayer(player: Player): SlimPlayer {
+  return {
+    id: player.id,
+    stage: player.stage,
+    hp: player.hp,
+    mana: player.mana,
+    x: player.x,
+    y: player.y,
+    vx: player.vx,
+    vy: player.vy,
+    status: player.status,
+    disconnectedAt: player.disconnectedAt,
+    effects: player.effects,
+    scores: player.scores,
+  };
+}
 
 export default class FeedingRoom implements Party.Server {
   // Click history keyed by sessionToken (per player), so opening extra tabs can't multiply the click budget.
@@ -157,7 +185,7 @@ export default class FeedingRoom implements Party.Server {
   }
 
   private broadcast(message: ServerMessage): void {
-    this.room.broadcast(JSON.stringify(message));
+    this.room.broadcast(serializeServerMessage(message));
   }
 
   private currentState(): ServerState {
@@ -255,7 +283,7 @@ export default class FeedingRoom implements Party.Server {
     }
 
     if (this.tick % FRENZY.snapshotEveryNTicks === 0) {
-      this.broadcast(this.snapshot());
+      this.broadcast(this.slimSnapshot());
     }
   }
 
@@ -304,7 +332,7 @@ export default class FeedingRoom implements Party.Server {
       return;
     }
 
-    // Steering shares the click rate-limit budget — it's player input and each accepted steer broadcasts a snapshot.
+    // Steering shares the click rate-limit budget — it's player input and each accepted steer broadcasts an event.
     const rate = checkClickRate(this.clickTimestamps.get(sessionToken) ?? [], Date.now());
 
     this.clickTimestamps.set(sessionToken, rate.timestamps);
@@ -322,7 +350,22 @@ export default class FeedingRoom implements Party.Server {
     }
 
     this.syncState(next);
-    this.broadcast(this.snapshot());
+
+    // A tiny delta event instead of a full snapshot (steers fire up to the click budget — broadcasting ~4KB
+    // snapshots per tap dominated downstream traffic). The guard is for the type only: applySteer changing
+    // state proves the steerer exists.
+    const steerer = next.players.find((player) => player.id === sessionToken);
+
+    if (steerer !== undefined) {
+      this.broadcast({
+        type: 'steered',
+        playerId: steerer.id,
+        x: steerer.x,
+        y: steerer.y,
+        vx: steerer.vx,
+        vy: steerer.vy,
+      });
+    }
   }
 
   // A player tapped the NPC's sprite: accrue its anger only (no position change — D4/3.6). The poke shares the
@@ -359,7 +402,8 @@ export default class FeedingRoom implements Party.Server {
     this.players = this.players.map((player) =>
       player.id === npcId ? { ...player, mana } : player,
     );
-    this.broadcast(this.snapshot());
+    // Pokes arrive in bursts (anger is poke density) — a tiny delta event instead of a full snapshot per poke.
+    this.broadcast({ type: 'npcAngered', npcId, mana });
   }
 
   private handleIdentify(connectionId: string, sessionToken: string): void {
@@ -460,7 +504,7 @@ export default class FeedingRoom implements Party.Server {
   }
 
   private sendTo(conn: Party.Connection, message: ServerMessage): void {
-    conn.send(JSON.stringify(message));
+    conn.send(serializeServerMessage(message));
   }
 
   private snapshot(): ServerMessage {
@@ -470,6 +514,19 @@ export default class FeedingRoom implements Party.Server {
     const players = projectTimeAlive(state.players, Date.now());
 
     return { type: 'snapshot', state: { ...state, players } };
+  }
+
+  // Periodic tick-cadence snapshot: players stripped to their dynamic half (see `toSlimPlayer`). Invariant the
+  // client merge relies on: every path that ADDS a player to `players[]` (connect bootstrap, join, rejoin, NPC
+  // spawn) broadcasts a FULL snapshot before any slim one can reference that id — WS delivery is ordered per
+  // socket, so the client always holds the static half it merges over.
+  private slimSnapshot(): ServerMessage {
+    const state = this.currentState();
+    const players = projectTimeAlive(state.players, Date.now()).map((player) =>
+      toSlimPlayer(player),
+    );
+
+    return { type: 'slimSnapshot', state: { players, items: state.items, tick: state.tick } };
   }
 
   private spawnItem(): void {

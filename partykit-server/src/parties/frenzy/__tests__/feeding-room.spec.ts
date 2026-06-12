@@ -163,6 +163,63 @@ describe('FeedingRoom orchestration', () => {
     expect(byType(room, 'eaten')).toHaveLength(0);
   });
 
+  it('broadcasts a steered delta event instead of a full snapshot when a player steers', () => {
+    // Pin the spawn position so the tap point below is guaranteed to differ from it (a zero direction is a no-op).
+    vi.spyOn(Math, 'random').mockReturnValue(0.5);
+
+    const { room, server } = setup();
+    const conn = new FakeConnection('c1');
+
+    server.onConnect(asParty(conn));
+    joinPlayer(server, conn, 'token-1');
+
+    const snapshotsBefore = byType(room, 'snapshot').length;
+
+    send(server, conn, { type: 'steer', x: 0.9, y: 0.1 });
+
+    const steered = byType(room, 'steered');
+
+    expect(steered).toHaveLength(1);
+    expect(steered[0].playerId).toBe('token-1');
+    expect(Math.hypot(steered[0].vx, steered[0].vy)).toBeGreaterThan(0);
+    // The whole point: player input no longer multiplies full-snapshot traffic.
+    expect(byType(room, 'snapshot')).toHaveLength(snapshotsBefore);
+  });
+
+  it('broadcasts slim snapshots on the scheduled cadence and full ones on roster changes', () => {
+    // random→0.5 keeps the NPC spawn window (10s) far beyond the few ticks below, so no roster-change
+    // full snapshot can sneak into the cadence window being asserted.
+    vi.spyOn(Math, 'random').mockReturnValue(0.5);
+
+    const { room, server } = setup();
+    const conn = new FakeConnection('c1');
+
+    server.onConnect(asParty(conn));
+    joinPlayer(server, conn, 'token-1'); // roster change → full snapshot
+
+    const fullBefore = byType(room, 'snapshot').length;
+
+    expect(fullBefore).toBeGreaterThan(0);
+
+    vi.advanceTimersByTime(TICK_MS * FRENZY.snapshotEveryNTicks);
+
+    const slim = byType(room, 'slimSnapshot');
+
+    expect(slim).toHaveLength(1);
+
+    // Dynamic-only payload: the static half never rides the slim wire.
+    const wirePlayer = slim[0].state.players.find((player) => player.id === 'token-1');
+
+    expect(wirePlayer).toBeDefined();
+    expect(wirePlayer?.hp).toBeGreaterThan(0);
+    expect(Object.keys(wirePlayer!)).not.toContain('name');
+    expect(Object.keys(wirePlayer!)).not.toContain('body');
+    expect(Object.keys(wirePlayer!)).not.toContain('appearance');
+
+    // The scheduled cadence no longer multiplies full snapshots.
+    expect(byType(room, 'snapshot')).toHaveLength(fullBefore);
+  });
+
   it('marks a player disconnected on close and purges them after the grace period', () => {
     const { room, server } = setup();
     const conn = new FakeConnection('c1');
@@ -438,12 +495,26 @@ describe('FeedingRoom — angry-bomb NPC lifecycle', () => {
 
     expect(npc).toBeDefined();
 
+    const snapshotsBefore = byType(room, 'snapshot').length;
+
     // A burst of pokes in the anger window — superlinear gain pushes mana above 0.
     for (let i = 0; i < 3; i += 1) {
       send(server, conn, { type: 'pokeNpc', npcId: npc!.id });
     }
 
-    const pokedNpc = latestSnapshot(room)?.state.players.find((player) => player.kind === 'npc');
+    // Each poke rides a tiny npcAngered delta event — no full-snapshot broadcast per poke.
+    const angered = byType(room, 'npcAngered');
+
+    expect(angered.length).toBeGreaterThan(0);
+    expect(angered.at(-1)?.mana).toBeGreaterThan(0);
+    expect(byType(room, 'snapshot')).toHaveLength(snapshotsBefore);
+
+    // The scheduled (slim) snapshot reconciles the same mana.
+    vi.advanceTimersByTime(TICK_MS * FRENZY.snapshotEveryNTicks);
+
+    const pokedNpc = byType(room, 'slimSnapshot')
+      .at(-1)
+      ?.state.players.find((player) => player.id === npc!.id);
 
     expect(pokedNpc?.mana).toBeGreaterThan(0);
   });

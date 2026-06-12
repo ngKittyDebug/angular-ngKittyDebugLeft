@@ -14,6 +14,10 @@
   transform: translate(-50%, -50%) translateZ(0);
   backface-visibility: hidden;
   pointer-events: none;
+  // Fixed-content absolute box whose insides never affect outside layout — containment lets the engine skip the
+  // ancestors when the sprite/sensors/hp-bar animate. NOT `paint`: sparks, the shield bubble and auras overflow
+  // the box and must stay visible.
+  contain: layout style;
 }
 
 :host(.scene__player--disconnected) {

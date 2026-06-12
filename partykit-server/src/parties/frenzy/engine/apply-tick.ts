@@ -1,6 +1,13 @@
 import { isPlayerCollisionEnabled } from '@game/frenzy/config';
 import { crownIdOf } from '@game/frenzy/crown';
-import type { FaintedEvent, GameEvent, NpcPlayer, Player, ServerState } from '@game/frenzy/types';
+import type {
+  FaintedEvent,
+  GameEvent,
+  Item,
+  NpcPlayer,
+  Player,
+  ServerState,
+} from '@game/frenzy/types';
 import { isNPC } from '@game/frenzy/types';
 
 import { applyBumpDamage } from './apply-bumps';
@@ -41,8 +48,13 @@ export function applyTick(
   const crownId = crownIdOf(state.players);
   const livePlayers = pruneExpiredEffects(state.players, now);
   const movedItems = moveItems(state.items, deltaSeconds);
-  const survivors = movedItems.filter((item) => item.restMs === undefined || item.restMs > 0);
-  const expired = movedItems.filter((item) => item.restMs !== undefined && item.restMs <= 0);
+  // Single-pass partition: floor-survivors keep falling/resting, the just-expired feed resolveLandings below.
+  const survivors: Item[] = [];
+  const expired: Item[] = [];
+
+  for (const item of movedItems) {
+    (item.restMs !== undefined && item.restMs <= 0 ? expired : survivors).push(item);
+  }
 
   // Humans and the NPC move by different rules: humans drift+bounce (movePlayers), the NPC seeks edibles along the
   // seabed (moveNpc). Split by kind, move each, recombine — order is irrelevant for the snapshot.
