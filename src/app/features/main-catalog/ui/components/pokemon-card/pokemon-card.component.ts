@@ -1,10 +1,7 @@
 import { TitleCasePipe } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import type { OnInit } from '@angular/core';
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { POKEMON_BASE_API } from '@core/constants/pokemon-constants';
-import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
+import { PokemonCardDataService } from '@features/main-catalog/data/services/pokemon-card-data.service';
 import { TuiBadge, TuiProgress } from '@taiga-ui/kit';
 
 @Component({
@@ -14,19 +11,16 @@ import { TuiBadge, TuiProgress } from '@taiga-ui/kit';
   styleUrl: './pokemon-card.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PokemonCardComponent implements OnInit {
-  private readonly http = inject(HttpClient);
+export class PokemonCardComponent {
+  private readonly cardData = inject(PokemonCardDataService);
   public readonly pokemonName = input.required<string>();
-  protected readonly pokemonCardData = signal<PokemonDetailApiData | null>(null);
+  protected readonly pokemonCardData = this.cardData.createPokemonDataService(() =>
+    this.pokemonName().toLowerCase(),
+  );
+
   protected readonly pokemonLimitedStats = computed(() => {
-    const data = this.pokemonCardData();
+    const data = this.pokemonCardData.cardData();
 
     return data?.stats?.slice(0, 3) ?? [];
   });
-
-  public ngOnInit(): void {
-    this.http
-      .get<PokemonDetailApiData>(`${POKEMON_BASE_API}/pokemon/${this.pokemonName()}`)
-      .subscribe((data) => this.pokemonCardData.set(data));
-  }
 }

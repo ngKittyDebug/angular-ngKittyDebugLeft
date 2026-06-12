@@ -1,21 +1,21 @@
-<a [routerLink]="['/pokemon', pokemonCardData()?.name]" class="card__link">
+<a [routerLink]="['/pokemon', pokemonCardData.cardData()?.name]" class="card__link">
   <figure class="card__cover">
     <img
       class="card__image"
       [src]="
         $safeNavigationMigration(
-          pokemonCardData()?.sprites?.other?.['official-artwork']?.front_default
+          pokemonCardData.cardData()?.sprites?.other?.['official-artwork']?.front_default
         )
       "
-      [alt]="$safeNavigationMigration(pokemonCardData()?.name)"
+      [alt]="$safeNavigationMigration(pokemonCardData.cardData()?.name)"
     />
     <figcaption class="card__information">
       <div class="card__line">
-        <h3 class="card__name">{{ pokemonCardData()?.name | titlecase }}</h3>
-        <p class="card__id">#{{ pokemonCardData()?.id }}</p>
+        <h3 class="card__name">{{ pokemonCardData.cardData()?.name | titlecase }}</h3>
+        <p class="card__id">#{{ pokemonCardData.cardData()?.id }}</p>
       </div>
       <div class="card__line-left">
-        @for (item of pokemonCardData()?.types; track item.type.name) {
+        @for (item of pokemonCardData.cardData()?.types; track item.type.name) {
           <span className="card__type card__type-{{ item.type.name }}" tuiBadge>{{
             item.type.name
           }}</span>

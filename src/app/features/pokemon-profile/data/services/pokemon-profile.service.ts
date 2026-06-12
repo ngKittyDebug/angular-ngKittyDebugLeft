@@ -1,4 +1,5 @@
-import { inject, resource, Service } from '@angular/core';
+import { httpResource } from '@angular/common/http';
+import { inject, Service } from '@angular/core';
 import { PokemonApiService } from '@core/api/pokemon-api.service';
 import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
 import type { PokemonSpeciesApiData } from '@shared/models/pokemon-species-api-data-interface';
@@ -16,37 +17,22 @@ export class PokemonProfileService {
   private readonly pokemonApiService = inject(PokemonApiService);
 
   public createPokemonProfile(pokemonEndpoint: () => string) {
-    const pokemonDataResource = resource({
-      params: () => ({ name: pokemonEndpoint() }),
-      loader: ({ params }): Promise<PokemonDetailApiData> =>
-        this.pokemonApiService.getPokemonData(params.name).then((data) => data.json()),
-    });
-    const pokemonSpeciesResource = resource({
-      params: () => ({ name: pokemonEndpoint() }),
-      loader: ({ params }): Promise<PokemonSpeciesApiData> =>
-        this.pokemonApiService.getPokemonSpecies(params.name).then((data) => data.json()),
-    });
-    const pokemonEvolutionResource = resource({
-      params: () => {
-        const speciesData = pokemonSpeciesResource.value();
+    const pokemonDataResource = httpResource<PokemonDetailApiData>(() =>
+      this.pokemonApiService.getPokemonData(pokemonEndpoint()),
+    );
+    const pokemonSpeciesResource = httpResource<PokemonSpeciesApiData>(() =>
+      this.pokemonApiService.getPokemonSpecies(pokemonEndpoint()),
+    );
+    const pokemonEvolutionResource = httpResource<EvolutionChainResponse>(() => {
+      const speciesData = pokemonSpeciesResource.value();
 
-        if (!speciesData || pokemonSpeciesResource.error() || !speciesData.evolution_chain?.url) {
-          return null;
-        }
-        const chainId = speciesData.evolution_chain.url.split('/').filter(Boolean).pop();
+      if (!speciesData || pokemonSpeciesResource.error() || !speciesData.evolution_chain?.url) {
+        return undefined;
+      }
 
-        return chainId ? { id: chainId } : null;
-      },
+      const chainId = speciesData.evolution_chain.url.split('/').filter(Boolean).pop();
 
-      loader: (context): Promise<EvolutionChainResponse | null> => {
-        if (!context.params) {
-          return Promise.resolve(null);
-        }
-
-        return this.pokemonApiService
-          .getEvolutionChain(context.params.id)
-          .then((data) => data.json());
-      },
+      return chainId ? this.pokemonApiService.getEvolutionChain(chainId) : undefined;
     });
 
     const result = {
