@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
 import { TuiButton, TuiCarousel, TuiIcon } from '@taiga-ui/core';
 import { TuiCard } from '@taiga-ui/layout';
 import type { EvolutionNodeModel } from '../../pokemon-profile-page.component';
 import { TranslocoDirective } from '@jsverse/transloco';
+import { PokemonProfileService } from '@features/pokemon-profile/data/services/pokemon-profile.service';
 
 @Component({
   selector: 'left-paw-evolution-chain-item',
@@ -12,7 +13,13 @@ import { TranslocoDirective } from '@jsverse/transloco';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EvolutionChainItemComponent {
+  private readonly profileService = inject(PokemonProfileService);
+
   public readonly evolutionChain = input.required<EvolutionNodeModel>();
   public readonly activeName = input<string | undefined>('');
   protected readonly index = signal(0);
+
+  protected readonly evolutionCardData = this.profileService.createPokemonData(
+    () => this.evolutionChain().name,
+  );
 }

@@ -46,4 +46,17 @@ export class PokemonProfileService {
 
     return result;
   }
+
+  public createPokemonData(pokemonEndpoint: () => string) {
+    const pokemonDataResource = httpResource<PokemonDetailApiData>(() =>
+      this.pokemonApiService.getPokemonData(pokemonEndpoint()),
+    );
+
+    const result = {
+      cardData: pokemonDataResource.value,
+      cardDataError: pokemonDataResource.error,
+    };
+
+    return result;
+  }
 }
