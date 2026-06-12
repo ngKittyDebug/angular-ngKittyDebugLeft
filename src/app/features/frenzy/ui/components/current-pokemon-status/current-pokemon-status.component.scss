@@ -29,8 +29,9 @@
   &__head {
     display: flex;
     align-items: center;
-    // Leave room on the right so a long name never slides under the top-right stage badge.
-    padding-inline-end: 1.5rem;
+    // Leave room on the right so a long name never slides under the top-right stage badge — sized for the widest
+    // badge ("СТАДИЯ 3" / "STAGE 3") so a 24-char name still clears it.
+    padding-inline-end: 2.5rem;
   }
 
   &__name {
@@ -82,16 +83,36 @@
     min-width: 4rem;
   }
 
-  // Evolution notch on the absolute bar — positioned by `left` (%) at the next-evolution threshold.
+  // Stage zones: a translucent three-band overlay (info → warning → positive) painted over the bar via an inline
+  // hard-stop gradient, splitting it at the two evolution gates. Alpha is low so the HP fill underneath still reads;
+  // the crisp notches sit on top of it. Decorative + non-interactive.
+  &__zones {
+    --lp-zone-1: color-mix(in srgb, var(--tui-status-info) 12%, transparent);
+    --lp-zone-2: color-mix(in srgb, var(--tui-status-warning) 12%, transparent);
+    --lp-zone-3: color-mix(in srgb, var(--tui-status-positive) 16%, transparent);
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    pointer-events: none;
+  }
+
+  // Evolution notch on the absolute bar — positioned by `left` (%) at an evolution gate. A gate already passed
+  // reads muted and shorter; the upcoming one stays bright and tall. On top of the bar + zones.
   &__tick {
     position: absolute;
     top: 50%;
+    z-index: 1;
     width: 2px;
     height: 0.7rem;
     border-radius: 1px;
     background: var(--tui-text-primary);
     opacity: 0.7;
     transform: translate(-50%, -50%);
+
+    &--reached {
+      height: 0.55rem;
+      opacity: 0.3;
+    }
   }
 
   // HP corner chip: same shared metrics as the stage chip; the fill is the HP tone (`hpToneColor`: green → amber →

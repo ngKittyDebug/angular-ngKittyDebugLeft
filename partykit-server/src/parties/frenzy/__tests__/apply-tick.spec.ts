@@ -1,18 +1,21 @@
 import { describe, expect, it } from 'vitest';
 
 import { FRENZY, halfExtentNorm, restYFor } from '@game/frenzy/config';
+import { ANGRY_BOMB } from '@game/frenzy/npc/angry-bomb';
 import type { Item, Player, ServerState } from '@game/frenzy/types';
 
 import { applyTick } from '../engine/apply-tick';
 import { TEST_BODY } from './test-body';
 
 const PLAYER: Player = {
+  kind: 'human',
   id: 'p1',
   name: 'Ash',
   appearance: 'caterpie',
   body: TEST_BODY,
   stage: 1,
   hp: 100,
+  mana: 0,
   x: 0.5,
   y: 0.6,
   vx: 0,
@@ -325,7 +328,7 @@ describe('applyTick', () => {
       expect.objectContaining({
         type: 'detonated',
         radius: FRENZY.bomb.blastRadius,
-        playerIds: ['p1'],
+        hits: [expect.objectContaining({ playerId: 'p1' })],
       }),
     );
   });
@@ -433,7 +436,7 @@ describe('applyTick', () => {
     });
   });
 
-  it('spares a shielded Pokémon from a bomb blast (no damage, excluded from playerIds)', () => {
+  it('spares a shielded Pokémon from a bomb blast (no damage, excluded from hits)', () => {
     const shielded: Player = {
       ...PLAYER,
       id: 'shielded',
@@ -459,7 +462,10 @@ describe('applyTick', () => {
     expect(exposedHp).toBeLessThan(PLAYER.hp);
     expect(exposedHp).toBeGreaterThanOrEqual(PLAYER.hp + FRENZY.bomb.maxDamage);
     expect(events).toContainEqual(
-      expect.objectContaining({ type: 'detonated', playerIds: ['exposed'] }),
+      expect.objectContaining({
+        type: 'detonated',
+        hits: [expect.objectContaining({ playerId: 'exposed' })],
+      }),
     );
   });
 
@@ -583,5 +589,82 @@ describe('applyTick', () => {
     } finally {
       flag.enabled = original;
     }
+  });
+});
+
+const NPC: Player = {
+  kind: 'npc',
+  npcKind: 'angryBomb',
+  id: 'npc-1',
+  name: 'angryBomb',
+  appearance: 'angryBomb',
+  body: ANGRY_BOMB.body,
+  stage: 1,
+  hp: 100,
+  mana: 0,
+  x: 0.5,
+  y: FRENZY.npc.floorY,
+  vx: 0,
+  vy: 0,
+  status: 'alive',
+  disconnectedAt: null,
+  joinedAt: 0,
+  effects: [],
+  scores: {},
+};
+
+describe('applyTick — angry-bomb NPC integration', () => {
+  it('excludes the NPC from player separation (a human overlapping it is not pushed by it)', () => {
+    // A human sitting right on the NPC: with the NPC held out of separation, only the lone human remains, so it
+    // has no peer to push it — its x stays put (drift is zero). Proves the NPC didn't separate against it.
+    const human: Player = { ...PLAYER, id: 'h', x: NPC.x, y: NPC.y, vx: 0, vy: 0 };
+    const { state: next } = applyTick(stateWith([human, NPC], []), 0.1, false);
+    const movedHuman = next.players.find((player) => player.id === 'h');
+
+    expect(movedHuman?.x).toBeCloseTo(human.x, 5);
+  });
+
+  it('bleeds the NPC at its own decayPerStep (not the human rate)', () => {
+    // Plenty of headroom so decay is non-fatal — assert the NPC lost exactly its own per-step amount.
+    const npc: Player = { ...NPC, hp: 100 };
+    const { state: next } = applyTick(stateWith([PLAYER, npc], []), 0.1, true);
+    const survivedNpc = next.players.find((player) => player.id === npc.id);
+
+    expect(survivedNpc?.hp).toBe(100 - FRENZY.npc.decayPerStep);
+    expect(FRENZY.npc.decayPerStep).not.toBe(FRENZY.decayPerTick);
+  });
+
+  it('detonates a starved NPC (hp 0) AFTER decay, emitting detonated + fainted', () => {
+    const npc: Player = { ...NPC, hp: FRENZY.npc.decayPerStep };
+    const { state: next, events } = applyTick(stateWith([PLAYER, npc], []), 0.1, true);
+
+    expect(next.players.find((player) => player.id === npc.id)).toBeUndefined();
+    expect(events.some((event) => event.type === 'detonated' && event.itemId === npc.id)).toBe(
+      true,
+    );
+    expect(events.some((event) => event.type === 'fainted' && event.playerId === npc.id)).toBe(
+      true,
+    );
+  });
+
+  it('strong-blasts a max-anger NPC within the tick — the blast check beats coolAnger', () => {
+    // Regression: a poke tops mana to exactly `anger.max` between ticks. The NPC blast pass must run BEFORE
+    // coolAnger, or the per-tick −cooldownPerTick bleed drops mana under max first and the rage blast never fires.
+    const npc: Player = { ...NPC, hp: 100, mana: FRENZY.npc.anger.max };
+    const { state: next, events } = applyTick(stateWith([PLAYER, npc], []), 0.1, false);
+
+    expect(next.players.find((player) => player.id === npc.id)).toBeUndefined();
+
+    const detonated = events.find((event) => event.type === 'detonated' && event.itemId === npc.id);
+
+    expect(detonated).toBeDefined();
+    // Strong blast (stage-scaled), distinct from the weak/starvation radius (= base bomb radius).
+    expect(detonated?.type === 'detonated' && detonated.radius).toBe(
+      FRENZY.bomb.blastRadius * FRENZY.npc.strongBlast.stageRadiusMultiplier[npc.stage],
+    );
+    // Strong-blast NPC fainted carries no cause (the weak/starvation one is `{ by: 'decay' }`).
+    const fainted = events.find((event) => event.type === 'fainted' && event.playerId === npc.id);
+
+    expect(fainted?.type === 'fainted' && fainted.cause).toBeUndefined();
   });
 });

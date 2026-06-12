@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 
 import { FRENZY } from '@game/frenzy/config';
-import type { ServerMessage } from '@game/frenzy/types';
+import { isNPC, type ServerMessage } from '@game/frenzy/types';
 
 import type { FloatingTone, OwnedFloat } from '../../models/floating-message';
 import { type SoundEffect } from '../../models/sound-effect';
@@ -52,8 +52,12 @@ export class EatEffect implements FrenzyEffect {
       tone: this.toneForDelta(message.delta),
       textKey: `floatingText.${message.itemType}.${index}`,
       durationMs: FLOATING_TEXT_TTL_MS,
-      // My own eats don't need a name — it's obvious it's me; names help only on others' floats.
-      who: this.isMine(message.playerId) ? undefined : player?.name,
+      // My own eats don't need a name (it's obvious it's me), and the NPC has no human-style label (its `name`
+      // is the internal appearance id, e.g. "angryBomb") — names help only on other humans' floats.
+      who:
+        this.isMine(message.playerId) || (player !== undefined && isNPC(player))
+          ? undefined
+          : player?.name,
       delta: message.delta,
       priority: message.priority ?? FRENZY.floatPriority.eaten,
     };

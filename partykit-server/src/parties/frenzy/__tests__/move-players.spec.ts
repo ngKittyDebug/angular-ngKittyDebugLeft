@@ -7,12 +7,14 @@ import { movePlayers } from '../engine/tick/move-players';
 import { TEST_BODY } from './test-body';
 
 const PLAYER: Player = {
+  kind: 'human',
   id: 'p1',
   name: 'Ash',
   appearance: 'caterpie',
   body: TEST_BODY,
   stage: 1,
   hp: 100,
+  mana: 0,
   x: 0.5,
   y: 0.6,
   vx: 0,

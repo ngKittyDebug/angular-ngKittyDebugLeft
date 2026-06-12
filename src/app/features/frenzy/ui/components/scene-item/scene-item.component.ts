@@ -10,6 +10,8 @@ import {
 } from '@angular/core';
 import type { ElementRef } from '@angular/core';
 
+import { FRENZY } from '@game/frenzy/config';
+
 import { ItemSpritePipe } from '../../pipes/item-sprite.pipe';
 import type { RenderedItem } from '../scene/scene-view-models';
 
@@ -20,6 +22,12 @@ import type { RenderedItem } from '../scene/scene-view-models';
 const BURIED_CUT = 70; // % from the top where the sand line sits (matches the old 30%-from-bottom inset)
 const BURIED_SWING = 7; // % the line wanders above/below the cut at each sample
 const BURIED_SEGMENTS = 5; // samples across the width — few enough to read as irregular lumps, not a smooth sine
+
+// Sensor running-light chase duration (the `--sensor-speed` CSS var). Maps the mine's hidden click budget to a
+// speed: a full budget reads as calm at the original SVG pace, the last click before detonation runs frantic.
+// A mine with no budget (undefined — aura-emitted) shows the calm default so it looks unchanged.
+const SENSOR_SLOW_S = 1.6; // duration at full budget (matches the original baked-in `sensor-run`)
+const SENSOR_FAST_S = 0.4; // duration at the last shove before it blows
 
 // Stable 0..1 value from a seed + sample index (a cheap integer hash, no Math.random so it never flickers).
 function buriedNoise(seed: number, index: number): number {
@@ -59,6 +67,8 @@ function hashItemId(id: string): number {
   // never be swallowed by an overlapping Pokémon sprite that paints later at the same z-index.
   host: {
     '[class.scene__item-host--bomb]': "item().type === 'bomb'",
+    // Sensor running-light chase duration, driven from the mine's remaining click budget (see sensorSpeed).
+    '[style.--sensor-speed]': 'sensorSpeed()',
   },
 })
 export class SceneItemComponent {
@@ -103,6 +113,26 @@ export class SceneItemComponent {
     }
 
     return `polygon(${points.join(', ')})`;
+  });
+
+  // Sensor running-light chase duration as a CSS `<time>` (`--sensor-speed`). The lights run faster as the mine's
+  // hidden click budget drops: full budget → the calm SVG pace, the last shove → frantic. Linearly mapped between
+  // the max budget (`clicksToExplodeRange[1]`, slow) and 1 (fast), clamped. No budget (undefined — aura-emitted) →
+  // the calm default, so a non-counter mine looks exactly as before. The staggered per-horn delays scale with this
+  // duration in SCSS, so the chase never desyncs.
+  protected readonly sensorSpeed = computed<string>(() => {
+    const clicksLeft = this.item().clicksLeft;
+    const maxBudget = FRENZY.bomb.clicksToExplodeRange[1];
+
+    if (clicksLeft === undefined || maxBudget <= 1) {
+      return `${SENSOR_SLOW_S}s`;
+    }
+
+    // 0 at full budget, 1 at the last click (clamped) → interpolate slow→fast.
+    const danger = Math.min(1, Math.max(0, (maxBudget - clicksLeft) / (maxBudget - 1)));
+    const seconds = SENSOR_SLOW_S + (SENSOR_FAST_S - SENSOR_SLOW_S) * danger;
+
+    return `${seconds.toFixed(3)}s`;
   });
 
   public constructor() {

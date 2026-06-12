@@ -1,18 +1,20 @@
 import { describe, expect, it } from 'vitest';
 
-import type { Item, Player } from '@game/frenzy/types';
+import type { HumanPlayer, Item, Player } from '@game/frenzy/types';
 
 import { armEmittedItems } from '../engine/tick/arm-emitted-items';
 import { TEST_BODY } from './test-body';
 
-function makePlayer(overrides: Partial<Player> = {}): Player {
+function makePlayer(overrides: Partial<HumanPlayer> = {}): Player {
   return {
+    kind: 'human',
     id: 'owner',
     name: 'O',
     appearance: 'caterpie',
     body: TEST_BODY,
     stage: 1,
     hp: 100,
+    mana: 0,
     x: 0.5,
     y: 0.5,
     vx: 0,

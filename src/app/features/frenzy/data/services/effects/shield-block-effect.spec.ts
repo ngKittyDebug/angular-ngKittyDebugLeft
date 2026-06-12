@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type {
+  HumanPlayer,
   Player,
   PlayerEffect,
   ServerMessage,
@@ -16,14 +17,16 @@ import { ShieldBlockEffect } from './shield-block-effect.service';
 const STAGE: StageBody = { width: 60, height: 60, speed: 0.03, maxSpeed: 0.07, hp: 0 };
 const SHIELD: PlayerEffect = { kind: 'shield', expiresAt: Number.MAX_SAFE_INTEGER };
 
-function player(id: string, partial: Partial<Player> = {}): Player {
+function player(id: string, partial: Partial<HumanPlayer> = {}): Player {
   return {
+    kind: 'human',
     id,
     name: id,
     appearance: 'caterpie',
     body: { 1: STAGE, 2: STAGE, 3: STAGE },
     stage: 1,
     hp: 100,
+    mana: 0,
     x: 0.5,
     y: 0.5,
     vx: 0,
@@ -66,7 +69,7 @@ function detonated(
     y: 0.5,
     radius: 0.18,
     // Shielded players are skipped at the blast, so they never appear here — the effect must find them itself.
-    playerIds: [],
+    hits: [],
     ...partial,
   };
 }
@@ -121,7 +124,7 @@ describe('ShieldBlockEffect', () => {
     expect(effect.ownedShieldBlocks()).toHaveLength(0);
   });
 
-  it('on a bomb blast, marks shielded players within the radius — even though they are absent from playerIds', () => {
+  it('on a bomb blast, marks shielded players within the radius — even though they are absent from hits', () => {
     state.set(
       stateWith([
         player('shielded-near', { x: 0.5, y: 0.5, effects: [SHIELD] }),

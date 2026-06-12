@@ -6,7 +6,7 @@
  * The flat `FRENZY` object is assembled from per-concern partials under `./config/*`; edit a partial to retune a
  * concern. `FRENZY.features` (see `./config/features`) gates which items take part — toggled via `isItemEnabled`.
  */
-import type { ItemType, ScoreKind } from './types';
+import type { ItemType, NpcKind, ScoreKind } from './types';
 
 import { BUFFS } from './config/buffs';
 import { COLLISION } from './config/collision';
@@ -15,6 +15,7 @@ import { FLOATS } from './config/floats';
 import { ITEMS } from './config/items';
 import { LOOP } from './config/loop';
 import { HP } from './config/hp';
+import { NPC } from './config/npc';
 import { PLAYER } from './config/player';
 import { PLAYER_COLLISION } from './config/player-collision';
 import { SCORE } from './config/score';
@@ -33,6 +34,7 @@ export const FRENZY = {
   ...LOOP,
   ...FLOATS,
   ...SCORE,
+  npc: NPC,
   features: FEATURES,
 } as const;
 
@@ -51,6 +53,14 @@ export function halfExtentNorm(sizePx: number, dimensionPx: number): number {
  */
 export function isItemEnabled(type: ItemType): boolean {
   return FRENZY.features.items[type].enabled;
+}
+
+/**
+ * Whether an NPC kind is currently enabled (see `FRENZY.features.npc`). Gates the NPC spawner so a disabled
+ * autobot never enters play — mirrors `isItemEnabled`.
+ */
+export function isNpcEnabled(kind: NpcKind): boolean {
+  return FRENZY.features.npc[kind].enabled;
 }
 
 /**

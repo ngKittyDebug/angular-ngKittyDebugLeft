@@ -84,9 +84,15 @@ export const FrenzyStore = signalStore(
 
         return 'connecting';
       }),
+      // Counts only humans (the NPC is never a "presence"): a disconnected NPC isn't a thing, but the filter keeps
+      // the count honest if one ever lingers in a snapshot mid-removal.
       disconnectedCount: computed(
         () =>
-          store.state()?.players.filter((player) => player.status === 'disconnected').length ?? 0,
+          store
+            .state()
+            ?.players.filter(
+              (player) => player.kind === 'human' && player.status === 'disconnected',
+            ).length ?? 0,
       ),
       // Ranked alive-first, then by raw hp (the live threat order), NOT by `totalScore` — hp is the crown axis and
       // the bounty target, score is a separate cumulative axis with no UI consumer landed yet (see Player.scores).
@@ -94,7 +100,8 @@ export const FrenzyStore = signalStore(
       // appears (greyed, below the living) but never outranks the actual alive leader, so the list, the collapsed
       // pill and the scene crown all tell one story.
       leaderboard: computed(() =>
-        [...(store.state()?.players ?? [])]
+        (store.state()?.players ?? [])
+          .filter((player) => player.kind === 'human')
           .sort((a, b) => {
             const aDown = a.status === 'disconnected' ? 1 : 0;
             const bDown = b.status === 'disconnected' ? 1 : 0;
@@ -108,20 +115,24 @@ export const FrenzyStore = signalStore(
       // Gated to ≥2 alive players: with a lone survivor there's no rival to out-rank and no bounty target, so a
       // crown would be meaningless noise — null hides it everywhere at once.
       crownId: computed(() => {
-        const players = store.state()?.players ?? [];
+        // Humans only — the NPC is a hazard, never a rival to crown, so it can't hold the crown and an alive NPC
+        // doesn't count toward the ≥2-alive gate that decides whether a crown is shown at all.
+        const humans = (store.state()?.players ?? []).filter((player) => player.kind === 'human');
 
-        if (players.filter((player) => player.status === 'alive').length < 2) {
+        if (humans.filter((player) => player.status === 'alive').length < 2) {
           return null;
         }
 
-        return crownIdOf(players);
+        return crownIdOf(humans);
       }),
       me: computed(() => {
         const id = store.myId();
 
         return store.state()?.players.find((player) => player.id === id) ?? null;
       }),
-      presenceCount: computed(() => store.state()?.players.length ?? 0),
+      presenceCount: computed(
+        () => store.state()?.players.filter((player) => player.kind === 'human').length ?? 0,
+      ),
     };
   }),
   withMethods(
@@ -144,6 +155,9 @@ export const FrenzyStore = signalStore(
       },
       dismissFainted(): void {
         patchState(store, { myFaintedAt: null });
+      },
+      pokeNpc(npcId: string): void {
+        socket.send({ type: 'pokeNpc', npcId });
       },
       join(name: string, appearance: string, body: PlayerBody): void {
         persistence.saveName(name);

@@ -19,6 +19,26 @@
     will-change: transform;
   }
 
+  // Owned-float overlay: one zero-size box per live player, parked on the body point by the scene-position
+  // directive's compositor `translate` (top-left lands on the point — no static centring transform, so the box
+  // origin IS the body point). It carries the player's sprite vars so the quips anchor to the head; rendered as a
+  // direct world child (not nested in the player) so the floats clear the kelp layers. Non-interactive.
+  &__owned-floats {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 4;
+    pointer-events: none;
+  }
+
+  // A quip anchored above the visible sprite's head: lift its (translate-centred) box up from the body point by
+  // the full sprite height, nudged by the art's vertical centring offset so winged/offset sprites still sit right.
+  // Matches where the formerly-nested `.scene__player-float` sat; the rise animation then carries it up from here.
+  &__owned-float {
+    left: 50%;
+    bottom: calc(var(--scene-sprite-height, 96px) - var(--scene-sprite-offset-y, 0px));
+  }
+
   // Debug outline boxes (?debug only) live in their own `left-paw-debug-box` component now.
 
   // Foreground parallax particle layers (in front of the world; drift via background-position set per-frame from

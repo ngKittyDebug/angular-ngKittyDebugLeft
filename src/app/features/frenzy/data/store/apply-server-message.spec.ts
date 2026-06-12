@@ -6,12 +6,14 @@ import { bodyForAppearance } from '../../ui/constants/pokemon-registry';
 import { applyServerMessage } from './apply-server-message';
 
 const PLAYER: Player = {
+  kind: 'human',
   id: 't1',
   name: 'Ash',
   appearance: 'caterpie',
   body: bodyForAppearance('caterpie'),
   stage: 1,
   hp: 100,
+  mana: 0,
   x: 0.5,
   y: 0.6,
   vx: 0,
@@ -92,7 +94,7 @@ describe('applyServerMessage', () => {
       x: 0.45,
       y: 1,
       radius: 0.18,
-      playerIds: ['t1'],
+      hits: [{ playerId: 't1', delta: -10 }],
     });
 
     expect(next?.items).toHaveLength(0);

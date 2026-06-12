@@ -11,12 +11,14 @@ import { IntroQuipsEffect } from './intro-quips-effect.service';
 
 function me(hp: number): Player {
   return {
+    kind: 'human',
     id: 'me',
     name: 'Me',
     appearance: 'pidgey',
     body: bodyForAppearance('pidgey'),
     stage: 1,
     hp,
+    mana: 0,
     x: 0.5,
     y: 0.5,
     vx: 0,

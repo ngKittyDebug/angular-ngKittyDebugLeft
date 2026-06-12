@@ -1,0 +1,13 @@
+<!-- One badge per off-screen group. `#arrow` + `data-key` let the component's per-frame pass find each node and
+     write its `translate` directly (no per-frame binding → no change detection). The label is the player name, or
+     the member count for a cluster; the edge the badge rides is the direction cue. -->
+@for (indicator of indicators(); track indicator.key) {
+  <div
+    #arrow
+    class="offscreen-indicator"
+    [class.offscreen-indicator--cluster]="indicator.count > 1"
+    [attr.data-key]="indicator.key"
+  >
+    <span class="offscreen-indicator__label">{{ indicator.name ?? indicator.count }}</span>
+  </div>
+}

@@ -14,12 +14,14 @@ function item(type: ItemType): Item {
 }
 
 const PLAYER: Player = {
+  kind: 'human',
   id: 'p1',
   name: 'Ash',
   appearance: 'caterpie',
   body: TEST_BODY,
   stage: 1,
   hp: 100,
+  mana: 0,
   x: 0.5,
   y: 0.5,
   vx: 0,
@@ -149,6 +151,35 @@ describe('bomb behavior', () => {
     expect(fromLeft.nudgeX).toBe(FRENZY.bomb.clickImpulse);
     expect(fromLeft.nudgeY).toBe(0);
     expect(fromRight.nudgeX).toBe(-FRENZY.bomb.clickImpulse);
+  });
+
+  it('with click budget to spare, a click still just nudges (no detonation)', () => {
+    const armed: Item = { ...bombAt(0.5), clicksLeft: 3 };
+
+    const interaction = getItemBehavior('bomb').onClick(armed, 'p1', EMPTY_STATE, -0.1);
+
+    expect(interaction.explodes).toBeUndefined();
+    expect(interaction.consumed).toBe(false);
+    expect(interaction.nudgeX).toBe(-FRENZY.bomb.clickImpulse);
+  });
+
+  it('detonates when the click spends the last budget (clicksLeft <= 1)', () => {
+    const victim = playerAt('victim', 0.5, 1);
+    const state: ServerState = { players: [victim], items: [], tick: 0 };
+    const lastClick: Item = { ...bombAt(0.5), clicksLeft: 1 };
+
+    const interaction = getItemBehavior('bomb').onClick(lastClick, 'p1', state, -0.1);
+
+    expect(interaction.explodes).toBe(true);
+    expect(interaction.consumed).toBe(true);
+    expect(interaction.hpDeltas.map((delta) => delta.playerId)).toEqual(['victim']);
+  });
+
+  it('never click-detonates an aura-emitted bomb (no clicksLeft) — always nudges', () => {
+    const interaction = getItemBehavior('bomb').onClick(bombAt(0.5), 'p1', EMPTY_STATE, -0.1);
+
+    expect(interaction.explodes).toBeUndefined();
+    expect(interaction.consumed).toBe(false);
   });
 
   it('explodes on landing and damages every alive Pokémon in range, owner included; far/offline spared', () => {

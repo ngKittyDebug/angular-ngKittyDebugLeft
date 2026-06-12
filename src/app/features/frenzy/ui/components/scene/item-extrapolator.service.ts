@@ -224,6 +224,8 @@ export class ItemExtrapolatorService {
       spinReverse: spin.reverse,
       // Authoritative drift speed (from the last snapshot's vx/vy) for the `?debug` speed readout.
       debugSpeed: Math.hypot(vx, vy).toFixed(4),
+      // Carried through for the sensor-light "armed" chase speed (undefined for aura-emitted mines).
+      clicksLeft: item.clicksLeft,
     };
   }
 }

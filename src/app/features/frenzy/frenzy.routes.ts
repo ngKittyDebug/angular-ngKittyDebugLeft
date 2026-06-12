@@ -9,8 +9,10 @@ import { EvolutionEffect } from './data/services/effects/evolution-effect.servic
 import { FloatingMessagesStore } from './data/services/effects/floating-messages.store';
 import { HitBurstEffect } from './data/services/effects/hit-burst-effect.service';
 import { IntroQuipsEffect } from './data/services/effects/intro-quips-effect.service';
+import { NpcQuipEffect } from './data/services/effects/npc-quip-effect.service';
 import { PlayerEffectsTracker } from './data/services/effects/player-effects-tracker.service';
 import { PresenceTracker } from './data/services/effects/presence-tracker.service';
+import { ReactiveMoodEffect } from './data/services/effects/reactive-mood-effect.service';
 import { SelfMoodEffect } from './data/services/effects/self-mood-effect.service';
 import { ShieldBlockEffect } from './data/services/effects/shield-block-effect.service';
 import { FrenzyEffectsService } from './data/services/frenzy-effects.service';
@@ -62,7 +64,9 @@ export const frenzyRoutes: Routes = [
       PlayerEffectsTracker,
       EmissionSoundEffect,
       SelfMoodEffect,
+      ReactiveMoodEffect,
       IntroQuipsEffect,
+      NpcQuipEffect,
       FrenzyEffectsService,
       FrenzyPageFacade,
       DeathEpitaphService,

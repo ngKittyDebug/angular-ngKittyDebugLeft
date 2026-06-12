@@ -57,7 +57,7 @@ export interface PlayerEffect {
   expiresAt: number;
 }
 
-export interface Player {
+export interface PlayerBase {
   id: string;
   name: string;
   /** Opaque appearance id the player chose. The server relays it but never interprets it; the client maps it
@@ -68,6 +68,9 @@ export interface Player {
   body: PlayerBody;
   stage: Stage;
   hp: number;
+  /** Anger/mana meter, always present. Humans carry it but don't consume it yet (stays 0); NPCs accumulate it
+   * from player pokes and detonate hard at max. Echoed in snapshots. */
+  mana: number;
   x: number;
   y: number;
   vx: number;
@@ -84,6 +87,18 @@ export interface Player {
    * forthcoming score/medals UI, so an unused `totalScore` is expected, not a wiring bug. */
   scores: Partial<Record<ScoreKind, number>>;
 }
+
+export type NpcKind = 'angryBomb';
+export interface HumanPlayer extends PlayerBase {
+  kind: 'human';
+}
+export interface NpcPlayer extends PlayerBase {
+  kind: 'npc';
+  npcKind: NpcKind;
+}
+export type Player = HumanPlayer | NpcPlayer;
+/** Narrows a player to the NPC variant (server-spawned autobot). */
+export const isNPC = (player: Player): player is NpcPlayer => player.kind === 'npc';
 
 export interface Item {
   id: string;
@@ -110,6 +125,10 @@ export interface Item {
    * kill-credit stamp: a blast triggered by a shoved bomb names the shover in the obituary. Bombs only; undefined
    * until first shoved, and overwritten by each later shover (last toucher takes the blame in a tug-of-war). */
   lastNudgedBy?: string;
+  /** Bombs only. A hidden random click-budget stamped at spawn (see FRENZY.bomb.clicksToExplodeRange). Each
+   * shove-click decrements it; the click that would take it below 1 detonates the mine instead of nudging.
+   * Undefined for non-bombs and for aura-emitted bombs (those never click-detonate, only collide/land). */
+  clicksLeft?: number;
 }
 
 export interface ServerState {
@@ -172,17 +191,29 @@ export interface ItemNudgedEvent {
   y: number;
   vx: number;
   vy: number;
+  /** The mine's remaining click budget after this shove spent one (see `Item.clicksLeft`). Carried on the event so
+   * the client's danger visual (sensor lights speeding up) reacts on the shove itself instead of lagging a snapshot.
+   * Undefined for aura-emitted bombs (no budget) and absent for any non-bomb nudge. */
+  clicksLeft?: number;
 }
 
-// A bomb exploded at (x, y) over `radius`; `playerIds` are everyone caught in the blast (incl. the owner).
-// `itemId` is the bomb itself — clients drop it immediately so its sprite doesn't linger until the next snapshot.
+// One player caught in a blast and the hp they lost (negative, distance-scaled) — per-victim so the client can
+// float the real number over each, not a fixed guess.
+export interface BlastHit {
+  playerId: string;
+  delta: number;
+}
+
+// A bomb exploded at (x, y) over `radius`; `hits` are everyone caught in the blast (incl. the owner) with the hp
+// each lost. `itemId` is the bomb itself — clients drop it immediately so its sprite doesn't linger until the
+// next snapshot.
 export interface DetonatedEvent {
   type: 'detonated';
   itemId: string;
   x: number;
   y: number;
   radius: number;
-  playerIds: string[];
+  hits: BlastHit[];
   priority?: number;
 }
 
@@ -229,6 +260,9 @@ export type ClientMessage =
   // Steering: the player tapped empty water at normalized point (x, y). The server adds a velocity impulse toward
   // it on top of the current drift (speed capped), so taps nudge the Pokémon's heading without replacing the drift.
   | { type: 'steer'; x: number; y: number }
+  // Player tapped the NPC's sprite. Accumulates the NPC's anger only — carries NO direction (the NPC never
+  // reacts positionally to clicks).
+  | { type: 'pokeNpc'; npcId: string }
   | { type: 'leave' };
 
 /**

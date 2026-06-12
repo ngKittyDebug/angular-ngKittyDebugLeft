@@ -1,6 +1,6 @@
 // Host is the player box the scene-position directive drives (it writes the `translate` CSS property); this
 // `transform` is the static centre anchor, and translateZ(0) promotes its own layer so the repositioning
-// composites cleanly. Children stack in a centred column; the absolutely-positioned auras/hp-bar/floats sit
+// composites cleanly. Children stack in a centred column; the absolutely-positioned auras/hp-bar/sparks sit
 // out of that flow.
 :host {
   position: absolute;
@@ -19,19 +19,6 @@
 :host(.scene__player--disconnected) {
   opacity: 0.5;
   filter: grayscale(1);
-}
-
-// Owned floats live inside the player box and ride along with its drift. Anchored above the box top
-// (the sprite's head); the float's own rise animation carries it up from there. `left: 50%` pairs with
-// the float's `translate(-50%, …)` to centre it over the sprite.
-.scene__player-float {
-  position: absolute;
-  // All floats anchor at the same spot above the head; the rise animation plus the release queue's
-  // stagger spread co-existing quips of one player into a column over time instead of overlapping here.
-  // `100% − var(offset-y)` lifts the anchor to the VISIBLE sprite's top (the host box is the un-offset render
-  // box), so on winged/offset sprites the quip still sits above the head, not above empty canvas.
-  bottom: calc(100% - var(--scene-sprite-offset-y, 0px));
-  left: 50%;
 }
 
 // Rock/brick impact sparks burst from where the falling block bonked it, centred on the sprite and riding its
@@ -93,27 +80,24 @@
   pointer-events: none;
 }
 
-// wellFed aura: a soft healthy-green ring while the vitamin's decay-pause buff is active. Gentler than the
-// shield bubble — it only stalls decay, so it signals "kept fed", not "invulnerable".
+// wellFed aura: a soft healthy-green ring while the vitamin's decay-pause buff is active. Shares the SAME ring
+// construction as the laying/poop auras (flat tint + the radial `mask` band + matching border/glow) so the buff
+// rings read as one visual family; recoloured green and kept gentle — a slow pulse, not the festive/cursed spin —
+// since it only stalls decay ("kept fed", not "invulnerable"). Nested a touch smaller (1.45× vs laying's 1.6×) so
+// when buffs stack it still reads as a distinct inner ring rather than overlapping its sibling.
 .scene__well-fed {
   position: absolute;
   // Centre on the VISIBLE sprite, not the bare body point: follow the same vertical centring offset the sprite
-  // uses (`--scene-sprite-offset-y` = −spriteOffsetY) so the ring/bubble wraps the art on winged/offset sprites.
+  // uses (`--scene-sprite-offset-y` = −spriteOffsetY) so the ring wraps the art on winged/offset sprites.
   top: calc(var(--scene-sprite-height, 96px) / 2 + var(--scene-sprite-offset-y, 0px));
   left: 50%;
   width: calc(var(--scene-sprite-height, 96px) * 1.45);
   height: calc(var(--scene-sprite-height, 96px) * 1.45);
   border-radius: 50%;
-  border: 2px solid rgba(150, 230, 150, 0.8);
-  background: radial-gradient(
-    circle,
-    rgba(150, 230, 150, 0) 58%,
-    rgba(150, 230, 150, 0.2) 82%,
-    rgba(150, 230, 150, 0) 100%
-  );
-  box-shadow:
-    0 0 12px rgba(150, 230, 150, 0.55),
-    inset 0 0 12px rgba(150, 230, 150, 0.3);
+  border: 2px solid rgba(150, 230, 150, 0.85);
+  background: rgba(150, 230, 150, 0.28);
+  mask: radial-gradient(circle, transparent 56%, #000 60%, #000 88%, transparent 100%);
+  box-shadow: 0 0 14px rgba(150, 230, 150, 0.6);
   transform: translate(-50%, -50%);
   animation: scene-shield-pulse 2.2s ease-in-out infinite;
   pointer-events: none;
@@ -245,6 +229,15 @@
   filter: saturate(0.6) brightness(0.85);
 }
 
+// Angry-bomb NPC: reddens with its anger (`--npc-anger`, 0..1, set on the host). At rest it looks normal; as
+// players spam-poke it the colour saturates and a red glow swells, telegraphing the impending strong blast. Placed
+// after `--sad` so the NPC never inherits the sad desaturation. The base `.scene__sprite` filter transition makes
+// the reddening glide as anger ramps.
+.scene__sprite--npc {
+  filter: saturate(calc(1 + var(--npc-anger, 0) * 1.6))
+    drop-shadow(0 0 calc(var(--npc-anger, 0) * 10px) rgba(255, 40, 0, var(--npc-anger, 0)));
+}
+
 .scene__sprite--evolving {
   animation: scene-evolve-pulse 1.5s ease-out;
 }
@@ -257,10 +250,15 @@
   top: 100%;
   left: 50%;
   transform: translateX(-50%);
+  // Cap the width so a max-length name (24 chars) ellipsises under the sprite instead of spilling out of the
+  // centred column and overrunning neighbouring players.
+  max-width: 7rem;
   margin-top: 0.25rem;
+  overflow: hidden;
   color: #f5f5f5;
   font-size: 0.75rem;
   white-space: nowrap;
+  text-overflow: ellipsis;
   // No background pill — a crisp shadow keeps the name legible over the aquarium instead.
   text-shadow:
     0 1px 2px rgba(0, 0, 0, 0.9),

@@ -1,4 +1,4 @@
-import type { ItemType, PlayerBody, Stage, StageBody } from '@game/frenzy/types';
+import type { ItemType, NpcKind, PlayerBody, Stage, StageBody } from '@game/frenzy/types';
 
 // The Pokémon roster is client-owned: the server only relays an opaque `appearance` id (`Player.appearance`)
 // and never enumerates these. `Line` is the set of ids this client knows how to render.
@@ -71,7 +71,28 @@ const ITEM_ART: Record<ItemType, ItemArt> = {
   poop: { sprite: 'poop.png', dotColor: '#7a5230', sandPuff: 0.45 },
 };
 
+// NPC appearances are rendered from a single static PNG scaled per evolution stage — deliberately NOT routed
+// through the Pokémon `Line`/GIF machinery (no native/body rects, no growth bands) and NOT listed in
+// `POKEMON_LINES`, so the picker never offers an NPC as a playable creature. One row per NPC appearance: the PNG
+// served from `/frenzy/npc/` and the square render side per stage, matching the server body sizes in
+// `shared-game/frenzy/npc/angry-bomb.ts` (64/88/112).
+// Keyed by `NpcKind` (not a loose string) so a new NPC kind is a compile error here until it gets a sprite —
+// mirrors how LINE_META/ITEM_ART are keyed by their exact unions.
+const NPC_SPRITES: Record<NpcKind, { sprite: string; size: Record<Stage, number> }> = {
+  angryBomb: { sprite: 'angry-bomb.svg', size: { 1: 64, 2: 88, 3: 112 } },
+};
+
+// True when the appearance id is a known NPC (rendered as a static PNG), not a playable Pokémon line. A type guard
+// so callers can index `NPC_SPRITES` with the narrowed `NpcKind`.
+export function isNpcAppearance(appearance: string): appearance is NpcKind {
+  return appearance in NPC_SPRITES;
+}
+
 export function spritePathFor(appearance: string, stage: Stage = 1): string {
+  if (isNpcAppearance(appearance)) {
+    return `/frenzy/npc/${NPC_SPRITES[appearance].sprite}`;
+  }
+
   const { sprite } = STAGE_ART[resolveLine(appearance)][stage];
 
   return `/frenzy/pokemon/sprites/${sprite}.gif`;
@@ -82,11 +103,12 @@ export function spritePathFor(appearance: string, stage: Stage = 1): string {
 const STAGE_DISPLAY_HEIGHT: Record<Stage, number> = { 1: 72, 2: 96, 3: 120 };
 
 // Shared per-stage motion profile (normalized units/sec) + HP gate to ENTER the stage. Speeds dip a touch with
-// size so growth reads as heft; gates mirror the old global 200/500 (stage 1 baseline 0). Same for every line.
+// size so growth reads as heft; gates split the 0→1500 hp ceiling into even thirds (stage 1 baseline 0), so the
+// two evolutions land at the third-marks of the status bar and stage 3 keeps a 1000→1500 headroom. Same per line.
 const STAGE_MOTION: Record<Stage, Pick<StageBody, 'speed' | 'maxSpeed' | 'hp'>> = {
   1: { speed: 0.032, maxSpeed: 0.075, hp: 0 },
-  2: { speed: 0.028, maxSpeed: 0.065, hp: 200 },
-  3: { speed: 0.024, maxSpeed: 0.055, hp: 500 },
+  2: { speed: 0.028, maxSpeed: 0.065, hp: 500 },
+  3: { speed: 0.024, maxSpeed: 0.055, hp: 1000 },
 };
 
 // Per sprite: native GIF canvas `[width, height]` (measured) and the collidable BODY rectangle `[x, y, w, h]`
@@ -186,7 +208,15 @@ export function bodyForAppearance(appearance: string): PlayerBody {
 }
 
 // Client render placement for an appearance + stage: full-art size and the offset to centre the body on the point.
+// NPCs render as a centred square PNG (width = height = per-stage side, no offset) — the collidable body itself
+// still comes from the server snapshot; this is only the render box.
 export function spriteRenderFor(appearance: string, stage: Stage = 1): SpriteRender {
+  if (isNpcAppearance(appearance)) {
+    const side = NPC_SPRITES[appearance].size[stage];
+
+    return { width: side, height: side, offsetX: 0, offsetY: 0 };
+  }
+
   return renderFor(STAGE_ART[resolveLine(appearance)][stage], stage);
 }
 

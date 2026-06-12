@@ -44,18 +44,49 @@
       />
     }
 
+    <!-- Owned floats (live-sprite quips) render here, in the same overlay as orphan floats, instead of nested in
+         the player container: nesting trapped them inside the player's z-index:1 stacking context, so the kelp
+         layers (z 2/3) painted over them. As direct world children at the floating-text z-index (4) they clear the
+         kelp. Each player's column is positioned on its live body point via the same compositor `translate` path the
+         sprite uses, so the quips still ride the drift; the anchor lifts them above the head (see `.scene__owned-floats`). -->
+    @for (player of renderedPlayers(); track player.id) {
+      @if (floatsByOwner().get(player.id); as floats) {
+        @if (floats.length) {
+          <div
+            class="scene__owned-floats"
+            [leftPawScenePosition]="{ x: player.x, y: player.y }"
+            [scenePositionTransform]="true"
+            [style.--scene-sprite-height]="player.spriteHeight"
+            [style.--scene-sprite-offset-y]="-player.spriteOffsetY + 'px'"
+          >
+            @for (float of floats; track float.id) {
+              <left-paw-floating-text
+                class="scene__owned-float"
+                [icon]="float.icon"
+                [who]="float.who"
+                [text]="t(float.textKey)"
+                [delta]="float.delta"
+                [tone]="float.tone"
+                [durationMs]="float.durationMs"
+              />
+            }
+          </div>
+        }
+      }
+    }
+
     @for (player of renderedPlayers(); track player.id) {
       <left-paw-scene-player
         [leftPawScenePosition]="{ x: player.x, y: player.y }"
         [scenePositionTransform]="true"
         [player]="player"
-        [floats]="floatsByOwner().get(player.id) ?? []"
         [sparks]="sparksByOwner().get(player.id) ?? []"
         [shieldBlocks]="shieldBlocksByOwner().get(player.id) ?? []"
         [maxHp]="maxHp"
         [shieldAuraClass]="shieldAuraClass"
         [isLeader]="player.id === crownId()"
         (poke)="onSelfPoke()"
+        (pokeNpc)="onPokeNpc($event)"
       />
     }
 
@@ -109,4 +140,9 @@
   <!-- Foreground kelp: a screen-space near layer in FRONT of the actors (camera writes its width/transform each
        frame), so the Pokémon swim between the seabed backdrop and these close fronds. Decorative only. -->
   <left-paw-foreground-kelp #foregroundKelp />
+
+  <!-- Off-screen player indicators: edge arrows pointing at active players outside the viewport (sliding/clustering),
+       a screen-space sibling of the world (NOT inside it — the world is camera-transformed). Driven imperatively by
+       the scene's rAF loop via its `frame()`; aria-hidden as a real-time visual-only aid. -->
+  <left-paw-offscreen-indicators [players]="players()" aria-hidden="true" />
 </section>

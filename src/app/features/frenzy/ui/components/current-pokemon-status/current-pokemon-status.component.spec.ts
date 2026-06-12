@@ -42,7 +42,7 @@ function createFixture(
   fixture.componentRef.setInput('name', inputs.name);
   fixture.componentRef.setInput('hp', inputs.hp);
   fixture.componentRef.setInput('stage', inputs.stage);
-  // gates 200/500 (matches the 500 next-evolution threshold the assertions below expect).
+  // gates 500/1000 (matches the 1000 next-evolution threshold the assertions below expect).
   fixture.componentRef.setInput('body', bodyForAppearance('caterpie'));
   fixture.detectChanges();
 
@@ -60,22 +60,22 @@ describe('CurrentPokemonStatusComponent', () => {
   it('shows the HP still needed to reach the next evolution', () => {
     const text = (createFixture().nativeElement as HTMLElement).textContent ?? '';
 
-    // hp 412, stage 2 → next threshold 500 → 88 remaining.
-    expect(text).toContain('to evolve 88');
+    // hp 412, stage 2 → next threshold 1000 → 588 remaining.
+    expect(text).toContain('to evolve 588');
   });
 
-  it('shows the evolution tick on a non-final stage', () => {
+  it('marks both evolution thresholds on a non-final stage', () => {
     const element = createFixture().nativeElement as HTMLElement;
 
-    expect(element.querySelector('.current-pokemon-status__tick')).not.toBeNull();
+    expect(element.querySelectorAll('.current-pokemon-status__tick')).toHaveLength(2);
   });
 
-  it('hides the until-evolution line and tick on the final stage', () => {
-    const element = createFixture({ name: 'Sparky', hp: 900, stage: 3 })
+  it('keeps both evolution ticks but hides the until-evolution line on the final stage', () => {
+    const element = createFixture({ name: 'Sparky', hp: 1100, stage: 3 })
       .nativeElement as HTMLElement;
 
+    expect(element.querySelectorAll('.current-pokemon-status__tick')).toHaveLength(2);
     expect(element.querySelector('.current-pokemon-status__until')).toBeNull();
-    expect(element.querySelector('.current-pokemon-status__tick')).toBeNull();
     expect(element.textContent ?? '').not.toContain('to evolve');
   });
 

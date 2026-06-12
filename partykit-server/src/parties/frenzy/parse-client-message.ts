@@ -85,6 +85,13 @@ export function parseClientMessage(raw: string): ClientMessage | null {
         ? { type: 'steer', x: data.x, y: data.y }
         : null;
     }
+    case 'pokeNpc': {
+      // npcId is a server-generated UUID (36 chars); cap the length so a tampered client can't pass an oversized
+      // string through parsing (mirrors the appearance length policy in validate-join).
+      return isNonEmptyString(data.npcId) && data.npcId.length <= 64
+        ? { type: 'pokeNpc', npcId: data.npcId }
+        : null;
+    }
     case 'leave': {
       return { type: 'leave' };
     }

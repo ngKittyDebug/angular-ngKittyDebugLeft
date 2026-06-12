@@ -15,12 +15,14 @@ import { PlayerEffectsTracker } from './player-effects-tracker.service';
 
 function player(id: string, name: string): Player {
   return {
+    kind: 'human',
     id,
     name,
     appearance: 'pidgey',
     body: bodyForAppearance('pidgey'),
     stage: 1,
     hp: 100,
+    mana: 0,
     x: 0.5,
     y: 0.5,
     vx: 0,

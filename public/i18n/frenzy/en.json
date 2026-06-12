@@ -14,6 +14,13 @@
       "content": "Content",
       "hungry": "Hungry",
       "starving": "Starving"
+    },
+    "reaction": {
+      "hurt": "Hurt",
+      "dizzy": "Dizzy",
+      "bonk": "Bonked",
+      "sick": "Queasy",
+      "pumped": "Pumped"
     }
   },
   "joinError": {
@@ -181,6 +188,7 @@
   },
   "scene": {
     "pokeAriaLabel": "Poke your Pokémon",
+    "pokeNpcAriaLabel": "Poke the angry bomb",
     "floorLabel": "Seabed",
     "intro": {
       "0": "Off we go for snacks!",
@@ -345,6 +353,30 @@
         "1": "Spewing poop!",
         "2": "Stinky!",
         "3": "Number two!"
+      },
+      "npcAppeared": {
+        "0": "Tick… tick…",
+        "1": "Who wants a bang?",
+        "2": "I'm feeling explosive.",
+        "3": "Don't poke me."
+      },
+      "npcPoke": {
+        "0": "Hey!",
+        "1": "Quit it.",
+        "2": "Watch the fuse.",
+        "3": "You'll regret that.",
+        "4": "Do that again…",
+        "5": "Grrr.",
+        "6": "Tick tick tick…",
+        "7": "Keep poking, I dare you.",
+        "8": "Getting warm in here.",
+        "9": "Boom is coming."
+      },
+      "npcDied": {
+        "0": "KABOOM!",
+        "1": "Told you so!",
+        "2": "Worth it.",
+        "3": "See you in 40 seconds."
       }
     }
   }

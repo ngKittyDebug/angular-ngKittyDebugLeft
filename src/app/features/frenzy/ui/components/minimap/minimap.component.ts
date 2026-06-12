@@ -10,6 +10,7 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import { TuiIcon } from '@taiga-ui/core';
 
 import type { Item, Player } from '@game/frenzy/types';
+import { isNPC } from '@game/frenzy/types';
 
 import { PlayerPersistenceService } from '../../../data/services/player-persistence.service';
 import { ITEM_DOT_COLOR } from '../../constants/pokemon-registry';
@@ -23,6 +24,7 @@ interface PlayerDot {
   y: number;
   me: boolean;
   isLeader: boolean;
+  isNpc: boolean;
 }
 
 interface ItemDot {
@@ -156,6 +158,7 @@ export class MinimapComponent {
       y: player.y,
       me: player.id === myId,
       isLeader: player.id === crownId,
+      isNpc: isNPC(player),
     }));
   });
 

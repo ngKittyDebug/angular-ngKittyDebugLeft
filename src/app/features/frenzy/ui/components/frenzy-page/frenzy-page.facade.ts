@@ -66,6 +66,8 @@ export class FrenzyPageFacade {
   });
   public readonly orphanFloats = this.effects.orphanFloats;
   public readonly ownedFloats = this.effects.ownedFloats;
+  // The transient reaction face for my own Pokémon (bomb/collision/poison/buff), overlaid on the status avatar.
+  public readonly reactionFace = this.effects.reactionFace;
   public readonly joinError = this.store.joinError;
   public readonly isMobile = computed(() => this.breakpoint() === 'mobile');
   public readonly items = computed(() => this.store.state()?.items ?? []);
@@ -131,6 +133,12 @@ export class FrenzyPageFacade {
 
   public pokeSelf(): void {
     this.effects.pokeSelf();
+  }
+
+  // Poking the angry-bomb NPC: tell the server (accrues anger) and fire the optimistic local quip over it.
+  public pokeNpc(npcId: string): void {
+    this.store.pokeNpc(npcId);
+    this.effects.pokeNpc(npcId);
   }
 
   public steer(point: { x: number; y: number }): void {

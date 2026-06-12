@@ -2,7 +2,7 @@ import type * as Party from 'partykit/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { FRENZY } from '@game/frenzy/config';
-import type { ClientMessage, ServerMessage } from '@game/frenzy/types';
+import type { ClientMessage, ServerMessage, ServerState } from '@game/frenzy/types';
 
 import FeedingRoom from '../index';
 import { TEST_BODY } from './test-body';
@@ -70,6 +70,12 @@ function byType<T extends ServerMessage['type']>(
 
 function latestSnapshot(room: FakeRoom): Extract<ServerMessage, { type: 'snapshot' }> | undefined {
   return byType(room, 'snapshot').at(-1);
+}
+
+// Human players in the latest snapshot — isolates the human roster from the angry-bomb NPC, which the server
+// spawns into the same `players[]` once a human is present.
+function humanPlayers(room: FakeRoom): ServerState['players'] {
+  return latestSnapshot(room)?.state.players.filter((player) => player.kind === 'human') ?? [];
 }
 
 // Game broadcasts only — excludes the connection-scoped liveness `ping`, which keeps firing while a connection is
@@ -172,7 +178,8 @@ describe('FeedingRoom orchestration', () => {
 
     vi.advanceTimersByTime(FRENZY.graceMs + TICK_MS);
 
-    expect(latestSnapshot(room)?.state.players).toHaveLength(0);
+    // Grace runs longer than the NPC spawn window, so the autobot is in the snapshot by now — assert on humans only.
+    expect(humanPlayers(room)).toHaveLength(0);
   });
 
   it('restores a disconnected player on reconnect and emits rejoined', () => {
@@ -194,7 +201,8 @@ describe('FeedingRoom orchestration', () => {
     // Grace timer was cancelled — advancing past it must not purge the restored player.
     vi.advanceTimersByTime(FRENZY.graceMs + TICK_MS);
 
-    expect(latestSnapshot(room)?.state.players).toHaveLength(1);
+    // The NPC also spawns during the wait; assert on humans only to isolate the restored player.
+    expect(humanPlayers(room)).toHaveLength(1);
   });
 
   it('stops the game loop once the last player leaves', () => {
@@ -344,5 +352,132 @@ describe('FeedingRoom orchestration', () => {
     expect(byType(many.room, 'spawned').length).toBeGreaterThan(
       byType(single.room, 'spawned').length,
     );
+  });
+});
+
+function npcCount(room: FakeRoom): number {
+  const snapshot = latestSnapshot(room);
+
+  if (snapshot === undefined) {
+    return 0;
+  }
+
+  return snapshot.state.players.filter((player) => player.kind === 'npc').length;
+}
+
+describe('FeedingRoom — angry-bomb NPC lifecycle', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.clearAllTimers();
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it('spawns the NPC within the initial 0–20s window after the first human joins (not the 40s respawn)', () => {
+    // random→0 pins both the spawn-window delay (0ms) and the NPC's x; the NPC appears on the first tick.
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+
+    const { room, server } = setup();
+    const conn = new FakeConnection('c1');
+
+    server.onConnect(asParty(conn));
+    joinPlayer(server, conn, 'token-1');
+
+    expect(npcCount(room)).toBe(0);
+
+    // Advance less than the 40s respawn delay — the NPC must already be here from the initial window.
+    vi.advanceTimersByTime(FRENZY.npc.spawnDelayMsRange[1]);
+
+    expect(npcCount(room)).toBe(1);
+    expect(FRENZY.npc.spawnDelayMsRange[1]).toBeLessThan(FRENZY.npc.respawnDelayMs);
+  });
+
+  it('keeps at most one NPC alive at a time', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+
+    const { room, server } = setup();
+    const conn = new FakeConnection('c1');
+
+    server.onConnect(asParty(conn));
+    joinPlayer(server, conn, 'token-1');
+
+    vi.advanceTimersByTime(FRENZY.npc.respawnDelayMs * 2);
+
+    expect(npcCount(room)).toBe(1);
+  });
+
+  it('does not spawn the NPC before any human joins', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+
+    const { room, server } = setup();
+    const conn = new FakeConnection('idle');
+
+    // Pure lobby connection: no join → no humans → no NPC, even after a long wait.
+    server.onConnect(asParty(conn));
+
+    vi.advanceTimersByTime(FRENZY.npc.respawnDelayMs);
+
+    expect(npcCount(room)).toBe(0);
+  });
+
+  it('accrues NPC anger on rapid pokes from a player (mana climbs)', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+
+    const { room, server } = setup();
+    const conn = new FakeConnection('c1');
+
+    server.onConnect(asParty(conn));
+    joinPlayer(server, conn, 'token-1');
+
+    vi.advanceTimersByTime(FRENZY.npc.spawnDelayMsRange[1]);
+
+    const npc = latestSnapshot(room)?.state.players.find((player) => player.kind === 'npc');
+
+    expect(npc).toBeDefined();
+
+    // A burst of pokes in the anger window — superlinear gain pushes mana above 0.
+    for (let i = 0; i < 3; i += 1) {
+      send(server, conn, { type: 'pokeNpc', npcId: npc!.id });
+    }
+
+    const pokedNpc = latestSnapshot(room)?.state.players.find((player) => player.kind === 'npc');
+
+    expect(pokedNpc?.mana).toBeGreaterThan(0);
+  });
+
+  it('removes the NPC and stops the loop when the last human leaves', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+
+    const { room, server } = setup();
+    const conn = new FakeConnection('c1');
+
+    server.onConnect(asParty(conn));
+    joinPlayer(server, conn, 'token-1');
+
+    vi.advanceTimersByTime(FRENZY.npc.spawnDelayMsRange[1]);
+    expect(npcCount(room)).toBe(1);
+
+    send(server, conn, { type: 'leave' });
+
+    const frozen = gameBroadcasts(room).length;
+
+    vi.advanceTimersByTime(TICK_MS * 10);
+
+    // Loop stopped (stopLoop dropped the NPC + cleared its schedule) — no further game broadcasts, no NPC re-arm.
+    expect(gameBroadcasts(room).length).toBe(frozen);
+
+    // Re-joining starts a fresh, person-ful room: the NPC's stored state was cleared, so a new spawn window arms
+    // and a single NPC re-appears (proving the old NPC and its schedule were purged, not left dangling).
+    const second = new FakeConnection('c2');
+
+    server.onConnect(asParty(second));
+    joinPlayer(server, second, 'token-2');
+
+    vi.advanceTimersByTime(FRENZY.npc.spawnDelayMsRange[1]);
+
+    expect(npcCount(room)).toBe(1);
   });
 });

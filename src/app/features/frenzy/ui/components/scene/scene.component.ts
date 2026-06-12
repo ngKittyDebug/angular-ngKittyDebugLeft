@@ -29,6 +29,7 @@ import { parseDebugFlags } from '../../../debug/debug-options';
 import { FloatingTextComponent } from '../floating-text/floating-text.component';
 import { ForegroundKelpComponent } from '../foreground-kelp/foreground-kelp.component';
 import { MidgroundKelpComponent } from '../midground-kelp/midground-kelp.component';
+import { OffscreenIndicatorsComponent } from '../offscreen-indicators/offscreen-indicators.component';
 import { SandPuffComponent } from '../sand-puff/sand-puff.component';
 import { SceneItemComponent } from '../scene-item/scene-item.component';
 import { ScenePlayerComponent } from '../scene-player/scene-player.component';
@@ -48,8 +49,8 @@ function clamp01(value: number): number {
   return Math.min(1, Math.max(0, value));
 }
 
-// Bucket owner-scoped scene items (floats, sparks) by their `ownerId`, so each `.scene__player` renders and
-// carries only its own. Preserves source order within each bucket.
+// Bucket owner-scoped scene items (floats, sparks) by their `ownerId`. Sparks render inside each `.scene__player`;
+// floats render in the scene's owned-float overlay keyed by the same id. Preserves source order within each bucket.
 function groupByOwner<T extends { ownerId: string }>(items: readonly T[]): Map<string, T[]> {
   const grouped = new Map<string, T[]>();
 
@@ -75,6 +76,7 @@ function groupByOwner<T extends { ownerId: string }>(items: readonly T[]): Map<s
     FloatingTextComponent,
     ForegroundKelpComponent,
     MidgroundKelpComponent,
+    OffscreenIndicatorsComponent,
     SandPuffComponent,
     SceneItemComponent,
     ScenePlayerComponent,
@@ -108,6 +110,9 @@ export class SceneComponent {
     'foregroundKelp',
     { read: ElementRef },
   );
+  // The off-screen indicators overlay — driven imperatively from this loop (positions each frame, structure
+  // throttled) instead of via per-frame inputs, to keep the rAF work off change detection like the rest of the scene.
+  private readonly offscreenIndicators = viewChild(OffscreenIndicatorsComponent);
 
   public readonly blasts = input<readonly Blast[]>([]);
   public readonly hitBursts = input<readonly HitBurst[]>([]);
@@ -124,6 +129,7 @@ export class SceneComponent {
   // and resolved upstream via the shared `crownIdOf`, so the scene marker matches the pill and minimap exactly.
   public readonly crownId = input<string | null>(null);
   public readonly selfPoke = output<void>();
+  public readonly pokeNpc = output<string>();
   public readonly steer = output<{ x: number; y: number }>();
 
   protected readonly renderedItems = this.facade.renderedItems;
@@ -151,7 +157,7 @@ export class SceneComponent {
   // `item-borders`, `speed` = pick) — lets a session draw just the boxes it needs against the sprite silhouette.
   // Snapshot read; no reactivity.
   protected readonly debug = parseDebugFlags(inject(ActivatedRoute).snapshot.queryParamMap);
-  // Owned floats grouped by their player, so each `.scene__player` can render (and carry) its own quips.
+  // Owned floats grouped by their player, so the owned-float overlay renders each sprite's quips on its body point.
   protected readonly floatsByOwner = computed(() => groupByOwner(this.ownedFloats()));
   // Rock/brick impact sparks grouped by the struck player, so each `.scene__player` renders (and carries) its own.
   protected readonly sparksByOwner = computed(() => groupByOwner(this.ownedSparks()));
@@ -193,6 +199,9 @@ export class SceneComponent {
             this.parallaxMidRef()?.nativeElement,
             this.foregroundKelpRef()?.nativeElement,
           );
+          // Right after the camera writes this frame's transform, reposition the off-screen indicators off the
+          // matching snapshot (zero phase skew); the overlay throttles its own structural recompute internally.
+          this.offscreenIndicators()?.frame(this.facade.cameraSnapshot(), now);
         }
       };
 
@@ -210,6 +219,10 @@ export class SceneComponent {
 
   protected onSelfPoke(): void {
     this.selfPoke.emit();
+  }
+
+  protected onPokeNpc(npcId: string): void {
+    this.pokeNpc.emit(npcId);
   }
 
   // Press anywhere bubbles up here. A tap that misses an item spawns the airy bubble burst (the success cue for a
@@ -240,7 +253,7 @@ export class SceneComponent {
       this.facade.spawnBurst(x, y);
     }
 
-    if (target.closest('.scene__item, .scene__poke') === null) {
+    if (target.closest('.scene__item, .scene__poke, .scene__poke-npc') === null) {
       // Optimistically steer my own sprite this frame, then send the authoritative request. The server confirms
       // via the next snapshot, which reconciles only a sub-pixel gap (same steer math both sides).
       this.facade.predictSteer(this.myId(), x, y, performance.now());

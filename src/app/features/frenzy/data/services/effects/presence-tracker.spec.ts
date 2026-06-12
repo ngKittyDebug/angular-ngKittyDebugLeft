@@ -11,12 +11,14 @@ import { PresenceTracker } from './presence-tracker.service';
 
 function player(id: string, name: string, x = 0.5, y = 0.5): Player {
   return {
+    kind: 'human',
     id,
     name,
     appearance: 'pidgey',
     body: bodyForAppearance('pidgey'),
     stage: 1,
     hp: 100,
+    mana: 0,
     x,
     y,
     vx: 0,

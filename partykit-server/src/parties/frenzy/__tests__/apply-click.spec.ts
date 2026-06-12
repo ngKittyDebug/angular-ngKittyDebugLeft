@@ -7,12 +7,14 @@ import { TEST_BODY } from './test-body';
 import type { Item, Player, ServerState } from '@game/frenzy/types';
 
 const PLAYER: Player = {
+  kind: 'human',
   id: 'p1',
   name: 'Ash',
   appearance: 'caterpie',
   body: TEST_BODY,
   stage: 1,
   hp: 100,
+  mana: 0,
   x: 0.5,
   y: 0.5,
   vx: 0,
@@ -143,6 +145,45 @@ describe('applyClick', () => {
         vy: expect.closeTo(0, 5),
       },
     ]);
+  });
+
+  it('a shove on a budgeted bomb decrements clicksLeft and nudges (no detonation)', () => {
+    const state = stateWith(
+      [PLAYER],
+      [makeItem({ type: 'bomb', x: 0.5, y: 0.5, vy: 0, clicksLeft: 3 })],
+    );
+
+    const { state: next, events } = applyClick(state, PLAYER.id, 'i1', -0.1);
+
+    expect(next.items).toHaveLength(1);
+    expect(next.items[0].clicksLeft).toBe(2);
+    expect(events).toHaveLength(1);
+    expect(events[0].type).toBe('itemNudged');
+  });
+
+  it('a shove on a bomb without a budget leaves clicksLeft undefined', () => {
+    const state = stateWith([PLAYER], [makeItem({ type: 'bomb', x: 0.5, y: 0.5, vy: 0 })]);
+
+    const { state: next } = applyClick(state, PLAYER.id, 'i1', -0.1);
+
+    expect(next.items[0].clicksLeft).toBeUndefined();
+  });
+
+  it('detonates on the click that spends the last budget — emits detonated and removes the item', () => {
+    const state = stateWith(
+      [PLAYER],
+      [makeItem({ type: 'bomb', x: 0.5, y: 0.5, vy: 0, clicksLeft: 1 })],
+    );
+
+    const { state: next, events } = applyClick(state, PLAYER.id, 'i1', -0.1);
+
+    expect(next.items).toHaveLength(0);
+    expect(events[0]).toMatchObject({
+      type: 'detonated',
+      itemId: 'i1',
+      hits: [{ playerId: 'p1' }],
+    });
+    expect(next.players[0].hp).toBeLessThan(100); // caught in its own blast
   });
 
   it('accumulates repeated shoves and caps the bomb drift at maxDriftSpeed', () => {

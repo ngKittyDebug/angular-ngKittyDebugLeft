@@ -107,8 +107,16 @@ export function applyServerMessage(
           }
 
           // A shove updates the bomb's 2D drift velocity (and re-syncs its authoritative position); the
-          // extrapolator re-anchors from the new vx/vy so the push — and any tug-of-war — shows at once.
-          return { ...item, x: message.x, y: message.y, vx: message.vx, vy: message.vy };
+          // extrapolator re-anchors from the new vx/vy so the push — and any tug-of-war — shows at once. The
+          // spent click budget rides along so the sensor-light danger speeds up on the shove, not a snapshot later.
+          return {
+            ...item,
+            x: message.x,
+            y: message.y,
+            vx: message.vx,
+            vy: message.vy,
+            clicksLeft: message.clicksLeft ?? item.clicksLeft,
+          };
         }),
       };
     }

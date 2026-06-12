@@ -43,17 +43,18 @@ export class DetonationEffect implements FrenzyEffect {
 
     // A float per hit Pokémon, anchored to that player. The scene renders it only while the sprite is
     // still around, so a Pokémon the bomb finished off simply shows the "died" quip instead.
-    for (const playerId of message.playerIds) {
+    for (const hit of message.hits) {
       const index = Math.floor(Math.random() * FLOATING_TEXT_PHRASE_COUNT);
       const entry: OwnedFloat = {
         id: createTransientId(),
-        ownerId: playerId,
+        ownerId: hit.playerId,
         tone: 'negative',
         textKey: `floatingText.bomb.${index}`,
         durationMs: BOMB_FLOAT_TTL_MS,
         icon: '@tui.bomb',
-        // No number: blast damage is distance-scaled and not carried in the event — the HP bar reconciles on
-        // the next snapshot. The quip + bomb icon read the hit; a fixed "−25" would be a lie now.
+        // The real distance-scaled hp this victim lost (negative) — the event now carries a per-victim number,
+        // so the quip + bomb icon read the hit AND the exact damage shows, no longer a fixed guess.
+        delta: hit.delta,
         priority: message.priority ?? FRENZY.floatPriority.detonated,
       };
 

@@ -1,20 +1,22 @@
 import { describe, expect, it } from 'vitest';
 
 import { FRENZY } from '@game/frenzy/config';
-import type { Player, ServerState } from '@game/frenzy/types';
+import type { HumanPlayer, Player, ServerState } from '@game/frenzy/types';
 
 import { applyBumpDamage } from '../engine/apply-bumps';
 import type { BumpDamage } from '../engine/tick/separate-players';
 import { TEST_BODY } from './test-body';
 
-function makePlayer(overrides: Partial<Player> = {}): Player {
+function makePlayer(overrides: Partial<HumanPlayer> = {}): Player {
   return {
+    kind: 'human',
     id: 'p',
     name: 'P',
     appearance: 'caterpie',
     body: TEST_BODY,
     stage: 1,
     hp: 100,
+    mana: 0,
     x: 0.5,
     y: 0.5,
     vx: 0,

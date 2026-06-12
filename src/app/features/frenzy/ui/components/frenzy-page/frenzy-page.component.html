@@ -14,6 +14,7 @@
     [ownedShieldBlocks]="ownedShieldBlocks()"
     (itemClick)="handleItemClick($event)"
     (selfPoke)="handleSelfPoke()"
+    (pokeNpc)="handlePokeNpc($event)"
     (steer)="handleSteer($event)"
   />
 
@@ -35,6 +36,7 @@
         [hp]="myself.hp"
         [stage]="myself.stage"
         [body]="myself.body"
+        [reaction]="reactionFace()"
         [compact]="isMobile()"
       />
       <left-paw-minimap

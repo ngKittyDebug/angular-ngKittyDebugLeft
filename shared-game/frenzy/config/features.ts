@@ -1,4 +1,4 @@
-import type { ItemType } from '../types';
+import type { ItemType, NpcKind } from '../types';
 
 /**
  * A single on/off gate. Reusable shape for any spawnable/participating game entity — items today, NPCs later.
@@ -31,13 +31,19 @@ export const ITEM_FEATURES: Record<ItemType, FeatureFlag> = {
 };
 
 /**
- * Game feature flags. Gates the item roster and the player-vs-player collision pass.
- *
- * NPC extension (no NPCs yet): when they land, add a sibling `npc: Record<NpcKind, FeatureFlag>` of the same
- * shape and gate the NPC spawner exactly like `pickItemType` is gated — one flag, one decision point.
+ * Per-NPC-kind feature gate, same shape as `ITEM_FEATURES`. Disabling one keeps the NPC spawner from ever
+ * creating that autobot — one flag, one decision point (gated via `isNpcEnabled`).
+ */
+export const NPC_FEATURES: Record<NpcKind, FeatureFlag> = {
+  angryBomb: { enabled: true },
+};
+
+/**
+ * Game feature flags. Gates the item roster, the NPC roster and the player-vs-player collision pass.
  */
 export const FEATURES = {
   items: ITEM_FEATURES,
+  npc: NPC_FEATURES,
   /** Pokémon↔Pokémon collision (soft separation + mini-bump). Off → Pokémon pass through each other (legacy). */
   playerCollision: { enabled: true } satisfies FeatureFlag,
 } as const;

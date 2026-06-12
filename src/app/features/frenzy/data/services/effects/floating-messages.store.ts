@@ -17,7 +17,10 @@ type StatusKind =
   | 'shield'
   | 'wellFed'
   | 'laying'
-  | 'pooping';
+  | 'pooping'
+  | 'npcAppeared'
+  | 'npcPoke'
+  | 'npcDied';
 
 interface StatusConfig {
   tone: FloatingTone;
@@ -48,6 +51,9 @@ const STATUS_CONFIG: Record<StatusKind, StatusConfig> = {
   wellFed: { tone: 'positive', icon: '@tui.heart', durationMs: 2500, phraseCount: 4 },
   laying: { tone: 'positive', icon: '@tui.egg', durationMs: 2500, phraseCount: 4 },
   pooping: { tone: 'warning', icon: '@tui.wind', durationMs: 2500, phraseCount: 4 },
+  npcAppeared: { tone: 'warning', icon: '@tui.bomb', durationMs: 2500, phraseCount: 4 },
+  npcPoke: { tone: 'negative', icon: '@tui.flame', durationMs: 1400, phraseCount: 10 },
+  npcDied: { tone: 'negative', icon: '@tui.bomb', durationMs: 5500, phraseCount: 4 },
 };
 
 /**

@@ -18,7 +18,7 @@ const WARDED_EATEN_TYPES = new Set<ItemType>(['rock', 'brick', 'rotten']);
  * (a per-owner deflect-flash pulse). Fires for every player so the room sees a shield earn its keep. Detection
  * differs by damage source:
  *  - `eaten` (rock/brick collision, rotten click): a damaging item that resolved to `delta === 0` was warded.
- *  - `detonated`: shielded players are skipped at the blast (absent from `playerIds`), so the event can't name
+ *  - `detonated`: shielded players are skipped at the blast (absent from `hits`), so the event can't name
  *    them — instead we scan the snapshot for shielded players within the blast radius (the ward the server
  *    silently applied). Edge: a shielded blast OWNER would also match here (immune by ownership, not by shield),
  *    but the event carries no `ownerId` to exclude them and emitted-bomb owners are rare — accepted.

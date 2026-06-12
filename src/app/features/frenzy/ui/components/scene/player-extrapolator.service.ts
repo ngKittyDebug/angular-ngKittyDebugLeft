@@ -2,6 +2,7 @@ import { Injectable, signal } from '@angular/core';
 
 import { FRENZY } from '@game/frenzy/config';
 import { steerVelocity } from '@game/frenzy/steer-velocity';
+import { isNPC } from '@game/frenzy/types';
 import type { Player, PlayerEffectKind } from '@game/frenzy/types';
 
 import { isSad } from '../../../data/logic/is-sad';
@@ -229,7 +230,12 @@ export class PlayerExtrapolatorService {
         isDisconnected: player.status === 'disconnected',
         isEvolving: evolving.has(player.id),
         isMe: player.id === myId,
-        isSad: isSad(player.hp, player.stage),
+        // The NPC is never "sad" — it's a hazard, not a Pokémon with a mood; the sad desaturation would also fight
+        // its anger reddening. Gate the mood to humans so the NPC keeps its own (red-tinted) look.
+        isSad: !isNPC(player) && isSad(player.hp, player.stage),
+        isNpc: isNPC(player),
+        // Normalized anger only matters for the NPC (humans never accumulate mana); 0 keeps human sprites untinted.
+        npcAnger: isNPC(player) ? clamp(player.mana / FRENZY.npc.anger.max, 0, 1) : 0,
         label: player.name,
         hp: player.hp,
         spriteWidth: `${render.width}px`,

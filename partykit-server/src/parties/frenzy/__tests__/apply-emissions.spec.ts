@@ -8,12 +8,14 @@ import { TEST_BODY } from './test-body';
 
 function player(id: string, effects: PlayerEffect[] = []): Player {
   return {
+    kind: 'human',
     id,
     name: id,
     appearance: 'caterpie',
     body: TEST_BODY,
     stage: 1,
     hp: 100,
+    mana: 0,
     x: 0.4,
     y: 0.6,
     vx: 0,

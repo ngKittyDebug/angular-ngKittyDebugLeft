@@ -15,12 +15,14 @@ import { FloatingMessagesStore } from './floating-messages.store';
 
 function player(id: string, name: string): Player {
   return {
+    kind: 'human',
     id,
     name,
     appearance: 'pidgey',
     body: bodyForAppearance('pidgey'),
     stage: 1,
     hp: 100,
+    mana: 0,
     x: 0.5,
     y: 0.5,
     vx: 0,
@@ -30,6 +32,15 @@ function player(id: string, name: string): Player {
     joinedAt: 0,
     effects: [],
     scores: {},
+  };
+}
+
+function npcPlayer(id: string): Player {
+  return {
+    ...player(id, 'angryBomb'),
+    kind: 'npc',
+    npcKind: 'angryBomb',
+    appearance: 'angryBomb',
   };
 }
 
@@ -64,7 +75,7 @@ describe('EatEffect', () => {
     brickSound = { play: vi.fn() };
 
     const state = signal<ServerState | null>({
-      players: [player('other', 'Ash')],
+      players: [player('other', 'Ash'), npcPlayer('npc-1')],
       items: [],
       tick: 0,
     });
@@ -134,5 +145,12 @@ describe('EatEffect', () => {
 
     expect(last().who).toBe('Ash');
     expect(eatSound.play).not.toHaveBeenCalled();
+  });
+
+  it('omits the name on the NPC eater float (its name is the internal appearance id)', () => {
+    effect.handle(eaten({ playerId: 'npc-1' }));
+
+    expect(last().ownerId).toBe('npc-1');
+    expect(last().who).toBeUndefined();
   });
 });

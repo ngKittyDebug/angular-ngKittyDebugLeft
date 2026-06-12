@@ -62,6 +62,7 @@
               class="minimap__player"
               [class.minimap__player--me]="dot.me"
               [class.minimap__player--leader]="dot.isLeader"
+              [class.minimap__player--npc]="dot.isNpc"
               [leftPawScenePosition]="{ x: dot.x, y: dot.y }"
             >
               @if (dot.isLeader) {

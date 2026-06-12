@@ -225,6 +225,15 @@
     box-shadow: none;
   }
 
+  // The angry-bomb NPC: a hazard blip, not a peer — bomb-red core with a soft red halo so it reads as a threat
+  // distinct from the amber pokémon and your green dot. Theme-aware token, so no separate dark override needed.
+  &__player--npc {
+    background: var(--tui-status-negative);
+    box-shadow:
+      0 0 0 2px var(--tui-background-base),
+      0 0 7px 2px color-mix(in srgb, var(--tui-status-negative) 70%, transparent);
+  }
+
   // The leader's crown, centered ON the blip point in place of the dot — same gold as the chrome leader chip,
   // scaled to the map. Decorative (ignores pointer events); the drop-shadow keeps it legible over the live scene.
   &__player-crown {
@@ -241,7 +250,8 @@
 
   // Dark scene: a brighter amber pops on the navy where the dark-yellow would go muddy (the "lighter on dark"
   // half of the contrast guideline). `:not(--me)` leaves your green dot untouched.
-  :host-context([tuiTheme='dark']) &__player:not(&__player--me):not(&__player--leader) {
+  :host-context([tuiTheme='dark'])
+    &__player:not(&__player--me):not(&__player--leader):not(&__player--npc) {
     background: #fbbf24;
   }
 }

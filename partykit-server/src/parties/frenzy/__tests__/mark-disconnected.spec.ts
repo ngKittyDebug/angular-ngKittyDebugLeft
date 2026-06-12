@@ -6,12 +6,14 @@ import { TEST_BODY } from './test-body';
 import type { Player, ServerState } from '@game/frenzy/types';
 
 const ALIVE_PLAYER: Player = {
+  kind: 'human',
   id: 't1',
   name: 'Ash',
   appearance: 'caterpie',
   body: TEST_BODY,
   stage: 1,
   hp: 100,
+  mana: 0,
   x: 0.5,
   y: 0.5,
   vx: 0,

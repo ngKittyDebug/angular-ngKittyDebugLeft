@@ -75,5 +75,8 @@ export const BUFFS = {
     blastImpulse: 0.1,
     /** Post-blast speed cap as a multiple of the stage's `maxSpeed`: knockback may briefly exceed cruising speed but no more than this. */
     blastImpulseMaxFactor: 1.3,
+    /** Inclusive [min, max] hidden click-budget a freshly spawned mine gets (see Item.clicksLeft); each shove-click
+     * spends one, the last one detonates it. */
+    clicksToExplodeRange: [4, 10],
   },
 } as const;

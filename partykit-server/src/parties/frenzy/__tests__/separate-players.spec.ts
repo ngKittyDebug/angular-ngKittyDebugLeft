@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { FRENZY } from '@game/frenzy/config';
-import type { Player } from '@game/frenzy/types';
+import type { HumanPlayer, Player } from '@game/frenzy/types';
 
 import type { PlayerImpulse } from '../engine/item-behaviors';
 import { separatePlayers } from '../engine/tick/separate-players';
@@ -9,14 +9,16 @@ import { TEST_BODY } from './test-body';
 
 const WORLD = FRENZY.world.width;
 
-function makePlayer(overrides: Partial<Player> = {}): Player {
+function makePlayer(overrides: Partial<HumanPlayer> = {}): Player {
   return {
+    kind: 'human',
     id: 'p',
     name: 'P',
     appearance: 'caterpie',
     body: TEST_BODY,
     stage: 1,
     hp: 100,
+    mana: 0,
     x: 0.5,
     y: 0.5,
     vx: 0,

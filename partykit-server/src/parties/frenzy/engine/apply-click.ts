@@ -3,9 +3,11 @@ import type { EatenEvent, GameEvent, Item, Player, ServerState } from '@game/fre
 
 import { applyEffects, resolveGrants } from './apply-effect';
 import { applyHpDeltas } from './apply-hp-deltas';
+import { applyImpulses } from './apply-impulses';
 import { itemFaintCause } from './faint-cause';
 import { getItemBehavior } from './item-behaviors';
 import type { ItemInteraction } from './item-behaviors';
+import { detonated } from './tick/detonated';
 
 export interface ClickResult {
   state: ServerState;
@@ -67,13 +69,24 @@ function nudgeResult(
   }
 
   // Stamp the shover so a kill from this bomb's blast credits them in the obituary (last toucher wins a tug-of-war).
+  // Also spend one of the mine's hidden click budget; once it hits the last one the next click detonates instead of
+  // nudging (see bombBehavior.onClick). An aura-emitted bomb has no budget (undefined) and stays untouched here.
+  const clicksLeft = item.clicksLeft !== undefined ? item.clicksLeft - 1 : undefined;
   const items = state.items.map((candidate) =>
-    candidate.id === item.id ? { ...candidate, vx, vy, lastNudgedBy: clickerId } : candidate,
+    candidate.id === item.id
+      ? {
+          ...candidate,
+          vx,
+          vy,
+          lastNudgedBy: clickerId,
+          clicksLeft,
+        }
+      : candidate,
   );
 
   return {
     state: { ...state, items },
-    events: [{ type: 'itemNudged', itemId: item.id, x: item.x, y: item.y, vx, vy }],
+    events: [{ type: 'itemNudged', itemId: item.id, x: item.x, y: item.y, vx, vy, clicksLeft }],
   };
 }
 
@@ -111,8 +124,28 @@ function eatResult(
 }
 
 /**
+ * Click detonation (bomb): the click that spent the mine's last budget blows it up — a third trigger alongside
+ * collision and landing. Mirrors `resolveLandings`: apply the blast hp deltas, then its radial knockback impulses,
+ * drop the item and report a `detonated` event ahead of any faints from the deltas.
+ */
+function detonateClickResult(
+  state: ServerState,
+  item: Item,
+  interaction: ItemInteraction,
+): ClickResult {
+  const resolved = applyHpDeltas(state, interaction.hpDeltas, itemFaintCause(item));
+  const withImpulses = applyImpulses(resolved.state, interaction.impulses ?? []);
+  const items = withImpulses.items.filter((candidate) => candidate.id !== item.id);
+
+  return {
+    state: { ...withImpulses, items },
+    events: [detonated(item, interaction.hpDeltas), ...resolved.events],
+  };
+}
+
+/**
  * Resolves a player's first click on an item: looks the item/clicker up, asks the item's behaviour what happens,
- * then dispatches to the matching path — effect pickup, bomb juggle or plain eating.
+ * then dispatches to the matching path — effect pickup, click detonation, bomb juggle or plain eating.
  */
 export function applyClick(
   state: ServerState,
@@ -141,6 +174,10 @@ export function applyClick(
 
   if (interaction.effects !== undefined && interaction.effects.length > 0) {
     return grantEffectResult(state, item, interaction, now);
+  }
+
+  if (interaction.explodes) {
+    return detonateClickResult(state, item, interaction);
   }
 
   if (interaction.nudgeX !== undefined && !interaction.consumed) {

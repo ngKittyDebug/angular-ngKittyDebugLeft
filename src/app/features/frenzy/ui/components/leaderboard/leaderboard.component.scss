@@ -35,7 +35,11 @@
   }
 
   // Champion shown in the collapsed pill: name (ellipsised) + HP chip, so the header still names the leader.
+  // `flex: 0 1 auto` + `min-width: 0` lets a long name shrink and ellipsise within the fixed-width pill rather
+  // than push the HP chip past its right edge.
   &__pill-name {
+    flex: 0 1 auto;
+    min-width: 0;
     max-width: 8rem;
     overflow: hidden;
     font-size: 0.85rem;

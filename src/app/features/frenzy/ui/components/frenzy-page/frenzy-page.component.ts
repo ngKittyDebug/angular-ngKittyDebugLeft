@@ -57,6 +57,7 @@ export class FrenzyPageComponent implements OnInit {
   protected readonly myId = this.facade.myId;
   protected readonly players = this.facade.players;
   protected readonly presenceCount = this.facade.presenceCount;
+  protected readonly reactionFace = this.facade.reactionFace;
   protected readonly respawnReady = this.facade.respawnReady;
   protected readonly isReconnecting = this.facade.isReconnecting;
   protected readonly uiState = this.facade.uiState;
@@ -83,6 +84,10 @@ export class FrenzyPageComponent implements OnInit {
 
   protected handleSelfPoke(): void {
     this.facade.pokeSelf();
+  }
+
+  protected handlePokeNpc(npcId: string): void {
+    this.facade.pokeNpc(npcId);
   }
 
   protected handleSteer(point: { x: number; y: number }): void {

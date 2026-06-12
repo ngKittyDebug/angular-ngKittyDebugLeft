@@ -32,8 +32,9 @@ export const ITEMS = {
     easterEgg: 0.18,
     poop: 0.18,
   },
-  /** How long an item lies on the floor (still edible) after landing before it disappears, ms. */
-  itemRestMs: 3000,
+  /** How long an item lies on the floor (still edible) after landing before it disappears, ms. Long enough that
+   * the floor-bound NPC has time to walk over and eat resting food, without the seabed piling up. */
+  itemRestMs: 6_000,
   /** `[min, max]` horizontal spawn position of an item (normalized 0..1), inset from the scene edges. */
   itemSpawnXRange: [0.05, 0.95],
   /** `[min, max]` normalized y where a falling item settles on the seabed — this is the item's CENTRE (the

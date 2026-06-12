@@ -66,12 +66,14 @@ export function createPlayer({
   const speed = body[stage].speed;
 
   return {
+    kind: 'human',
     id: sessionToken,
     name,
     appearance,
     body,
     stage,
     hp: FRENZY.startingHp,
+    mana: 0,
     x,
     y,
     vx: Math.cos(angle) * speed,

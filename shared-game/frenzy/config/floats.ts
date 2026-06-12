@@ -19,5 +19,9 @@ export const FLOATS = {
     sad: 30,
     appeared: 20,
     poke: 10,
+    // NPC (angry-bomb) quips — same tiers as their human counterparts.
+    npcDied: 100,
+    npcAppeared: 20,
+    npcPoke: 10,
   },
 } as const;

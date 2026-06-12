@@ -23,7 +23,7 @@
     tuiAvatar
     size="m"
     class="current-pokemon-status__avatar"
-    [attr.aria-label]="t('mood.' + mood())"
+    [attr.aria-label]="t(faceLabelKey())"
   >
     <img [src]="moodSprite()" alt="" draggable="false" />
   </span>
@@ -34,6 +34,13 @@
     </div>
 
     <div class="current-pokemon-status__bar-wrap">
+      <!-- Stage zones: three tinted bands behind the fill, split at the two evolution gates so the whole HP
+           journey reads at a glance (base → stage-2 → stage-3). Decorative, sits under the bar. -->
+      <span
+        class="current-pokemon-status__zones"
+        aria-hidden="true"
+        [style.background]="zonesBackground()"
+      ></span>
       <progress
         tuiProgressBar
         class="current-pokemon-status__bar"
@@ -42,13 +49,14 @@
         [max]="maxHp"
         [color]="hp() | hpToneColor"
       ></progress>
-      <!-- Evolution marker: a notch on the absolute 0→max bar at the next-evolution threshold; gone on the
-           final stage (along with the "until evolution" line). -->
-      @if (untilEvolution() !== null) {
+      <!-- Evolution markers: a notch on the absolute 0→max bar at EACH evolution threshold; a passed gate reads
+           muted, the upcoming one bright. Both stay visible on the final stage (the foot line is what drops). -->
+      @for (mark of stageMarks(); track $index) {
         <span
           class="current-pokemon-status__tick"
           aria-hidden="true"
-          [style.left.%]="thresholdPercent()"
+          [class.current-pokemon-status__tick--reached]="mark.reached"
+          [style.left.%]="mark.percent"
         ></span>
       }
     </div>

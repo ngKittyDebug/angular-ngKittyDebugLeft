@@ -1,19 +1,21 @@
 import { describe, expect, it } from 'vitest';
 
 import { FRENZY } from '@game/frenzy/config';
-import type { Player, ServerState } from '@game/frenzy/types';
+import type { HumanPlayer, Player, ServerState } from '@game/frenzy/types';
 
 import { applyHpDeltas } from '../engine/apply-hp-deltas';
 import { TEST_BODY } from './test-body';
 
-function player(overrides: Partial<Player> = {}): Player {
+function player(overrides: Partial<HumanPlayer> = {}): Player {
   return {
+    kind: 'human',
     id: 'p1',
     name: 'Ash',
     appearance: 'caterpie',
     body: TEST_BODY,
     stage: 1,
     hp: 100,
+    mana: 0,
     x: 0.5,
     y: 0.5,
     vx: 0,

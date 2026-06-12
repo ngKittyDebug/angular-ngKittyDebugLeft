@@ -19,6 +19,23 @@ import {
 import { PlayerExtrapolatorService } from './player-extrapolator.service';
 
 /**
+ * A frozen, synchronous read of the camera's current frame state, in `.scene` screen px. Consumed by overlays
+ * (e.g. the off-screen indicators) that project world points to screen each frame. Deliberately a plain getter,
+ * NOT a signal — a signal would invite reactive reads and drag per-frame change detection back into the rAF loop,
+ * which the whole Renderer2-driven scene is built to avoid.
+ */
+export interface CameraSnapshot {
+  camX: number;
+  camY: number;
+  scale: number;
+  viewportWidth: number;
+  viewportHeight: number;
+  // False until the first frame has snapped the camera (the world ref is absent for a few frames under async
+  // *transloco); consumers skip projecting until then.
+  ready: boolean;
+}
+
+/**
  * Owns the camera's per-frame state (offset + first-frame snap) and writes the easing result to the world layer
  * (a sub-pixel translate + responsive scale) and the foreground parallax layers via Renderer2. The focus point
  * is read from the player extrapolator's rendered "me"; math lives in `camera-math` so this stays a thin
@@ -36,6 +53,11 @@ export class SceneCameraService {
   private camX = 0;
   private camY = 0;
   private cameraReady = false;
+  // Last frame's scale and viewport size, cached so overlays can read the exact projection this frame produced
+  // (the camera math derives them locally in `update`; nothing else stored them). Exposed via `snapshot()`.
+  private scale = 1;
+  private viewportWidth = 0;
+  private viewportHeight = 0;
 
   // Eases the camera offset toward the focus (my Pokémon, or world centre when I'm absent — spectating, pre-join
   // or fainted) and writes it as a sub-pixel translate + responsive scale on the world layer.
@@ -64,6 +86,11 @@ export class SceneCameraService {
     );
     const screenWorldWidth = this.worldWidth * scale;
     const screenWorldHeight = this.worldHeight * scale;
+
+    // Cache the projection inputs for `snapshot()` (overlays read them THIS frame, after `update`).
+    this.scale = scale;
+    this.viewportWidth = viewport.clientWidth;
+    this.viewportHeight = viewport.clientHeight;
 
     if (this.cameraReady) {
       // Ease toward the dead-zone target: zero motion while the Pokémon stays in the central band, a gentle
@@ -109,6 +136,19 @@ export class SceneCameraService {
     this.setParallax(parallaxNear, PARALLAX_NEAR);
     this.setParallax(parallaxMid, PARALLAX_MID);
     this.setForegroundKelp(foregroundKelp, screenWorldWidth, screenWorldHeight);
+  }
+
+  // Frozen read of the current frame's projection state (screen px). Overlays project world points via
+  // `x * worldWidth * scale + camX` (and the y analogue) against `viewportWidth/Height`.
+  public snapshot(): CameraSnapshot {
+    return {
+      camX: this.camX,
+      camY: this.camY,
+      scale: this.scale,
+      viewportWidth: this.viewportWidth,
+      viewportHeight: this.viewportHeight,
+      ready: this.cameraReady,
+    };
   }
 
   // Drive the screen-space foreground kelp: pan horizontally a touch faster than the world (PARALLAX_FRONT) for a

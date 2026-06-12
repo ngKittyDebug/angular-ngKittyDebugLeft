@@ -6,6 +6,7 @@ import { ItemExtrapolatorService } from './item-extrapolator.service';
 import { PlayerExtrapolatorService } from './player-extrapolator.service';
 import { SceneBurstsService } from './scene-bursts.service';
 import { SceneCameraService } from './scene-camera.service';
+import type { CameraSnapshot } from './scene-camera.service';
 import { SceneSandPuffsService } from './scene-sand-puffs.service';
 
 /**
@@ -61,6 +62,12 @@ export class SceneFacade {
     foregroundKelp: HTMLElement | undefined,
   ): void {
     this.camera.update(world, parallaxNear, parallaxMid, foregroundKelp);
+  }
+
+  // The camera's current-frame projection state, for the off-screen indicators overlay (read right after
+  // `updateCamera` so both share the frame).
+  public cameraSnapshot(): CameraSnapshot {
+    return this.camera.snapshot();
   }
 
   public spawnBurst(x: number, y: number): void {

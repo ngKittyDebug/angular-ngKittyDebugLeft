@@ -12,6 +12,12 @@ export interface RenderedPlayer {
   isEvolving: boolean;
   isMe: boolean;
   isSad: boolean;
+  // True for the angry-bomb NPC (kind === 'npc'). Phase 5 reads it to make the sprite clickable (poke) and skip
+  // the human-only chrome (poke button, crown). False for humans.
+  isNpc: boolean;
+  // Normalized NPC anger (mana / FRENZY.npc.anger.max, clamped 0..1); 0 for humans. Phase 5 reads it to redden
+  // the NPC sprite as it rages.
+  npcAnger: number;
   label: string;
   hp: number;
   // Full-art render box (px strings) and the offset (px) that shifts the art so its body sits on the actor point.
@@ -45,6 +51,9 @@ export interface RenderedItem {
   // Current drift speed (|velocity|, normalized units/sec, 4 decimals) — set only for the bomb (the one item that
   // drifts under physics), shown by the `?debug` speed readout. Undefined for plain fallers.
   debugSpeed?: string;
+  // Hidden shove budget left on a mine (set only for the bomb; undefined for aura-emitted mines and other items).
+  // Drives the sensor-light chase speed: fewer clicks left → faster running lights (see scene-item).
+  clicksLeft?: number;
 }
 
 export interface BubbleBurst {

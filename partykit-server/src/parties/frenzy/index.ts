@@ -1,6 +1,6 @@
 import type * as Party from 'partykit/server';
 
-import { FRENZY } from '@game/frenzy/config';
+import { FRENZY, isNpcEnabled } from '@game/frenzy/config';
 import type { Item, Player, PlayerBody, ServerMessage, ServerState } from '@game/frenzy/types';
 
 import { applyClick } from './engine/apply-click';
@@ -11,6 +11,8 @@ import { applyTick } from './engine/apply-tick';
 import { checkClickRate } from './engine/check-click-rate';
 import { createPlayer } from './engine/create-player';
 import { markDisconnected } from './engine/mark-disconnected';
+import { accrueAnger } from './engine/npc/angry-bomb/anger';
+import { createNpc } from './engine/npc/angry-bomb/create-npc';
 import { pickItemType } from './engine/pick-item-type';
 import { restoreConnected } from './engine/restore-connected';
 import { parseClientMessage } from './parse-client-message';
@@ -24,6 +26,9 @@ const DECAY_EVERY_N_TICKS = (FRENZY.decayIntervalMs / 1000) * FRENZY.tickRateHz;
 export default class FeedingRoom implements Party.Server {
   // Click history keyed by sessionToken (per player), so opening extra tabs can't multiply the click budget.
   private readonly clickTimestamps = new Map<string, number[]>();
+  // Poke history keyed by NPC id — the timestamps of ALL clickers' pokes (anger is density summed across players,
+  // D4). Anger gain is superlinear in the per-window poke count; the NPC's own `clickTimestamps` budget rate-limits.
+  private readonly npcPokeTimestamps = new Map<string, number[]>();
   private readonly connectionToSession = new Map<string, string>();
   private readonly graceTimers = new Map<string, ReturnType<typeof setTimeout>>();
   // Accepted connection ids — bounds total connections (incl. idle/not-yet-joined) beyond the player cap.
@@ -36,6 +41,9 @@ export default class FeedingRoom implements Party.Server {
   // Per-player aura emission schedule (`playerId -> nextEmitAt`, server-clock ms). Rebuilt each tick from live aura
   // holders by `applyEmissions`, so it self-prunes when a holder dies, leaves or the aura expires.
   private nextEmitAtByPlayer = new Map<string, number>();
+  // Unified NPC spawn schedule (server-clock ms): armed once on the 0→1 human transition (random window) and
+  // re-armed after the NPC dies/leaves (fixed respawn delay). Null = no spawn pending. Drives the single live NPC.
+  private npcNextSpawnAt: number | null = null;
   private tick = 0;
   private readonly debugEnabled: boolean;
 
@@ -92,6 +100,10 @@ export default class FeedingRoom implements Party.Server {
       }
       case 'steer': {
         this.handleSteer(sender.id, message.x, message.y);
+        break;
+      }
+      case 'pokeNpc': {
+        this.handlePokeNpc(sender.id, message.npcId);
         break;
       }
     }
@@ -186,15 +198,30 @@ export default class FeedingRoom implements Party.Server {
       this.broadcast(event);
     }
 
-    // Last player can leave via death (decay/fatal land), not only via leave/grace-purge — stop the loop here too.
-    if (this.players.length === 0) {
-      this.broadcast(this.snapshot());
+    // Last human can leave via death (decay/fatal land), not only via leave/grace-purge — stop the loop here too.
+    // The NPC isn't a "person in the room", so an idle room is one with no humans: stop the loop first (which drops
+    // the NPC + items via clearNpc) so the final snapshot reflects the emptied room rather than a lingering autobot.
+    if (this.humanCount() === 0) {
       this.stopLoop();
+      this.broadcast(this.snapshot());
 
       return;
     }
 
     const now = Date.now();
+
+    // Re-arm the respawn whenever the NPC is absent (it died this tick by a blast, decay or max-anger detonation).
+    // Only set when no schedule is pending, so the initial 0→20s window armed on join is never overwritten by 40s.
+    // Also drop the dead NPC's poke history here so it doesn't accumulate one stale entry per respawn cycle.
+    if (this.humanCount() > 0 && !this.players.some((player) => player.kind === 'npc')) {
+      if (this.npcPokeTimestamps.size > 0) {
+        this.npcPokeTimestamps.clear();
+      }
+
+      if (this.npcNextSpawnAt === null) {
+        this.npcNextSpawnAt = now + FRENZY.npc.respawnDelayMs;
+      }
+    }
 
     // Aura emissions: players under the `laying`/`pooping` aura drip one item per `emitIntervalMs` (schedule kept server-side).
     const emission = applyEmissions(this.currentState(), now, this.nextEmitAtByPlayer);
@@ -212,6 +239,19 @@ export default class FeedingRoom implements Party.Server {
     if (now >= this.nextSpawnAt) {
       this.spawnItem();
       this.nextSpawnAt = now + this.nextSpawnDelayMs();
+    }
+
+    // Spawn the single live NPC once its scheduled time arrives (max one at a time — the `!some(npc)` guard enforces it).
+    if (
+      isNpcEnabled('angryBomb') &&
+      this.humanCount() > 0 &&
+      this.npcNextSpawnAt !== null &&
+      now >= this.npcNextSpawnAt &&
+      !this.players.some((player) => player.kind === 'npc')
+    ) {
+      this.players = [...this.players, createNpc({ now })];
+      this.npcNextSpawnAt = null;
+      this.broadcast(this.snapshot());
     }
 
     if (this.tick % FRENZY.snapshotEveryNTicks === 0) {
@@ -251,8 +291,8 @@ export default class FeedingRoom implements Party.Server {
       this.broadcast(event);
     }
 
-    // A fatal click can empty the room — stop the loop so it doesn't run against an empty room.
-    if (this.players.length === 0) {
+    // A fatal click can empty the room of humans — stop the loop so it doesn't run against a person-less room.
+    if (this.humanCount() === 0) {
       this.stopLoop();
     }
   }
@@ -282,6 +322,43 @@ export default class FeedingRoom implements Party.Server {
     }
 
     this.syncState(next);
+    this.broadcast(this.snapshot());
+  }
+
+  // A player tapped the NPC's sprite: accrue its anger only (no position change — D4/3.6). The poke shares the
+  // clicker's per-session click budget (a poke is a click for anti-spam), and the NPC keeps a window of EVERY
+  // clicker's pokes so rapid spam from the room sums superlinearly toward the max-anger strong blast.
+  private handlePokeNpc(connectionId: string, npcId: string): void {
+    const sessionToken = this.connectionToSession.get(connectionId);
+
+    if (sessionToken === undefined) {
+      return;
+    }
+
+    const npc = this.players.find((player) => player.id === npcId && player.kind === 'npc');
+
+    if (npc === undefined || npc.status !== 'alive') {
+      return;
+    }
+
+    const now = Date.now();
+    const rate = checkClickRate(this.clickTimestamps.get(sessionToken) ?? [], now);
+
+    this.clickTimestamps.set(sessionToken, rate.timestamps);
+
+    if (!rate.allowed) {
+      return;
+    }
+
+    const accrual = accrueAnger(this.npcPokeTimestamps.get(npcId) ?? [], now, FRENZY.npc.anger);
+
+    this.npcPokeTimestamps.set(npcId, accrual.timestamps);
+
+    const mana = Math.min(FRENZY.npc.anger.max, npc.mana + accrual.gain);
+
+    this.players = this.players.map((player) =>
+      player.id === npcId ? { ...player, mana } : player,
+    );
     this.broadcast(this.snapshot());
   }
 
@@ -331,16 +408,28 @@ export default class FeedingRoom implements Party.Server {
       return;
     }
 
+    const now = Date.now();
     const player = createPlayer({
       sessionToken,
       name: name.trim().slice(0, 24),
       appearance,
       body,
-      now: Date.now(),
+      now,
       existingPlayers: this.players,
     });
 
     this.players = [...this.players, player];
+
+    // Room just went from 0 to 1 human — arm the initial NPC spawn window (a random delay, the gameTick spawns it).
+    // Guarded so it only arms on the empty→first transition and never while an NPC is already live or pending.
+    if (
+      this.humanCount() === 1 &&
+      this.npcNextSpawnAt === null &&
+      !this.players.some((candidate) => candidate.kind === 'npc')
+    ) {
+      this.npcNextSpawnAt = now + this.randomSpawnDelayMs();
+    }
+
     this.broadcast(this.snapshot());
     this.ensureLoop();
   }
@@ -356,12 +445,17 @@ export default class FeedingRoom implements Party.Server {
 
     this.players = this.players.filter((player) => player.id !== sessionToken);
 
-    if (this.players.length !== before) {
+    // Last human gone: stop the loop first (clears the NPC + items via clearNpc) so the leave snapshot below reflects
+    // the emptied room. Otherwise broadcast the human's departure as usual.
+    if (this.humanCount() === 0) {
+      this.stopLoop();
       this.broadcast(this.snapshot());
+
+      return;
     }
 
-    if (this.players.length === 0) {
-      this.stopLoop();
+    if (this.players.length !== before) {
+      this.broadcast(this.snapshot());
     }
   }
 
@@ -387,10 +481,40 @@ export default class FeedingRoom implements Party.Server {
       x: minX + Math.random() * (maxX - minX),
       y: 0,
       vy: FRENZY.fallSpeed[type],
+      // A freshly spawned mine carries a hidden click budget; the click that spends the last one detonates it
+      // (see bombBehavior.onClick + applyClick). Other item types never click-detonate, so they get none.
+      ...(type === 'bomb' ? { clicksLeft: this.randomClicksLeft() } : {}),
     };
 
     this.items = [...this.items, item];
     this.broadcast({ type: 'spawned', item });
+  }
+
+  // Random integer in `bomb.clicksToExplodeRange` (inclusive) — the hidden shove budget stamped on a new mine.
+  private randomClicksLeft(): number {
+    const [min, max] = FRENZY.bomb.clicksToExplodeRange;
+
+    return min + Math.floor(Math.random() * (max - min + 1));
+  }
+
+  // People in the room = human players (disconnected humans count too — they're in grace, still occupying a seat).
+  // The NPC is a hazard, not a person, so it never keeps an otherwise-empty room "alive".
+  private humanCount(): number {
+    return this.players.filter((player) => player.kind === 'human').length;
+  }
+
+  // Random delay (ms) in `npc.spawnDelayMsRange` (inclusive) before the NPC appears after the first human joins.
+  private randomSpawnDelayMs(): number {
+    const [min, max] = FRENZY.npc.spawnDelayMsRange;
+
+    return min + Math.random() * (max - min);
+  }
+
+  // Drop any live NPC and clear its spawn schedule + poke history — called when the room loses its last human.
+  private clearNpc(): void {
+    this.players = this.players.filter((player) => player.kind !== 'npc');
+    this.npcNextSpawnAt = null;
+    this.npcPokeTimestamps.clear();
   }
 
   // Spawn rate scales with active players so per-capita food income stays ~constant (calibrated at spawnReferencePlayers).
@@ -399,7 +523,7 @@ export default class FeedingRoom implements Party.Server {
     const baseDelay = minMs + Math.random() * (maxMs - minMs);
     const activeCount = Math.max(
       1,
-      this.players.filter((player) => player.status === 'alive').length,
+      this.players.filter((player) => player.kind === 'human' && player.status === 'alive').length,
     );
 
     return (baseDelay * FRENZY.spawnReferencePlayers) / activeCount;
@@ -429,11 +553,14 @@ export default class FeedingRoom implements Party.Server {
 
       this.players = this.players.filter((candidate) => candidate.id !== sessionToken);
       this.log(`[party] grace expired, purged session=${sessionToken}`);
-      this.broadcast(this.snapshot());
 
-      if (this.players.length === 0) {
+      // Stop BEFORE broadcasting when the room emptied, so `stopLoop`→`clearNpc` drops the NPC first and the
+      // final snapshot is genuinely empty (no dangling NPC sprite on clients) — mirrors handleLeave/gameTick.
+      if (this.humanCount() === 0) {
         this.stopLoop();
       }
+
+      this.broadcast(this.snapshot());
     }, FRENZY.graceMs);
 
     this.graceTimers.set(sessionToken, timer);
@@ -450,6 +577,7 @@ export default class FeedingRoom implements Party.Server {
     }
 
     this.graceTimers.clear();
+    this.clearNpc();
     this.items = [];
     this.tick = 0;
   }

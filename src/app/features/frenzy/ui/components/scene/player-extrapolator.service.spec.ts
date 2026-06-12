@@ -1,18 +1,44 @@
 import { describe, expect, it } from 'vitest';
 
 import { FRENZY } from '@game/frenzy/config';
-import type { Player } from '@game/frenzy/types';
+import { ANGRY_BOMB } from '@game/frenzy/npc/angry-bomb';
+import type { HumanPlayer, NpcPlayer, Player } from '@game/frenzy/types';
 
 import { bodyForAppearance } from '../../constants/pokemon-registry';
 import { PlayerExtrapolatorService } from './player-extrapolator.service';
 
-function player(partial: Partial<Player> & Pick<Player, 'id'>): Player {
+function player(partial: Partial<HumanPlayer> & Pick<Player, 'id'>): Player {
   return {
+    kind: 'human',
     name: 'Ash',
     appearance: 'pidgey',
     body: bodyForAppearance('pidgey'),
     stage: 1,
     hp: 100,
+    mana: 0,
+    x: 0.5,
+    y: 0.5,
+    vx: 0,
+    vy: 0,
+    status: 'alive',
+    disconnectedAt: null,
+    joinedAt: 0,
+    effects: [],
+    scores: {},
+    ...partial,
+  };
+}
+
+function npc(partial: Partial<NpcPlayer> & Pick<Player, 'id'>): Player {
+  return {
+    kind: 'npc',
+    npcKind: 'angryBomb',
+    name: 'Angry Bomb',
+    appearance: ANGRY_BOMB.appearance,
+    body: ANGRY_BOMB.body,
+    stage: 1,
+    hp: 100,
+    mana: 0,
     x: 0.5,
     y: 0.5,
     vx: 0,
@@ -66,6 +92,37 @@ describe('PlayerExtrapolatorService', () => {
 
     service.ingest([expired], null, NONE, 1);
     expect(service.rendered()[0].effectAuras).toEqual([]);
+  });
+
+  it('flags the NPC and normalizes its mana into anger (0..1)', () => {
+    const service = new PlayerExtrapolatorService();
+    const half = FRENZY.npc.anger.max / 2;
+
+    service.ingest([npc({ id: 'bomb', mana: half })], null, NONE, 0);
+
+    const rendered = service.rendered()[0];
+
+    expect(rendered.isNpc).toBe(true);
+    expect(rendered.npcAnger).toBeCloseTo(0.5);
+  });
+
+  it('clamps NPC anger to 1 when mana exceeds the max', () => {
+    const service = new PlayerExtrapolatorService();
+
+    service.ingest([npc({ id: 'bomb', mana: FRENZY.npc.anger.max * 2 })], null, NONE, 0);
+
+    expect(service.rendered()[0].npcAnger).toBe(1);
+  });
+
+  it('leaves humans non-NPC with zero anger regardless of mana', () => {
+    const service = new PlayerExtrapolatorService();
+
+    service.ingest([player({ id: 'p1', mana: 50 })], null, NONE, 0);
+
+    const rendered = service.rendered()[0];
+
+    expect(rendered.isNpc).toBe(false);
+    expect(rendered.npcAnger).toBe(0);
   });
 
   it('marks an evolving player from the evolving map', () => {

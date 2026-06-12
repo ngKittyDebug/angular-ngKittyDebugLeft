@@ -2,19 +2,21 @@ import { describe, expect, it } from 'vitest';
 
 import { FRENZY, totalScore } from '@game/frenzy/config';
 import { crownIdOf } from '@game/frenzy/crown';
-import type { FaintedEvent, Player } from '@game/frenzy/types';
+import type { FaintedEvent, HumanPlayer, Player } from '@game/frenzy/types';
 
 import { applyKills, projectTimeAlive } from '../engine/apply-scores';
 import { TEST_BODY } from './test-body';
 
-function makePlayer(overrides: Partial<Player> = {}): Player {
+function makePlayer(overrides: Partial<HumanPlayer> = {}): Player {
   return {
+    kind: 'human',
     id: 'p',
     name: 'P',
     appearance: 'caterpie',
     body: TEST_BODY,
     stage: 1,
     hp: 100,
+    mana: 0,
     x: 0.5,
     y: 0.5,
     vx: 0,

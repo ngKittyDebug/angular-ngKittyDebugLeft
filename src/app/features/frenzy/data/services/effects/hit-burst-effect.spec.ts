@@ -152,7 +152,7 @@ describe('HitBurstEffect', () => {
       x: 0.5,
       y: 0.5,
       radius: 0.2,
-      playerIds: ['me'],
+      hits: [{ playerId: 'me', delta: -10 }],
     });
 
     expect(effect.hitBursts()).toHaveLength(0);

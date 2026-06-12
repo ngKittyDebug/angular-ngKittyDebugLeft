@@ -1,10 +1,14 @@
 import { isPlayerCollisionEnabled } from '@game/frenzy/config';
 import { crownIdOf } from '@game/frenzy/crown';
-import type { FaintedEvent, GameEvent, ServerState } from '@game/frenzy/types';
+import type { FaintedEvent, GameEvent, NpcPlayer, Player, ServerState } from '@game/frenzy/types';
+import { isNPC } from '@game/frenzy/types';
 
 import { applyBumpDamage } from './apply-bumps';
 import { applyImpulses } from './apply-impulses';
 import { applyKills } from './apply-scores';
+import { coolAnger } from './npc/angry-bomb/cool-anger';
+import { moveNpc } from './npc/angry-bomb/move-npc';
+import { applyNpcBlasts } from './npc/angry-bomb/npc-blast';
 import { applyDecayStep } from './tick/apply-decay-step';
 import { armEmittedItems } from './tick/arm-emitted-items';
 import { moveItems } from './tick/move-items';
@@ -40,17 +44,27 @@ export function applyTick(
   const survivors = movedItems.filter((item) => item.restMs === undefined || item.restMs > 0);
   const expired = movedItems.filter((item) => item.restMs !== undefined && item.restMs <= 0);
 
+  // Humans and the NPC move by different rules: humans drift+bounce (movePlayers), the NPC seeks edibles along the
+  // seabed (moveNpc). Split by kind, move each, recombine — order is irrelevant for the snapshot.
+  const humans = livePlayers.filter((player): player is Player => !isNPC(player));
+  const npcs = livePlayers.filter((player): player is NpcPlayer => isNPC(player));
+  const movedHumans = movePlayers(humans, deltaSeconds);
+  const movedNpcs = moveNpc(npcs, survivors, deltaSeconds, state.tick);
+
   let working: ServerState = {
     ...state,
     items: survivors,
-    players: movePlayers(livePlayers, deltaSeconds),
+    players: [...movedHumans, ...movedNpcs],
   };
   const events: GameEvent[] = [];
 
   if (isPlayerCollisionEnabled()) {
-    const separation = separatePlayers(working.players);
+    // Separation is a peer interaction — the NPC is a hazard, not a peer (O4), so it's held out and recombined after.
+    const separable = working.players.filter((player) => !isNPC(player));
+    const heldNpcs = working.players.filter((player) => isNPC(player));
+    const separation = separatePlayers(separable);
 
-    working = { ...working, players: separation.players };
+    working = { ...working, players: [...separation.players, ...heldNpcs] };
 
     const bumped = applyBumpDamage(working, separation.bumps);
 
@@ -78,6 +92,19 @@ export function applyTick(
     working = decay.state;
     events.push(...decay.events);
   }
+
+  // NPC blasts run AFTER decay (so this tick's starvation can trigger the WEAK blast) but BEFORE coolAnger — the
+  // strong blast fires on the mana a poke just topped up, before this tick's cooldown nibbles it back under max
+  // (otherwise the −cooldownPerTick bleed makes `mana >= max` unreachable and the NPC never rage-detonates). Each
+  // detonating NPC hits the caught humans (skipping itself — O8), is removed, and emits detonated+fainted.
+  const npcBlasts = applyNpcBlasts(working);
+
+  working = npcBlasts.state;
+  events.push(...npcBlasts.events);
+
+  // NPC anger cools in real time (every tick, not on the decay grid — O6) for the SURVIVORS; a poke handler tops it
+  // back up. Runs after the blast check so a freshly-maxed NPC detonates this tick instead of being cooled out of it.
+  working = { ...working, players: coolAnger(working.players) };
 
   // Score pass (last, so it sees every faint this tick): credit attributed kills to the survivors that caused them.
   // Gated on an actual faint — on the common no-faint tick we skip the filter + map + re-spread entirely (mirrors
