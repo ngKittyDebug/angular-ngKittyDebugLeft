@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { FRENZY } from '@game/frenzy/config';
-import { checkClickRate } from '../engine/check-click-rate';
+import { checkClickRate } from '../check-click-rate';
 
 const WINDOW = FRENZY.clickRateLimitWindowMs;
 const MAX = FRENZY.clickRateLimitMax;

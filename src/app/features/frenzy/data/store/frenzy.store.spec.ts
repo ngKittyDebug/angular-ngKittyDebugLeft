@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { Subject } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
 
-import { ANGRY_BOMB } from '@game/frenzy/npc/angry-bomb';
+import { ANGRY_BOMB_NPC } from '@game/frenzy/definition/npcs/angry-bomb';
 import type {
   HumanPlayer,
   NpcPlayer,
@@ -46,8 +46,8 @@ function bombNpc(id: string, hp: number): NpcPlayer {
     npcKind: 'angryBomb',
     id,
     name: 'Angry Bomb',
-    appearance: ANGRY_BOMB.appearance,
-    body: ANGRY_BOMB.body,
+    appearance: ANGRY_BOMB_NPC.appearance,
+    body: ANGRY_BOMB_NPC.body,
     stage: 1,
     hp,
     mana: 0,

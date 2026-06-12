@@ -1,4 +1,4 @@
-import type { Player } from './types';
+import type { Player } from '../engine/types';
 
 /**
  * The crown holder: the alive player with the highest hp (the hp-leader the leaderboard ranks first). Ties are
@@ -6,8 +6,10 @@ import type { Player } from './types';
  * the server reads it from the PRE-tick players to award the bounty bonus on a crown kill, the client reads it from
  * the latest snapshot to draw the crown marker. Returns `null` when nobody is alive.
  */
-export function crownIdOf(players: readonly Player[]): string | null {
-  let crown: Player | null = null;
+export function crownIdOf<TEffectId extends string, TNpcId extends string>(
+  players: readonly Player<TEffectId, TNpcId>[],
+): string | null {
+  let crown: Player<TEffectId, TNpcId> | null = null;
 
   for (const player of players) {
     if (player.status !== 'alive') {

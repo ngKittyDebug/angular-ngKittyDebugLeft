@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { FRENZY } from '@game/frenzy/config';
 
 import { validateJoin } from '../validate-join';
-import { TEST_BODY } from './test-body';
+import { TEST_BODY } from '../../../engine/__tests__/test-body';
 
 describe('validateJoin', () => {
   it('accepts a well-formed name, appearance and body', () => {

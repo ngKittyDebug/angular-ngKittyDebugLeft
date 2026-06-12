@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { ServerMessage } from '@game/frenzy/types';
 
 import { serializeServerMessage } from '../serialize-server-message';
-import { TEST_BODY } from './test-body';
+import { TEST_BODY } from '../../../engine/__tests__/test-body';
 
 function roundTrip(message: ServerMessage): ServerMessage {
   return JSON.parse(serializeServerMessage(message)) as ServerMessage;

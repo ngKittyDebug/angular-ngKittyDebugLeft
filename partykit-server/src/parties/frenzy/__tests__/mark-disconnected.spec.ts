@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { markDisconnected } from '../engine/mark-disconnected';
-import { restoreConnected } from '../engine/restore-connected';
-import { TEST_BODY } from './test-body';
+import { markDisconnected } from '../mark-disconnected';
+import { restoreConnected } from '../restore-connected';
+import { TEST_BODY } from '../../../engine/__tests__/test-body';
 import type { Player, ServerState } from '@game/frenzy/types';
 
 const ALIVE_PLAYER: Player = {

@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
 import { FRENZY, halfExtentNorm, restYFor } from '@game/frenzy/config';
-import { ANGRY_BOMB } from '@game/frenzy/npc/angry-bomb';
+import { FRENZY_DEFINITION } from '@game/frenzy/definition';
+import { ANGRY_BOMB_NPC } from '@game/frenzy/definition/npcs/angry-bomb';
 import type { Item, Player, ServerState } from '@game/frenzy/types';
 
-import { applyTick } from '../engine/apply-tick';
-import { TEST_BODY } from './test-body';
+import { applyTick } from '../../../engine/core/apply-tick';
+import { TEST_BODY } from '../../../engine/__tests__/test-body';
+import { frenzyNpcHooks } from '../game';
 
 const PLAYER: Player = {
   kind: 'human',
@@ -46,7 +48,7 @@ describe('applyTick', () => {
   it('advances items by vy * deltaSeconds', () => {
     const state = stateWith([PLAYER], [makeItem({ y: 0.2, vy: 0.3 })]);
 
-    const { state: next } = applyTick(state, 0.1, false);
+    const { state: next } = applyTick(FRENZY_DEFINITION, frenzyNpcHooks, state, 0.1, false);
 
     expect(next.items[0].y).toBeCloseTo(0.23, 5);
   });
@@ -55,21 +57,39 @@ describe('applyTick', () => {
     const halfWidth = halfExtentNorm(FRENZY.physicalSizePx.item, FRENZY.world.width);
 
     const launched = makeItem({ x: 0.5, y: 0.2, vx: -0.1, vy: 0.3 });
-    const { state: mid } = applyTick(stateWith([PLAYER], [launched]), 0.1, false);
+    const { state: mid } = applyTick(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
+      stateWith([PLAYER], [launched]),
+      0.1,
+      false,
+    );
 
     expect(mid.items[0].x).toBeCloseTo(0.49, 5);
     expect(mid.items[0].vx).toBeCloseTo(-0.1, 5);
 
     // Left wall: centre stops half a sprite-width inside the edge, not at 0, so the sprite stays fully in-world.
     const atLeft = makeItem({ x: 0.02, y: 0.2, vx: -0.1, vy: 0.3 });
-    const { state: stoppedLeft } = applyTick(stateWith([PLAYER], [atLeft]), 0.5, false);
+    const { state: stoppedLeft } = applyTick(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
+      stateWith([PLAYER], [atLeft]),
+      0.5,
+      false,
+    );
 
     expect(stoppedLeft.items[0].x).toBeCloseTo(halfWidth, 5);
     expect(stoppedLeft.items[0].vx).toBe(0);
 
     // Right wall: symmetric, centre stops at 1 - halfWidth.
     const atRight = makeItem({ x: 0.98, y: 0.2, vx: 0.1, vy: 0.3 });
-    const { state: stoppedRight } = applyTick(stateWith([PLAYER], [atRight]), 0.5, false);
+    const { state: stoppedRight } = applyTick(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
+      stateWith([PLAYER], [atRight]),
+      0.5,
+      false,
+    );
 
     expect(stoppedRight.items[0].x).toBeCloseTo(1 - halfWidth, 5);
     expect(stoppedRight.items[0].vx).toBe(0);
@@ -85,7 +105,13 @@ describe('applyTick', () => {
     const startY = restY - 0.01;
     const launched = makeItem({ x: 0.5, y: startY, vx, vy });
 
-    const { state: next } = applyTick(stateWith([PLAYER], [launched]), 0.1, false);
+    const { state: next } = applyTick(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
+      stateWith([PLAYER], [launched]),
+      0.1,
+      false,
+    );
     const fractionX = 0.5 + vx * ((restY - startY) / vy);
 
     expect(next.items[0].x).toBeCloseTo(fractionX, 5);
@@ -97,6 +123,8 @@ describe('applyTick', () => {
 
   it('leaves a plain item (no vx) horizontally fixed', () => {
     const { state: next } = applyTick(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
       stateWith([PLAYER], [makeItem({ x: 0.5, vy: 0.3 })]),
       0.1,
       false,
@@ -109,7 +137,7 @@ describe('applyTick', () => {
   it('settles an item on its per-item seabed line and starts its rest timer when it reaches the floor', () => {
     const state = stateWith([PLAYER], [makeItem({ y: 0.8, vy: 0.3 })]);
 
-    const { state: next } = applyTick(state, 0.5, false);
+    const { state: next } = applyTick(FRENZY_DEFINITION, frenzyNpcHooks, state, 0.5, false);
 
     expect(next.items).toHaveLength(1);
     // Settles at the hashed rest line for this id (within itemRestYRange), not a flat y=1.
@@ -122,7 +150,7 @@ describe('applyTick', () => {
     const resting = makeItem({ y: 1, vy: 0, restMs: 50 });
     const state = stateWith([PLAYER], [resting]);
 
-    const { state: next } = applyTick(state, 0.1, false);
+    const { state: next } = applyTick(FRENZY_DEFINITION, frenzyNpcHooks, state, 0.1, false);
 
     expect(next.items).toHaveLength(0);
   });
@@ -130,7 +158,7 @@ describe('applyTick', () => {
   it('leaves player hp untouched when applyDecay is false', () => {
     const state = stateWith([PLAYER], []);
 
-    const { state: next, events } = applyTick(state, 0.1, false);
+    const { state: next, events } = applyTick(FRENZY_DEFINITION, frenzyNpcHooks, state, 0.1, false);
 
     expect(next.players[0].hp).toBe(PLAYER.hp);
     expect(events).toEqual([]);
@@ -139,7 +167,7 @@ describe('applyTick', () => {
   it('applies decay when applyDecay is true', () => {
     const state = stateWith([PLAYER], []);
 
-    const { state: next } = applyTick(state, 0.1, true);
+    const { state: next } = applyTick(FRENZY_DEFINITION, frenzyNpcHooks, state, 0.1, true);
 
     expect(next.players[0].hp).toBe(98);
   });
@@ -148,7 +176,7 @@ describe('applyTick', () => {
     const dying: Player = { ...PLAYER, hp: 1 };
     const state = stateWith([dying], []);
 
-    const { state: next, events } = applyTick(state, 0.1, true);
+    const { state: next, events } = applyTick(FRENZY_DEFINITION, frenzyNpcHooks, state, 0.1, true);
 
     expect(next.players).toHaveLength(0);
     expect(events).toEqual([{ type: 'fainted', playerId: 'p1', cause: { by: 'decay' } }]);
@@ -156,7 +184,13 @@ describe('applyTick', () => {
 
   it('drifts a player by velocity * delta on a non-decay tick', () => {
     const drifting: Player = { ...PLAYER, x: 0.5, y: 0.6, vx: 0.03, vy: -0.02 };
-    const { state: next } = applyTick(stateWith([drifting], []), 0.1, false);
+    const { state: next } = applyTick(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
+      stateWith([drifting], []),
+      0.1,
+      false,
+    );
 
     expect(next.players[0].x).toBeCloseTo(0.503, 5);
     expect(next.players[0].y).toBeCloseTo(0.598, 5);
@@ -171,7 +205,15 @@ describe('applyTick', () => {
       vy: -0.02,
       effects: [{ kind: 'laying', expiresAt: 4000 }],
     };
-    const { state: next } = applyTick(stateWith([expiring], []), 0.1, false, Math.random, 5000);
+    const { state: next } = applyTick(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
+      stateWith([expiring], []),
+      0.1,
+      false,
+      Math.random,
+      5000,
+    );
 
     expect(next.players[0].effects).toEqual([]);
   });
@@ -179,7 +221,13 @@ describe('applyTick', () => {
   it('bounces a player off the drift-zone edges (clamps position, inverts velocity)', () => {
     const { maxX, minY } = FRENZY.playerDriftZone;
     const atEdge: Player = { ...PLAYER, x: maxX - 0.001, y: minY + 0.001, vx: 0.03, vy: -0.03 };
-    const { state: next } = applyTick(stateWith([atEdge], []), 0.1, false);
+    const { state: next } = applyTick(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
+      stateWith([atEdge], []),
+      0.1,
+      false,
+    );
 
     expect(next.players[0].x).toBe(maxX);
     expect(next.players[0].vx).toBeLessThan(0);
@@ -187,9 +235,15 @@ describe('applyTick', () => {
     expect(next.players[0].vy).toBeGreaterThan(0);
   });
 
-  it('eats food that overlaps a Pokémon (emits eaten, removes the item, grows the hp)', () => {
+  it('eats food that overlaps a player (emits eaten, removes the item, grows the hp)', () => {
     const food = makeItem({ type: 'food', x: 0.5, y: 0.6, vy: 0 });
-    const { state: next, events } = applyTick(stateWith([PLAYER], [food]), 0.1, false);
+    const { state: next, events } = applyTick(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
+      stateWith([PLAYER], [food]),
+      0.1,
+      false,
+    );
 
     expect(next.items).toHaveLength(0);
     expect(next.players[0].hp).toBe(PLAYER.hp + FRENZY.itemEffects.food);
@@ -206,9 +260,15 @@ describe('applyTick', () => {
     });
   });
 
-  it('damages a Pokémon that a rock bonks (emits eaten with negative delta, removes the rock)', () => {
+  it('damages a player that a rock bonks (emits eaten with negative delta, removes the rock)', () => {
     const rock = makeItem({ type: 'rock', x: 0.5, y: 0.6, vy: 0 });
-    const { state: next, events } = applyTick(stateWith([PLAYER], [rock]), 0.1, false);
+    const { state: next, events } = applyTick(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
+      stateWith([PLAYER], [rock]),
+      0.1,
+      false,
+    );
 
     expect(next.items).toHaveLength(0);
     expect(next.players[0].hp).toBe(PLAYER.hp + FRENZY.collision.rockDamage);
@@ -221,11 +281,17 @@ describe('applyTick', () => {
     );
   });
 
-  it('resolves a collision against the closest alive Pokémon only', () => {
+  it('resolves a collision against the closest alive player only', () => {
     const near: Player = { ...PLAYER, id: 'near', x: 0.5, y: 0.6 };
     const far: Player = { ...PLAYER, id: 'far', x: 0.58, y: 0.6 };
     const food = makeItem({ type: 'food', x: 0.53, y: 0.6, vy: 0 });
-    const { state: next, events } = applyTick(stateWith([near, far], [food]), 0.1, false);
+    const { state: next, events } = applyTick(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
+      stateWith([near, far], [food]),
+      0.1,
+      false,
+    );
 
     expect(next.players.find((player) => player.id === 'near')?.hp).toBe(
       PLAYER.hp + FRENZY.itemEffects.food,
@@ -234,12 +300,14 @@ describe('applyTick', () => {
     expect(events.filter((event) => event.type === 'eaten')).toHaveLength(1);
   });
 
-  it('gives a bigger (evolved) Pokémon a wider catch reach', () => {
+  it('gives a bigger (evolved) player a wider catch reach', () => {
     // 100px horizontal gap (derived from world.width so it survives a world resize): inside a stage-3 reach
     // (120px) but outside a stage-1 reach (75px).
     const itemX = 0.5 + 100 / FRENZY.world.width;
     const small: Player = { ...PLAYER, stage: 1, x: 0.5, y: 0.6 };
     const smallRun = applyTick(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
       stateWith([small], [makeItem({ type: 'food', x: itemX, y: 0.6, vy: 0 })]),
       0.1,
       false,
@@ -249,6 +317,8 @@ describe('applyTick', () => {
 
     const big: Player = { ...PLAYER, stage: 3, x: 0.5, y: 0.6 };
     const bigRun = applyTick(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
       stateWith([big], [makeItem({ type: 'food', x: itemX, y: 0.6, vy: 0 })]),
       0.1,
       false,
@@ -262,7 +332,13 @@ describe('applyTick', () => {
     // 60px from the item (derived from world.width) — comfortably inside a stage-1 reach (75px) on any world size.
     const rival: Player = { ...PLAYER, id: 'rival', x: 0.5 + 60 / FRENZY.world.width, y: 0.6 };
     const ownedFood = makeItem({ type: 'food', x: 0.5, y: 0.6, vy: 0, ownerId: 'owner' });
-    const { state: next, events } = applyTick(stateWith([owner, rival], [ownedFood]), 0.1, false);
+    const { state: next, events } = applyTick(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
+      stateWith([owner, rival], [ownedFood]),
+      0.1,
+      false,
+    );
 
     expect(next.players.find((player) => player.id === 'owner')?.hp).toBe(PLAYER.hp);
     expect(next.players.find((player) => player.id === 'rival')?.hp).toBe(
@@ -274,7 +350,13 @@ describe('applyTick', () => {
   it('an owned item near only its owner does not collide at all (stays on the field)', () => {
     const owner: Player = { ...PLAYER, id: 'owner', x: 0.5, y: 0.6 };
     const ownedFood = makeItem({ type: 'food', x: 0.5, y: 0.6, vy: 0, ownerId: 'owner' });
-    const { state: next, events } = applyTick(stateWith([owner], [ownedFood]), 0.1, false);
+    const { state: next, events } = applyTick(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
+      stateWith([owner], [ownedFood]),
+      0.1,
+      false,
+    );
 
     expect(next.items).toHaveLength(1);
     expect(next.players[0].hp).toBe(PLAYER.hp);
@@ -283,16 +365,28 @@ describe('applyTick', () => {
 
   it('does not collide when the item is outside the collision radius', () => {
     const food = makeItem({ type: 'food', x: 0.5, y: 0.2, vy: 0 });
-    const { state: next, events } = applyTick(stateWith([PLAYER], [food]), 0.1, false);
+    const { state: next, events } = applyTick(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
+      stateWith([PLAYER], [food]),
+      0.1,
+      false,
+    );
 
     expect(next.items).toHaveLength(1);
     expect(events).toEqual([]);
   });
 
-  it('does not hit a disconnected Pokémon', () => {
+  it('does not hit a disconnected player', () => {
     const offline: Player = { ...PLAYER, status: 'disconnected', x: 0.5, y: 0.6 };
     const rock = makeItem({ type: 'rock', x: 0.5, y: 0.6, vy: 0 });
-    const { state: next, events } = applyTick(stateWith([offline], [rock]), 0.1, false);
+    const { state: next, events } = applyTick(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
+      stateWith([offline], [rock]),
+      0.1,
+      false,
+    );
 
     expect(next.items).toHaveLength(1);
     expect(next.players[0].hp).toBe(PLAYER.hp);
@@ -302,9 +396,15 @@ describe('applyTick', () => {
   it('drifts a bomb at constant velocity and bounces it off the side wall (damped)', () => {
     const halfWidth = halfExtentNorm(FRENZY.physicalSizePx.item, FRENZY.world.width);
     // Heading into the right wall with a gentle downward coast; after the bounce vx flips left and is damped, while
-    // vy is unchanged (no gravity — the bomb steers like a Pokémon, so its velocity only changes on shove/bounce).
+    // vy is unchanged (no gravity — the bomb steers like a player, so its velocity only changes on shove/bounce).
     const bomb = makeItem({ type: 'bomb', x: 1 - halfWidth - 0.001, y: 0.3, vx: 0.03, vy: 0.01 });
-    const { state: next } = applyTick(stateWith([], [bomb]), 0.1, false);
+    const { state: next } = applyTick(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
+      stateWith([], [bomb]),
+      0.1,
+      false,
+    );
     const moved = next.items[0];
 
     expect(moved.x).toBeLessThanOrEqual(1 - halfWidth + 1e-9);
@@ -313,11 +413,17 @@ describe('applyTick', () => {
     expect(moved.vy).toBe(0.01); // constant — no gravity to accelerate the sink (stays under the speed cap)
   });
 
-  it('detonates a bomb on landing: damages Pokémon in range (owner included), removes it, emits detonated', () => {
+  it('detonates a bomb on landing: damages player in range (owner included), removes it, emits detonated', () => {
     const victim: Player = { ...PLAYER, x: 0.5, y: 0.95 };
     const bomb = makeItem({ type: 'bomb', x: 0.5, y: 0.99, vy: FRENZY.fallSpeed.bomb });
 
-    const { state: next, events } = applyTick(stateWith([victim], [bomb]), 0.5, false);
+    const { state: next, events } = applyTick(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
+      stateWith([victim], [bomb]),
+      0.5,
+      false,
+    );
 
     expect(next.items).toHaveLength(0);
     // Distance-scaled damage: somewhere between the epicentre max and the radius-edge floor, never zero.
@@ -340,6 +446,8 @@ describe('applyTick', () => {
     // (≈72px) → touching a horn detonates the mine.
     const atSensor = 0.5 + 66 / FRENZY.world.width;
     const hit = applyTick(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
       stateWith([player], [makeItem({ type: 'bomb', x: atSensor, y: 0.6, vy: 0 })]),
       0.05,
       false,
@@ -352,6 +460,8 @@ describe('applyTick', () => {
     // yet still inside food's reach (still eaten) — proving the bomb uses true contact while food keeps a small assist.
     const past = 0.5 + 74 / FRENZY.world.width;
     const miss = applyTick(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
       stateWith([player], [makeItem({ type: 'bomb', x: past, y: 0.6, vy: 0 })]),
       0.05,
       false,
@@ -360,6 +470,8 @@ describe('applyTick', () => {
     expect(miss.events.some((event) => event.type === 'detonated')).toBe(false);
 
     const food = applyTick(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
       stateWith([player], [makeItem({ type: 'food', x: past, y: 0.6, vy: 0 })]),
       0.05,
       false,
@@ -368,12 +480,18 @@ describe('applyTick', () => {
     expect(food.events.some((event) => event.type === 'eaten')).toBe(true);
   });
 
-  it('detonates a bomb that bumps a Pokémon mid-air (detonated, not eaten; blasts the area)', () => {
+  it('detonates a bomb that bumps a player mid-air (detonated, not eaten; blasts the area)', () => {
     const hit: Player = { ...PLAYER, id: 'hit', x: 0.5, y: 0.6 };
     const bystander: Player = { ...PLAYER, id: 'bystander', x: 0.55, y: 0.6 };
     const bomb = makeItem({ type: 'bomb', x: 0.5, y: 0.6, vy: FRENZY.fallSpeed.bomb });
 
-    const { state: next, events } = applyTick(stateWith([hit, bystander], [bomb]), 0.1, false);
+    const { state: next, events } = applyTick(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
+      stateWith([hit, bystander], [bomb]),
+      0.1,
+      false,
+    );
 
     expect(next.items).toHaveLength(0);
     const hitHp = next.players.find((player) => player.id === 'hit')?.hp ?? 0;
@@ -389,29 +507,55 @@ describe('applyTick', () => {
 
   it('skips decay for a shielded player (hp holds while the shield is live)', () => {
     const shielded: Player = { ...PLAYER, effects: [{ kind: 'shield', expiresAt: 10_000 }] };
-    const { state: next } = applyTick(stateWith([shielded], []), 0.1, true, Math.random, 5000);
+    const { state: next } = applyTick(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
+      stateWith([shielded], []),
+      0.1,
+      true,
+      Math.random,
+      5000,
+    );
 
     expect(next.players[0].hp).toBe(PLAYER.hp);
   });
 
   it('skips decay for a wellFed player (vitamin pauses the natural bleed)', () => {
     const fed: Player = { ...PLAYER, effects: [{ kind: 'wellFed', expiresAt: 100_000 }] };
-    const { state: next } = applyTick(stateWith([fed], []), 0.1, true, Math.random, 5000);
+    const { state: next } = applyTick(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
+      stateWith([fed], []),
+      0.1,
+      true,
+      Math.random,
+      5000,
+    );
 
     expect(next.players[0].hp).toBe(PLAYER.hp);
   });
 
   it('prunes a lapsed effect and resumes decay once it expires', () => {
     const shielded: Player = { ...PLAYER, effects: [{ kind: 'shield', expiresAt: 4000 }] };
-    const { state: next } = applyTick(stateWith([shielded], []), 0.1, true, Math.random, 5000);
+    const { state: next } = applyTick(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
+      stateWith([shielded], []),
+      0.1,
+      true,
+      Math.random,
+      5000,
+    );
 
     expect(next.players[0].effects).toEqual([]);
     expect(next.players[0].hp).toBe(PLAYER.hp - FRENZY.decayPerTick);
   });
 
-  it('heals and grants wellFed (effectGranted, no eaten) when a Pokémon drifts into a vitamin', () => {
+  it('heals and grants wellFed (effectGranted, no eaten) when a player drifts into a vitamin', () => {
     const vitamin = makeItem({ type: 'vitamin', x: 0.5, y: 0.6, vy: 0 });
     const { state: next, events } = applyTick(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
       stateWith([PLAYER], [vitamin]),
       0.1,
       false,
@@ -436,7 +580,7 @@ describe('applyTick', () => {
     });
   });
 
-  it('spares a shielded Pokémon from a bomb blast (no damage, excluded from hits)', () => {
+  it('spares a shielded player from a bomb blast (no damage, excluded from hits)', () => {
     const shielded: Player = {
       ...PLAYER,
       id: 'shielded',
@@ -448,6 +592,8 @@ describe('applyTick', () => {
     const bomb = makeItem({ type: 'bomb', x: 0.5, y: 0.99, vy: FRENZY.fallSpeed.bomb });
 
     const { state: next, events } = applyTick(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
       stateWith([shielded, exposed], [bomb]),
       0.5,
       false,
@@ -469,7 +615,7 @@ describe('applyTick', () => {
     );
   });
 
-  it('nullifies rock collision damage for a shielded Pokémon', () => {
+  it('nullifies rock collision damage for a shielded player', () => {
     const shielded: Player = {
       ...PLAYER,
       x: 0.5,
@@ -477,7 +623,15 @@ describe('applyTick', () => {
       effects: [{ kind: 'shield', expiresAt: 10_000 }],
     };
     const rock = makeItem({ type: 'rock', x: 0.5, y: 0.6, vy: 0 });
-    const { state: next } = applyTick(stateWith([shielded], [rock]), 0.1, false, Math.random, 5000);
+    const { state: next } = applyTick(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
+      stateWith([shielded], [rock]),
+      0.1,
+      false,
+      Math.random,
+      5000,
+    );
 
     expect(next.items).toHaveLength(0);
     expect(next.players[0].hp).toBe(PLAYER.hp);
@@ -486,7 +640,13 @@ describe('applyTick', () => {
   it('emits fainted when a rock collision drops hp to zero', () => {
     const frail: Player = { ...PLAYER, hp: 10, x: 0.5, y: 0.6 };
     const rock = makeItem({ type: 'rock', x: 0.5, y: 0.6, vy: 0 });
-    const { state: next, events } = applyTick(stateWith([frail], [rock]), 0.1, false);
+    const { state: next, events } = applyTick(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
+      stateWith([frail], [rock]),
+      0.1,
+      false,
+    );
 
     expect(next.items).toHaveLength(0);
     expect(next.players).toHaveLength(0);
@@ -497,10 +657,16 @@ describe('applyTick', () => {
     });
   });
 
-  it('separates two overlapping Pokémon (player collision enabled by default)', () => {
+  it('separates two overlapping player (player collision enabled by default)', () => {
     const a: Player = { ...PLAYER, id: 'a', x: 0.5, y: 0.6 };
     const b: Player = { ...PLAYER, id: 'b', x: 0.5 + 40 / FRENZY.world.width, y: 0.6 };
-    const { state: next } = applyTick(stateWith([a, b], []), 0.1, false);
+    const { state: next } = applyTick(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
+      stateWith([a, b], []),
+      0.1,
+      false,
+    );
     const [movedA, movedB] = next.players;
 
     expect(movedB.x - movedA.x).toBeGreaterThan(b.x - a.x);
@@ -510,7 +676,13 @@ describe('applyTick', () => {
     // Touching, closing fast: after the drift step they overlap and ram harder than the bump threshold.
     const a: Player = { ...PLAYER, id: 'a', x: 0.5, y: 0.6, vx: 0.04 };
     const b: Player = { ...PLAYER, id: 'b', x: 0.5 + 60 / FRENZY.world.width, y: 0.6, vx: -0.04 };
-    const { state: next, events } = applyTick(stateWith([a, b], []), 0.1, false);
+    const { state: next, events } = applyTick(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
+      stateWith([a, b], []),
+      0.1,
+      false,
+    );
     const [movedA, movedB] = next.players;
 
     expect(movedA.hp).toBe(PLAYER.hp + FRENZY.playerCollision.bumpDamage);
@@ -519,7 +691,7 @@ describe('applyTick', () => {
     expect(events).toContainEqual({ type: 'bumped', playerId: 'b' });
   });
 
-  it('spares a shielded Pokémon from bump damage and its float (the rammer still takes both)', () => {
+  it('spares a shielded player from bump damage and its float (the rammer still takes both)', () => {
     const shielded: Player = {
       ...PLAYER,
       id: 'shielded',
@@ -536,6 +708,8 @@ describe('applyTick', () => {
       vx: -0.04,
     };
     const { state: next, events } = applyTick(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
       stateWith([shielded, rammer], []),
       0.1,
       false,
@@ -560,7 +734,13 @@ describe('applyTick', () => {
       y: 0.6,
       vx: -0.04,
     };
-    const { state: next, events } = applyTick(stateWith([frail, rammer], []), 0.1, false);
+    const { state: next, events } = applyTick(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
+      stateWith([frail, rammer], []),
+      0.1,
+      false,
+    );
 
     expect(next.players.find((player) => player.id === 'frail')).toBeUndefined();
     expect(events).toContainEqual({
@@ -572,23 +752,25 @@ describe('applyTick', () => {
     expect(events).not.toContainEqual({ type: 'bumped', playerId: 'frail' });
   });
 
-  it('leaves overlapping Pokémon untouched when player collision is disabled', () => {
-    const flag = FRENZY.features.playerCollision as { enabled: boolean };
-    const original = flag.enabled;
+  it('leaves overlapping players untouched when player collision is disabled', () => {
+    // The flag is plain game data now — disable it on a derived definition instead of mutating the shared one.
+    const noCollisionGame = {
+      ...FRENZY_DEFINITION,
+      playerCollision: { ...FRENZY_DEFINITION.playerCollision, enabled: false },
+    };
+    const a: Player = { ...PLAYER, id: 'a', x: 0.5, y: 0.6 };
+    const b: Player = { ...PLAYER, id: 'b', x: 0.5 + 40 / FRENZY.world.width, y: 0.6 };
+    const { state: next } = applyTick(
+      noCollisionGame,
+      frenzyNpcHooks,
+      stateWith([a, b], []),
+      0.1,
+      false,
+    );
+    const [movedA, movedB] = next.players;
 
-    flag.enabled = false;
-
-    try {
-      const a: Player = { ...PLAYER, id: 'a', x: 0.5, y: 0.6 };
-      const b: Player = { ...PLAYER, id: 'b', x: 0.5 + 40 / FRENZY.world.width, y: 0.6 };
-      const { state: next } = applyTick(stateWith([a, b], []), 0.1, false);
-      const [movedA, movedB] = next.players;
-
-      expect(movedA.x).toBe(a.x);
-      expect(movedB.x).toBe(b.x);
-    } finally {
-      flag.enabled = original;
-    }
+    expect(movedA.x).toBe(a.x);
+    expect(movedB.x).toBe(b.x);
   });
 });
 
@@ -598,7 +780,7 @@ const NPC: Player = {
   id: 'npc-1',
   name: 'angryBomb',
   appearance: 'angryBomb',
-  body: ANGRY_BOMB.body,
+  body: ANGRY_BOMB_NPC.body,
   stage: 1,
   hp: 100,
   mana: 0,
@@ -618,7 +800,13 @@ describe('applyTick — angry-bomb NPC integration', () => {
     // A human sitting right on the NPC: with the NPC held out of separation, only the lone human remains, so it
     // has no peer to push it — its x stays put (drift is zero). Proves the NPC didn't separate against it.
     const human: Player = { ...PLAYER, id: 'h', x: NPC.x, y: NPC.y, vx: 0, vy: 0 };
-    const { state: next } = applyTick(stateWith([human, NPC], []), 0.1, false);
+    const { state: next } = applyTick(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
+      stateWith([human, NPC], []),
+      0.1,
+      false,
+    );
     const movedHuman = next.players.find((player) => player.id === 'h');
 
     expect(movedHuman?.x).toBeCloseTo(human.x, 5);
@@ -627,7 +815,13 @@ describe('applyTick — angry-bomb NPC integration', () => {
   it('bleeds the NPC at its own decayPerStep (not the human rate)', () => {
     // Plenty of headroom so decay is non-fatal — assert the NPC lost exactly its own per-step amount.
     const npc: Player = { ...NPC, hp: 100 };
-    const { state: next } = applyTick(stateWith([PLAYER, npc], []), 0.1, true);
+    const { state: next } = applyTick(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
+      stateWith([PLAYER, npc], []),
+      0.1,
+      true,
+    );
     const survivedNpc = next.players.find((player) => player.id === npc.id);
 
     expect(survivedNpc?.hp).toBe(100 - FRENZY.npc.decayPerStep);
@@ -636,7 +830,13 @@ describe('applyTick — angry-bomb NPC integration', () => {
 
   it('detonates a starved NPC (hp 0) AFTER decay, emitting detonated + fainted', () => {
     const npc: Player = { ...NPC, hp: FRENZY.npc.decayPerStep };
-    const { state: next, events } = applyTick(stateWith([PLAYER, npc], []), 0.1, true);
+    const { state: next, events } = applyTick(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
+      stateWith([PLAYER, npc], []),
+      0.1,
+      true,
+    );
 
     expect(next.players.find((player) => player.id === npc.id)).toBeUndefined();
     expect(events.some((event) => event.type === 'detonated' && event.itemId === npc.id)).toBe(
@@ -651,7 +851,13 @@ describe('applyTick — angry-bomb NPC integration', () => {
     // Regression: a poke tops mana to exactly `anger.max` between ticks. The NPC blast pass must run BEFORE
     // coolAnger, or the per-tick −cooldownPerTick bleed drops mana under max first and the rage blast never fires.
     const npc: Player = { ...NPC, hp: 100, mana: FRENZY.npc.anger.max };
-    const { state: next, events } = applyTick(stateWith([PLAYER, npc], []), 0.1, false);
+    const { state: next, events } = applyTick(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
+      stateWith([PLAYER, npc], []),
+      0.1,
+      false,
+    );
 
     expect(next.players.find((player) => player.id === npc.id)).toBeUndefined();
 

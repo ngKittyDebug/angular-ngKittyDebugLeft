@@ -75,7 +75,7 @@ const ITEM_ART: Record<ItemType, ItemArt> = {
 // through the Pokémon `Line`/GIF machinery (no native/body rects, no growth bands) and NOT listed in
 // `POKEMON_LINES`, so the picker never offers an NPC as a playable creature. One row per NPC appearance: the PNG
 // served from `/frenzy/npc/` and the square render side per stage, matching the server body sizes in
-// `shared-game/frenzy/npc/angry-bomb.ts` (64/88/112).
+// `shared-game/frenzy/definition/npcs/angry-bomb.ts` (64/88/112).
 // Keyed by `NpcKind` (not a loose string) so a new NPC kind is a compile error here until it gets a sprite —
 // mirrors how LINE_META/ITEM_ART are keyed by their exact unions.
 const NPC_SPRITES: Record<NpcKind, { sprite: string; size: Record<Stage, number> }> = {

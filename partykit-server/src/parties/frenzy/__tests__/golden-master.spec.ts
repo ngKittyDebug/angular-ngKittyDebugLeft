@@ -1,23 +1,31 @@
 import { describe, expect, it } from 'vitest';
 
 import { FRENZY, restYFor } from '@game/frenzy/config';
-import { ANGRY_BOMB } from '@game/frenzy/npc/angry-bomb';
+import { FRENZY_DEFINITION } from '@game/frenzy/definition';
+import { ANGRY_BOMB_NPC } from '@game/frenzy/definition/npcs/angry-bomb';
 import type {
   GameEvent,
   HumanPlayer,
   Item,
   ItemType,
+  NpcKind,
   NpcPlayer,
   PlayerEffectKind,
   ServerState,
 } from '@game/frenzy/types';
 
-import { applyClick } from '../engine/apply-click';
-import { applyEmissions } from '../engine/apply-emissions';
-import { applyTick } from '../engine/apply-tick';
-import { calculateStage } from '../engine/calculate-stage';
-import { accrueAnger } from '../engine/npc/angry-bomb/anger';
-import { TEST_BODY } from './test-body';
+import { applyClick } from '../../../engine/core/apply-click';
+import {
+  applyEmissions as applyEmissionsPass,
+  buildEmitters,
+} from '../../../engine/core/apply-emissions';
+import { applyTick } from '../../../engine/core/apply-tick';
+import { calculateStage } from '../../../engine/core/calculate-stage';
+import { TEST_BODY } from '../../../engine/__tests__/test-body';
+import { frenzyNpcHooks } from '../game';
+import { accrueAnger } from '../slices/angry-bomb/anger';
+
+const EMITTERS = buildEmitters<ItemType, PlayerEffectKind, NpcKind>(FRENZY_DEFINITION);
 
 // Golden master for the whole engine (phase 0 of the theme-agnostic refactor): one deterministic ~600-tick
 // scenario drives every item type through its click/collide/land path, both auras, a click-detonated bomb, a
@@ -129,12 +137,12 @@ function npcLiteral(now: number): NpcPlayer {
     kind: 'npc',
     npcKind: 'angryBomb',
     id: NPC_ID,
-    name: ANGRY_BOMB.appearance,
-    appearance: ANGRY_BOMB.appearance,
-    body: ANGRY_BOMB.body,
-    stage: calculateStage(ANGRY_BOMB.startingHp, ANGRY_BOMB.body),
-    hp: ANGRY_BOMB.startingHp,
-    mana: ANGRY_BOMB.startingMana,
+    name: ANGRY_BOMB_NPC.appearance,
+    appearance: ANGRY_BOMB_NPC.appearance,
+    body: ANGRY_BOMB_NPC.body,
+    stage: calculateStage(ANGRY_BOMB_NPC.startingHp, ANGRY_BOMB_NPC.body),
+    hp: ANGRY_BOMB_NPC.startingHp,
+    mana: ANGRY_BOMB_NPC.startingMana,
     x: 0.5,
     y: FRENZY.npc.floorY,
     vx: 0,
@@ -184,8 +192,19 @@ function runScenario(): ScenarioRun {
     return { x: hunter?.x ?? 0.3, y: hunter?.y ?? 0.4 };
   };
 
+  // Explicit type args on the engine calls below: inference over the raw definition would widen the unions to
+  // the FULL roster keys; the spec speaks the public (enabled-only) unions, like the binding in `../game.ts`.
   const click = (tick: number, itemId: string, nudgeX?: number, nudgeY?: number): void => {
-    const result = applyClick(state, HUNTER_ID, itemId, nudgeX, nudgeY, random, now);
+    const result = applyClick<ItemType, PlayerEffectKind, NpcKind>(
+      FRENZY_DEFINITION,
+      state,
+      HUNTER_ID,
+      itemId,
+      nudgeX,
+      nudgeY,
+      random,
+      now,
+    );
 
     state = result.state;
     record(tick, result.events);
@@ -328,12 +347,28 @@ function runScenario(): ScenarioRun {
     scriptTick(tick);
 
     // Mirrors the room's gameTick order: the tick passes first, then the aura emissions.
-    const result = applyTick(state, TICK_SECONDS, tick % DECAY_EVERY_N_TICKS === 0, random, now);
+    const result = applyTick<ItemType, PlayerEffectKind, NpcKind>(
+      FRENZY_DEFINITION,
+      frenzyNpcHooks,
+      state,
+      TICK_SECONDS,
+      tick % DECAY_EVERY_N_TICKS === 0,
+      random,
+      now,
+    );
 
     state = { ...result.state, tick };
     record(tick, result.events);
 
-    const emission = applyEmissions(state, now, schedule, random, createId);
+    const emission = applyEmissionsPass<ItemType, PlayerEffectKind, NpcKind>(
+      FRENZY_DEFINITION,
+      EMITTERS,
+      state,
+      now,
+      schedule,
+      random,
+      createId,
+    );
 
     schedule = emission.schedule;
 

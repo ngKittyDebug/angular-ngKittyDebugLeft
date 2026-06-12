@@ -181,11 +181,13 @@
     position: absolute;
     border-radius: 50%;
     transform: translate(-50%, -50%);
-    // Server snapshots land every ~300ms (10Hz, every 3rd tick); easing left/top over that window turns the
-    // discrete position jumps into continuous drift. Linear keeps it steady (no per-snapshot ease-in/out pulse).
+    // Easing left/top over exactly one snapshot window turns the discrete position jumps into continuous
+    // drift; the duration comes from the host var (--minimap-glide, derived from FRENZY's snapshot cadence)
+    // so the glide can't desync from the server again — a shorter hardcoded glide left the dots frozen for
+    // the tail of each window (the "wave" stutter). Linear keeps it steady (no per-snapshot ease-in/out pulse).
     transition:
-      left 0.3s linear,
-      top 0.3s linear;
+      left var(--minimap-glide, 300ms) linear,
+      top var(--minimap-glide, 300ms) linear;
   }
 
   // Items: small dots — deliberately a fraction of the player size so a pokémon is never mistaken for an item

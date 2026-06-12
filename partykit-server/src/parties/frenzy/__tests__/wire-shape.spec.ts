@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { HumanPlayer, Item, ServerMessage, SlimPlayer } from '@game/frenzy/types';
 
 import { serializeServerMessage } from '../serialize-server-message';
-import { TEST_BODY } from './test-body';
+import { TEST_BODY } from '../../../engine/__tests__/test-body';
 
 // Wire-shape golden master (phase 0 of the theme-agnostic refactor): one committed snapshot of the SERIALIZED
 // form of every ServerMessage type, fixing both the field layout and the 4-decimal quantization on the wire.

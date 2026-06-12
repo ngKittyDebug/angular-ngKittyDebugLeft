@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { FRENZY } from '@game/frenzy/config';
-import { ANGRY_BOMB } from '@game/frenzy/npc/angry-bomb';
+import { ANGRY_BOMB_NPC } from '@game/frenzy/definition/npcs/angry-bomb';
 import type { HumanPlayer, NpcPlayer, Player } from '@game/frenzy/types';
 
 import { bodyForAppearance } from '../../constants/pokemon-registry';
@@ -34,8 +34,8 @@ function npc(partial: Partial<NpcPlayer> & Pick<Player, 'id'>): Player {
     kind: 'npc',
     npcKind: 'angryBomb',
     name: 'Angry Bomb',
-    appearance: ANGRY_BOMB.appearance,
-    body: ANGRY_BOMB.body,
+    appearance: ANGRY_BOMB_NPC.appearance,
+    body: ANGRY_BOMB_NPC.body,
     stage: 1,
     hp: 100,
     mana: 0,

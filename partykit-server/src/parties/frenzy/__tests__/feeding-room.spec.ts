@@ -5,7 +5,7 @@ import { FRENZY } from '@game/frenzy/config';
 import type { ClientMessage, ServerMessage, ServerState } from '@game/frenzy/types';
 
 import FeedingRoom from '../index';
-import { TEST_BODY } from './test-body';
+import { TEST_BODY } from '../../../engine/__tests__/test-body';
 
 const TICK_MS = 1000 / FRENZY.tickRateHz;
 

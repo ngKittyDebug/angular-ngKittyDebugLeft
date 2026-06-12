@@ -49,6 +49,12 @@ Thumbs.db
 # Local planning notes (per-developer, not for merge)
 .planning/
 
+# Local markdown issue tracker for agent skills (see docs/agents/issue-tracker.md)
+.scratch/
+
+# Per-developer agent-skills config (issue tracker, triage labels, domain docs)
+docs/agents/
+
 # Claude Code — local config / sessions / skills stay local, EXCEPT the committed review
 # skills (used by cloud routines, which only see what's in the repo), CLAUDE.md and .mcp.json
 # (cloud routines need the taiga-ui / angular-cli verification MCPs too).

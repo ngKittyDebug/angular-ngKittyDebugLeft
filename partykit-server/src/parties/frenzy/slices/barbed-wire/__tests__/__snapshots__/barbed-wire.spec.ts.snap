@@ -1,0 +1,35 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`barbed-wire demo slice (disabled) > keeps the demo slice values stable 1`] = `
+{
+  "effect": {
+    "enabled": false,
+    "modifiers": {
+      "damageDealt": {
+        "bump": 2,
+      },
+    },
+  },
+  "item": {
+    "enabled": false,
+    "interactions": {
+      "onClick": {
+        "durationMs": 10000,
+        "effectId": "barbedWire",
+        "verb": "grantEffect",
+      },
+      "onCollide": {
+        "durationMs": 10000,
+        "effectId": "barbedWire",
+        "verb": "grantEffect",
+      },
+    },
+    "physics": {
+      "fallSpeed": 0.16,
+    },
+    "spawn": {
+      "world": 5,
+    },
+  },
+}
+`;

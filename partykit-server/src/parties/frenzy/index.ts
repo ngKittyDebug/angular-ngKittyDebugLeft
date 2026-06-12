@@ -1,6 +1,7 @@
 import type * as Party from 'partykit/server';
 
-import { FRENZY, isNpcEnabled } from '@game/frenzy/config';
+import { FRENZY } from '@game/frenzy/config';
+import { ANGRY_BOMB_NPC } from '@game/frenzy/definition/npcs/angry-bomb';
 import type {
   Item,
   Player,
@@ -10,19 +11,14 @@ import type {
   SlimPlayer,
 } from '@game/frenzy/types';
 
-import { applyClick } from './engine/apply-click';
-import { applyEmissions } from './engine/apply-emissions';
-import { projectTimeAlive } from './engine/apply-scores';
-import { applySteer } from './engine/apply-steer';
-import { applyTick } from './engine/apply-tick';
-import { checkClickRate } from './engine/check-click-rate';
-import { createPlayer } from './engine/create-player';
-import { markDisconnected } from './engine/mark-disconnected';
-import { accrueAnger } from './engine/npc/angry-bomb/anger';
-import { createNpc } from './engine/npc/angry-bomb/create-npc';
-import { pickItemType } from './engine/pick-item-type';
-import { restoreConnected } from './engine/restore-connected';
+import { projectTimeAlive } from '../../engine/core/apply-scores';
+import { accrueAnger } from './slices/angry-bomb/anger';
+import { createNpc } from './slices/angry-bomb/create-npc';
+import { checkClickRate } from './check-click-rate';
+import { frenzyEngine } from './game';
+import { markDisconnected } from './mark-disconnected';
 import { parseClientMessage } from './parse-client-message';
+import { restoreConnected } from './restore-connected';
 import { serializeServerMessage } from './serialize-server-message';
 import { validateJoin } from './validate-join';
 
@@ -225,7 +221,7 @@ export default class FeedingRoom implements Party.Server {
     this.tick += 1;
 
     const shouldDecay = this.tick % DECAY_EVERY_N_TICKS === 0;
-    const result = applyTick(this.currentState(), TICK_DELTA_SECONDS, shouldDecay);
+    const result = frenzyEngine.applyTick(this.currentState(), TICK_DELTA_SECONDS, shouldDecay);
 
     this.syncState(result.state);
 
@@ -254,12 +250,12 @@ export default class FeedingRoom implements Party.Server {
       }
 
       if (this.npcNextSpawnAt === null) {
-        this.npcNextSpawnAt = now + FRENZY.npc.respawnDelayMs;
+        this.npcNextSpawnAt = now + ANGRY_BOMB_NPC.respawnDelayMs;
       }
     }
 
     // Aura emissions: players under the `laying`/`pooping` aura drip one item per `emitIntervalMs` (schedule kept server-side).
-    const emission = applyEmissions(this.currentState(), now, this.nextEmitAtByPlayer);
+    const emission = frenzyEngine.applyEmissions(this.currentState(), now, this.nextEmitAtByPlayer);
 
     this.nextEmitAtByPlayer = emission.schedule;
 
@@ -278,7 +274,7 @@ export default class FeedingRoom implements Party.Server {
 
     // Spawn the single live NPC once its scheduled time arrives (max one at a time — the `!some(npc)` guard enforces it).
     if (
-      isNpcEnabled('angryBomb') &&
+      ANGRY_BOMB_NPC.enabled &&
       this.humanCount() > 0 &&
       this.npcNextSpawnAt !== null &&
       now >= this.npcNextSpawnAt &&
@@ -320,7 +316,7 @@ export default class FeedingRoom implements Party.Server {
       return;
     }
 
-    const result = applyClick(this.currentState(), playerId, itemId, nudgeX, nudgeY);
+    const result = frenzyEngine.applyClick(this.currentState(), playerId, itemId, nudgeX, nudgeY);
 
     if (result.events.length === 0) {
       return;
@@ -361,7 +357,7 @@ export default class FeedingRoom implements Party.Server {
     }
 
     const state = this.currentState();
-    const next = applySteer(state, playerId, x, y);
+    const next = frenzyEngine.applySteer(state, playerId, x, y);
 
     // applySteer returns the same state reference when nothing changed (unknown/dead player, zero direction).
     if (next === state) {
@@ -412,11 +408,11 @@ export default class FeedingRoom implements Party.Server {
       return;
     }
 
-    const accrual = accrueAnger(this.npcPokeTimestamps.get(npcId) ?? [], now, FRENZY.npc.anger);
+    const accrual = accrueAnger(this.npcPokeTimestamps.get(npcId) ?? [], now, ANGRY_BOMB_NPC.anger);
 
     this.npcPokeTimestamps.set(npcId, accrual.timestamps);
 
-    const mana = Math.min(FRENZY.npc.anger.max, npc.mana + accrual.gain);
+    const mana = Math.min(ANGRY_BOMB_NPC.anger.max, npc.mana + accrual.gain);
 
     this.players = this.players.map((player) =>
       player.id === npcId ? { ...player, mana } : player,
@@ -502,7 +498,7 @@ export default class FeedingRoom implements Party.Server {
     }
 
     const now = Date.now();
-    const player = createPlayer({
+    const player = frenzyEngine.createPlayer({
       name: name.trim().slice(0, 24),
       appearance,
       body,
@@ -589,29 +585,12 @@ export default class FeedingRoom implements Party.Server {
     return { type: 'slimSnapshot', state: { players, items: state.items, tick: state.tick } };
   }
 
+  // Natural item drop: weighted pick, spawn-band x, click budget for explosives — all in the engine (`spawnItem`).
   private spawnItem(): void {
-    const [minX, maxX] = FRENZY.itemSpawnXRange;
-    const type = pickItemType(Math.random);
-    const item: Item = {
-      id: crypto.randomUUID(),
-      type,
-      x: minX + Math.random() * (maxX - minX),
-      y: 0,
-      vy: FRENZY.fallSpeed[type],
-      // A freshly spawned mine carries a hidden click budget; the click that spends the last one detonates it
-      // (see bombBehavior.onClick + applyClick). Other item types never click-detonate, so they get none.
-      ...(type === 'bomb' ? { clicksLeft: this.randomClicksLeft() } : {}),
-    };
+    const item: Item = frenzyEngine.spawnItem();
 
     this.items = [...this.items, item];
     this.broadcast({ type: 'spawned', item });
-  }
-
-  // Random integer in `bomb.clicksToExplodeRange` (inclusive) — the hidden shove budget stamped on a new mine.
-  private randomClicksLeft(): number {
-    const [min, max] = FRENZY.bomb.clicksToExplodeRange;
-
-    return min + Math.floor(Math.random() * (max - min + 1));
   }
 
   // People in the room = human players (disconnected humans count too — they're in grace, still occupying a seat).
@@ -622,7 +601,7 @@ export default class FeedingRoom implements Party.Server {
 
   // Random delay (ms) in `npc.spawnDelayMsRange` (inclusive) before the NPC appears after the first human joins.
   private randomSpawnDelayMs(): number {
-    const [min, max] = FRENZY.npc.spawnDelayMsRange;
+    const [min, max] = ANGRY_BOMB_NPC.spawnDelayMsRange;
 
     return min + Math.random() * (max - min);
   }

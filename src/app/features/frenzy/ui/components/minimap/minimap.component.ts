@@ -9,6 +9,7 @@ import {
 import { TranslocoDirective } from '@jsverse/transloco';
 import { TuiIcon } from '@taiga-ui/core';
 
+import { FRENZY } from '@game/frenzy/config';
 import type { Item, Player } from '@game/frenzy/types';
 import { isNPC } from '@game/frenzy/types';
 
@@ -106,6 +107,9 @@ const KELP_VIEW_BOX = `0 0 ${KELP_VIEW_WIDTH} ${KELP_VIEW_HEIGHT}`;
   ],
   templateUrl: './minimap.component.html',
   styleUrl: './minimap.component.scss',
+  // Dot glide duration = the actual snapshot cadence, so blips drift continuously instead of glide-then-freeze
+  // (the SCSS transition reads this var; a hardcoded duration silently desyncs when the cadence is retuned).
+  host: { '[style.--minimap-glide.ms]': 'snapshotIntervalMs' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MinimapComponent {
@@ -121,6 +125,8 @@ export class MinimapComponent {
   public readonly myId = input.required<string | null>();
   public readonly online = input.required<number>();
   public readonly players = input.required<readonly Player[]>();
+
+  protected readonly snapshotIntervalMs = (FRENZY.snapshotEveryNTicks / FRENZY.tickRateHz) * 1000;
 
   protected readonly kelpPath = KELP_SILHOUETTE_PATH;
   protected readonly kelpViewBox = KELP_VIEW_BOX;

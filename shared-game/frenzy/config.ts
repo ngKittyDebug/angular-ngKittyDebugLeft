@@ -1,66 +1,144 @@
 /**
- * Single source of game tunables for Feeding Frenzy.
- * Contract shared by the server (authoritative) and the client (render/UI) — imported by both via `@game/frenzy/config`.
- * Coordinates are normalized (0..1): the client multiplies them by the viewport size.
+ * Single source of game tunables for Feeding Frenzy — the flat `FRENZY` read-model, DERIVED from the per-entity
+ * definition slices (`./definition`). Contract shared by the server (authoritative) and the client (render/UI),
+ * imported by both via `@game/frenzy/config`. Coordinates are normalized (0..1): the client multiplies them by
+ * the viewport size.
  *
- * The flat `FRENZY` object is assembled from per-concern partials under `./config/*`; edit a partial to retune a
- * concern. `FRENZY.features` (see `./config/features`) gates which items take part — toggled via `isItemEnabled`.
+ * To retune an entity, edit its slice (`definition/items|effects/<entity>.ts`, `definition/npcs/*`); to retune a
+ * neutral concern (world/loop/hp/...), edit its per-concern partial in `definition/`. The flat keys, values and
+ * record KEY ORDER here reproduce the legacy `config/*` layout byte-for-byte (guarded by the definition-contract
+ * spec + the golden master in `partykit-server`) — `FRENZY.xxx` consumers never notice the source moved.
+ * Deliberate carve-outs from the legacy layout: `itemEffects.poop` normalized -10 → 0 (a stale duplicate of the
+ * descriptor's `hpDelta`) and, since phase 5, the pruned server-only NPC projections (`npc.seekItemTypes`,
+ * `features.npc` — the server reads the definition slice directly); see the definition-contract spec.
  */
-import type { ItemType, NpcKind, ScoreKind } from './types';
+import { restYFor as engineRestYFor } from '../engine/geometry';
+import {
+  ANGRY_BOMB_NPC,
+  FRENZY_DEFINITION,
+  FRENZY_ITEMS,
+  mapItems,
+  SPAWN_POOLS,
+} from './definition';
+import type { ItemType, ScoreKind } from './types';
 
-import { BUFFS } from './config/buffs';
-import { COLLISION } from './config/collision';
-import { FEATURES } from './config/features';
-import { FLOATS } from './config/floats';
-import { ITEMS } from './config/items';
-import { LOOP } from './config/loop';
-import { HP } from './config/hp';
-import { NPC } from './config/npc';
-import { PLAYER } from './config/player';
-import { PLAYER_COLLISION } from './config/player-collision';
-import { SCORE } from './config/score';
-import { SPAWN } from './config/spawn';
-import { WORLD } from './config/world';
+// Pure geometry lives in the engine layer; re-exported here so client call sites keep their historical import.
+export { halfExtentNorm } from '../engine/geometry';
+
+const { collision, hp, loop, player, playerCollision, score, spawn, world } = FRENZY_DEFINITION;
 
 export const FRENZY = {
-  ...HP,
-  ...WORLD,
-  ...COLLISION,
-  ...ITEMS,
-  ...SPAWN,
-  ...BUFFS,
-  ...PLAYER,
-  ...PLAYER_COLLISION,
-  ...LOOP,
-  ...FLOATS,
-  ...SCORE,
-  npc: NPC,
-  features: FEATURES,
+  ...hp,
+  world: { width: world.width, height: world.height },
+  /** Physical sprite-box sizes in world px — `item` is the shared falling-item box, `bomb` the mine's
+   * sensor-tip span override (detonation matches what you see). Both single-source render + collision reach. */
+  physicalSizePx: { item: world.itemSizePx, bomb: FRENZY_ITEMS.bomb.physics.sizePx },
+  collision: {
+    catchGenerosity: collision.catchGenerosity,
+    /** The bomb's strict edge-to-edge contact (its `physics.catchGenerosity` override). */
+    bombCatchGenerosity: FRENZY_ITEMS.bomb.physics.catchGenerosity,
+    rockDamage: FRENZY_ITEMS.rock.interactions.onCollide.hpDelta,
+    brickDamage: FRENZY_ITEMS.brick.interactions.onCollide.hpDelta,
+  },
+  /** Hp delta when an item is eaten via the plain `eat` verb, by type; 0 for items whose pickup resolves through
+   * another verb (gamble/grantEffect/nudge) — their deltas live in their own descriptors. */
+  itemEffects: mapItems((definition) => {
+    return definition.interactions.onClick.verb === 'eat'
+      ? definition.interactions.onClick.hpDelta
+      : 0;
+  }),
+  fallSpeed: mapItems((definition) => definition.physics.fallSpeed),
+  itemRestMs: spawn.restMs,
+  itemSpawnXRange: spawn.xRange,
+  itemRestYRange: spawn.restYRange,
+  spawnWeights: SPAWN_POOLS.world,
+  eggEmitWeights: SPAWN_POOLS.eggEmit,
+  poopEmitWeights: SPAWN_POOLS.poopEmit,
+  spawnIntervalMsRange: spawn.intervalMsRange,
+  spawnReferencePlayers: spawn.referencePlayers,
+  mushroom: {
+    minDelta: FRENZY_ITEMS.mushroom.interactions.onClick.minDelta,
+    maxDelta: FRENZY_ITEMS.mushroom.interactions.onClick.maxDelta,
+  },
+  vitamin: {
+    hp: FRENZY_ITEMS.vitamin.interactions.onClick.hpDelta,
+    decayPauseMs: FRENZY_ITEMS.vitamin.interactions.onClick.durationMs,
+  },
+  shield: {
+    shieldMs: FRENZY_ITEMS.shield.interactions.onClick.durationMs,
+    spawnShieldMs: FRENZY_DEFINITION.spawnEffects.onJoin.durationMs,
+  },
+  easterEgg: {
+    durationMs: FRENZY_ITEMS.easterEgg.interactions.onClick.durationMs,
+    emitIntervalMs: FRENZY_DEFINITION.effects.laying.emission.intervalMs,
+    hpOnPickup: FRENZY_ITEMS.easterEgg.interactions.onClick.hpDelta,
+    emitBack: FRENZY_DEFINITION.effects.laying.emission.launch.back,
+    emitDown: FRENZY_DEFINITION.effects.laying.emission.launch.down,
+    emitBackSpeed: FRENZY_DEFINITION.effects.laying.emission.launch.backSpeed,
+    emitAngleJitter: FRENZY_DEFINITION.effects.laying.emission.launch.angleJitter,
+  },
+  poop: {
+    durationMs: FRENZY_ITEMS.poop.interactions.onClick.durationMs,
+    emitIntervalMs: FRENZY_DEFINITION.effects.pooping.emission.intervalMs,
+    hpOnPickup: FRENZY_ITEMS.poop.interactions.onClick.hpDelta,
+    emitBack: FRENZY_DEFINITION.effects.pooping.emission.launch.back,
+    emitDown: FRENZY_DEFINITION.effects.pooping.emission.launch.down,
+    emitBackSpeed: FRENZY_DEFINITION.effects.pooping.emission.launch.backSpeed,
+    emitAngleJitter: FRENZY_DEFINITION.effects.pooping.emission.launch.angleJitter,
+  },
+  bomb: {
+    maxDamage: FRENZY_ITEMS.bomb.interactions.onCollide.maxDamage,
+    minDamage: FRENZY_ITEMS.bomb.interactions.onCollide.minDamage,
+    blastRadius: FRENZY_ITEMS.bomb.interactions.onCollide.blastRadius,
+    clickImpulse: FRENZY_ITEMS.bomb.interactions.onClick.clickImpulse,
+    maxDriftSpeed: FRENZY_ITEMS.bomb.interactions.onClick.maxDriftSpeed,
+    emitBackSpeed: FRENZY_ITEMS.bomb.physics.emitLaunchSpeed,
+    blastImpulse: FRENZY_ITEMS.bomb.interactions.onCollide.blastImpulse,
+    blastImpulseMaxFactor: FRENZY_ITEMS.bomb.interactions.onCollide.blastImpulseMaxFactor,
+    clicksToExplodeRange: FRENZY_ITEMS.bomb.interactions.onClick.clicksToExplodeRange,
+  },
+  playerDriftZone: player.driftZone,
+  steer: player.steer,
+  bounceDamping: player.bounceDamping,
+  playerSpawnMinDistance: player.spawnMinDistance,
+  playerSpawnMaxAttempts: player.spawnMaxAttempts,
+  playerCollision: {
+    relaxation: playerCollision.relaxation,
+    slopPx: playerCollision.slopPx,
+    restitution: playerCollision.restitution,
+    maxCorrectionPx: playerCollision.maxCorrectionPx,
+    bumpSpeedThreshold: playerCollision.bumpSpeedThreshold,
+    bumpDamage: playerCollision.bumpDamage,
+    bumpImpulse: playerCollision.bumpImpulse,
+    bumpImpulseScale: playerCollision.bumpImpulseScale,
+  },
+  ...loop,
+  floatPriority: FRENZY_DEFINITION.floats.floatPriority,
+  score,
+  // NPC fields the CLIENT still reads (anger meter normalization, floor band); server code reads the
+  // definition slice directly since phase 5, so server-only fields (seekItemTypes, enabled) are not projected.
+  npc: {
+    spawnDelayMsRange: ANGRY_BOMB_NPC.spawnDelayMsRange,
+    respawnDelayMs: ANGRY_BOMB_NPC.respawnDelayMs,
+    floorY: ANGRY_BOMB_NPC.floorY,
+    floorBob: ANGRY_BOMB_NPC.floorBob,
+    retargetEveryTicks: ANGRY_BOMB_NPC.retargetEveryTicks,
+    decayPerStep: ANGRY_BOMB_NPC.decayPerStep,
+    anger: ANGRY_BOMB_NPC.anger,
+    strongBlast: ANGRY_BOMB_NPC.strongBlast,
+  },
+  features: {
+    items: mapItems((definition) => ({ enabled: definition.enabled })),
+    playerCollision: { enabled: playerCollision.enabled },
+  },
 } as const;
 
 /**
- * Normalized half-extent (0..1) of a `sizePx`-wide sprite measured along a world axis of `dimensionPx`.
- * Used for size-aware edge bounds: keeping an actor's centre at least this far from a world wall keeps the
- * whole sprite inside the aquarium (no clipping through the edge). Both axes derive from `FRENZY.world`.
- */
-export function halfExtentNorm(sizePx: number, dimensionPx: number): number {
-  return sizePx / 2 / dimensionPx;
-}
-
-/**
- * Whether an item type is currently enabled (see `FRENZY.features.items`). Consulted by `pickItemType` so a
- * disabled item is dropped from every spawn path. Cheap enough to call per spawn.
+ * Whether an item type is currently enabled (the slice's `enabled` flag, see `FRENZY.features.items`).
+ * Consulted by `pickItemType` so a disabled item is dropped from every spawn path. Cheap enough to call per spawn.
  */
 export function isItemEnabled(type: ItemType): boolean {
   return FRENZY.features.items[type].enabled;
-}
-
-/**
- * Whether an NPC kind is currently enabled (see `FRENZY.features.npc`). Gates the NPC spawner so a disabled
- * autobot never enters play — mirrors `isItemEnabled`.
- */
-export function isNpcEnabled(kind: NpcKind): boolean {
-  return FRENZY.features.npc[kind].enabled;
 }
 
 /**
@@ -71,7 +149,7 @@ export function isNpcEnabled(kind: NpcKind): boolean {
 export function totalScore(scores: Partial<Record<ScoreKind, number>>): number {
   const { weights } = FRENZY.score;
 
-  // Data-driven over the weights record (typed `Record<ScoreKind, number>` in `config/score`), so a new `ScoreKind`
+  // Data-driven over the weights record (typed `Record<ScoreKind, number>` in the definition), so a new `ScoreKind`
   // is forced to carry a weight AND is summed here automatically — no axis can silently drop out of the total.
   return (Object.keys(weights) as ScoreKind[]).reduce(
     (sum, kind) => sum + (scores[kind] ?? 0) * weights[kind],
@@ -80,31 +158,20 @@ export function totalScore(scores: Partial<Record<ScoreKind, number>>): number {
 }
 
 /**
- * Whether Pokémon↔Pokémon collision (soft separation + mini-bump) is on (see `FRENZY.features.playerCollision`).
- * Consulted once per tick by the orchestrator to gate the whole `separatePlayers` pass; off → Pokémon overlap freely.
+ * Whether player↔player collision (soft separation + mini-bump) is on (see `FRENZY.features.playerCollision`).
+ * Consulted once per tick by the orchestrator to gate the whole `separatePlayers` pass; off → players overlap freely.
  */
 export function isPlayerCollisionEnabled(): boolean {
   return FRENZY.features.playerCollision.enabled;
 }
 
 /**
- * Deterministic per-item resting y (normalized) within `range` (default `FRENZY.itemRestYRange`), hashed from the
- * item id. Server-authoritative: the engine settles a landing item here, and the client extrapolator clamps the
- * fall to the SAME value (so no snap on the confirming snapshot). Spreading rest y by id scatters settled items
- * across the seabed instead of stacking them on one row.
+ * Deterministic per-item resting y within `range` (default `FRENZY.itemRestYRange`) — the engine-layer
+ * `restYFor` with the frenzy default baked in, so client call sites keep their historical one-argument form.
  */
 export function restYFor(
   id: string,
   range: readonly [number, number] = FRENZY.itemRestYRange,
 ): number {
-  let hash = 0;
-
-  for (const character of id) {
-    hash = (hash * 31 + character.charCodeAt(0)) | 0;
-  }
-
-  const [min, max] = range;
-  const fraction = (Math.abs(hash) % 1000) / 1000;
-
-  return min + fraction * (max - min);
+  return engineRestYFor(id, range);
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { parseClientMessage } from '../parse-client-message';
-import { TEST_BODY } from './test-body';
+import { TEST_BODY } from '../../../engine/__tests__/test-body';
 
 describe('parseClientMessage', () => {
   it('returns null for invalid JSON', () => {
