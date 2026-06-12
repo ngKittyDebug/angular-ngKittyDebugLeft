@@ -68,10 +68,20 @@ describe('applyServerMessage', () => {
     expect(next?.players[0].stage).toBe(2);
   });
 
-  it('snaps the item x on itemNudged (bomb juggle)', () => {
-    const next = applyServerMessage(BOMB_STATE, { type: 'itemNudged', itemId: 'b1', x: 0.45 });
+  it('updates the bomb x/y and vx/vy on itemNudged (shove)', () => {
+    const next = applyServerMessage(BOMB_STATE, {
+      type: 'itemNudged',
+      itemId: 'b1',
+      x: 0.45,
+      y: 0.42,
+      vx: -0.04,
+      vy: 0.02,
+    });
 
     expect(next?.items[0].x).toBe(0.45);
+    expect(next?.items[0].y).toBe(0.42);
+    expect(next?.items[0].vx).toBe(-0.04);
+    expect(next?.items[0].vy).toBe(0.02);
   });
 
   it('drops the bomb item on detonated', () => {
@@ -127,5 +137,10 @@ describe('applyServerMessage', () => {
       SNAPSHOT_STATE,
     );
     expect(applyServerMessage(SNAPSHOT_STATE, { type: 'roomFull' })).toBe(SNAPSHOT_STATE);
+  });
+
+  it('returns previous unchanged on ping (liveness heartbeat carries no state)', () => {
+    expect(applyServerMessage(SNAPSHOT_STATE, { type: 'ping' })).toBe(SNAPSHOT_STATE);
+    expect(applyServerMessage(null, { type: 'ping' })).toBe(null);
   });
 });

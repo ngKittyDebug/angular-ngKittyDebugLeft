@@ -1,7 +1,7 @@
 // Host is the debug pill itself, placed by the scene-position directive (it writes the `translate` CSS property);
-// this static `transform` is the centre anchor plus an upward nudge (`--debug-readout-offset-y`, set by the caller
-// to sit just above the native box; falls back to a fixed lift) so the chip floats above the sprite and its debug
-// boxes instead of overlapping them. Non-interactive — purely a readout.
+// this static `transform` anchors the pill's bottom-left corner to the art box's top-left (offsets set by the
+// caller) — `translateY(-100%)` lifts it by its own height so it sits flush on the box top, left-aligned to the
+// sprite, with no gap. Non-interactive — purely a readout.
 :host {
   position: absolute;
   top: 0;
@@ -17,7 +17,8 @@
     600 10px/1.4 ui-monospace,
     monospace;
   white-space: nowrap;
-  transform: translate(-50%, -50%) translateY(var(--debug-readout-offset-y, -72px));
+  transform: translate(var(--debug-readout-offset-x, 0), var(--debug-readout-offset-y, -72px))
+    translateY(-100%);
   pointer-events: none;
 }
 

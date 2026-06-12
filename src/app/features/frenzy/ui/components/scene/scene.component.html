@@ -51,54 +51,21 @@
         [player]="player"
         [floats]="floatsByOwner().get(player.id) ?? []"
         [sparks]="sparksByOwner().get(player.id) ?? []"
+        [shieldBlocks]="shieldBlocksByOwner().get(player.id) ?? []"
         [maxHp]="maxHp"
         [shieldAuraClass]="shieldAuraClass"
         (poke)="onSelfPoke()"
       />
     }
 
-    @if (debug) {
-      <!-- Debug hitbox overlay (?debug): each actor's physical box centred on its position — the source of the
-           server AABB — to tune authored sizes against the sprite silhouette. -->
-      @for (player of renderedPlayers(); track player.id) {
-        <!-- Yellow = full art box (render size), shifted by the same centring offset as the sprite. -->
-        <left-paw-debug-box
-          variant="art"
-          [leftPawScenePosition]="{ x: player.x, y: player.y }"
-          [scenePositionTransform]="true"
-          [width]="player.spriteWidth"
-          [height]="player.spriteHeight"
-          [offsetX]="-player.spriteOffsetX + 'px'"
-          [offsetY]="-player.spriteOffsetY + 'px'"
-        />
-        <!-- Green = body hitbox (what the server collides), centred on the actor point. -->
-        <left-paw-debug-box
-          variant="body"
-          [leftPawScenePosition]="{ x: player.x, y: player.y }"
-          [scenePositionTransform]="true"
-          [width]="player.hitboxWidth"
-          [height]="player.hitboxHeight"
-        />
-        <!-- Readout pill floating just above the native box — current drift speed for now, more fields later. -->
-        <left-paw-debug-readout
-          [leftPawScenePosition]="{ x: player.x, y: player.y }"
-          [scenePositionTransform]="true"
-          [style.--debug-readout-offset-y]="player.debugReadoutOffsetY"
-          label="v"
-          [value]="player.debugSpeed"
-        />
-      }
-
-      @for (item of renderedItems(); track item.id) {
-        <left-paw-debug-box
-          variant="item"
-          [leftPawScenePosition]="{ x: item.x, y: item.y }"
-          [scenePositionTransform]="true"
-          [width]="itemSize"
-          [height]="itemSize"
-        />
-      }
-    }
+    <!-- Debug overlay (?debug) — all box/readout rendering lives in the debug feature; see DebugOverlayComponent. -->
+    <left-paw-debug-overlay
+      [flags]="debug"
+      [players]="renderedPlayers()"
+      [items]="renderedItems()"
+      [itemSize]="itemSize"
+      [bombSize]="bombSize"
+    />
 
     <!-- In-world near kelp drawn IN FRONT of the actors (its own z-index), so the Pokémon can duck behind it. -->
     <left-paw-midground-kelp />
@@ -128,6 +95,7 @@
         <span class="scene__blast-core"></span>
         <span class="scene__blast-flash"></span>
         <span class="scene__blast-sparks"></span>
+        <span class="scene__blast-embers"></span>
       </div>
     }
   </div>

@@ -82,9 +82,19 @@ export interface Item {
   vx?: number;
   /** Set once the item lands on the floor: remaining lie-on-floor time, ms. Counts down to removal; the item stays edible meanwhile. Undefined while still falling. */
   restMs?: number;
-  /** Player who emitted this item (easter-egg `laying` aura). That player is immune to it: collision and bomb
-   * blast skip the owner, so a Pokémon never eats or detonates its own output. Undefined for normal spawns. */
+  /** Player who emitted this item (`laying`/`pooping` aura). That player is immune to it WHILE it sits in their
+   * immediate interaction zone (so a freshly-laid item — incl. a pooped bomb — doesn't instantly eat/detonate its
+   * owner). The immunity lapses once the item separates (see `armed`). Undefined for normal spawns. */
   ownerId?: string;
+  /** Emitted item that has cleared its owner's interaction zone at least once (a bomb left the blast radius, any
+   * other item left the collision box). Once `true` the owner-immunity from `ownerId` no longer applies, so the
+   * item can collide with / blast its emitter if it drifts back. Set by the `armEmittedItems` tick pass; sticky.
+   * Undefined/false while the item is still hugging its owner, and absent entirely for non-emitted items. */
+  armed?: boolean;
+  /** Player who last shoved this bomb (set on each nudge). Unlike `ownerId` it grants NO immunity — it's purely a
+   * kill-credit stamp: a blast triggered by a shoved bomb names the shover in the obituary. Bombs only; undefined
+   * until first shoved, and overwritten by each later shover (last toucher takes the blame in a tug-of-war). */
+  lastNudgedBy?: string;
 }
 
 export interface ServerState {
@@ -122,9 +132,13 @@ export interface EvolvedEvent {
  * What ended a Pokémon's run, carried on the fainted event so the client can write an obituary.
  * `decay` = starved out by hp decay (no item involved). `item` = a specific item dealt the killing blow;
  * `itemType` is that item and `killerId` is the player who emitted it (easter-egg/poop aura) — absent for
- * naturally spawned items. Optional overall: omitted only by legacy/unknown deaths the client treats generically.
+ * naturally spawned items. `bump` = a rival Pokémon rammed it to death in a collision; `killerId` is that rival
+ * (always named — collisions always have a culprit). Optional overall: omitted only by legacy/unknown deaths.
  */
-export type FaintCause = { by: 'decay' } | { by: 'item'; itemType: ItemType; killerId?: string };
+export type FaintCause =
+  | { by: 'decay' }
+  | { by: 'item'; itemType: ItemType; killerId?: string }
+  | { by: 'bump'; killerId: string };
 
 export interface FaintedEvent {
   type: 'fainted';
@@ -133,11 +147,16 @@ export interface FaintedEvent {
   priority?: number;
 }
 
-// A bomb was juggled by a click: it moved horizontally to `x` (no hp change). Clients snap the item there immediately.
+// A bomb was shoved by a click: the click added an inertial impulse to its drift velocity (no hp change).
+// `x`/`y` are the bomb's authoritative position at shove time, `vx`/`vy` its new 2D drift velocity — clients
+// re-anchor their extrapolation baseline from all four so the shove (and any tug-of-war between players) shows at once.
 export interface ItemNudgedEvent {
   type: 'itemNudged';
   itemId: string;
   x: number;
+  y: number;
+  vx: number;
+  vy: number;
 }
 
 // A bomb exploded at (x, y) over `radius`; `playerIds` are everyone caught in the blast (incl. the owner).
@@ -165,6 +184,15 @@ export interface EffectGrantedEvent {
   via: PickupVia;
 }
 
+// Two Pokémon rammed each other hard enough to deal collision damage. `playerId` is a hit-but-survived Pokémon
+// (a Pokémon the ram finished off gets a `fainted` event instead); the client floats a quip over it. The damage
+// amount isn't carried — the HP bar reconciles on the next snapshot, like a bomb blast.
+export interface BumpedEvent {
+  type: 'bumped';
+  playerId: string;
+  priority?: number;
+}
+
 // Gameplay events emitted by the engine (apply-click/apply-tick) — single source; ServerMessage reuses them.
 export type GameEvent =
   | EatenEvent
@@ -172,14 +200,17 @@ export type GameEvent =
   | FaintedEvent
   | ItemNudgedEvent
   | DetonatedEvent
-  | EffectGrantedEvent;
+  | EffectGrantedEvent
+  | BumpedEvent;
 
 export type ClientMessage =
   | { type: 'identify'; sessionToken: string }
   | { type: 'join'; name: string; appearance: string; body: PlayerBody }
-  // `nudgeX` is the bomb-bat input: the signed horizontal displacement (normalized 0..1) the player wants,
-  // computed client-side from a fixed pixel step and the tapped side. Server caps/clamps it. Ignored for non-bomb items.
-  | { type: 'click'; itemId: string; nudgeX?: number }
+  // `nudgeX`/`nudgeY` are the bomb-shove input: a 2D direction (each roughly −1..1) pointing AWAY from the tapped
+  // side (tap the mine's right → push left, tap its top → push down, etc.). The server normalizes the pair and
+  // applies a fixed `bomb.clickImpulse` to the bomb's drift velocity (total speed capped at `bomb.maxDriftSpeed`).
+  // Ignored for non-bomb items.
+  | { type: 'click'; itemId: string; nudgeX?: number; nudgeY?: number }
   // Steering: the player tapped empty water at normalized point (x, y). The server adds a velocity impulse toward
   // it on top of the current drift (speed capped), so taps nudge the Pokémon's heading without replacing the drift.
   | { type: 'steer'; x: number; y: number }
@@ -198,4 +229,6 @@ export type ServerMessage =
   | { type: 'spawned'; item: Item }
   | { type: 'roomFull' }
   | { type: 'joinRejected'; reason: JoinRejectReason }
-  | { type: 'rejoined'; playerId: string };
+  | { type: 'rejoined'; playerId: string }
+  // Liveness heartbeat (carries no state) — lets the client tell a live-but-idle socket from a stalled one.
+  | { type: 'ping' };

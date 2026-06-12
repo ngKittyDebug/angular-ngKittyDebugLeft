@@ -90,13 +90,14 @@
     color: var(--tui-text-secondary);
   }
 
+  // No `overflow: hidden` here: on a flex item it forces the box baseline to the bottom edge (CSS spec), which
+  // knocks "до эволюции N" off the shared baseline of "N HP" in the `align-items: baseline` foot row. The text is
+  // short, app-generated and bounded, so it never needs the ellipsis clamp (the unbounded `__name` keeps its own).
   &__until {
-    overflow: hidden;
     margin-left: auto;
     font-size: 0.75rem;
     font-weight: 600;
     white-space: nowrap;
-    text-overflow: ellipsis;
     color: var(--tui-text-secondary);
   }
 

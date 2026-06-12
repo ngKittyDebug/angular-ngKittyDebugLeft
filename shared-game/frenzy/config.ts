@@ -16,6 +16,7 @@ import { ITEMS } from './config/items';
 import { LOOP } from './config/loop';
 import { HP } from './config/hp';
 import { PLAYER } from './config/player';
+import { PLAYER_COLLISION } from './config/player-collision';
 import { SPAWN } from './config/spawn';
 import { WORLD } from './config/world';
 
@@ -27,6 +28,7 @@ export const FRENZY = {
   ...SPAWN,
   ...BUFFS,
   ...PLAYER,
+  ...PLAYER_COLLISION,
   ...LOOP,
   ...FLOATS,
   features: FEATURES,
@@ -47,6 +49,14 @@ export function halfExtentNorm(sizePx: number, dimensionPx: number): number {
  */
 export function isItemEnabled(type: ItemType): boolean {
   return FRENZY.features.items[type].enabled;
+}
+
+/**
+ * Whether Pokémon↔Pokémon collision (soft separation + mini-bump) is on (see `FRENZY.features.playerCollision`).
+ * Consulted once per tick by the orchestrator to gate the whole `separatePlayers` pass; off → Pokémon overlap freely.
+ */
+export function isPlayerCollisionEnabled(): boolean {
+  return FRENZY.features.playerCollision.enabled;
 }
 
 /**

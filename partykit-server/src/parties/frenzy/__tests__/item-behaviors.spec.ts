@@ -96,27 +96,61 @@ describe('bomb behavior', () => {
     return { ...PLAYER, id, x, y, status };
   }
 
-  it('a click bats the bomb by the supplied displacement and never eats it', () => {
+  it('a click shoves the bomb opposite the tapped side and never eats it', () => {
+    // A horizontal-left direction → a purely leftward impulse of magnitude clickImpulse.
     const interaction = getItemBehavior('bomb').onClick(bombAt(0.5), 'p1', EMPTY_STATE, -0.1);
 
-    expect(interaction).toEqual({ hpDeltas: [], consumed: false, nudgeX: -0.1 });
+    expect(interaction).toEqual({
+      hpDeltas: [],
+      consumed: false,
+      nudgeX: -FRENZY.bomb.clickImpulse,
+      nudgeY: 0,
+    });
   });
 
-  it('caps an oversized bat displacement', () => {
-    const interaction = getItemBehavior('bomb').onClick(bombAt(0.5), 'p1', EMPTY_STATE, 1);
+  it('shoves vertically too — tapping above the centre pushes the bomb down', () => {
+    // nudgeY > 0 is downward in scene space; the bomb gets a purely vertical impulse, no horizontal component.
+    const interaction = getItemBehavior('bomb').onClick(
+      bombAt(0.5),
+      'p1',
+      EMPTY_STATE,
+      0,
+      undefined,
+      1,
+    );
 
-    expect(interaction.nudgeX).toBe(FRENZY.bomb.maxNudge);
+    expect(interaction.nudgeX).toBe(0);
+    expect(interaction.nudgeY).toBe(FRENZY.bomb.clickImpulse);
   });
 
-  it('without a displacement, a click bats the bomb away from the nearest edge (fallback)', () => {
+  it('normalizes the client direction to a fixed clickImpulse magnitude (never the raw size)', () => {
+    const diagonal = getItemBehavior('bomb').onClick(
+      bombAt(0.5),
+      'p1',
+      EMPTY_STATE,
+      5,
+      undefined,
+      5,
+    );
+
+    // A (5,5) input is a 45° push; magnitude is always clickImpulse regardless of the raw values.
+    expect(Math.hypot(diagonal.nudgeX ?? 0, diagonal.nudgeY ?? 0)).toBeCloseTo(
+      FRENZY.bomb.clickImpulse,
+      5,
+    );
+    expect(diagonal.nudgeX).toBeCloseTo(diagonal.nudgeY ?? 0, 5); // symmetric 45°
+  });
+
+  it('without a direction, a click shoves the bomb away from the nearest edge (fallback)', () => {
     const fromLeft = getItemBehavior('bomb').onClick(bombAt(0.3), 'p1', EMPTY_STATE);
     const fromRight = getItemBehavior('bomb').onClick(bombAt(0.7), 'p1', EMPTY_STATE);
 
-    expect(fromLeft.nudgeX).toBe(FRENZY.bomb.nudgeStep);
-    expect(fromRight.nudgeX).toBe(-FRENZY.bomb.nudgeStep);
+    expect(fromLeft.nudgeX).toBe(FRENZY.bomb.clickImpulse);
+    expect(fromLeft.nudgeY).toBe(0);
+    expect(fromRight.nudgeX).toBe(-FRENZY.bomb.clickImpulse);
   });
 
-  it('explodes on landing and damages every alive Pokémon in range, owner included', () => {
+  it('explodes on landing and damages every alive Pokémon in range, owner included; far/offline spared', () => {
     const owner = playerAt('owner', 0.5, 1);
     const nearby = playerAt('near', 0.6, 0.95);
     const faraway = playerAt('far', 0.1, 0.5);
@@ -131,10 +165,28 @@ describe('bomb behavior', () => {
 
     expect(interaction?.consumed).toBe(true);
     expect(interaction?.explodes).toBe(true);
-    expect(interaction?.hpDeltas).toEqual([
-      { playerId: 'owner', amount: FRENZY.bomb.damage },
-      { playerId: 'near', amount: FRENZY.bomb.damage },
-    ]);
+    expect(interaction?.hpDeltas.map((delta) => delta.playerId)).toEqual(['owner', 'near']);
+    // Epicentre takes the full max; the off-centre one takes less (distance falloff) but never weaker than the floor.
+    expect(interaction?.hpDeltas[0].amount).toBe(FRENZY.bomb.maxDamage);
+    expect(interaction?.hpDeltas[1].amount).toBeGreaterThan(FRENZY.bomb.maxDamage);
+    expect(interaction?.hpDeltas[1].amount).toBeLessThanOrEqual(FRENZY.bomb.minDamage);
+  });
+
+  it('kicks each caught player radially away from the epicentre (one impulse per hit)', () => {
+    const owner = playerAt('owner', 0.5, 1); // exactly on the bomb → lifted straight up
+    const side = playerAt('side', 0.6, 1); // to the right → pushed right
+    const state: ServerState = { players: [owner, side], items: [], tick: 0 };
+
+    const interaction = getItemBehavior('bomb').onLand?.(bombAt(0.5), state);
+
+    expect(interaction?.impulses).toHaveLength(2);
+
+    const ownerImpulse = interaction?.impulses?.find((impulse) => impulse.playerId === 'owner');
+    const sideImpulse = interaction?.impulses?.find((impulse) => impulse.playerId === 'side');
+
+    expect(ownerImpulse?.ix).toBe(0);
+    expect(ownerImpulse?.iy).toBeLessThan(0); // straight up out of the epicentre
+    expect(sideImpulse?.ix).toBeGreaterThan(0); // flung away to the right
   });
 
   it('spares a shielded Pokémon from the blast (skipped, not zero-damage)', () => {
@@ -147,7 +199,7 @@ describe('bomb behavior', () => {
 
     const interaction = getItemBehavior('bomb').onLand?.(bombAt(0.5), state);
 
-    expect(interaction?.hpDeltas).toEqual([{ playerId: 'owner', amount: FRENZY.bomb.damage }]);
+    expect(interaction?.hpDeltas).toEqual([{ playerId: 'owner', amount: FRENZY.bomb.maxDamage }]);
   });
 
   it('spares the bomb owner from their own laid bomb but still hits nearby rivals', () => {
@@ -158,10 +210,12 @@ describe('bomb behavior', () => {
 
     const interaction = getItemBehavior('bomb').onLand?.(ownedBomb, state);
 
-    expect(interaction?.hpDeltas).toEqual([{ playerId: 'rival', amount: FRENZY.bomb.damage }]);
+    expect(interaction?.hpDeltas).toHaveLength(1);
+    expect(interaction?.hpDeltas[0].playerId).toBe('rival');
+    expect(interaction?.hpDeltas[0].amount).toBeLessThan(0);
   });
 
-  it('also detonates on mid-air collision — same area blast, not a one-on-one hit', () => {
+  it('also detonates on mid-air collision — same area blast, closer hit takes more damage', () => {
     const touched = playerAt('touched', 0.5, 0.6);
     const bystander = playerAt('bystander', 0.6, 0.6);
     const faraway = playerAt('far', 0.1, 0.6);
@@ -175,10 +229,9 @@ describe('bomb behavior', () => {
 
     expect(interaction?.consumed).toBe(true);
     expect(interaction?.explodes).toBe(true);
-    expect(interaction?.hpDeltas).toEqual([
-      { playerId: 'touched', amount: FRENZY.bomb.damage },
-      { playerId: 'bystander', amount: FRENZY.bomb.damage },
-    ]);
+    expect(interaction?.hpDeltas.map((delta) => delta.playerId)).toEqual(['touched', 'bystander']);
+    // touched sits at the epicentre, bystander off to the side → touched loses more (a more negative amount).
+    expect(interaction?.hpDeltas[0].amount).toBeLessThan(interaction?.hpDeltas[1].amount ?? 0);
   });
 });
 

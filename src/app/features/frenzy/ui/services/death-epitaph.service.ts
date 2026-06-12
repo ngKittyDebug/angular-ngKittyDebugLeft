@@ -21,6 +21,7 @@ const VARIANT_COUNT: Record<string, number> = {
   bomb: 4,
   mushroom: 3,
   item: 3,
+  self: 3,
   'killer.bomb': 3,
   'killer.thrown': 3,
   'killer.generic': 3,
@@ -39,9 +40,10 @@ export class DeathEpitaphService {
   public compose(
     cause: FaintCause | null,
     killerName: string | null,
+    selfDestruct = false,
     rng: () => number = Math.random,
   ): Epitaph {
-    const bucket = this.bucketFor(cause, killerName);
+    const bucket = this.bucketFor(cause, killerName, selfDestruct);
     const index = Math.floor(rng() * VARIANT_COUNT[bucket]);
     const parameters: Record<string, string> =
       killerName !== null && bucket.startsWith('killer.') ? { killer: killerName } : {};
@@ -50,14 +52,30 @@ export class DeathEpitaphService {
   }
 
   // Map cause + whether a culprit is named to an i18n bucket. A named killer (an easter-egg/poop layer whose
-  // item landed the blow) gets the gloatier `killer.*` lines; otherwise it's a plain item or starvation.
-  private bucketFor(cause: FaintCause | null, killerName: string | null): string {
+  // item landed the blow, or a rival that rammed us to death) gets the gloatier `killer.*` lines; otherwise it's
+  // a plain item or starvation.
+  private bucketFor(
+    cause: FaintCause | null,
+    killerName: string | null,
+    selfDestruct: boolean,
+  ): string {
     if (cause === null) {
       return 'unknown';
     }
 
     if (cause.by === 'decay') {
       return 'decay';
+    }
+
+    // Hoisted by your own petard — shoved your own mine (or laid your own poison) into yourself. The killer
+    // resolves to your own name, so skip the gloat lines and own the comedy with a dedicated self-destruct bucket.
+    if (selfDestruct) {
+      return 'self';
+    }
+
+    // A fatal collision has no item — reuse the generic gloat line, naming the rival that rammed us.
+    if (cause.by === 'bump') {
+      return killerName !== null ? 'killer.generic' : 'unknown';
     }
 
     if (killerName !== null) {

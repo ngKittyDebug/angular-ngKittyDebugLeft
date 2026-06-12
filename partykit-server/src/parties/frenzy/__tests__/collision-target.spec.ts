@@ -27,17 +27,22 @@ function itemAt(x: number, y: number, overrides: Partial<Item> = {}): Item {
   return { id: 'i1', type: 'food', x, y, vy: 0, ...overrides };
 }
 
-// AABB half-reach in normalized units for a stage's box: (itemHalf + bodyHalf) * generosity, per axis.
+// AABB half-reach in normalized units for a stage's box: itemHalf + bodyHalf * generosity, per axis. The item
+// enters at its true half (no assist); only the body half is scaled by generosity.
 function reachNormX(stage: 1 | 2 | 3): number {
-  const halfPx = (FRENZY.physicalSizePx.item + TEST_BODY[stage].width) / 2;
+  const halfPx =
+    FRENZY.physicalSizePx.item / 2 +
+    (TEST_BODY[stage].width / 2) * FRENZY.collision.catchGenerosity;
 
-  return (halfPx * FRENZY.collision.catchGenerosity) / FRENZY.world.width;
+  return halfPx / FRENZY.world.width;
 }
 
 function reachNormY(stage: 1 | 2 | 3): number {
-  const halfPx = (FRENZY.physicalSizePx.item + TEST_BODY[stage].height) / 2;
+  const halfPx =
+    FRENZY.physicalSizePx.item / 2 +
+    (TEST_BODY[stage].height / 2) * FRENZY.collision.catchGenerosity;
 
-  return (halfPx * FRENZY.collision.catchGenerosity) / FRENZY.world.height;
+  return halfPx / FRENZY.world.height;
 }
 
 describe('findCollisionTarget (AABB)', () => {

@@ -52,7 +52,8 @@ export class DetonationEffect implements FrenzyEffect {
         textKey: `floatingText.bomb.${index}`,
         durationMs: BOMB_FLOAT_TTL_MS,
         icon: '@tui.bomb',
-        delta: FRENZY.bomb.damage,
+        // No number: blast damage is distance-scaled and not carried in the event — the HP bar reconciles on
+        // the next snapshot. The quip + bomb icon read the hit; a fixed "−25" would be a lie now.
         priority: message.priority ?? FRENZY.floatPriority.detonated,
       };
 

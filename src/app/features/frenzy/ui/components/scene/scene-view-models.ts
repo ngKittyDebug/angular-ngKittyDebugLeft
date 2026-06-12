@@ -22,10 +22,12 @@ export interface RenderedPlayer {
   // Body hitbox box (px strings) — the collidable torso, centred on the point. Drawn by the `?debug` overlay.
   hitboxWidth: string;
   hitboxHeight: string;
-  // Current drift speed (|velocity|, normalized units/sec, 2 decimals) — shown by the `?debug` overlay readout.
+  // Current drift speed (|velocity|, normalized units/sec, 4 decimals) — shown by the `?debug` overlay readout.
   debugSpeed: string;
-  // Y offset (px, world units) from the actor point to sit the `?debug` readout just above the native (art) box's
-  // top edge — varies per sprite/stage with the render height + centring offset, so it tracks each box.
+  // X/Y offsets (px, world units) from the actor point to the art box's top-left corner — anchor the `?debug`
+  // readout's bottom-left there so the pill sits flush on the box top, left-aligned to the sprite. Track each box
+  // (vary per sprite/stage with the render size + centring offset).
+  debugReadoutOffsetX: string;
   debugReadoutOffsetY: string;
   stage: Stage;
   x: number;
@@ -40,6 +42,9 @@ export interface RenderedItem {
   landed: boolean;
   spinDurationMs: number;
   spinReverse: boolean;
+  // Current drift speed (|velocity|, normalized units/sec, 4 decimals) — set only for the bomb (the one item that
+  // drifts under physics), shown by the `?debug` speed readout. Undefined for plain fallers.
+  debugSpeed?: string;
 }
 
 export interface BubbleBurst {
@@ -61,6 +66,7 @@ export interface SandPuff {
 
 export interface ItemClick {
   itemId: string;
-  /** Bomb bat input: signed normalized horizontal displacement (fixed pixel step ÷ world width). Undefined for non-bomb items. */
+  /** Bomb shove input: a 2D direction pointing AWAY from the tapped side (tap right → push left, tap top → push down); the server applies a fixed impulse along it. Undefined for non-bomb items. */
   nudgeX?: number;
+  nudgeY?: number;
 }

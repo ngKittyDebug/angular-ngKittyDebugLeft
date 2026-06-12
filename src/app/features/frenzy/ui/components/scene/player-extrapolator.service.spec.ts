@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { FRENZY } from '@game/frenzy/config';
 import type { Player } from '@game/frenzy/types';
 
 import { bodyForAppearance } from '../../constants/pokemon-registry';
@@ -90,6 +91,48 @@ describe('PlayerExtrapolatorService', () => {
 
     expect(() => service.predictSteer(null, 0.9, 0.5, 0)).not.toThrow();
     expect(() => service.predictSteer('ghost', 0.9, 0.5, 0)).not.toThrow();
+  });
+
+  it('never renders a player outside the drift zone after a large reconciliation correction', () => {
+    const service = new PlayerExtrapolatorService();
+    const zone = FRENZY.playerDriftZone;
+
+    // Client extrapolated the player against the right/bottom wall...
+    service.ingest([player({ id: 'p1', x: zone.maxX, y: zone.maxY })], null, NONE, 0);
+    // ...then the server snaps it to the opposite wall with high velocity (e.g. a bomb knockback): a large gap is
+    // captured as the reconciliation offset, which must not fling the offset-adjusted sprite past the wall.
+    service.ingest(
+      [player({ id: 'p1', x: zone.minX, y: zone.minY, vx: 50, vy: 50 })],
+      null,
+      NONE,
+      0,
+    );
+
+    for (const now of [10, 30, 90, 270]) {
+      // Each iteration is a fresh, distinct snapshot arriving mid-glide so `sync` actually re-anchors (re-captures
+      // the gap). The captured offset must come from the clamped rendered position, never re-extending the excursion.
+      const vx = now % 2 === 0 ? 50 : -50;
+
+      service.ingest(
+        [player({ id: 'p1', x: zone.minX, y: zone.minY, vx, vy: vx })],
+        null,
+        NONE,
+        now,
+      );
+      service.tick(
+        [player({ id: 'p1', x: zone.minX, y: zone.minY, vx, vy: vx })],
+        null,
+        NONE,
+        now + 5,
+      );
+
+      const rendered = service.rendered()[0];
+
+      expect(rendered.x).toBeGreaterThanOrEqual(zone.minX);
+      expect(rendered.x).toBeLessThanOrEqual(zone.maxX);
+      expect(rendered.y).toBeGreaterThanOrEqual(zone.minY);
+      expect(rendered.y).toBeLessThanOrEqual(zone.maxY);
+    }
   });
 
   it('drops players absent from the latest snapshot', () => {

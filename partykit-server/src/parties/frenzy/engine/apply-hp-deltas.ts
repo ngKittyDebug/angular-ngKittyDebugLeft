@@ -81,13 +81,15 @@ function resolvePlayerHp(player: Player, amount: number, cause?: FaintCause): Pl
  * Applies hp changes to players: clamps at 0, recomputes stage, removes anyone who hits 0.
  * Emits `evolved` when a player crosses a stage threshold and `fainted` when they reach 0.
  * Shared by click (eating) and any landing/collateral effect, so it handles one or many targets.
- * `cause` is the killing-blow attribution stamped on each `fainted` event: every call here resolves a single
- * item interaction (one item → one cause), so the whole batch shares it; decay deaths are built elsewhere.
+ * `cause` is the killing-blow attribution stamped on each `fainted` event. A single `FaintCause` covers a one-item
+ * interaction (one item → one cause) where the whole batch shares it; a resolver function `(playerId) => cause`
+ * covers a batch with a per-victim culprit (player-vs-player bumps, where each victim's killer is its own rammer).
+ * Decay deaths are built elsewhere.
  */
 export function applyHpDeltas(
   state: ServerState,
   deltas: HpDelta[],
-  cause?: FaintCause,
+  cause?: FaintCause | ((playerId: string) => FaintCause | undefined),
 ): HpDeltaResult {
   if (deltas.length === 0) {
     return { state, events: [] };
@@ -105,7 +107,8 @@ export function applyHpDeltas(
       continue;
     }
 
-    const outcome = resolvePlayerHp(player, amount, cause);
+    const resolvedCause = typeof cause === 'function' ? cause(player.id) : cause;
+    const outcome = resolvePlayerHp(player, amount, resolvedCause);
 
     if (outcome.player !== undefined) {
       players.push(outcome.player);

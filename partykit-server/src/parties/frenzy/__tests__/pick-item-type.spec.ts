@@ -4,9 +4,9 @@ import { pickItemType } from '../engine/pick-item-type';
 
 describe('pickItemType', () => {
   // Cumulative weight bands over FRENZY.spawnWeights in insertion order:
-  // food=55 rotten=15 rock=20 brick=10 rareCandy=5 bomb=10 goldenBerry=5 crumb=35 mushroom=12 vitamin=8 shield=6 easterEgg=6 poop=6 → total=193.
+  // food=55 rotten=15 rock=20 brick=10 rareCandy=5 bomb=10 goldenBerry=5 crumb=35 mushroom=12 vitamin=8 shield=6 easterEgg=12 poop=6 → total=199.
   // Multiplied roll bands: food<55, rotten<70, rock<90, brick<100, rareCandy<105, bomb<115, goldenBerry<120,
-  // crumb<155, mushroom<167, vitamin<175, shield<181, easterEgg<187, else poop. Rolls below pick a band midpoint.
+  // crumb<155, mushroom<167, vitamin<175, shield<181, easterEgg<193, else poop. Rolls below pick a band midpoint.
   it('returns food for low rolls', () => {
     expect(pickItemType(() => 0)).toBe('food');
     expect(pickItemType(() => 0.2)).toBe('food');
@@ -25,7 +25,7 @@ describe('pickItemType', () => {
   });
 
   it('returns rareCandy in the 100..105 roll band', () => {
-    expect(pickItemType(() => 0.531)).toBe('rareCandy');
+    expect(pickItemType(() => 0.515)).toBe('rareCandy');
   });
 
   it('returns bomb in the 105..115 roll band', () => {
@@ -33,7 +33,7 @@ describe('pickItemType', () => {
   });
 
   it('returns goldenBerry in the 115..120 roll band', () => {
-    expect(pickItemType(() => 0.609)).toBe('goldenBerry');
+    expect(pickItemType(() => 0.59)).toBe('goldenBerry');
   });
 
   it('returns crumb in the 120..155 roll band', () => {
@@ -45,14 +45,14 @@ describe('pickItemType', () => {
   });
 
   it('returns vitamin in the 167..175 roll band', () => {
-    expect(pickItemType(() => 0.886)).toBe('vitamin');
+    expect(pickItemType(() => 0.859)).toBe('vitamin');
   });
 
   it('returns shield in the 175..181 roll band', () => {
-    expect(pickItemType(() => 0.922)).toBe('shield');
+    expect(pickItemType(() => 0.894)).toBe('shield');
   });
 
-  it('returns easterEgg in the 181..187 roll band', () => {
+  it('returns easterEgg in the 181..193 roll band', () => {
     expect(pickItemType(() => 0.953)).toBe('easterEgg');
     expect(pickItemType(() => 0.965)).toBe('easterEgg');
   });

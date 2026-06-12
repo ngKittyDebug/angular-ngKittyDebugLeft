@@ -31,11 +31,13 @@ export const ITEM_FEATURES: Record<ItemType, FeatureFlag> = {
 };
 
 /**
- * Game feature flags. Currently gates the item roster.
+ * Game feature flags. Gates the item roster and the player-vs-player collision pass.
  *
  * NPC extension (no NPCs yet): when they land, add a sibling `npc: Record<NpcKind, FeatureFlag>` of the same
  * shape and gate the NPC spawner exactly like `pickItemType` is gated — one flag, one decision point.
  */
 export const FEATURES = {
   items: ITEM_FEATURES,
+  /** Pokémon↔Pokémon collision (soft separation + mini-bump). Off → Pokémon pass through each other (legacy). */
+  playerCollision: { enabled: true } satisfies FeatureFlag,
 } as const;

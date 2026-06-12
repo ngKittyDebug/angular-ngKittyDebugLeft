@@ -10,10 +10,22 @@
     [blasts]="blasts()"
     [hitBursts]="hitBursts()"
     [ownedSparks]="ownedSparks()"
+    [ownedShieldBlocks]="ownedShieldBlocks()"
     (itemClick)="handleItemClick($event)"
     (selfPoke)="handleSelfPoke()"
     (steer)="handleSteer($event)"
   />
+
+  @if (isReconnecting()) {
+    <p
+      *transloco="let t; prefix: 'frenzy.connection'"
+      class="frenzy-page__reconnecting"
+      role="status"
+      aria-live="polite"
+    >
+      {{ t('reconnecting') }}
+    </p>
+  }
 
   @if (me(); as myself) {
     <div class="frenzy-page__hud-left">
@@ -42,13 +54,13 @@
     <left-paw-leaderboard [entries]="leaderboard()" [myId]="myId()" [compact]="isMobile()" />
   </div>
 
-  <div class="frenzy-page__overlay">
+  <div class="frenzy-page__overlay" *transloco="let t; prefix: 'frenzy.connection'">
     @switch (uiState()) {
       @case ('connecting') {
-        <p class="frenzy-page__status">Connecting…</p>
+        <p class="frenzy-page__status">{{ t('connecting') }}</p>
       }
       @case ('roomFull') {
-        <p class="frenzy-page__status">Room is full. Try again later.</p>
+        <p class="frenzy-page__status">{{ t('roomFull') }}</p>
       }
       @case ('closed') {
         <div class="frenzy-page__backdrop"></div>
@@ -73,3 +85,7 @@
     }
   </div>
 </main>
+
+<span class="frenzy-page__floor" *transloco="let t; prefix: 'frenzy.scene'" aria-hidden="true">{{
+  t('floorLabel')
+}}</span>

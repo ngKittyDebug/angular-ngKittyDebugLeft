@@ -1,6 +1,7 @@
 import type { Routes } from '@angular/router';
 import { provideTranslocoScope } from '@jsverse/transloco';
 
+import { BumpEffect } from './data/services/effects/bump-effect.service';
 import { DetonationEffect } from './data/services/effects/detonation-effect.service';
 import { EatEffect } from './data/services/effects/eat-effect.service';
 import { EmissionSoundEffect } from './data/services/effects/emission-sound-effect.service';
@@ -10,6 +11,7 @@ import { HitBurstEffect } from './data/services/effects/hit-burst-effect.service
 import { PlayerEffectsTracker } from './data/services/effects/player-effects-tracker.service';
 import { PresenceTracker } from './data/services/effects/presence-tracker.service';
 import { SelfMoodEffect } from './data/services/effects/self-mood-effect.service';
+import { ShieldBlockEffect } from './data/services/effects/shield-block-effect.service';
 import { FrenzyEffectsService } from './data/services/frenzy-effects.service';
 import { FrenzySocketService } from './data/services/frenzy-socket.service';
 import { PlayerPersistenceService } from './data/services/player-persistence.service';
@@ -52,7 +54,9 @@ export const frenzyRoutes: Routes = [
       EatEffect,
       EvolutionEffect,
       DetonationEffect,
+      BumpEffect,
       HitBurstEffect,
+      ShieldBlockEffect,
       PresenceTracker,
       PlayerEffectsTracker,
       EmissionSoundEffect,

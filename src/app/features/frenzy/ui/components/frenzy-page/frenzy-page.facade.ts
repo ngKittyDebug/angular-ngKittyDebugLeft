@@ -45,6 +45,7 @@ export class FrenzyPageFacade {
   public readonly evolvingPlayers = this.effects.evolvingPlayers;
   public readonly hitBursts = this.effects.hitBursts;
   public readonly ownedSparks = this.effects.ownedSparks;
+  public readonly ownedShieldBlocks = this.effects.ownedShieldBlocks;
   public readonly faintedStats = computed<FaintedStats>(() => ({
     eatenByType: this.stats.eatenByType(),
     lifespanSeconds: this.stats.lifespanSeconds(),
@@ -54,9 +55,15 @@ export class FrenzyPageFacade {
   }));
   // Rolled once per death: the computed only re-runs when the captured cause/killer change (at the next faint),
   // so the obituary phrase stays fixed while the modal re-renders on the respawn-cooldown ticker.
-  public readonly faintedEpitaph = computed<Epitaph>(() =>
-    this.epitaphs.compose(this.store.myFaintCause(), this.store.myKillerName()),
-  );
+  public readonly faintedEpitaph = computed<Epitaph>(() => {
+    const cause = this.store.myFaintCause();
+    // Self-destruct: the lethal blow carries my own id (shoved my own mine into myself). The killer name would
+    // resolve to my own, so flag it and let the epitaph swap the gloat line for a self-own one.
+    const selfDestruct =
+      cause !== null && 'killerId' in cause && cause.killerId === this.store.myId();
+
+    return this.epitaphs.compose(cause, this.store.myKillerName(), selfDestruct);
+  });
   public readonly orphanFloats = this.effects.orphanFloats;
   public readonly ownedFloats = this.effects.ownedFloats;
   public readonly joinError = this.store.joinError;
@@ -68,6 +75,9 @@ export class FrenzyPageFacade {
   public readonly players = computed(() => this.store.state()?.players ?? []);
   public readonly presenceCount = this.store.presenceCount;
   public readonly respawnReady = computed(() => this.cooldownLeftMs() === 0);
+  // A self-healing inbound stall (see FrenzySocketService): shown as a non-blocking banner over the live scene
+  // rather than tearing down to the disconnected modal, since it recovers in well under a second.
+  public readonly isReconnecting = computed(() => this.store.connectionStatus() === 'reconnecting');
   public readonly uiState = computed<UiState>(() => {
     const status = this.store.connectionStatus();
 
@@ -79,7 +89,9 @@ export class FrenzyPageFacade {
       return 'closed';
     }
 
-    if (status !== 'open') {
+    // `reconnecting` keeps the in-game UI (scene + the reconnecting banner); only a genuine pre-connect counts
+    // as `connecting`.
+    if (status === 'connecting') {
       return 'connecting';
     }
 
@@ -101,7 +113,7 @@ export class FrenzyPageFacade {
   }
 
   public click(event: ItemClick): void {
-    this.store.click(event.itemId, event.nudgeX);
+    this.store.click(event.itemId, event.nudgeX, event.nudgeY);
   }
 
   public connect(): void {

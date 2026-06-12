@@ -23,7 +23,7 @@ export const ITEMS = {
     rock: 0.2,
     brick: 0.22,
     rareCandy: 0.15,
-    bomb: 0.035,
+    bomb: 0.01,
     goldenBerry: 0.18,
     crumb: 0.25,
     mushroom: 0.15,

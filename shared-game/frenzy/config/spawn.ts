@@ -13,7 +13,7 @@ export const SPAWN = {
     mushroom: 12,
     vitamin: 8,
     shield: 6,
-    easterEgg: 6,
+    easterEgg: 12,
     poop: 6,
   },
   /** Relative weights for what the `laying` (easter-egg) aura sprays — its own pool, not `spawnWeights`, so the

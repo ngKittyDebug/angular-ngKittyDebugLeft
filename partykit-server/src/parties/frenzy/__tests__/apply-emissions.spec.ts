@@ -47,15 +47,20 @@ describe('applyEmissions', () => {
 
   it('a laying player sprays an item from its lower-rear, launched backward and tagged with ownerId', () => {
     const layer = player('p1', LAYING);
-    const { state: next, spawned } = applyEmissions(stateWith([layer]), emit, () => 'egg-1');
+    // rng: [emit gate, pickItemType → food, angle jitter = 0.5 → zero rotation] so the exact launch vector holds.
+    const { state: next, spawned } = applyEmissions(
+      stateWith([layer]),
+      sequenceRng([0, 0, 0.5]),
+      () => 'egg-1',
+    );
 
     expect(spawned).toEqual([
       {
         id: 'egg-1',
         type: 'food',
-        // Idle layer (vx 0) faces right → item spawns behind (left of) and below it, launched left.
-        x: 0.4 - FRENZY.easterEgg.emitBack,
-        y: 0.6 + FRENZY.easterEgg.emitDown,
+        // Idle layer (vx 0) faces right → item spawns past the body's rear-left edge and below it, launched left.
+        x: 0.4 - (TEST_BODY[1].width / 2 / FRENZY.world.width + FRENZY.easterEgg.emitBack),
+        y: 0.6 + TEST_BODY[1].height / 2 / FRENZY.world.height + FRENZY.easterEgg.emitDown,
         vx: -FRENZY.easterEgg.emitBackSpeed,
         vy: FRENZY.fallSpeed.food,
         ownerId: 'p1',
@@ -66,10 +71,13 @@ describe('applyEmissions', () => {
 
   it('launches the item opposite the heading: a left-moving layer sprays to the right', () => {
     const layer = { ...player('p1', LAYING), vx: -0.05 };
-    const { spawned } = applyEmissions(stateWith([layer]), emit, () => 'egg-2');
+    const { spawned } = applyEmissions(stateWith([layer]), sequenceRng([0, 0, 0.5]), () => 'egg-2');
 
     expect(spawned[0].vx).toBeCloseTo(FRENZY.easterEgg.emitBackSpeed, 5);
-    expect(spawned[0].x).toBeCloseTo(0.4 + FRENZY.easterEgg.emitBack, 5);
+    expect(spawned[0].x).toBeCloseTo(
+      0.4 + TEST_BODY[1].width / 2 / FRENZY.world.width + FRENZY.easterEgg.emitBack,
+      5,
+    );
   });
 
   it('a laying player only ever sprays the all-positive egg pool — never a nasty, bomb nor aura item', () => {
@@ -133,14 +141,18 @@ describe('applyEmissions', () => {
 
   it('a pooping player sprays only from the nasty pool (rng 0 → rock), using the poop launch config', () => {
     const pooper = player('p1', POOPING);
-    const { spawned } = applyEmissions(stateWith([pooper]), emit, () => 'poop-1');
+    const { spawned } = applyEmissions(
+      stateWith([pooper]),
+      sequenceRng([0, 0, 0.5]),
+      () => 'poop-1',
+    );
 
     expect(spawned).toEqual([
       {
         id: 'poop-1',
         type: 'rock',
-        x: 0.4 - FRENZY.poop.emitBack,
-        y: 0.6 + FRENZY.poop.emitDown,
+        x: 0.4 - (TEST_BODY[1].width / 2 / FRENZY.world.width + FRENZY.poop.emitBack),
+        y: 0.6 + TEST_BODY[1].height / 2 / FRENZY.world.height + FRENZY.poop.emitDown,
         vx: -FRENZY.poop.emitBackSpeed,
         vy: FRENZY.fallSpeed.rock,
         ownerId: 'p1',
@@ -173,9 +185,32 @@ describe('applyEmissions', () => {
 
   it('a player holding both auras emits via laying (first match wins → food, not the poop pool)', () => {
     const both = player('p1', [...LAYING, ...POOPING]);
-    const { spawned } = applyEmissions(stateWith([both]), emit, () => 'both-1');
+    const { spawned } = applyEmissions(stateWith([both]), sequenceRng([0, 0, 0.5]), () => 'both-1');
 
     expect(spawned[0].type).toBe('food');
     expect(spawned[0].vx).toBeCloseTo(-FRENZY.easterEgg.emitBackSpeed, 5);
+  });
+
+  it('jitters the launch angle so a burst fans out instead of lining up (speed preserved)', () => {
+    const speedOf = (s: { vx?: number; vy: number }): number => Math.hypot(s.vx ?? 0, s.vy);
+    const base = Math.hypot(FRENZY.easterEgg.emitBackSpeed, FRENZY.fallSpeed.food);
+
+    // Same emit + same item type (food), two opposite jitter rolls → two different launch directions, one speed.
+    const { spawned: ccw } = applyEmissions(
+      stateWith([player('p1', LAYING)]),
+      sequenceRng([0, 0, 0]),
+      () => 'e',
+    );
+    const { spawned: cw } = applyEmissions(
+      stateWith([player('p1', LAYING)]),
+      sequenceRng([0, 0, 1]),
+      () => 'e',
+    );
+
+    expect(ccw[0].vx).not.toBeCloseTo(cw[0].vx ?? 0, 4); // fanned apart, not a single line
+    expect(speedOf(ccw[0])).toBeCloseTo(base, 6); // rotation preserves the launch speed
+    expect(speedOf(cw[0])).toBeCloseTo(base, 6);
+    expect(ccw[0].vy).toBeGreaterThan(0); // still launched downward, never flipped upward
+    expect(cw[0].vy).toBeGreaterThan(0);
   });
 });

@@ -1,11 +1,11 @@
-<section class="picker">
+<section class="picker" *transloco="let t; prefix: 'frenzy.picker'">
   <label class="picker__name">
-    <span class="picker__label">Your name</span>
+    <span class="picker__label">{{ t('nameLabel') }}</span>
     <input
       class="picker__input"
       type="text"
       maxlength="24"
-      placeholder="trainer"
+      [placeholder]="t('namePlaceholder')"
       [value]="name()"
       (input)="onNameInput($event)"
     />
@@ -37,6 +37,6 @@
   }
 
   <button type="button" class="picker__submit" [disabled]="!canSubmit()" (click)="submit()">
-    Join the frenzy
+    {{ t('submit') }}
   </button>
 </section>

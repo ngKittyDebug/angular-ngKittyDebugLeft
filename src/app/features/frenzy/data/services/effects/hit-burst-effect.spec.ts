@@ -133,8 +133,19 @@ describe('HitBurstEffect', () => {
     expect(bursts[1].mode).toBe('burst');
   });
 
+  it('sparks over the rammed Pokémon on a bump — no bubble burst', () => {
+    effect.handle({ type: 'bumped', playerId: 'victim' });
+
+    expect(effect.hitBursts()).toHaveLength(0);
+
+    const sparks = effect.ownedSparks();
+
+    expect(sparks).toHaveLength(1);
+    expect(sparks[0].ownerId).toBe('victim');
+  });
+
   it('ignores itemNudged and detonated', () => {
-    effect.handle({ type: 'itemNudged', itemId: 'b1', x: 0.5 });
+    effect.handle({ type: 'itemNudged', itemId: 'b1', x: 0.5, y: 0.5, vx: 0.04, vy: 0.02 });
     effect.handle({
       type: 'detonated',
       itemId: 'b1',

@@ -2,7 +2,13 @@
   <span class="scene__item-shadow" aria-hidden="true"></span>
 }
 
-<button class="scene__item" type="button" (click)="clicked.emit($event)">
+<button
+  class="scene__item"
+  [class.scene__item--bomb]="item().type === 'bomb'"
+  [class.scene__item--landed]="item().landed"
+  type="button"
+  (click)="clicked.emit($event)"
+>
   <img
     class="scene__item-sprite"
     [class.scene__item-sprite--spin]="item().type !== 'bomb' && item().type !== 'shield'"
@@ -10,7 +16,6 @@
     [class.scene__item-sprite--bomb]="item().type === 'bomb'"
     [class.scene__item-sprite--rock]="item().type === 'rock'"
     [class.scene__item-sprite--rotten]="item().type === 'rotten'"
-    [class.scene__item-sprite--reverse]="item().type === 'bomb' && item().spinReverse"
     [style.animation-duration]="
       item().type === 'bomb'
         ? null

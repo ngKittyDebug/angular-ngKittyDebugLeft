@@ -20,11 +20,12 @@ import type { Item, Player } from '@game/frenzy/types';
 import type { Blast } from '../../../data/models/blast';
 import type { OrphanFloat, OwnedFloat } from '../../../data/models/floating-message';
 import type { HitBurst, OwnedSpark } from '../../../data/models/hit-burst';
+import type { OwnedShieldBlock } from '../../../data/models/shield-block';
 import { ScenePositionDirective } from '../../directives/scene-position.directive';
 import { AquariumDecorComponent } from '../aquarium-decor/aquarium-decor.component';
 import { BubbleBurstComponent } from '../bubble-burst/bubble-burst.component';
-import { DebugBoxComponent } from '../debug-box/debug-box.component';
-import { DebugReadoutComponent } from '../debug-readout/debug-readout.component';
+import { DebugOverlayComponent } from '../../../debug/debug-overlay/debug-overlay.component';
+import { parseDebugFlags } from '../../../debug/debug-options';
 import { FloatingTextComponent } from '../floating-text/floating-text.component';
 import { ForegroundKelpComponent } from '../foreground-kelp/foreground-kelp.component';
 import { MidgroundKelpComponent } from '../midground-kelp/midground-kelp.component';
@@ -42,10 +43,6 @@ import type { ItemClick, RenderedItem } from './scene-view-models';
 // Other players' HP bars use a single absolute scale — the hard ceiling — so a bar's fill reads the same for
 // everyone regardless of stage (the OWN widget instead scales to its next evolution threshold).
 const MAX_VISUAL_HP = FRENZY.maxHp;
-
-// Fixed pixel distance the bomb is batted per click — converted to normalized units against the world width,
-// so a juggle covers the same world distance on any screen size rather than scaling with the viewport.
-const BOMB_NUDGE_PX = 72;
 
 function clamp01(value: number): number {
   return Math.min(1, Math.max(0, value));
@@ -74,8 +71,7 @@ function groupByOwner<T extends { ownerId: string }>(items: readonly T[]): Map<s
   imports: [
     AquariumDecorComponent,
     BubbleBurstComponent,
-    DebugBoxComponent,
-    DebugReadoutComponent,
+    DebugOverlayComponent,
     FloatingTextComponent,
     ForegroundKelpComponent,
     MidgroundKelpComponent,
@@ -116,6 +112,7 @@ export class SceneComponent {
   public readonly blasts = input<readonly Blast[]>([]);
   public readonly hitBursts = input<readonly HitBurst[]>([]);
   public readonly ownedSparks = input<readonly OwnedSpark[]>([]);
+  public readonly ownedShieldBlocks = input<readonly OwnedShieldBlock[]>([]);
   public readonly evolvingPlayers = input<ReadonlyMap<string, number>>(new Map());
   public readonly orphanFloats = input<readonly OrphanFloat[]>([]);
   public readonly ownedFloats = input<readonly OwnedFloat[]>([]);
@@ -137,13 +134,18 @@ export class SceneComponent {
   protected readonly shieldAuraClass = SHIELD_AURA_CLASS;
   // Item sprite size from the shared contract, exposed to CSS so render size tracks the server bound source.
   protected readonly itemSize = `${FRENZY.physicalSizePx.item}px`;
-  // Debug draw toggle from the `?debug` query param — overlays each actor's physical box (the AABB hitbox source)
-  // so authored `STAGE_BODY` sizes can be eyeballed against the sprite silhouette. Snapshot read; no reactivity.
-  protected readonly debug = inject(ActivatedRoute).snapshot.queryParamMap.has('debug');
+  // The bomb's larger collidable size (sensor-horn reach) — for the `?debug` box so it frames the real trigger area.
+  protected readonly bombSize = `${FRENZY.physicalSizePx.bomb}px`;
+  // Per-category `?debug` overlay toggles parsed from the query param (`?debug` = all; `?debug=pokemon-borders`,
+  // `item-borders`, `speed` = pick) — lets a session draw just the boxes it needs against the sprite silhouette.
+  // Snapshot read; no reactivity.
+  protected readonly debug = parseDebugFlags(inject(ActivatedRoute).snapshot.queryParamMap);
   // Owned floats grouped by their player, so each `.scene__player` can render (and carry) its own quips.
   protected readonly floatsByOwner = computed(() => groupByOwner(this.ownedFloats()));
   // Rock/brick impact sparks grouped by the struck player, so each `.scene__player` renders (and carries) its own.
   protected readonly sparksByOwner = computed(() => groupByOwner(this.ownedSparks()));
+  // Shield-ward cues grouped by the warded player, so each `.scene__player` pulses its bubble + clinks in place.
+  protected readonly shieldBlocksByOwner = computed(() => groupByOwner(this.ownedShieldBlocks()));
 
   public constructor() {
     // Re-anchor item/player baselines from each snapshot and paint immediately (before the rAF loop starts).
@@ -190,10 +192,10 @@ export class SceneComponent {
   }
 
   protected onItemClick(item: RenderedItem, event: MouseEvent): void {
-    // Bomb is batted: tapping the left half of the sprite knocks it right, the right half knocks it left.
-    const nudgeX = item.type === 'bomb' ? this.batNudge(event) : undefined;
+    // Bomb is shoved away from wherever it was tapped: tap a side and it drifts off in the opposite direction.
+    const shove = item.type === 'bomb' ? this.batNudge(event) : undefined;
 
-    this.itemClick.emit({ itemId: item.id, nudgeX });
+    this.itemClick.emit({ itemId: item.id, nudgeX: shove?.x, nudgeY: shove?.y });
   }
 
   protected onSelfPoke(): void {
@@ -236,15 +238,21 @@ export class SceneComponent {
     }
   }
 
-  // Signed normalized bat displacement: a fixed pixel step (BOMB_NUDGE_PX) over the world width, pushed right
-  // when the click landed left of the item's centre and left otherwise. World-px based, so a juggle covers the
-  // same world distance on any screen.
-  private batNudge(event: MouseEvent): number {
+  // Shove direction (unit vector) pointing from the tapped point toward the bomb's centre — i.e. AWAY from the side
+  // that was hit, so tapping the right edge pushes it left, the top pushes it down, a corner pushes diagonally. The
+  // server scales this by a fixed `bomb.clickImpulse`, so only the direction matters here. A dead-centre tap falls
+  // back to a straight-up nudge.
+  private batNudge(event: MouseEvent): { x: number; y: number } {
     const button = event.currentTarget as HTMLElement;
     const bounds = button.getBoundingClientRect();
-    const centerX = bounds.left + bounds.width / 2;
-    const direction = event.clientX < centerX ? 1 : -1;
+    const deltaX = bounds.left + bounds.width / 2 - event.clientX;
+    const deltaY = bounds.top + bounds.height / 2 - event.clientY;
+    const magnitude = Math.hypot(deltaX, deltaY);
 
-    return (direction * BOMB_NUDGE_PX) / this.worldWidth;
+    if (magnitude === 0) {
+      return { x: 0, y: -1 };
+    }
+
+    return { x: deltaX / magnitude, y: deltaY / magnitude };
   }
 }

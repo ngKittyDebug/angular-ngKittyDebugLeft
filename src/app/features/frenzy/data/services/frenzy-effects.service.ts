@@ -1,6 +1,7 @@
 import { DestroyRef, inject, Injectable } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
+import { BumpEffect } from './effects/bump-effect.service';
 import { DetonationEffect } from './effects/detonation-effect.service';
 import { EatEffect } from './effects/eat-effect.service';
 import { EmissionSoundEffect } from './effects/emission-sound-effect.service';
@@ -11,6 +12,7 @@ import { HitBurstEffect } from './effects/hit-burst-effect.service';
 import { PlayerEffectsTracker } from './effects/player-effects-tracker.service';
 import { PresenceTracker } from './effects/presence-tracker.service';
 import { SelfMoodEffect } from './effects/self-mood-effect.service';
+import { ShieldBlockEffect } from './effects/shield-block-effect.service';
 import { FrenzySocketService } from './frenzy-socket.service';
 
 /**
@@ -26,7 +28,9 @@ export class FrenzyEffectsService {
   private readonly eat = inject(EatEffect);
   private readonly evolution = inject(EvolutionEffect);
   private readonly detonation = inject(DetonationEffect);
+  private readonly bump = inject(BumpEffect);
   private readonly hitBurst = inject(HitBurstEffect);
+  private readonly shieldBlock = inject(ShieldBlockEffect);
   private readonly presence = inject(PresenceTracker);
   private readonly playerEffects = inject(PlayerEffectsTracker);
   private readonly emissionSound = inject(EmissionSoundEffect);
@@ -35,7 +39,9 @@ export class FrenzyEffectsService {
     this.eat,
     this.evolution,
     this.detonation,
+    this.bump,
     this.hitBurst,
+    this.shieldBlock,
     this.presence,
     this.playerEffects,
     this.emissionSound,
@@ -46,6 +52,7 @@ export class FrenzyEffectsService {
   public readonly blasts = this.detonation.blasts;
   public readonly hitBursts = this.hitBurst.hitBursts;
   public readonly ownedSparks = this.hitBurst.ownedSparks;
+  public readonly ownedShieldBlocks = this.shieldBlock.ownedShieldBlocks;
   public readonly evolvingPlayers = this.evolution.evolvingPlayers;
 
   public constructor() {

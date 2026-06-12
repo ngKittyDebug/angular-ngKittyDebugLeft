@@ -119,7 +119,7 @@ const STAGE_ART: Record<Line, Record<Stage, SpriteArt>> = {
   charmander: {
     1: { native: [48, 57], body: [0, 1, 44, 56] },
     2: { native: [60, 70], body: [2, 2, 51, 68] },
-    3: { native: [133, 140], body: [44, 52, 52, 82] }, // charizard — torso, wings excluded
+    3: { native: [133, 140], body: [28, 44, 68, 90] }, // charizard — head+chest+torso, wings & tail excluded
   },
   squirtle: {
     1: { native: [53, 54], body: [0, 0, 44, 54] },

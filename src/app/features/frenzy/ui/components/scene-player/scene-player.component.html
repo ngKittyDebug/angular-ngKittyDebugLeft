@@ -1,7 +1,12 @@
 <ng-container *transloco="let t; prefix: 'frenzy.scene'">
   @for (aura of player().effectAuras; track aura) {
     @if (aura === shieldAuraClass()) {
-      <span [class]="aura" leftPawBubbleSkin aria-hidden="true"></span>
+      <span
+        [class]="aura"
+        [class.scene__shield--pulse]="shieldBlocks().length > 0"
+        leftPawBubbleSkin
+        aria-hidden="true"
+      ></span>
     } @else {
       <span [class]="aura" aria-hidden="true"></span>
     }

@@ -120,15 +120,41 @@ describe('applyClick', () => {
     expect(events.some((event) => event.type === 'evolved')).toBe(false);
   });
 
-  it('batting a bomb slides it by the supplied displacement without eating it or changing hp', () => {
-    const state = stateWith([PLAYER], [makeItem({ type: 'bomb', x: 0.5 })]);
+  it('shoving a bomb adds an inertial impulse to its drift without eating it or changing hp', () => {
+    const state = stateWith([PLAYER], [makeItem({ type: 'bomb', x: 0.5, y: 0.5, vy: 0 })]);
 
+    // A leftward direction → a leftward velocity impulse of magnitude clickImpulse; the server applies it to vx.
     const { state: next, events } = applyClick(state, PLAYER.id, 'i1', -0.1);
 
     expect(next.items).toHaveLength(1);
-    expect(next.items[0].x).toBeCloseTo(0.4, 5);
+    expect(next.items[0].x).toBe(0.5); // position unchanged — a shove changes velocity, not place
+    expect(next.items[0].vx).toBeCloseTo(-FRENZY.bomb.clickImpulse, 5);
+    expect(next.items[0].vy).toBeCloseTo(0, 5);
+    expect(next.items[0].lastNudgedBy).toBe(PLAYER.id); // shover stamped for blast kill-credit
     expect(next.players[0].hp).toBe(100);
-    expect(events).toEqual([{ type: 'itemNudged', itemId: 'i1', x: expect.closeTo(0.4, 5) }]);
+    expect(events).toEqual([
+      {
+        type: 'itemNudged',
+        itemId: 'i1',
+        x: 0.5,
+        y: 0.5,
+        vx: expect.closeTo(-FRENZY.bomb.clickImpulse, 5),
+        vy: expect.closeTo(0, 5),
+      },
+    ]);
+  });
+
+  it('accumulates repeated shoves and caps the bomb drift at maxDriftSpeed', () => {
+    const fast = makeItem({ type: 'bomb', x: 0.5, vx: FRENZY.bomb.maxDriftSpeed, vy: 0 });
+    const state = stateWith([PLAYER], [fast]);
+
+    // Already at the cap and shoved further the same way — total speed stays clamped, never exceeds it.
+    const { state: next } = applyClick(state, PLAYER.id, 'i1', 1);
+
+    expect(Math.hypot(next.items[0].vx ?? 0, next.items[0].vy)).toBeCloseTo(
+      FRENZY.bomb.maxDriftSpeed,
+      5,
+    );
   });
 
   it('grabbing a vitamin heals hp and grants wellFed, removes the item, emits effectGranted', () => {
@@ -138,6 +164,7 @@ describe('applyClick', () => {
       state,
       PLAYER.id,
       'i1',
+      undefined,
       undefined,
       Math.random,
       1000,
@@ -168,6 +195,7 @@ describe('applyClick', () => {
       state,
       PLAYER.id,
       'i1',
+      undefined,
       undefined,
       Math.random,
       1000,

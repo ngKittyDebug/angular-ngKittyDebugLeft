@@ -10,5 +10,10 @@ export const WORLD = {
    * and arrive on `join` as `Player.body` (see `StageBody`), so the server stays roster-agnostic. */
   physicalSizePx: {
     item: 60,
+    /** The bomb's collidable size in world px — LARGER than a normal item because its sensor horns are the trigger:
+     * a sea mine goes off when a Pokémon touches a horn-tip sensor, not just the central shell. Sized to the
+     * rendered mine's sensor-tip span (the client draws the sprite at ≈this size), so detonation matches what you
+     * see. Used only for the bomb's collision reach (see collision-target + the `?debug` item box). */
+    bomb: 84,
   },
 } as const;

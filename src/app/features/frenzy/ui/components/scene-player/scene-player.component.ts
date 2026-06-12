@@ -5,6 +5,7 @@ import { TuiProgressBar } from '@taiga-ui/kit';
 
 import type { OwnedFloat } from '../../../data/models/floating-message';
 import type { OwnedSpark } from '../../../data/models/hit-burst';
+import type { OwnedShieldBlock } from '../../../data/models/shield-block';
 import { BubbleSkinDirective } from '../../directives/bubble-skin.directive';
 import { HpToneColorPipe } from '../../pipes/hp-tone-color.pipe';
 import { PokemonSpritePipe } from '../../pipes/pokemon-sprite.pipe';
@@ -37,6 +38,7 @@ import { SparkBurstComponent } from '../spark-burst/spark-burst.component';
     '[class.scene__player--disconnected]': 'player().isDisconnected',
     '[style.--scene-sprite-width]': 'player().spriteWidth',
     '[style.--scene-sprite-height]': 'player().spriteHeight',
+    '[style.--scene-hitbox-height]': 'player().hitboxHeight',
     '[style.--scene-sprite-offset-x]': "(-player().spriteOffsetX) + 'px'",
     '[style.--scene-sprite-offset-y]': "(-player().spriteOffsetY) + 'px'",
   },
@@ -46,6 +48,7 @@ export class ScenePlayerComponent {
   public readonly player = input.required<RenderedPlayer>();
   public readonly floats = input<readonly OwnedFloat[]>([]);
   public readonly sparks = input<readonly OwnedSpark[]>([]);
+  public readonly shieldBlocks = input<readonly OwnedShieldBlock[]>([]);
   public readonly maxHp = input.required<number>();
   public readonly shieldAuraClass = input.required<string>();
   public readonly poke = output<void>();

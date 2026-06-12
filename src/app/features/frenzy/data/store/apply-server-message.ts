@@ -2,17 +2,41 @@ import type { ServerMessage, ServerState } from '@game/frenzy/types';
 
 const EMPTY_STATE: ServerState = { players: [], items: [], tick: 0 };
 
-// A typed no-op for the switch's `default`: the `never` parameter enforces that every ServerMessage
+// A typed no-op for the switch's `default`: the `never` parameter enforces that every state-changing ServerMessage
 // variant is handled above — a newly added one would fail to compile here, naming the missing type —
 // while at runtime an unrecognized message simply leaves the state unchanged.
 function ignoreUnhandledMessage(_message: never, state: ServerState | null): ServerState | null {
   return state;
 }
 
+// Messages that carry no game-state change: connection lifecycle (`rejoined`/`roomFull`), the join-refusal reason
+// (recorded elsewhere in the store), the FX-only collision quip (`bumped` — its float lives in the effects service;
+// the damaged-but-alive hp reconciles on the next snapshot, faints arrive via their own `fainted` event), and the
+// liveness heartbeat (`ping`). Splitting them out as a type guard keeps the state switch within its complexity
+// budget and lets its `never` default still prove every state-changing message is handled.
+type StatelessMessage = Extract<
+  ServerMessage,
+  { type: 'rejoined' | 'roomFull' | 'joinRejected' | 'bumped' | 'ping' }
+>;
+
+function isStatelessMessage(message: ServerMessage): message is StatelessMessage {
+  return (
+    message.type === 'rejoined' ||
+    message.type === 'roomFull' ||
+    message.type === 'joinRejected' ||
+    message.type === 'bumped' ||
+    message.type === 'ping'
+  );
+}
+
 export function applyServerMessage(
   previous: ServerState | null,
   message: ServerMessage,
 ): ServerState | null {
+  if (isStatelessMessage(message)) {
+    return previous;
+  }
+
   switch (message.type) {
     case 'snapshot': {
       return message.state;
@@ -82,7 +106,9 @@ export function applyServerMessage(
             return item;
           }
 
-          return { ...item, x: message.x };
+          // A shove updates the bomb's 2D drift velocity (and re-syncs its authoritative position); the
+          // extrapolator re-anchors from the new vx/vy so the push — and any tug-of-war — shows at once.
+          return { ...item, x: message.x, y: message.y, vx: message.vx, vy: message.vy };
         }),
       };
     }
@@ -123,19 +149,6 @@ export function applyServerMessage(
           return { ...player, effects };
         }),
       };
-    }
-
-    case 'rejoined': {
-      return previous;
-    }
-
-    case 'roomFull': {
-      return previous;
-    }
-
-    // Join refusal carries no game state — the store records the reason separately for the picker.
-    case 'joinRejected': {
-      return previous;
     }
 
     default: {

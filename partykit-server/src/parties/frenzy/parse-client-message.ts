@@ -72,8 +72,10 @@ export function parseClientMessage(raw: string): ClientMessage | null {
 
       const nudgeX =
         typeof data.nudgeX === 'number' && Number.isFinite(data.nudgeX) ? data.nudgeX : undefined;
+      const nudgeY =
+        typeof data.nudgeY === 'number' && Number.isFinite(data.nudgeY) ? data.nudgeY : undefined;
 
-      return { type: 'click', itemId: data.itemId, nudgeX };
+      return { type: 'click', itemId: data.itemId, nudgeX, nudgeY };
     }
     case 'steer': {
       return typeof data.x === 'number' &&

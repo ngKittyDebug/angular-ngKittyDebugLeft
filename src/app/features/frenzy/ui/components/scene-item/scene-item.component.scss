@@ -12,6 +12,14 @@
   transform: translate(-50%, -50%);
 }
 
+// The bomb is the one item you actively shove, so it must win the tap over the Pokémon layer (both default to
+// z-index 1, and the players paint later in the DOM, so an overlapping sprite would otherwise swallow a bat aimed
+// at the mine — most visibly from the top, where the `?debug` speed pill sits). Lift its whole (already generous,
+// sensor-sized) hit box above the actors so a press anywhere on the mine always reaches it.
+:host(.scene__item-host--bomb) {
+  z-index: 3;
+}
+
 .scene__item {
   display: block;
   padding: 12px;
@@ -24,8 +32,19 @@
   user-select: none;
 }
 
-.scene__item:active {
+// The bomb (sea mine) is a moored object you shove around, not a tappable pickup — skip the press-shrink so a
+// tap reads as a nudge, not a button press. All other items keep the 0.95 press feedback.
+.scene__item:not(.scene__item--bomb):active {
   scale: 0.95;
+}
+
+// A rested item is half-sunk into the seabed: fade its lower ~quarter into transparency so the sand shows through
+// and it reads as buried rather than sitting on top. The mask is on the (non-rotated) button, so the cut runs
+// along the WORLD vertical — a tumbled item still sinks along the flat sand line, not its own frozen tilt. Cheap:
+// a static compositor mask applied only while landed.
+.scene__item--landed {
+  -webkit-mask-image: linear-gradient(to bottom, #000 64%, transparent 86%);
+  mask-image: linear-gradient(to bottom, #000 64%, transparent 86%);
 }
 
 // Hover/focus highlights the sprite (brighten + glowing rim) rather than scaling it up — a clearer "this one is
@@ -71,7 +90,7 @@
 // the item speeds up and slows through each turn rather than spinning mechanically, plus a gentle size "breathe"
 // (`scene-item-breathe`, on the `scale` property so it never fights the rotation). Per item, the inline style
 // sets both durations (rotation = the id-derived `spinDurationMs`, breathe = a constant) and the shared
-// direction. The bomb opts out of the tumble (keeps the steady `scene-item-spin` so its fuse stays readable).
+// direction. The bomb and shield opt out of the tumble (see below).
 .scene__item-sprite--spin {
   animation-name: scene-item-tumble, scene-item-breathe;
   animation-timing-function: linear, ease-in-out;
@@ -87,26 +106,12 @@
   animation-iteration-count: infinite;
 }
 
-// The bomb (sea mine) keeps its own slow tumble — two stacked animations on independent properties: a steady
-// rotation (`transform`) plus a gentle size breathing (`scale`, so it never fights the rotation). Spin direction
-// is randomised per item via the `--reverse` modifier; the pulse stays `alternate` either way. Pauses on landing
-// through the shared inline `animation-play-state`.
+// The bomb (sea mine) does NOT spin or pulse — a moored mine sits still. Its box is a LARGER square than other
+// items (so it's easy to tap from any side — taps shove it away from the tapped edge in 2D). The only motion is
+// the sensor lights running around its horns, animated in CSS inside the SVG itself.
 .scene__item-sprite--bomb {
-  animation-name: scene-item-spin, scene-item-bomb-pulse;
-  animation-duration: 7s, 2.2s;
-  animation-timing-function: linear, ease-in-out;
-  animation-iteration-count: infinite, infinite;
-  animation-direction: normal, alternate;
-}
-
-.scene__item-sprite--bomb.scene__item-sprite--reverse {
-  animation-direction: reverse, alternate;
-}
-
-@keyframes scene-item-spin {
-  to {
-    transform: rotate(360deg);
-  }
+  width: calc(var(--scene-item-size, 60px) * 1.6);
+  height: calc(var(--scene-item-size, 60px) * 1.6);
 }
 
 // Uneven full turn (linear timing, but the angle is bunched): the item lingers near 65% then whips through the
@@ -138,17 +143,6 @@
 
   50% {
     scale: 1.04;
-  }
-}
-
-@keyframes scene-item-bomb-pulse {
-  0%,
-  100% {
-    scale: 0.94;
-  }
-
-  50% {
-    scale: 1.06;
   }
 }
 

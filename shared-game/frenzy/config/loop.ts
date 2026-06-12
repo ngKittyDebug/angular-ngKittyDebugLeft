@@ -4,6 +4,8 @@ export const LOOP = {
   tickRateHz: 10,
   /** Every Nth tick the server broadcasts a full snapshot to heal drift; between snapshots clients rely on delta events and velocity extrapolation. At 10 Hz, 3 ≈ 3.3 snapshots/sec — frequent enough that the client's reconciliation corrections stay small (and remote heading changes surface fast), while delta events still carry the gaps. */
   snapshotEveryNTicks: 3,
+  /** Server liveness heartbeat, ms: a tiny `ping` broadcast on this cadence while any connection is open, independent of the game loop. Gives the client a steady inbound signal even in the lobby/idle (where no snapshots flow) so it can detect a stalled (half-open) socket and reconnect. */
+  heartbeatMs: 2_000,
   /** Grace period after disconnect, ms: the Pokémon stays in the room (greyed out, decay continues) and may rejoin on reconnection; purged afterward. */
   graceMs: 60_000,
   /** Delay after fainting, ms, during which the "Pick a new one" button is disabled (anti-instant-respawn farming). */

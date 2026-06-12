@@ -20,6 +20,8 @@ const SPARK_TTL_MS = 800;
  *   implodes on the vanished item.
  * - A **collision** with a falling **rock/brick** → cartoon sparks over the struck Pokémon (it got bonked on the
  *   head): owned by that player's sprite, no burst.
+ * - A **Pokémon-vs-Pokémon ram** (`bumped`) → the same cartoon sparks over the rammed Pokémon. The float quip is
+ *   produced separately by `BumpEffect`; this adds the visual hit on top.
  * - Any **other collision** pickup (drifted into food/berry/shield/…) → an outward bubble splash on the item.
  *
  * `itemNudged` (bomb still alive) and `detonated` (own blast already renders) get nothing.
@@ -55,6 +57,14 @@ export class HitBurstEffect implements FrenzyEffect {
 
     if (message.type === 'effectGranted') {
       this.addBurst(message.x, message.y, message.playerId, message.via);
+
+      return;
+    }
+
+    // A ram that hurt — sparks over the rammed sprite, same cue as a rock/brick bonk. The server only emits
+    // `bumped` for survivors who actually took damage (shielded ones are filtered out), so no gating needed here.
+    if (message.type === 'bumped') {
+      this.sparks.add({ id: createTransientId(), ownerId: message.playerId }, SPARK_TTL_MS);
     }
   }
 

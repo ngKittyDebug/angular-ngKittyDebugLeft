@@ -15,6 +15,7 @@ import { restoreConnected } from './engine/restore-connected';
 import { parseClientMessage } from './parse-client-message';
 import { validateJoin } from './validate-join';
 
+const HEARTBEAT_INTERVAL_MS = FRENZY.heartbeatMs;
 const TICK_INTERVAL_MS = 1000 / FRENZY.tickRateHz;
 const TICK_DELTA_SECONDS = 1 / FRENZY.tickRateHz;
 const DECAY_EVERY_N_TICKS = (FRENZY.decayIntervalMs / 1000) * FRENZY.tickRateHz;
@@ -29,6 +30,7 @@ export default class FeedingRoom implements Party.Server {
   private items: Item[] = [];
   private players: Player[] = [];
   private loopHandle: ReturnType<typeof setInterval> | null = null;
+  private heartbeatHandle: ReturnType<typeof setInterval> | null = null;
   private nextSpawnAt = 0;
   private tick = 0;
   private readonly debugEnabled: boolean;
@@ -51,6 +53,7 @@ export default class FeedingRoom implements Party.Server {
     }
 
     this.connections.add(conn.id);
+    this.ensureHeartbeat();
     this.log(`[party] connected: ${conn.id} (room=${this.room.id})`);
     this.sendTo(conn, this.snapshot());
   }
@@ -80,7 +83,7 @@ export default class FeedingRoom implements Party.Server {
         break;
       }
       case 'click': {
-        this.handleClick(sender.id, message.itemId, message.nudgeX);
+        this.handleClick(sender.id, message.itemId, message.nudgeX, message.nudgeY);
         break;
       }
       case 'steer': {
@@ -92,6 +95,12 @@ export default class FeedingRoom implements Party.Server {
 
   public onClose(conn: Party.Connection): void {
     this.connections.delete(conn.id);
+
+    // Liveness heartbeat outlives the game loop (it covers idle/lobby connections too) — stop it only once the
+    // room has no connections left at all, regardless of which onClose branch we return through below.
+    if (this.connections.size === 0) {
+      this.stopHeartbeat();
+    }
 
     const sessionToken = this.connectionToSession.get(conn.id);
 
@@ -149,6 +158,18 @@ export default class FeedingRoom implements Party.Server {
     }
   }
 
+  // Liveness heartbeat: a steady inbound signal for clients so they can tell a live-but-idle socket from a stalled
+  // (half-open) one and reconnect. Runs while any connection is open — independent of the game loop, which only
+  // runs with active players and so leaves lobby/spectator connections without traffic.
+  private ensureHeartbeat(): void {
+    if (this.heartbeatHandle === null) {
+      this.heartbeatHandle = setInterval(
+        () => this.broadcast({ type: 'ping' }),
+        HEARTBEAT_INTERVAL_MS,
+      );
+    }
+  }
+
   private gameTick(): void {
     this.tick += 1;
 
@@ -192,7 +213,12 @@ export default class FeedingRoom implements Party.Server {
     }
   }
 
-  private handleClick(connectionId: string, itemId: string, nudgeX?: number): void {
+  private handleClick(
+    connectionId: string,
+    itemId: string,
+    nudgeX?: number,
+    nudgeY?: number,
+  ): void {
     const sessionToken = this.connectionToSession.get(connectionId);
 
     if (sessionToken === undefined) {
@@ -207,7 +233,7 @@ export default class FeedingRoom implements Party.Server {
       return;
     }
 
-    const result = applyClick(this.currentState(), sessionToken, itemId, nudgeX);
+    const result = applyClick(this.currentState(), sessionToken, itemId, nudgeX, nudgeY);
 
     if (result.events.length === 0) {
       return;
@@ -415,6 +441,13 @@ export default class FeedingRoom implements Party.Server {
     this.graceTimers.clear();
     this.items = [];
     this.tick = 0;
+  }
+
+  private stopHeartbeat(): void {
+    if (this.heartbeatHandle !== null) {
+      clearInterval(this.heartbeatHandle);
+      this.heartbeatHandle = null;
+    }
   }
 
   private syncState(state: ServerState): void {

@@ -6,7 +6,7 @@ import type { Player, PlayerEffectKind } from '@game/frenzy/types';
 
 import { isSad } from '../../../data/logic/is-sad';
 import { spriteRenderFor } from '../../constants/pokemon-registry';
-import { decayedOffset, OFFSET_DECAY_TAU_MS, reflect, reflectDirection } from './drift-math';
+import { clamp, decayedOffset, OFFSET_DECAY_TAU_MS, reflect, reflectDirection } from './drift-math';
 import type { RenderedPlayer } from './scene-view-models';
 
 // CSS class for the decorative aura ring drawn around a sprite per active effect kind.
@@ -88,12 +88,18 @@ export class PlayerExtrapolatorService {
 
     const zone = FRENZY.playerDriftZone;
     const elapsed = (now - baseline.clientStartTime) / 1000;
-    const renderedX =
+    const renderedX = clamp(
       reflect(baseline.x0, baseline.vx, elapsed, zone.minX, zone.maxX) +
-      decayedOffset(baseline.offsetX, now - baseline.offsetStamp, OFFSET_DECAY_TAU_MS);
-    const renderedY =
+        decayedOffset(baseline.offsetX, now - baseline.offsetStamp, OFFSET_DECAY_TAU_MS),
+      zone.minX,
+      zone.maxX,
+    );
+    const renderedY = clamp(
       reflect(baseline.y0, baseline.vy, elapsed, zone.minY, zone.maxY) +
-      decayedOffset(baseline.offsetY, now - baseline.offsetStamp, OFFSET_DECAY_TAU_MS);
+        decayedOffset(baseline.offsetY, now - baseline.offsetStamp, OFFSET_DECAY_TAU_MS),
+      zone.minY,
+      zone.maxY,
+    );
     const tuning = { impulse: FRENZY.steer.impulse, maxSpeed: baseline.maxSpeed };
     const { vx, vy } = steerVelocity(baseline, x - renderedX, y - renderedY, tuning);
 
@@ -140,12 +146,20 @@ export class PlayerExtrapolatorService {
 
       if (prior !== undefined) {
         const elapsed = (now - prior.clientStartTime) / 1000;
-        const renderedX =
+        // Carry forward the ACTUALLY-rendered (clamped) gap — same clamp `compute` applies — so a snapshot taken
+        // while the sprite was pinned at a wall can't capture an out-of-zone overshoot and keep gliding from it.
+        const renderedX = clamp(
           reflect(prior.x0, prior.vx, elapsed, zone.minX, zone.maxX) +
-          decayedOffset(prior.offsetX, now - prior.offsetStamp, OFFSET_DECAY_TAU_MS);
-        const renderedY =
+            decayedOffset(prior.offsetX, now - prior.offsetStamp, OFFSET_DECAY_TAU_MS),
+          zone.minX,
+          zone.maxX,
+        );
+        const renderedY = clamp(
           reflect(prior.y0, prior.vy, elapsed, zone.minY, zone.maxY) +
-          decayedOffset(prior.offsetY, now - prior.offsetStamp, OFFSET_DECAY_TAU_MS);
+            decayedOffset(prior.offsetY, now - prior.offsetStamp, OFFSET_DECAY_TAU_MS),
+          zone.minY,
+          zone.maxY,
+        );
 
         offsetX = renderedX - player.x;
         offsetY = renderedY - player.y;
@@ -224,13 +238,16 @@ export class PlayerExtrapolatorService {
         spriteOffsetY: render.offsetY,
         hitboxWidth: `${hitbox.width}px`,
         hitboxHeight: `${hitbox.height}px`,
-        debugSpeed: Math.hypot(vx, vy).toFixed(2),
-        // Native box top (rel. point) = -offsetY - height/2; sit the readout's centre above it so the pill clears
-        // the box top with a small gap.
-        debugReadoutOffsetY: `${-render.offsetY - render.height / 2 - 16}px`,
+        debugSpeed: Math.hypot(vx, vy).toFixed(4),
+        // Anchor the readout's bottom-left corner to the art box's top-left (rel. point): left = -offsetX - width/2,
+        // top = -offsetY - height/2. The pill sits flush on the box top (no gap), left-aligned to the sprite.
+        debugReadoutOffsetX: `${-render.offsetX - render.width / 2}px`,
+        debugReadoutOffsetY: `${-render.offsetY - render.height / 2}px`,
         stage: player.stage,
-        x: reflect(x0, vx, elapsed, zone.minX, zone.maxX) + decayX,
-        y: reflect(y0, vy, elapsed, zone.minY, zone.maxY) + decayY,
+        // Clamp the offset-adjusted position to the drift zone: a large reconciliation gap (bomb knockback,
+        // reconnect snap) must glide the sprite back from the wall, never render it outside the scene.
+        x: clamp(reflect(x0, vx, elapsed, zone.minX, zone.maxX) + decayX, zone.minX, zone.maxX),
+        y: clamp(reflect(y0, vy, elapsed, zone.minY, zone.maxY) + decayY, zone.minY, zone.maxY),
       };
     });
   }

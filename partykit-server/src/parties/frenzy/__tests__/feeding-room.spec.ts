@@ -72,6 +72,12 @@ function latestSnapshot(room: FakeRoom): Extract<ServerMessage, { type: 'snapsho
   return byType(room, 'snapshot').at(-1);
 }
 
+// Game broadcasts only — excludes the connection-scoped liveness `ping`, which keeps firing while a connection is
+// open even after the game loop stops, so the "loop stopped" assertions stay about game traffic.
+function gameBroadcasts(room: FakeRoom): ServerMessage[] {
+  return room.broadcasts.filter((message) => message.type !== 'ping');
+}
+
 describe('FeedingRoom orchestration', () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -202,11 +208,11 @@ describe('FeedingRoom orchestration', () => {
     expect(room.broadcasts.length).toBeGreaterThan(0);
 
     send(server, conn, { type: 'leave' });
-    const frozen = room.broadcasts.length;
+    const frozen = gameBroadcasts(room).length;
 
     vi.advanceTimersByTime(TICK_MS * 10);
 
-    expect(room.broadcasts.length).toBe(frozen);
+    expect(gameBroadcasts(room).length).toBe(frozen);
   });
 
   it('stops the game loop when the last player dies from decay', () => {
@@ -228,11 +234,11 @@ describe('FeedingRoom orchestration', () => {
     expect(byType(room, 'fainted').some((message) => message.playerId === 'token-1')).toBe(true);
     expect(latestSnapshot(room)?.state.players).toHaveLength(0);
 
-    const frozen = room.broadcasts.length;
+    const frozen = gameBroadcasts(room).length;
 
     vi.advanceTimersByTime(TICK_MS * 10);
 
-    expect(room.broadcasts.length).toBe(frozen);
+    expect(gameBroadcasts(room).length).toBe(frozen);
   });
 
   it('restarts the loop when a player joins after the room emptied via death', () => {
@@ -262,6 +268,27 @@ describe('FeedingRoom orchestration', () => {
 
     // ensureLoop restarted the interval — new broadcasts (ticks/spawns/snapshots) keep arriving.
     expect(room.broadcasts.length).toBeGreaterThan(frozen);
+  });
+
+  it('heartbeats a liveness ping on cadence for an idle (never-joined) connection and stops once empty', () => {
+    const { room, server } = setup();
+    const conn = new FakeConnection('idle');
+
+    // Pure lobby connection: it never joins, so the game loop never starts and no snapshots flow. The heartbeat
+    // is the only inbound signal — it must still fire so the client can tell this live socket from a stalled one.
+    server.onConnect(asParty(conn));
+
+    vi.advanceTimersByTime(FRENZY.heartbeatMs * 2 + 1);
+
+    expect(byType(room, 'ping').length).toBeGreaterThanOrEqual(2);
+
+    // Once the last connection closes, the heartbeat stops (no dangling interval pinging an empty room).
+    server.onClose(asParty(conn));
+    const frozen = byType(room, 'ping').length;
+
+    vi.advanceTimersByTime(FRENZY.heartbeatMs * 3);
+
+    expect(byType(room, 'ping').length).toBe(frozen);
   });
 
   it('rejects connections beyond maxConnections even when they never join, and frees a slot on close', () => {

@@ -1,4 +1,9 @@
 {
+  "connection": {
+    "connecting": "Connecting…",
+    "roomFull": "Room is full. Try again later.",
+    "reconnecting": "Reconnecting…"
+  },
   "currentPokemonStatus": {
     "stageBadge": "STAGE {{stage}}",
     "untilEvolution": "to evolve {{value}}",
@@ -15,6 +20,11 @@
     "invalidName": "Please enter a name.",
     "invalidAppearance": "That Pokémon isn't available — pick another.",
     "invalidBody": "Something's off with that Pokémon. Pick another."
+  },
+  "picker": {
+    "nameLabel": "Your name",
+    "namePlaceholder": "trainer",
+    "submit": "Join the frenzy"
   },
   "faintedModal": {
     "lifespan": "Survived",
@@ -76,6 +86,11 @@
         "1": "An unlucky run-in with a falling object.",
         "2": "Picked up exactly the wrong thing."
       },
+      "self": {
+        "0": "Mined the water and then swam right into it.",
+        "1": "Self-destruct sequence: flawless execution.",
+        "2": "Hoisted by your own mine. Textbook stuff."
+      },
       "killer": {
         "bomb": {
           "0": "Blown sky-high by a mine {{killer}} dropped.",
@@ -128,6 +143,7 @@
   },
   "scene": {
     "pokeAriaLabel": "Poke your Pokémon",
+    "floorLabel": "Seabed",
     "floatingText": {
       "food": {
         "0": "Yum!",
@@ -191,6 +207,13 @@
         "2": "Surprise!",
         "3": "Lucky?",
         "4": "Whoa!"
+      },
+      "bump": {
+        "0": "Bonk!",
+        "1": "Oof!",
+        "2": "Watch it!",
+        "3": "Hey!",
+        "4": "Move it!"
       }
     },
     "statusMessage": {

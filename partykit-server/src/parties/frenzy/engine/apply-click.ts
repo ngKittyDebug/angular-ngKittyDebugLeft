@@ -45,16 +45,36 @@ function grantEffectResult(
 }
 
 /**
- * Juggle (bomb): no eating, no hp change — slide the item horizontally (clamped to the spawn range) and tell clients.
+ * Shove (bomb): no eating, no hp change — add the click's 2D inertial impulse to the bomb's drift, then cap the
+ * total speed at `bomb.maxDriftSpeed` so repeated clicks can't fling it arbitrarily fast. The shared `vx`/`vy` is
+ * what makes tug-of-war emergent: every player's click mutates the same velocity additively. Tell clients the new
+ * position + velocity.
  */
-function nudgeResult(state: ServerState, item: Item, interaction: ItemInteraction): ClickResult {
-  const [minX, maxX] = FRENZY.itemSpawnXRange;
-  const x = Math.max(minX, Math.min(maxX, item.x + (interaction.nudgeX ?? 0)));
+function nudgeResult(
+  state: ServerState,
+  item: Item,
+  clickerId: string,
+  interaction: ItemInteraction,
+): ClickResult {
+  const cap = FRENZY.bomb.maxDriftSpeed;
+  let vx = (item.vx ?? 0) + (interaction.nudgeX ?? 0);
+  let vy = item.vy + (interaction.nudgeY ?? 0);
+  const speed = Math.hypot(vx, vy);
+
+  if (speed > cap && speed > 0) {
+    vx = (vx / speed) * cap;
+    vy = (vy / speed) * cap;
+  }
+
+  // Stamp the shover so a kill from this bomb's blast credits them in the obituary (last toucher wins a tug-of-war).
   const items = state.items.map((candidate) =>
-    candidate.id === item.id ? { ...candidate, x } : candidate,
+    candidate.id === item.id ? { ...candidate, vx, vy, lastNudgedBy: clickerId } : candidate,
   );
 
-  return { state: { ...state, items }, events: [{ type: 'itemNudged', itemId: item.id, x }] };
+  return {
+    state: { ...state, items },
+    events: [{ type: 'itemNudged', itemId: item.id, x: item.x, y: item.y, vx, vy }],
+  };
 }
 
 /**
@@ -99,6 +119,7 @@ export function applyClick(
   clickerId: string,
   itemId: string,
   nudgeX?: number,
+  nudgeY?: number,
   rng: () => number = Math.random,
   now: number = Date.now(),
 ): ClickResult {
@@ -109,14 +130,21 @@ export function applyClick(
     return { state, events: [] };
   }
 
-  const interaction = getItemBehavior(item.type).onClick(item, clickerId, state, nudgeX, rng);
+  const interaction = getItemBehavior(item.type).onClick(
+    item,
+    clickerId,
+    state,
+    nudgeX,
+    rng,
+    nudgeY,
+  );
 
   if (interaction.effects !== undefined && interaction.effects.length > 0) {
     return grantEffectResult(state, item, interaction, now);
   }
 
   if (interaction.nudgeX !== undefined && !interaction.consumed) {
-    return nudgeResult(state, item, interaction);
+    return nudgeResult(state, item, clickerId, interaction);
   }
 
   return eatResult(state, item, clicker, interaction);

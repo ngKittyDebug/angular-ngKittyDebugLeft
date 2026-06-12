@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import type { OnInit } from '@angular/core';
+import { TranslocoDirective } from '@jsverse/transloco';
 
 import { CurrentPokemonStatusComponent } from '../current-pokemon-status/current-pokemon-status.component';
 import { DisconnectedModalComponent } from '../disconnected-modal/disconnected-modal.component';
@@ -24,6 +25,7 @@ import { FrenzyPageFacade } from './frenzy-page.facade';
     PokemonPickerComponent,
     SceneComponent,
     SoundToggleComponent,
+    TranslocoDirective,
   ],
   templateUrl: './frenzy-page.component.html',
   styleUrl: './frenzy-page.component.scss',
@@ -38,6 +40,7 @@ export class FrenzyPageComponent implements OnInit {
   protected readonly evolvingPlayers = this.facade.evolvingPlayers;
   protected readonly hitBursts = this.facade.hitBursts;
   protected readonly ownedSparks = this.facade.ownedSparks;
+  protected readonly ownedShieldBlocks = this.facade.ownedShieldBlocks;
   protected readonly faintedStats = this.facade.faintedStats;
   protected readonly faintedEpitaph = this.facade.faintedEpitaph;
   protected readonly orphanFloats = this.facade.orphanFloats;
@@ -51,6 +54,7 @@ export class FrenzyPageComponent implements OnInit {
   protected readonly players = this.facade.players;
   protected readonly presenceCount = this.facade.presenceCount;
   protected readonly respawnReady = this.facade.respawnReady;
+  protected readonly isReconnecting = this.facade.isReconnecting;
   protected readonly uiState = this.facade.uiState;
 
   public ngOnInit(): void {

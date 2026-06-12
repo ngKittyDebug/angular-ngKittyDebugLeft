@@ -15,6 +15,12 @@ import type { RenderedItem } from '../scene/scene-view-models';
   templateUrl: './scene-item.component.html',
   styleUrl: './scene-item.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  // The bomb is the one item you actively shove (and its `?debug` speed pill / sensor box sit right over it). Mark
+  // its host so the styles can lift it above the Pokémon layer — a tap on the mine must always reach it (and shove),
+  // never be swallowed by an overlapping Pokémon sprite that paints later at the same z-index.
+  host: {
+    '[class.scene__item-host--bomb]': "item().type === 'bomb'",
+  },
 })
 export class SceneItemComponent {
   public readonly item = input.required<RenderedItem>();

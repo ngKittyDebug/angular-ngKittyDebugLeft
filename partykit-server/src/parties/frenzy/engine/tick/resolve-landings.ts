@@ -1,6 +1,7 @@
 import type { GameEvent, Item, ServerState } from '@game/frenzy/types';
 
 import { applyHpDeltas } from '../apply-hp-deltas';
+import { applyImpulses } from '../apply-impulses';
 import { itemFaintCause } from '../faint-cause';
 import { getItemBehavior } from '../item-behaviors';
 import { detonated } from './detonated';
@@ -29,7 +30,7 @@ export function resolveLandings(state: ServerState, expired: readonly Item[]): L
     const interaction = onLand(item, working);
     const resolved = applyHpDeltas(working, interaction.hpDeltas, itemFaintCause(item));
 
-    working = resolved.state;
+    working = applyImpulses(resolved.state, interaction.impulses ?? []);
 
     if (interaction.explodes) {
       events.push(detonated(item, interaction.hpDeltas));

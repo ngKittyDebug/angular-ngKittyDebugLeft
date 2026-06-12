@@ -11,7 +11,7 @@ import { shieldBehavior } from './shield';
 import type { ItemBehavior } from './types';
 import { vitaminBehavior } from './vitamin';
 
-export type { EffectGrant, ItemBehavior, ItemInteraction, HpDelta } from './types';
+export type { EffectGrant, ItemBehavior, ItemInteraction, HpDelta, PlayerImpulse } from './types';
 
 const ITEM_BEHAVIORS: Record<ItemType, ItemBehavior> = {
   food: eatBehavior,

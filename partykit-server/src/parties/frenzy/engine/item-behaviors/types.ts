@@ -6,6 +6,13 @@ export interface HpDelta {
   amount: number;
 }
 
+/** A velocity kick targeted at one player (normalized units/sec), added to their drift. Used by the bomb's radial knockback. */
+export interface PlayerImpulse {
+  playerId: string;
+  ix: number;
+  iy: number;
+}
+
 /** A timed effect to grant a player. `durationMs` is converted to an absolute `expiresAt` by the apply layer (which holds the clock). */
 export interface EffectGrant {
   playerId: string;
@@ -17,8 +24,11 @@ export interface EffectGrant {
 export interface ItemInteraction {
   hpDeltas: HpDelta[];
   consumed: boolean;
-  /** Horizontal shift (normalized) to apply to the item instead of eating it — used by the bomb's juggle click. */
+  /** Velocity impulse (normalized units/sec) added to the item's drift instead of eating it — the bomb's 2D shove click (`nudgeX` horizontal, `nudgeY` vertical). */
   nudgeX?: number;
+  nudgeY?: number;
+  /** Radial knockback kicks for players caught in a blast (bomb) — added to their drift, capped server-side. */
+  impulses?: PlayerImpulse[];
   /** When set, the engine reports this as a `detonated` blast (bomb) rather than an `eaten`/silent landing. */
   explodes?: boolean;
   /** Timed effects to grant on pickup (e.g. vitamin → decayShield); the engine reports these as `effectGranted`, not `eaten`. */
@@ -33,14 +43,16 @@ export interface ItemInteraction {
  * Effects may target the grabber or other players, so collateral interactions are expressible.
  */
 export interface ItemBehavior {
-  // `nudgeX` is the player's bomb-bat input — a signed normalized displacement; ignored by items that aren't juggled.
-  // `rng` is injected so gamble items (mushroom) can roll deterministically in tests; defaults to Math.random at the call site.
+  // `nudgeX`/`nudgeY` are the player's bomb-shove input — a 2D direction away from the tapped side; ignored by items
+  // that aren't juggled. `rng` is injected so gamble items (mushroom) can roll deterministically in tests; defaults
+  // to Math.random at the call site. `nudgeY` trails `rng` so existing rng-passing callers/behaviours stay unbroken.
   onClick(
     item: Item,
     clickerId: string,
     state: ServerState,
     nudgeX?: number,
     rng?: () => number,
+    nudgeY?: number,
   ): ItemInteraction;
   onLand?(item: Item, state: ServerState): ItemInteraction;
   onCollide?(item: Item, player: Player, state: ServerState, rng?: () => number): ItemInteraction;

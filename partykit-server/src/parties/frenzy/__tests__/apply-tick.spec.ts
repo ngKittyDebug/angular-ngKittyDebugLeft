@@ -231,9 +231,9 @@ describe('applyTick', () => {
   });
 
   it('gives a bigger (evolved) Pokémon a wider catch reach', () => {
-    // 120px horizontal gap (derived from world.width so it survives a world resize): inside a stage-3 reach
-    // (135px) but outside a stage-1 reach (99px).
-    const itemX = 0.5 + 120 / FRENZY.world.width;
+    // 100px horizontal gap (derived from world.width so it survives a world resize): inside a stage-3 reach
+    // (120px) but outside a stage-1 reach (75px).
+    const itemX = 0.5 + 100 / FRENZY.world.width;
     const small: Player = { ...PLAYER, stage: 1, x: 0.5, y: 0.6 };
     const smallRun = applyTick(
       stateWith([small], [makeItem({ type: 'food', x: itemX, y: 0.6, vy: 0 })]),
@@ -255,7 +255,7 @@ describe('applyTick', () => {
 
   it('an owned (emitted) item skips its owner but still collides with a rival', () => {
     const owner: Player = { ...PLAYER, id: 'owner', x: 0.5, y: 0.6 };
-    // 60px from the item (derived from world.width) — comfortably inside a stage-1 reach (99px) on any world size.
+    // 60px from the item (derived from world.width) — comfortably inside a stage-1 reach (75px) on any world size.
     const rival: Player = { ...PLAYER, id: 'rival', x: 0.5 + 60 / FRENZY.world.width, y: 0.6 };
     const ownedFood = makeItem({ type: 'food', x: 0.5, y: 0.6, vy: 0, ownerId: 'owner' });
     const { state: next, events } = applyTick(stateWith([owner, rival], [ownedFood]), 0.1, false);
@@ -295,6 +295,20 @@ describe('applyTick', () => {
     expect(events).toEqual([]);
   });
 
+  it('drifts a bomb at constant velocity and bounces it off the side wall (damped)', () => {
+    const halfWidth = halfExtentNorm(FRENZY.physicalSizePx.item, FRENZY.world.width);
+    // Heading into the right wall with a gentle downward coast; after the bounce vx flips left and is damped, while
+    // vy is unchanged (no gravity — the bomb steers like a Pokémon, so its velocity only changes on shove/bounce).
+    const bomb = makeItem({ type: 'bomb', x: 1 - halfWidth - 0.001, y: 0.3, vx: 0.03, vy: 0.01 });
+    const { state: next } = applyTick(stateWith([], [bomb]), 0.1, false);
+    const moved = next.items[0];
+
+    expect(moved.x).toBeLessThanOrEqual(1 - halfWidth + 1e-9);
+    expect(moved.vx ?? 0).toBeLessThan(0); // bounced back toward the left
+    expect(Math.abs(moved.vx ?? 0)).toBeLessThan(0.03); // damped on the bounce
+    expect(moved.vy).toBe(0.01); // constant — no gravity to accelerate the sink (stays under the speed cap)
+  });
+
   it('detonates a bomb on landing: damages Pokémon in range (owner included), removes it, emits detonated', () => {
     const victim: Player = { ...PLAYER, x: 0.5, y: 0.95 };
     const bomb = makeItem({ type: 'bomb', x: 0.5, y: 0.99, vy: FRENZY.fallSpeed.bomb });
@@ -302,7 +316,10 @@ describe('applyTick', () => {
     const { state: next, events } = applyTick(stateWith([victim], [bomb]), 0.5, false);
 
     expect(next.items).toHaveLength(0);
-    expect(next.players[0].hp).toBe(PLAYER.hp + FRENZY.bomb.damage);
+    // Distance-scaled damage: somewhere between the epicentre max and the radius-edge floor, never zero.
+    expect(next.players[0].hp).toBeLessThan(PLAYER.hp);
+    expect(next.players[0].hp).toBeGreaterThanOrEqual(PLAYER.hp + FRENZY.bomb.maxDamage);
+    expect(next.players[0].hp).toBeLessThanOrEqual(PLAYER.hp + FRENZY.bomb.minDamage);
     expect(events).toContainEqual(
       expect.objectContaining({
         type: 'detonated',
@@ -310,6 +327,41 @@ describe('applyTick', () => {
         playerIds: ['p1'],
       }),
     );
+  });
+
+  it('detonates the bomb on sensor-horn contact (reach past the shell), still tighter than a food catch', () => {
+    const player: Player = { ...PLAYER, x: 0.5, y: 0.6 };
+
+    // 66px to the side: past the bare shell (the 60px item box would miss) but within the bomb's sensor-horn reach
+    // (≈72px) → touching a horn detonates the mine.
+    const atSensor = 0.5 + 66 / FRENZY.world.width;
+    const hit = applyTick(
+      stateWith([player], [makeItem({ type: 'bomb', x: atSensor, y: 0.6, vy: 0 })]),
+      0.05,
+      false,
+    );
+
+    expect(hit.events.some((event) => event.type === 'detonated')).toBe(true);
+
+    // The bomb's no-assist reach (72px) is now only a hair tighter than food's body-padded catch (75px): the assist
+    // pads the body half only, not the item half. A point at 74px is just past the mine's sensors (no detonation)
+    // yet still inside food's reach (still eaten) — proving the bomb uses true contact while food keeps a small assist.
+    const past = 0.5 + 74 / FRENZY.world.width;
+    const miss = applyTick(
+      stateWith([player], [makeItem({ type: 'bomb', x: past, y: 0.6, vy: 0 })]),
+      0.05,
+      false,
+    );
+
+    expect(miss.events.some((event) => event.type === 'detonated')).toBe(false);
+
+    const food = applyTick(
+      stateWith([player], [makeItem({ type: 'food', x: past, y: 0.6, vy: 0 })]),
+      0.05,
+      false,
+    );
+
+    expect(food.events.some((event) => event.type === 'eaten')).toBe(true);
   });
 
   it('detonates a bomb that bumps a Pokémon mid-air (detonated, not eaten; blasts the area)', () => {
@@ -320,12 +372,13 @@ describe('applyTick', () => {
     const { state: next, events } = applyTick(stateWith([hit, bystander], [bomb]), 0.1, false);
 
     expect(next.items).toHaveLength(0);
-    expect(next.players.find((player) => player.id === 'hit')?.hp).toBe(
-      PLAYER.hp + FRENZY.bomb.damage,
-    );
-    expect(next.players.find((player) => player.id === 'bystander')?.hp).toBe(
-      PLAYER.hp + FRENZY.bomb.damage,
-    );
+    const hitHp = next.players.find((player) => player.id === 'hit')?.hp ?? 0;
+    const bystanderHp = next.players.find((player) => player.id === 'bystander')?.hp ?? 0;
+
+    // Both are caught, but the one at the epicentre takes more damage than the one off to the side.
+    expect(hitHp).toBeLessThan(PLAYER.hp);
+    expect(bystanderHp).toBeLessThan(PLAYER.hp);
+    expect(hitHp).toBeLessThan(bystanderHp);
     expect(events.some((event) => event.type === 'eaten')).toBe(false);
     expect(events).toContainEqual(expect.objectContaining({ type: 'detonated' }));
   });
@@ -399,9 +452,11 @@ describe('applyTick', () => {
     );
 
     expect(next.players.find((player) => player.id === 'shielded')?.hp).toBe(PLAYER.hp);
-    expect(next.players.find((player) => player.id === 'exposed')?.hp).toBe(
-      PLAYER.hp + FRENZY.bomb.damage,
-    );
+
+    const exposedHp = next.players.find((player) => player.id === 'exposed')?.hp ?? 0;
+
+    expect(exposedHp).toBeLessThan(PLAYER.hp);
+    expect(exposedHp).toBeGreaterThanOrEqual(PLAYER.hp + FRENZY.bomb.maxDamage);
     expect(events).toContainEqual(
       expect.objectContaining({ type: 'detonated', playerIds: ['exposed'] }),
     );
@@ -433,5 +488,99 @@ describe('applyTick', () => {
       playerId: 'p1',
       cause: { by: 'item', itemType: 'rock' },
     });
+  });
+
+  it('separates two overlapping Pokémon (player collision enabled by default)', () => {
+    const a: Player = { ...PLAYER, id: 'a', x: 0.5, y: 0.6 };
+    const b: Player = { ...PLAYER, id: 'b', x: 0.5 + 40 / FRENZY.world.width, y: 0.6 };
+    const { state: next } = applyTick(stateWith([a, b], []), 0.1, false);
+    const [movedA, movedB] = next.players;
+
+    expect(movedB.x - movedA.x).toBeGreaterThan(b.x - a.x);
+  });
+
+  it('deals bump damage and emits a bumped float event for both survivors on a hard head-on collision', () => {
+    // Touching, closing fast: after the drift step they overlap and ram harder than the bump threshold.
+    const a: Player = { ...PLAYER, id: 'a', x: 0.5, y: 0.6, vx: 0.04 };
+    const b: Player = { ...PLAYER, id: 'b', x: 0.5 + 60 / FRENZY.world.width, y: 0.6, vx: -0.04 };
+    const { state: next, events } = applyTick(stateWith([a, b], []), 0.1, false);
+    const [movedA, movedB] = next.players;
+
+    expect(movedA.hp).toBe(PLAYER.hp + FRENZY.playerCollision.bumpDamage);
+    expect(movedB.hp).toBe(PLAYER.hp + FRENZY.playerCollision.bumpDamage);
+    expect(events).toContainEqual({ type: 'bumped', playerId: 'a' });
+    expect(events).toContainEqual({ type: 'bumped', playerId: 'b' });
+  });
+
+  it('spares a shielded Pokémon from bump damage and its float (the rammer still takes both)', () => {
+    const shielded: Player = {
+      ...PLAYER,
+      id: 'shielded',
+      x: 0.5,
+      y: 0.6,
+      vx: 0.04,
+      effects: [{ kind: 'shield', expiresAt: 10_000 }],
+    };
+    const rammer: Player = {
+      ...PLAYER,
+      id: 'rammer',
+      x: 0.5 + 60 / FRENZY.world.width,
+      y: 0.6,
+      vx: -0.04,
+    };
+    const { state: next, events } = applyTick(
+      stateWith([shielded, rammer], []),
+      0.1,
+      false,
+      Math.random,
+      5000,
+    );
+
+    expect(next.players.find((player) => player.id === 'shielded')?.hp).toBe(PLAYER.hp);
+    expect(next.players.find((player) => player.id === 'rammer')?.hp).toBe(
+      PLAYER.hp + FRENZY.playerCollision.bumpDamage,
+    );
+    expect(events).toContainEqual({ type: 'bumped', playerId: 'rammer' });
+    expect(events).not.toContainEqual({ type: 'bumped', playerId: 'shielded' });
+  });
+
+  it('emits fainted (cause bump, naming the rammer) when a collision drops hp to zero', () => {
+    const frail: Player = { ...PLAYER, id: 'frail', hp: 3, x: 0.5, y: 0.6, vx: 0.04 };
+    const rammer: Player = {
+      ...PLAYER,
+      id: 'rammer',
+      x: 0.5 + 60 / FRENZY.world.width,
+      y: 0.6,
+      vx: -0.04,
+    };
+    const { state: next, events } = applyTick(stateWith([frail, rammer], []), 0.1, false);
+
+    expect(next.players.find((player) => player.id === 'frail')).toBeUndefined();
+    expect(events).toContainEqual({
+      type: 'fainted',
+      playerId: 'frail',
+      cause: { by: 'bump', killerId: 'rammer' },
+    });
+    // The fatal victim gets its fainted/obituary line, not a bump float quip.
+    expect(events).not.toContainEqual({ type: 'bumped', playerId: 'frail' });
+  });
+
+  it('leaves overlapping Pokémon untouched when player collision is disabled', () => {
+    const flag = FRENZY.features.playerCollision as { enabled: boolean };
+    const original = flag.enabled;
+
+    flag.enabled = false;
+
+    try {
+      const a: Player = { ...PLAYER, id: 'a', x: 0.5, y: 0.6 };
+      const b: Player = { ...PLAYER, id: 'b', x: 0.5 + 40 / FRENZY.world.width, y: 0.6 };
+      const { state: next } = applyTick(stateWith([a, b], []), 0.1, false);
+      const [movedA, movedB] = next.players;
+
+      expect(movedA.x).toBe(a.x);
+      expect(movedB.x).toBe(b.x);
+    } finally {
+      flag.enabled = original;
+    }
   });
 });

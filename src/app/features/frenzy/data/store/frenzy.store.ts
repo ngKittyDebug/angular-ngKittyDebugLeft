@@ -22,7 +22,13 @@ import { applyServerMessage } from './apply-server-message';
 import { FrenzySocketService } from '../services/frenzy-socket.service';
 import { PlayerPersistenceService } from '../services/player-persistence.service';
 
-export type ConnectionStatus = 'idle' | 'connecting' | 'open' | 'closed' | 'roomFull';
+export type ConnectionStatus =
+  | 'idle'
+  | 'connecting'
+  | 'open'
+  | 'closed'
+  | 'roomFull'
+  | 'reconnecting';
 
 interface FrenzyState {
   state: ServerState | null;
@@ -59,6 +65,12 @@ export const FrenzyStore = signalStore(
           return 'roomFull';
         }
 
+        // A stalled-and-reconnecting socket flaps through `closed` while `reconnect()` runs — surface it as a
+        // distinct `reconnecting` (checked before the raw status) so the game keeps rendering through the blip.
+        if (socket.stale()) {
+          return 'reconnecting';
+        }
+
         const status = socket.status();
 
         if (status === 'open') {
@@ -92,8 +104,8 @@ export const FrenzyStore = signalStore(
       socket = inject(FrenzySocketService),
       persistence = inject(PlayerPersistenceService),
     ) => ({
-      click(itemId: string, nudgeX?: number): void {
-        socket.send({ type: 'click', itemId, nudgeX });
+      click(itemId: string, nudgeX?: number, nudgeY?: number): void {
+        socket.send({ type: 'click', itemId, nudgeX, nudgeY });
       },
       connect(roomId = 'feeding-frenzy'): void {
         const token = persistence.getOrCreateToken();
@@ -147,9 +159,10 @@ export const FrenzyStore = signalStore(
               next.myFaintedAt = Date.now();
               next.myFaintCause = cause;
               // Resolve the culprit's name from the pre-removal snapshot (the killer is a different, still-present
-              // player); null unless an owned item (easter-egg/poop emission) dealt the blow.
+              // player); null unless a culprit is named — an owned item (easter-egg/poop emission) or a rival that
+              // rammed us to death (bump). Both carry `killerId`, so one lookup serves both.
               next.myKillerName =
-                cause?.by === 'item' && cause.killerId !== undefined
+                cause !== null && 'killerId' in cause && cause.killerId !== undefined
                   ? (current.state?.players.find((player) => player.id === cause.killerId)?.name ??
                     null)
                   : null;

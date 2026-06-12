@@ -1,19 +1,62 @@
 :host {
+  position: relative;
   display: flex;
   flex: 1;
   min-height: 0;
-  // Cancel the .root-wrapper horizontal padding (2rem) so the game is full-bleed.
+  // Cancel the .root-wrapper horizontal padding so the game is full-bleed. The wrapper padding is RESPONSIVE
+  // (2rem desktop; 0.5rem at ≤410px — see styles.scss / $screen-x-small), so the bleed must match it per
+  // breakpoint. The mobile override lives below — a fixed `-2rem` over-pulled on narrow phones, shifting the page
+  // and its pinned HUD off-centre and clipping the right edge.
   margin-inline: -2rem;
   width: calc(100% + 4rem);
+  // Paint the host with the theme background so the mobile tab-bar reservation strip (see below)
+  // is themed, never the unpainted white tui-root background.
+  background: var(--gradient-bg);
+}
+
+// At ≤410px the wrapper's horizontal padding drops to 0.5rem (styles.scss / $screen-x-small). Match the bleed to
+// it so the page stays exactly viewport-width and centred — the desktop `-2rem` over-pulled here, sliding the page
+// (and the pinned top-left HUD) off-screen to the left and clipping the right edge.
+@media (max-width: 410px) {
+  :host {
+    margin-inline: -0.5rem;
+    width: calc(100% + 1rem);
+  }
+}
+
+// Thematic "seabed" label that fills the mobile tab-bar reservation strip (hidden on desktop, where
+// there is no reservation). Pinned to the host bottom, it sits inside the reserved padding area.
+.frenzy-page__floor {
+  display: none;
 }
 
 // At/below the layout's tablet breakpoint (TABLE_BREAKPOINT = 800px) the mobile tab bar is rendered as a
 // position:fixed bar at the viewport bottom — out of flow, so the full-bleed page would otherwise extend
 // behind it and hide low-drifting Pokémon and floor items. Reserve the bar's height (Taiga tab bar host =
 // --tui-height-l, plus its 1px top border) so the whole play area ends just above the bar.
+// Use padding (not margin) so the reserved strip stays inside the host box and is painted by the
+// host background above — a transparent margin would expose the white tui-root background.
 @media (max-width: 800px) {
   :host {
-    margin-block-end: calc(var(--tui-height-l) + 1px);
+    padding-block-end: calc(var(--tui-height-l) + 1px);
+  }
+
+  .frenzy-page__floor {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: calc(var(--tui-height-l) + 1px);
+    color: var(--tui-text-secondary);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    user-select: none;
+    pointer-events: none;
   }
 }
 
@@ -42,9 +85,10 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    // Desktop: stretch so the status bar and expanded map both fill the 22rem column.
+    // Desktop: stretch so the status bar and expanded map both fill the column (16.5rem — 25% narrower than the
+    // original 22rem so the status card and minimap take less of the play area).
     align-items: stretch;
-    width: min(22rem, calc(100% - 2rem));
+    width: min(16.5rem, calc(100% - 2rem));
     // Status is non-interactive; the minimap re-enables pointer events on itself.
     pointer-events: none;
   }
@@ -97,6 +141,23 @@
     border-radius: 0.5rem;
     color: #f5f5f5;
     font-size: 1.125rem;
+  }
+
+  // Non-blocking "reconnecting" pill pinned top-centre over the live scene — the inbound-stall recovery is
+  // self-healing, so it nudges rather than tears the game down (unlike the disconnected modal).
+  &__reconnecting {
+    position: absolute;
+    inset-block-start: 1rem;
+    inset-inline: 0;
+    margin: 0 auto;
+    width: fit-content;
+    padding: 0.375rem 1rem;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 1rem;
+    color: #f5f5f5;
+    font-size: 0.875rem;
+    pointer-events: none;
+    z-index: 11;
   }
 
   // Disconnected scrim: blurs + dims the frozen scene/HUD behind the modal and,

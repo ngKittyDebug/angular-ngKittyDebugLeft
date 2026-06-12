@@ -2,6 +2,13 @@
 // so it can be unit-tested directly: drift position/direction (mirroring the server's bounce) and the decaying
 // offset that smooths a snapshot correction.
 
+// Clamp a value into the inclusive [min, max] range. Used to keep a rendered sprite inside the drift zone after a
+// reconciliation offset is layered on top of the bounded drift — a large correction (e.g. a bomb knockback the
+// client extrapolated past the wall) must never push the sprite off-screen while the offset decays.
+export function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
 // Closed-form reflective ("ping-pong") drift along one axis: mirrors the server's bounce so the
 // client can extrapolate between snapshots smoothly instead of stepping each snapshot.
 export function reflect(

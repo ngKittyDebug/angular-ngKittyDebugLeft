@@ -1,7 +1,9 @@
+import { FRENZY } from '@game/frenzy/config';
 import type { GameEvent, ServerState } from '@game/frenzy/types';
 
 import { applyEffects, resolveGrants } from '../apply-effect';
 import { applyHpDeltas } from '../apply-hp-deltas';
+import { applyImpulses } from '../apply-impulses';
 import { itemFaintCause } from '../faint-cause';
 import { getItemBehavior } from '../item-behaviors';
 import { findCollisionTarget } from './collision-target';
@@ -35,7 +37,13 @@ export function resolveCollisions(
       continue;
     }
 
-    const target = findCollisionTarget(item, working.players);
+    // The bomb detonates on true contact (no catch assist) so it doesn't blow up half a body early; everything
+    // else keeps the forgiving catch reach.
+    const generosity =
+      item.type === 'bomb'
+        ? FRENZY.collision.bombCatchGenerosity
+        : FRENZY.collision.catchGenerosity;
+    const target = findCollisionTarget(item, working.players, generosity);
 
     if (target === undefined) {
       continue;
@@ -77,7 +85,7 @@ export function resolveCollisions(
 
     const resolved = applyHpDeltas(working, interaction.hpDeltas, itemFaintCause(item));
 
-    working = resolved.state;
+    working = applyImpulses(resolved.state, interaction.impulses ?? []);
 
     if (interaction.explodes) {
       // A bomb that bumps a Pokémon detonates over the whole area — not a one-on-one "eat".

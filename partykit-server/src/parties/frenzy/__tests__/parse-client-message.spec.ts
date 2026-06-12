@@ -89,10 +89,12 @@ describe('parseClientMessage', () => {
     expect(parseClientMessage(JSON.stringify({ type: 'click', itemId: '' }))).toBeNull();
   });
 
-  it('parses click with a numeric nudgeX (bomb bat input)', () => {
+  it('parses click with a numeric nudgeX/nudgeY (bomb 2D shove input)', () => {
     expect(
-      parseClientMessage(JSON.stringify({ type: 'click', itemId: 'i1', nudgeX: -0.12 })),
-    ).toEqual({ type: 'click', itemId: 'i1', nudgeX: -0.12 });
+      parseClientMessage(
+        JSON.stringify({ type: 'click', itemId: 'i1', nudgeX: -0.12, nudgeY: 0.34 }),
+      ),
+    ).toEqual({ type: 'click', itemId: 'i1', nudgeX: -0.12, nudgeY: 0.34 });
   });
 
   it('drops a non-numeric nudgeX', () => {
