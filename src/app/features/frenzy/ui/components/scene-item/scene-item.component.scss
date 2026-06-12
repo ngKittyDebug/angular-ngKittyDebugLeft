@@ -38,13 +38,21 @@
   scale: 0.95;
 }
 
-// A rested item is half-sunk into the seabed: fade its lower ~quarter into transparency so the sand shows through
-// and it reads as buried rather than sitting on top. The mask is on the (non-rotated) button, so the cut runs
-// along the WORLD vertical — a tumbled item still sinks along the flat sand line, not its own frozen tilt. Cheap:
-// a static compositor mask applied only while landed.
+// A rested item looks buried ~a quarter into the seabed: PUSH it down so its lower part dips past the sand line
+// (a mask alone just trimmed the sprite — it still sat on top at full height, so nothing read as "sunk"), then
+// CLIP that part off. Both props are on the (non-rotated) button, so the cut runs along the WORLD-horizontal sand
+// line — a tumbled item still buries flat, not along its frozen tilt. Cheap: two static props, only while landed.
 .scene__item--landed {
-  -webkit-mask-image: linear-gradient(to bottom, #000 64%, transparent 86%);
-  mask-image: linear-gradient(to bottom, #000 64%, transparent 86%);
+  transform: translateY(16%);
+  clip-path: inset(0 0 30% 0);
+  // Ease the sink+clip IN so the item settles into the sand naturally — a soft easeOutQuint (quick at first, then
+  // a long gentle slow-down to rest, like sinking into yielding sand) instead of snapping down on the landing frame.
+  // The sink is purely vertical and the clip runs along the world-horizontal sand line, so an item launched in at an
+  // angle (egg/poop auras) still buries flat regardless of its frozen tumble angle. `scale` keeps the press feedback.
+  transition:
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    clip-path 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    scale 0.08s ease;
 }
 
 // Hover/focus highlights the sprite (brighten + glowing rim) rather than scaling it up — a clearer "this one is
@@ -163,23 +171,26 @@
 // lives and dies with the item (no timers) and rides the world/camera like the item. Reduced-motion skips the fade.
 .scene__item-shadow {
   position: absolute;
-  // Lifted up to the sprite's base (the host foot is ~12px below the sprite art due to the button padding, so a
-  // foot-anchored shadow looked detached below a floating item). Size is driven by the item SPRITE size
-  // (`--scene-item-size`), not weight — a flat ellipse a touch wider than the sprite so it reads as the item
-  // sitting in it.
-  bottom: 6px;
+  // Peeks out just under the buried foot: the item sinks (translateY) AND clips its lower part, so its visible base
+  // sits ~12px up from the host bottom. The shadow (z-index -1, behind the sprite) must sit low enough to show
+  // BELOW that cut line — too high and the sprite hides it, too low and it detaches into a blob. Size is driven by
+  // the item SPRITE size (`--scene-item-size`), not weight — a flat, softly-blurred ellipse.
+  bottom: 2px;
   left: 50%;
   z-index: -1;
-  width: calc(var(--scene-item-size, 60px) * 1.55);
-  height: calc(var(--scene-item-size, 60px) * 0.32);
+  width: calc(var(--scene-item-size, 60px) * 1.5);
+  height: calc(var(--scene-item-size, 60px) * 0.24);
   transform: translateX(-50%);
+  // Soft contact shadow: full theme colour at the core fading out at 70% (no hard rim), with a moderate blur. Kept
+  // dense enough to actually read against the tan sand — over-blurring + lightening it earlier made it vanish — but
+  // the blur + gradient falloff still soften the edge so it's diffuse sand shade, not a sharp dark disc.
   background: radial-gradient(
     50% 50% at 50% 50%,
     var(--aq-item-shadow, rgba(0, 0, 0, 0.35)) 0%,
-    transparent 72%
+    transparent 70%
   );
   border-radius: 50%;
-  filter: blur(1.5px);
+  filter: blur(3.5px);
   pointer-events: none;
   animation: scene-item-shadow-in 150ms ease-out;
 }

@@ -2,21 +2,16 @@ import { FRENZY } from '@game/frenzy/config';
 import type { Item, Player } from '@game/frenzy/types';
 
 /**
- * Whether an emitted item still sits in its owner's immediate interaction zone — for a bomb, inside its blast
- * radius (normalized distance, mirroring `bombBlast`); for any other item, overlapping the owner's collision box
- * (the same size-aware AABB `findCollisionTarget` uses, in world px). While true the owner stays immune; once
- * false the item is safe to arm.
+ * Whether an emitted item still OVERLAPS its owner's body — the same size-aware AABB `findCollisionTarget` uses (in
+ * world px), with the item's own physical size (the bomb is bigger). While true the owner stays immune; the moment
+ * the item drifts off the body it arms. Deliberately NOT the bomb's blast radius: that radius is large (~0.18), so
+ * a slow, gravity-free bomb hovering near its owner never left it and stayed immune forever — the owner could swim
+ * through its own mine. Tying immunity to body-overlap instead means the bomb arms as soon as it separates, then
+ * detonates the moment it touches anyone (incl. the ex-owner who rams it again).
  */
 function stillHuggingOwner(item: Item, owner: Player): boolean {
-  if (item.type === 'bomb') {
-    const dx = owner.x - item.x;
-    const dy = owner.y - item.y;
-    const radius = FRENZY.bomb.blastRadius;
-
-    return dx * dx + dy * dy <= radius * radius;
-  }
-
-  const itemHalfPx = FRENZY.physicalSizePx.item / 2;
+  const itemHalfPx =
+    (item.type === 'bomb' ? FRENZY.physicalSizePx.bomb : FRENZY.physicalSizePx.item) / 2;
   const stageBody = owner.body[owner.stage];
   const generosity = FRENZY.collision.catchGenerosity;
   const reachX = itemHalfPx + (stageBody.width / 2) * generosity;

@@ -8,31 +8,32 @@ export const BUFFS = {
   /** Shield: a pickup granting a `shield` for `shieldMs` — suspends decay AND wards off all incoming damage (bomb/rock/rotten). A short window of full invulnerability inside a bubble; rare on purpose. */
   shield: { shieldMs: 15_000 },
   /** Easter egg: a pickup that heals `hpOnPickup` hp and grants `laying` for `durationMs`. While active, the
-   * Pokémon randomly emits a falling item from itself each tick with probability `emitChancePerTick` (any type,
-   * incl. bombs). Each item spawns at the body's lower-rear EDGE — `emitBack`/`emitDown` are the small gaps PAST the
-   * body edge (the server adds half the body size first, so emission scales with the Pokémon) behind + below — and
-   * is launched backward at `emitBackSpeed` (opposite the heading) — it sprays out behind, like it's being flung.
-   * Emitted items carry the layer's `ownerId`, so they never collide with or blast their owner. */
+   * Pokémon drips one falling item from itself every `emitIntervalMs` (any type, incl. bombs) — a steady, predictable
+   * count per aura (`durationMs / emitIntervalMs`) rather than a random per-tick burst. Each item spawns at the body's
+   * lower-rear EDGE — `emitBack`/`emitDown` are the small gaps PAST the body edge (the server adds half the body size
+   * first, so emission scales with the Pokémon) behind + below — and is launched backward at `emitBackSpeed` (opposite
+   * the heading) — it sprays out behind, like it's being flung. Emitted items carry the layer's `ownerId`, so they
+   * never collide with or blast their owner. */
   easterEgg: {
     durationMs: 10_000,
-    emitChancePerTick: 0.1,
+    emitIntervalMs: 1500,
     hpOnPickup: 10,
     emitBack: 0.012,
     emitDown: 0.008,
-    emitBackSpeed: 0.1,
+    emitBackSpeed: 0.08,
     /** Max random rotation (radians, ±) applied to each item's launch vector, so a burst fans out in a cone
      * instead of every item flying the identical way and lining up. Kept under the bomb's ~0.5 rad horizontal
      * limit so nothing ever launches upward. */
     emitAngleJitter: 0.4,
   },
   /** Poop: the cursed twin of the easter egg. Eating it deals `hpOnPickup` (negative) damage and grants `pooping`
-   * for `durationMs` — same emission loop as `laying`, but the Pokémon only sprays rock/brick/bomb (the nasty pool)
-   * out behind itself each tick at `emitChancePerTick`. Shares the egg's launch geometry (`emitBack`/`emitDown` as
+   * for `durationMs` — same emission loop as `laying`, but the Pokémon only drips rock/brick/bomb (the nasty pool)
+   * out behind itself every `emitIntervalMs`. Shares the egg's launch geometry (`emitBack`/`emitDown` as
    * gaps past the body edge / `emitBackSpeed`). Emitted items carry the layer's `ownerId`, so they never collide
    * with or blast their owner. */
   poop: {
     durationMs: 10_000,
-    emitChancePerTick: 0.1,
+    emitIntervalMs: 1000,
     hpOnPickup: -10,
     emitBack: 0.012,
     emitDown: 0.008,

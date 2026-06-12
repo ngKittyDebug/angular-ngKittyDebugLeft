@@ -14,7 +14,7 @@
   >
     <left-paw-aquarium-decor />
 
-    @for (item of renderedItems(); track item.id) {
+    @for (item of renderedItemsByDepth(); track item.id) {
       <left-paw-scene-item
         [leftPawScenePosition]="{ x: item.x, y: item.y }"
         [scenePositionTransform]="true"

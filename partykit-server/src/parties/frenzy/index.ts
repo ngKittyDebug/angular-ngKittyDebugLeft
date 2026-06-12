@@ -32,6 +32,9 @@ export default class FeedingRoom implements Party.Server {
   private loopHandle: ReturnType<typeof setInterval> | null = null;
   private heartbeatHandle: ReturnType<typeof setInterval> | null = null;
   private nextSpawnAt = 0;
+  // Per-player aura emission schedule (`playerId -> nextEmitAt`, server-clock ms). Rebuilt each tick from live aura
+  // holders by `applyEmissions`, so it self-prunes when a holder dies, leaves or the aura expires.
+  private nextEmitAtByPlayer = new Map<string, number>();
   private tick = 0;
   private readonly debugEnabled: boolean;
 
@@ -190,8 +193,12 @@ export default class FeedingRoom implements Party.Server {
       return;
     }
 
-    // Easter-egg emissions: players under the `laying` aura randomly drop items from themselves this tick.
-    const emission = applyEmissions(this.currentState());
+    const now = Date.now();
+
+    // Aura emissions: players under the `laying`/`pooping` aura drip one item per `emitIntervalMs` (schedule kept server-side).
+    const emission = applyEmissions(this.currentState(), now, this.nextEmitAtByPlayer);
+
+    this.nextEmitAtByPlayer = emission.schedule;
 
     if (emission.spawned.length > 0) {
       this.syncState(emission.state);
@@ -200,8 +207,6 @@ export default class FeedingRoom implements Party.Server {
         this.broadcast({ type: 'spawned', item });
       }
     }
-
-    const now = Date.now();
 
     if (now >= this.nextSpawnAt) {
       this.spawnItem();

@@ -32,8 +32,13 @@ function stateWith(players: Player[]): ServerState {
   return { players, items: [], tick: 0 };
 }
 
-// Feeds rng calls in order, repeating the last value once exhausted — lets a test pass the emit gate (first call)
-// then drive pickItemType into any band (second call) independently, instead of sharing one constant.
+// A schedule whose single holder is already due at now = 0, so the emit path runs this tick.
+function dueAt(id: string, at = 0): Map<string, number> {
+  return new Map([[id, at]]);
+}
+
+// Feeds rng calls in order, repeating the last value once exhausted. The gate is now timing-based, so rng drives only
+// pickItemType (first call) then the angle jitter (second call) — 0.5 → zero rotation, for an exact launch vector.
 function sequenceRng(values: number[]): () => number {
   let index = 0;
 
@@ -41,18 +46,14 @@ function sequenceRng(values: number[]): () => number {
 }
 
 describe('applyEmissions', () => {
-  // rng < emitChancePerTick → emit; the same rng then drives pickItemType (0 → first weighted type: food).
-  const emit = (): number => 0;
-  const skip = (): number => 0.5;
-
-  it('a laying player sprays an item from its lower-rear, launched backward and tagged with ownerId', () => {
+  it('a due laying player sprays an item from its lower-rear, launched backward and tagged with ownerId', () => {
     const layer = player('p1', LAYING);
-    // rng: [emit gate, pickItemType → food, angle jitter = 0.5 → zero rotation] so the exact launch vector holds.
-    const { state: next, spawned } = applyEmissions(
-      stateWith([layer]),
-      sequenceRng([0, 0, 0.5]),
-      () => 'egg-1',
-    );
+    // rng: [pickItemType → food, angle jitter = 0.5 → zero rotation] so the exact launch vector holds.
+    const {
+      state: next,
+      spawned,
+      schedule,
+    } = applyEmissions(stateWith([layer]), 0, dueAt('p1'), sequenceRng([0, 0.5]), () => 'egg-1');
 
     expect(spawned).toEqual([
       {
@@ -67,11 +68,19 @@ describe('applyEmissions', () => {
       },
     ]);
     expect(next.items).toEqual(spawned);
+    // Re-armed on the exact grid: due (0) + interval, not now + interval.
+    expect(schedule.get('p1')).toBe(FRENZY.easterEgg.emitIntervalMs);
   });
 
   it('launches the item opposite the heading: a left-moving layer sprays to the right', () => {
     const layer = { ...player('p1', LAYING), vx: -0.05 };
-    const { spawned } = applyEmissions(stateWith([layer]), sequenceRng([0, 0, 0.5]), () => 'egg-2');
+    const { spawned } = applyEmissions(
+      stateWith([layer]),
+      0,
+      dueAt('p1'),
+      sequenceRng([0, 0.5]),
+      () => 'egg-2',
+    );
 
     expect(spawned[0].vx).toBeCloseTo(FRENZY.easterEgg.emitBackSpeed, 5);
     expect(spawned[0].x).toBeCloseTo(
@@ -81,7 +90,7 @@ describe('applyEmissions', () => {
   });
 
   it('a laying player only ever sprays the all-positive egg pool — never a nasty, bomb nor aura item', () => {
-    // gate (first rng) always passes; the second rng sweeps pickItemType across the whole eggEmitWeights pool.
+    // Always due; the first rng sweeps pickItemType across the whole eggEmitWeights pool.
     const allowed = new Set([
       'food',
       'crumb',
@@ -97,7 +106,9 @@ describe('applyEmissions', () => {
       const pick = i / 100;
       const { spawned } = applyEmissions(
         stateWith([player('p1', LAYING)]),
-        sequenceRng([0, pick]),
+        0,
+        dueAt('p1'),
+        sequenceRng([pick, 0.5]),
         () => 'egg-x',
       );
 
@@ -111,39 +122,68 @@ describe('applyEmissions', () => {
     expect(seen).toEqual(allowed);
   });
 
-  it('does not emit when the per-tick roll misses the chance', () => {
-    const layer = player('p1', LAYING);
-    const { state: next, spawned } = applyEmissions(stateWith([layer]), skip, () => 'egg-1');
+  it('does not emit before the interval elapses, carrying the timer forward and keeping the same state ref', () => {
+    const state = stateWith([player('p1', LAYING)]);
+    // Timer due far in the future, now well before it → not due.
+    const {
+      state: next,
+      spawned,
+      schedule,
+    } = applyEmissions(state, 0, dueAt('p1', 5000), sequenceRng([0, 0.5]), () => 'egg-1');
 
     expect(spawned).toEqual([]);
-    expect(next.items).toEqual([]);
+    expect(next).toBe(state); // nothing emitted → same reference
+    expect(schedule.get('p1')).toBe(5000); // timer carried over unchanged
   });
 
-  it('does not emit for a player without the laying aura', () => {
-    const { spawned } = applyEmissions(stateWith([player('p1')]), emit, () => 'egg-1');
+  it('arms the timer on the first tick under the aura and emits nothing yet', () => {
+    // Empty schedule → first time seen: arm at now + interval, no item this tick.
+    const { spawned, schedule } = applyEmissions(
+      stateWith([player('p1', LAYING)]),
+      1000,
+      new Map(),
+      sequenceRng([0, 0.5]),
+      () => 'egg-1',
+    );
 
     expect(spawned).toEqual([]);
+    expect(schedule.get('p1')).toBe(1000 + FRENZY.easterEgg.emitIntervalMs);
+  });
+
+  it('does not emit nor schedule a player without the laying aura', () => {
+    const { spawned, schedule } = applyEmissions(
+      stateWith([player('p1')]),
+      0,
+      dueAt('p1'),
+      sequenceRng([0, 0.5]),
+      () => 'egg-1',
+    );
+
+    expect(spawned).toEqual([]);
+    expect(schedule.has('p1')).toBe(false); // dropped from the map → auto-clean
   });
 
   it('does not emit for a disconnected laying player', () => {
     const offline = { ...player('p1', LAYING), status: 'disconnected' as const };
-    const { spawned } = applyEmissions(stateWith([offline]), emit, () => 'egg-1');
+    const { spawned, schedule } = applyEmissions(
+      stateWith([offline]),
+      0,
+      dueAt('p1'),
+      sequenceRng([0, 0.5]),
+      () => 'egg-1',
+    );
 
     expect(spawned).toEqual([]);
+    expect(schedule.has('p1')).toBe(false);
   });
 
-  it('returns the same state reference when nothing is emitted', () => {
-    const state = stateWith([player('p1', LAYING)]);
-    const result = applyEmissions(state, skip, () => 'egg-1');
-
-    expect(result.state).toBe(state);
-  });
-
-  it('a pooping player sprays only from the nasty pool (rng 0 → rock), using the poop launch config', () => {
+  it('a due pooping player sprays only from the nasty pool (rng 0 → rock), using the poop launch config', () => {
     const pooper = player('p1', POOPING);
-    const { spawned } = applyEmissions(
+    const { spawned, schedule } = applyEmissions(
       stateWith([pooper]),
-      sequenceRng([0, 0, 0.5]),
+      0,
+      dueAt('p1'),
+      sequenceRng([0, 0.5]),
       () => 'poop-1',
     );
 
@@ -158,10 +198,11 @@ describe('applyEmissions', () => {
         ownerId: 'p1',
       },
     ]);
+    expect(schedule.get('p1')).toBe(FRENZY.poop.emitIntervalMs);
   });
 
   it('a pooping player only ever sprays the nasty trio — never poop itself — across the whole pool', () => {
-    // gate (first rng) always passes; the second rng sweeps pickItemType across the whole poopEmitWeights pool.
+    // Always due; the first rng sweeps pickItemType across the whole poopEmitWeights pool.
     const allowed = new Set(['rock', 'brick', 'bomb']);
     const seen = new Set<string>();
 
@@ -169,7 +210,9 @@ describe('applyEmissions', () => {
       const pick = i / 100;
       const { spawned } = applyEmissions(
         stateWith([player('p1', POOPING)]),
-        sequenceRng([0, pick]),
+        0,
+        dueAt('p1'),
+        sequenceRng([pick, 0.5]),
         () => 'poop-x',
       );
 
@@ -185,25 +228,35 @@ describe('applyEmissions', () => {
 
   it('a player holding both auras emits via laying (first match wins → food, not the poop pool)', () => {
     const both = player('p1', [...LAYING, ...POOPING]);
-    const { spawned } = applyEmissions(stateWith([both]), sequenceRng([0, 0, 0.5]), () => 'both-1');
+    const { spawned } = applyEmissions(
+      stateWith([both]),
+      0,
+      dueAt('p1'),
+      sequenceRng([0, 0.5]),
+      () => 'both-1',
+    );
 
     expect(spawned[0].type).toBe('food');
     expect(spawned[0].vx).toBeCloseTo(-FRENZY.easterEgg.emitBackSpeed, 5);
   });
 
-  it('jitters the launch angle so a burst fans out instead of lining up (speed preserved)', () => {
+  it('jitters the launch angle so successive emissions fan out instead of lining up (speed preserved)', () => {
     const speedOf = (s: { vx?: number; vy: number }): number => Math.hypot(s.vx ?? 0, s.vy);
     const base = Math.hypot(FRENZY.easterEgg.emitBackSpeed, FRENZY.fallSpeed.food);
 
-    // Same emit + same item type (food), two opposite jitter rolls → two different launch directions, one speed.
+    // Same item type (food), two opposite jitter rolls → two different launch directions, one speed.
     const { spawned: ccw } = applyEmissions(
       stateWith([player('p1', LAYING)]),
-      sequenceRng([0, 0, 0]),
+      0,
+      dueAt('p1'),
+      sequenceRng([0, 0]),
       () => 'e',
     );
     const { spawned: cw } = applyEmissions(
       stateWith([player('p1', LAYING)]),
-      sequenceRng([0, 0, 1]),
+      0,
+      dueAt('p1'),
+      sequenceRng([0, 1]),
       () => 'e',
     );
 

@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 
-import { FRENZY } from '@game/frenzy/config';
 import type { Item, Player } from '@game/frenzy/types';
 
 import { armEmittedItems } from '../engine/tick/arm-emitted-items';
@@ -45,18 +44,19 @@ describe('armEmittedItems', () => {
     expect(result.armed).toBeUndefined();
   });
 
-  it('keeps a bomb un-armed while it still sits inside its owner blast radius', () => {
+  it('keeps a bomb un-armed while it still overlaps its owner body', () => {
     const owner = makePlayer({ x: 0.5, y: 0.5 });
-    // Half a blast radius away — still well within range, so the owner stays protected.
-    const item = makeItem({ ownerId: 'owner', x: 0.5 + FRENZY.bomb.blastRadius / 2, y: 0.5 });
+    // Sitting right on the owner (just pooped) — body-overlap, so the owner stays protected.
+    const item = makeItem({ ownerId: 'owner', x: 0.5, y: 0.5 });
     const [result] = armEmittedItems([item], [owner]);
 
     expect(result.armed).toBeUndefined();
   });
 
-  it('arms a bomb once it has drifted out of its owner blast radius', () => {
+  it('arms a bomb once it has drifted off its owner body', () => {
     const owner = makePlayer({ x: 0.5, y: 0.5 });
-    const item = makeItem({ ownerId: 'owner', x: 0.5 + FRENZY.bomb.blastRadius * 1.5, y: 0.5 });
+    // Well clear of the owner's collision box — immunity lapses even though it is still within the blast radius.
+    const item = makeItem({ ownerId: 'owner', x: 0.95, y: 0.5 });
     const [result] = armEmittedItems([item], [owner]);
 
     expect(result.armed).toBe(true);

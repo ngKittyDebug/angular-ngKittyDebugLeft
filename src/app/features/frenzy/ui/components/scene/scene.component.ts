@@ -124,6 +124,14 @@ export class SceneComponent {
   public readonly steer = output<{ x: number; y: number }>();
 
   protected readonly renderedItems = this.facade.renderedItems;
+  // Paint items far→near for seabed perspective: sort by y ascending so an item lower on screen (nearer the camera,
+  // higher y) renders LATER and overlaps the ones behind it. DOM order is the depth cue at the shared item z-index
+  // (the bomb keeps its own lift; players paint after all items, so they stay above). track-by-id means a reorder
+  // just moves the existing nodes — no re-create, no animation reset.
+  protected readonly renderedItemsByDepth = computed(() =>
+    [...this.renderedItems()].sort((first, second) => first.y - second.y),
+  );
+
   protected readonly renderedPlayers = this.facade.renderedPlayers;
   protected readonly bursts = this.facade.bursts;
   protected readonly sandPuffs = this.facade.sandPuffs;
