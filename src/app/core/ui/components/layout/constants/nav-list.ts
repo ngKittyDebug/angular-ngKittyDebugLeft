@@ -1,32 +1,32 @@
-import { aboutRoutes } from '@features/about/about.routes';
-import { mainCatalogRoutes } from '@features/main-catalog/main-catalog.routes';
-import { profileRoutes } from '@features/profile/profile.routes';
-import { frenzyRoutes } from '@features/frenzy/frenzy.routes';
+import { ABOUT_PATH } from '@features/about/about.routes';
+import { MAIN_PATH } from '@features/main-catalog/main-catalog.routes';
+import { PROFILE_PATH } from '@features/profile/profile.routes';
+import { FRENZY_PATH } from '@features/frenzy/frenzy.routes';
 
 export const NAV_LIST_ITEMS = [
   {
     label: 'header.pokemon',
     icon: '@tui.paw-print',
-    link: '#',
+    link: '/',
   },
   {
     label: 'header.frenzy',
     icon: '@tui.gamepad-2',
-    link: `/${frenzyRoutes[0].path}`,
+    link: `/${FRENZY_PATH}`,
   },
   {
     label: 'header.catalog',
     icon: '@tui.panel-top-bottom-dashed',
-    link: `/${mainCatalogRoutes[0].path}`,
+    link: `/${MAIN_PATH}`,
   },
   {
     label: 'header.profile',
     icon: '@tui.user',
-    link: `/${profileRoutes[0].path}`,
+    link: `/${PROFILE_PATH}`,
   },
   {
     label: 'header.about',
     icon: '@tui.heart-handshake',
-    link: `/${aboutRoutes[0].path}`,
+    link: `/${ABOUT_PATH}`,
   },
 ];

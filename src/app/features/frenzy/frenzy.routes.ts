@@ -23,6 +23,7 @@ import { FrenzyStatsStore } from './data/store/frenzy-stats.store';
 import { FrenzyStore } from './data/store/frenzy.store';
 import { FrenzyPageFacade } from './ui/components/frenzy-page/frenzy-page.facade';
 
+export const FRENZY_PATH = 'frenzy';
 export const frenzyRoutes: Routes = [
   {
     path: 'frenzy',
