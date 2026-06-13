@@ -6,9 +6,10 @@ import { EvolutionChainItemComponent } from './evolution-chain-item/evolution-ch
 import { PokemonProfileInfoComponent } from './pokemon-profile-info/pokemon-profile-info/pokemon-profile-info.component';
 import { PokemonProfileStatsComponent } from './pokemon-profile-stats/pokemon-profile-stats/pokemon-profile-stats.component';
 import { PokemonProfileSpeciesBreedingComponent } from './pokemon-profile-species-breeding/pokemon-profile-species-breeding.component';
-import type { EvolutionNodeModel } from '@features/pokemon-profile/data/services/pokemon-profile.service';
-import { PokemonProfileService } from '@features/pokemon-profile/data/services/pokemon-profile.service';
+
 import { TranslocoDirective } from '@jsverse/transloco';
+import type { EvolutionNodeModel } from '@shared/services/pokemon-data.service';
+import { PokemonDataService } from '@shared/services/pokemon-data.service';
 
 @Component({
   selector: 'left-paw-pokemon-profile-page',
@@ -26,11 +27,11 @@ import { TranslocoDirective } from '@jsverse/transloco';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PokemonProfilePageComponent {
-  private readonly profileService = inject(PokemonProfileService);
+  private readonly profileService = inject(PokemonDataService);
 
   public readonly pokemonEndpoint = input.required<string>();
 
-  protected readonly pokemonProfile = this.profileService.createPokemonProfile(() =>
+  protected readonly pokemonProfile = this.profileService.createPokemonProfileData(() =>
     this.pokemonEndpoint().toLowerCase(),
   );
 

@@ -13,10 +13,10 @@ export interface EvolutionNodeModel {
 }
 
 @Service()
-export class PokemonProfileService {
+export class PokemonDataService {
   private readonly pokemonApiService = inject(PokemonApiService);
 
-  public createPokemonProfile(pokemonEndpoint: () => string) {
+  public createPokemonProfileData(pokemonEndpoint: () => string) {
     const pokemonDataResource = httpResource<PokemonDetailApiData>(() =>
       this.pokemonApiService.getPokemonData(pokemonEndpoint()),
     );
@@ -47,7 +47,7 @@ export class PokemonProfileService {
     return result;
   }
 
-  public createPokemonData(pokemonEndpoint: () => string) {
+  public createPokemonCardData(pokemonEndpoint: () => string) {
     const pokemonDataResource = httpResource<PokemonDetailApiData>(() =>
       this.pokemonApiService.getPokemonData(pokemonEndpoint()),
     );

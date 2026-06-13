@@ -1,7 +1,8 @@
 import { TitleCasePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { PokemonCardDataService } from '@features/main-catalog/data/services/pokemon-card-data.service';
+import { PokemonDataService } from '@shared/services/pokemon-data.service';
+
 import { TuiBadge, TuiProgress } from '@taiga-ui/kit';
 
 @Component({
@@ -12,9 +13,9 @@ import { TuiBadge, TuiProgress } from '@taiga-ui/kit';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PokemonCardComponent {
-  private readonly cardData = inject(PokemonCardDataService);
+  private readonly cardData = inject(PokemonDataService);
   public readonly pokemonName = input.required<string>();
-  protected readonly pokemonCardData = this.cardData.createPokemonDataService(() =>
+  protected readonly pokemonCardData = this.cardData.createPokemonCardData(() =>
     this.pokemonName().toLowerCase(),
   );
 
