@@ -64,15 +64,15 @@ export class CatalogFilterComponent {
   }
 
   protected toggleType(type: PokemonType): void {
-    this.selectedTypeList.update((list) =>
-      list.includes(type) ? list.filter((t) => t !== type) : [...list, type],
-    );
+    this.selectedTypeList.update((list) => {
+      return list.includes(type) ? list.filter((t) => t !== type) : [...list, type];
+    });
   }
 
   protected toggleGeneration(gen: PokemonGeneration): void {
-    this.selectedGenerationList.update((list) =>
-      list.includes(gen) ? list.filter((g) => g !== gen) : [...list, gen],
-    );
+    this.selectedGenerationList.update((list) => {
+      return list.includes(gen) ? list.filter((g) => g !== gen) : [...list, gen];
+    });
   }
 
   protected onSearchClick(): void {
