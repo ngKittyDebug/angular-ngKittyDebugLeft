@@ -136,7 +136,7 @@ describe('FrenzyStore — NPC excluded from human-facing UI (D11)', () => {
     setup();
     store.pokeNpc('bomb');
 
-    expect(send).toHaveBeenCalledWith({ type: 'pokeNpc', npcId: 'bomb' });
+    expect(send).toHaveBeenNthCalledWith(1, { type: 'pokeNpc', npcId: 'bomb' });
   });
 });
 
@@ -192,6 +192,6 @@ describe('FrenzyStore — session identity (issue #124)', () => {
     messages$.next({ type: 'identifyRejected' });
 
     expect(rotateToken).toHaveBeenCalledTimes(1);
-    expect(send).toHaveBeenCalledWith({ type: 'identify', sessionToken: 'fresh-token' });
+    expect(send).toHaveBeenNthCalledWith(1, { type: 'identify', sessionToken: 'fresh-token' });
   });
 });
