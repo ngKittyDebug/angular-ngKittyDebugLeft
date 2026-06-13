@@ -1,4 +1,5 @@
 @use 'utility/hud-pill' as *;
+@use 'utility/mixins' as *;
 
 // The host is the overlay's flex item. `align-self: stretch` makes it fill the overlay's height (a definite
 // reference), so the card's `max-height: 100%` actually caps against the available area and scrolls its overflow
@@ -203,11 +204,9 @@
   // Item primer (2.3): a one-line "eat this / avoid this" cheat-sheet with a couple of sprites each, framed like the
   // how-to panel. A curated taste — the full good/risky/bad legend lives in the in-game HUD («Сводка»).
   &__items {
-    display: flex;
+    @include center_content;
     flex-wrap: wrap;
     gap: 0.4rem 1.1rem;
-    align-items: center;
-    justify-content: center;
     padding: 0.55rem 0.85rem;
     background: color-mix(in srgb, var(--tui-text-primary) 5%, transparent);
     border: 1px solid color-mix(in srgb, var(--tui-text-primary) 10%, transparent);
