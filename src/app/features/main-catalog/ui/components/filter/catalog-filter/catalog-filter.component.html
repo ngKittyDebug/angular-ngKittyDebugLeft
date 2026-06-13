@@ -5,7 +5,7 @@
         class="field__input"
         placeholder="{{ t('main.filterInputName') }}"
         type="text"
-        (input)="filterByName($event.target.value)"
+        (input)="onNameInput($event)"
       />
       <button type="button" class="field__btn" (click)="onSearchClick()">
         <tui-icon icon="@tui.search" />
@@ -17,10 +17,8 @@
       <span class="accordion__title">
         <tui-icon class="icon" icon="@tui.sliders-horizontal" />
         {{ t('main.filterAdvancedSearch') }}
-        @if (selectedTypes.length + selectedGenerations.length) {
-          <span class="badge">
-            {{ selectedTypes.length + selectedGenerations.length }}
-          </span>
+        @if (selectedCount()) {
+          <span class="badge">{{ selectedCount() }}</span>
         }
       </span>
       <span class="icon">
@@ -36,11 +34,11 @@
         <div class="section">
           <div class="section__title">{{ t('main.filterType') }}</div>
           <div class="chips">
-            @for (type of types; track type) {
+            @for (type of typeListResource.value() ?? []; track type) {
               <button
                 type="button"
                 class="chip"
-                [class.active]="selectedTypes.includes(type)"
+                [class.active]="selectedTypeList().includes(type)"
                 (click)="toggleType(type)"
               >
                 {{ type }}
@@ -51,11 +49,11 @@
         <div class="section">
           <div class="section__title">{{ t('main.filterGeneration') }}</div>
           <div class="chips">
-            @for (gen of generations; track gen) {
+            @for (gen of generationListResource.value() ?? []; track gen) {
               <button
                 type="button"
                 class="chip"
-                [class.active]="selectedGenerations.includes(gen)"
+                [class.active]="selectedGenerationList().includes(gen)"
                 (click)="toggleGeneration(gen)"
               >
                 {{ gen }}

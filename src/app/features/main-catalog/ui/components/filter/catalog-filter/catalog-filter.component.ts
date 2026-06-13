@@ -1,37 +1,27 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  resource,
+  signal,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { provideTranslocoScope, TranslocoDirective } from '@jsverse/transloco';
 import { MainCatalogFacade } from '@features/main-catalog/data/facades/main-catalog.facade';
 import { TuiIcon } from '@taiga-ui/core';
 
-export const POKEMON_TYPES = [
-  'fire',
-  'water',
-  'grass',
-  'electric',
-  'psychic',
-  'ghost',
-  'dragon',
-] as const;
+const POKEMON_API = 'https://pokeapi.co/api/v2/';
 
-export const POKEMON_GENERATIONS = [
-  'I',
-  'II',
-  'III',
-  'IV',
-  'V',
-  'VI',
-  'VII',
-  'VIII',
-  'IX',
-] as const;
+interface PokeApiListResponse {
+  results: { name: string }[];
+}
 
-type PokemonType = (typeof POKEMON_TYPES)[number];
-type PokemonGeneration = (typeof POKEMON_GENERATIONS)[number];
+type PokemonType = string;
+type PokemonGeneration = string;
 
 @Component({
   selector: 'left-paw-catalog-filter',
-  standalone: true,
   imports: [FormsModule, TranslocoDirective, TuiIcon],
   templateUrl: './catalog-filter.component.html',
   styleUrl: './catalog-filter.component.scss',
@@ -43,30 +33,52 @@ export class CatalogFilterComponent {
 
   protected readonly expanded = signal(false);
 
-  protected readonly types = POKEMON_TYPES;
-  protected readonly generations = POKEMON_GENERATIONS;
+  protected readonly typeListResource = resource({
+    loader: (): Promise<PokemonType[]> =>
+      fetch(`${POKEMON_API}type`)
+        .then((r) => r.json() as Promise<PokeApiListResponse>)
+        .then((data) => data.results.map((t) => t.name)),
+  });
 
-  protected selectedTypes: PokemonType[] = [];
-  protected selectedGenerations: PokemonGeneration[] = [];
-  protected name = '';
+  protected readonly generationListResource = resource({
+    loader: (): Promise<PokemonGeneration[]> =>
+      fetch(`${POKEMON_API}generation`)
+        .then((r) => r.json() as Promise<PokeApiListResponse>)
+        .then((data) => data.results.map((g) => g.name)),
+  });
 
-  protected filterByName(value: string): void {
-    this.name = value;
+  protected readonly selectedTypeList = signal<PokemonType[]>([]);
+  protected readonly selectedGenerationList = signal<PokemonGeneration[]>([]);
+  protected readonly name = signal('');
+
+  protected readonly selectedCount = computed(
+    () => this.selectedTypeList().length + this.selectedGenerationList().length,
+  );
+
+  protected onNameInput(event: Event): void {
+    const target = event.target;
+
+    if (target instanceof HTMLInputElement) {
+      this.name.set(target.value);
+    }
   }
+
   protected toggleType(type: PokemonType): void {
-    this.selectedTypes = this.selectedTypes.includes(type)
-      ? this.selectedTypes.filter((t) => t !== type)
-      : [...this.selectedTypes, type];
+    this.selectedTypeList.update((list) =>
+      list.includes(type) ? list.filter((t) => t !== type) : [...list, type],
+    );
   }
+
   protected toggleGeneration(gen: PokemonGeneration): void {
-    this.selectedGenerations = this.selectedGenerations.includes(gen)
-      ? this.selectedGenerations.filter((g) => g !== gen)
-      : [...this.selectedGenerations, gen];
+    this.selectedGenerationList.update((list) =>
+      list.includes(gen) ? list.filter((g) => g !== gen) : [...list, gen],
+    );
   }
+
   protected onSearchClick(): void {
     this.facade.currentPage.set(0);
-    this.facade.filterByName.set(this.name);
-    this.facade.filterByTypes.set(this.selectedTypes);
-    this.facade.filterByGenerations.set(this.selectedGenerations);
+    this.facade.filterByName.set(this.name());
+    this.facade.filterByTypes.set(this.selectedTypeList());
+    this.facade.filterByGenerations.set(this.selectedGenerationList());
   }
 }
