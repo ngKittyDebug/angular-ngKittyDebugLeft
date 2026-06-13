@@ -12,4 +12,6 @@ export const mainCatalogFacadeMock = {
   filterByTypes: signal<string[]>([]),
   filterByGenerations: signal<string[]>([]),
   setPaginationCount: vi.fn(),
+  typeList: signal<string[] | undefined>(undefined),
+  generationList: signal<string[] | undefined>(undefined),
 } as const satisfies MockedObject<Partial<MainCatalogFacade>>;

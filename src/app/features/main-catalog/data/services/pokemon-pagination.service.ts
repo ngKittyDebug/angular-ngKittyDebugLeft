@@ -10,6 +10,7 @@ export class PokemonPaginationService {
   public readonly filterByName = signal<string>('');
   public readonly filterByTypes = signal<string[]>([]);
   public readonly filterByGenerations = signal<string[]>([]);
+  // TODO доделать логику фильтра по типу и поколению
 
   public readonly debounceFilter = debounced(this.filterByName, 500);
 

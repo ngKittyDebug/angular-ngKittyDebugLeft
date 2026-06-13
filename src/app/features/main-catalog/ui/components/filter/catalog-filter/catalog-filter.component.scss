@@ -17,13 +17,13 @@
     color: var(--popover-foreground);
     background-color: var(--sidebar-border);
     padding: 1rem;
-    border: 1px solid #ccc;
+    border: 1px solid var(--type-steel-start);
     border-radius: 1rem;
     width: 100%;
     margin-right: 1rem;
     outline: none;
     &:focus-visible {
-      border: 1px solid #ccc;
+      border: 1px solid var(--type-steel-start);
       box-shadow: 0 0 10px var(--sidebar-primary);
     }
   }

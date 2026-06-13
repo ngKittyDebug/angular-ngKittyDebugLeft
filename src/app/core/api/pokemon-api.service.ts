@@ -10,4 +10,11 @@ export class PokemonApiService {
   ): Promise<Response> {
     return await fetch(`${POKEMON_BASE_API}pokemon?limit=${options.limitPokemon}`);
   }
+  public async getTypeList(): Promise<Response> {
+    return fetch(`${POKEMON_BASE_API}type`);
+  }
+
+  public async getGenerationList(): Promise<Response> {
+    return fetch(`${POKEMON_BASE_API}generation`);
+  }
 }

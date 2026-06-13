@@ -1,24 +1,8 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  resource,
-  signal,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { provideTranslocoScope, TranslocoDirective } from '@jsverse/transloco';
 import { MainCatalogFacade } from '@features/main-catalog/data/facades/main-catalog.facade';
 import { TuiIcon } from '@taiga-ui/core';
-
-const POKEMON_API = 'https://pokeapi.co/api/v2/';
-
-interface PokeApiListResponse {
-  results: { name: string }[];
-}
-
-type PokemonType = string;
-type PokemonGeneration = string;
 
 @Component({
   selector: 'left-paw-catalog-filter',
@@ -33,22 +17,11 @@ export class CatalogFilterComponent {
 
   protected readonly expanded = signal(false);
 
-  protected readonly typeListResource = resource({
-    loader: (): Promise<PokemonType[]> =>
-      fetch(`${POKEMON_API}type`)
-        .then((r) => r.json() as Promise<PokeApiListResponse>)
-        .then((data) => data.results.map((t) => t.name)),
-  });
+  protected readonly typeListResource = this.facade.typeList;
+  protected readonly generationListResource = this.facade.generationList;
 
-  protected readonly generationListResource = resource({
-    loader: (): Promise<PokemonGeneration[]> =>
-      fetch(`${POKEMON_API}generation`)
-        .then((r) => r.json() as Promise<PokeApiListResponse>)
-        .then((data) => data.results.map((g) => g.name)),
-  });
-
-  protected readonly selectedTypeList = signal<PokemonType[]>([]);
-  protected readonly selectedGenerationList = signal<PokemonGeneration[]>([]);
+  protected readonly selectedTypeList = signal<string[]>([]);
+  protected readonly selectedGenerationList = signal<string[]>([]);
   protected readonly name = signal('');
 
   protected readonly selectedCount = computed(
@@ -63,13 +36,13 @@ export class CatalogFilterComponent {
     }
   }
 
-  protected toggleType(type: PokemonType): void {
+  protected toggleType(type: string): void {
     this.selectedTypeList.update((list) => {
       return list.includes(type) ? list.filter((t) => t !== type) : [...list, type];
     });
   }
 
-  protected toggleGeneration(gen: PokemonGeneration): void {
+  protected toggleGeneration(gen: string): void {
     this.selectedGenerationList.update((list) => {
       return list.includes(gen) ? list.filter((g) => g !== gen) : [...list, gen];
     });

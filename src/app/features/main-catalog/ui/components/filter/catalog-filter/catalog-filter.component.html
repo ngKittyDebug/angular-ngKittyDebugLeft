@@ -34,7 +34,7 @@
         <div class="section">
           <div class="section__title">{{ t('main.filterType') }}</div>
           <div class="chips">
-            @for (type of typeListResource.value() ?? []; track type) {
+            @for (type of facade.typeList() ?? []; track type) {
               <button
                 type="button"
                 class="chip"
@@ -49,7 +49,7 @@
         <div class="section">
           <div class="section__title">{{ t('main.filterGeneration') }}</div>
           <div class="chips">
-            @for (gen of generationListResource.value() ?? []; track gen) {
+            @for (gen of facade.generationList() ?? []; track gen) {
               <button
                 type="button"
                 class="chip"
