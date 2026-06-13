@@ -55,6 +55,9 @@ Thumbs.db
 # Per-developer agent-skills config (issue tracker, triage labels, domain docs)
 docs/agents/
 
+# Local domain glossary for grill-with-docs (per-developer, not for merge)
+CONTEXT.md
+
 # Claude Code — local config / sessions / skills stay local, EXCEPT the committed review
 # skills (used by cloud routines, which only see what's in the repo), CLAUDE.md and .mcp.json
 # (cloud routines need the taiga-ui / angular-cli verification MCPs too).

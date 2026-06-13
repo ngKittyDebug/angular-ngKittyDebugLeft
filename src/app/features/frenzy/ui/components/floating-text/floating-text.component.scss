@@ -81,9 +81,12 @@
   font-variant-numeric: tabular-nums;
 }
 
-// Rises a fixed distance (`--ft-rise`, set per message ∝ lifetime → constant speed) while fading evenly:
-// after a quick pop-in the opacity steps down to 0 across the whole climb. translateY is kept linear (the
-// 8% keyframe sits at 8% of the travel) so equally-staggered quips stay equally spaced.
+// Rises a fixed distance (`--ft-rise`, set per message ∝ lifetime → constant speed). After a quick pop-in the
+// bubble HOLDS full opacity (readable) until 70%, then fades to 0 only over the final stretch — so it reads
+// solid early and dissolves near the "surface", instead of fading the whole climb. Meanwhile it swells gently
+// (1.05 → 1.25) like an air bubble rising in water; the swell peaks just as it fades, so grown quips never
+// crowd the column. translateY is kept linear (the 8% keyframe sits at 8% of the travel; the 70% keyframe sets
+// ONLY opacity, so transform keeps interpolating linearly 8%→100%) so equally-staggered quips stay equally spaced.
 @keyframes floating-text-rise {
   0% {
     opacity: 0;
@@ -95,8 +98,12 @@
     transform: translate(-50%, calc(-50% - var(--ft-rise, 50px) * 0.08)) scale(1.05);
   }
 
+  70% {
+    opacity: 1;
+  }
+
   100% {
     opacity: 0;
-    transform: translate(-50%, calc(-50% - var(--ft-rise, 50px))) scale(1);
+    transform: translate(-50%, calc(-50% - var(--ft-rise, 50px))) scale(1.25);
   }
 }
