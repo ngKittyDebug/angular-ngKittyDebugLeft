@@ -1,5 +1,6 @@
 import type * as Party from 'partykit/server';
 
+import { isNPC } from '@game/engine/types';
 import { FRENZY } from '@game/frenzy/config';
 import { ANGRY_BOMB_NPC } from '@game/frenzy/definition/npcs/angry-bomb';
 import type {
@@ -244,7 +245,7 @@ export default class FeedingRoom implements Party.Server {
     // Re-arm the respawn whenever the NPC is absent (it died this tick by a blast, decay or max-anger detonation).
     // Only set when no schedule is pending, so the initial 0→20s window armed on join is never overwritten by 40s.
     // Also drop the dead NPC's poke history here so it doesn't accumulate one stale entry per respawn cycle.
-    if (this.humanCount() > 0 && !this.players.some((player) => player.kind === 'npc')) {
+    if (!this.players.some((player) => isNPC(player))) {
       if (this.npcPokeTimestamps.size > 0) {
         this.npcPokeTimestamps.clear();
       }
@@ -275,10 +276,9 @@ export default class FeedingRoom implements Party.Server {
     // Spawn the single live NPC once its scheduled time arrives (max one at a time — the `!some(npc)` guard enforces it).
     if (
       ANGRY_BOMB_NPC.enabled &&
-      this.humanCount() > 0 &&
       this.npcNextSpawnAt !== null &&
       now >= this.npcNextSpawnAt &&
-      !this.players.some((player) => player.kind === 'npc')
+      !this.players.some((player) => isNPC(player))
     ) {
       this.players = [...this.players, createNpc({ now })];
       this.npcNextSpawnAt = null;
@@ -393,7 +393,7 @@ export default class FeedingRoom implements Party.Server {
       return;
     }
 
-    const npc = this.players.find((player) => player.id === npcId && player.kind === 'npc');
+    const npc = this.players.find((player) => player.id === npcId && isNPC(player));
 
     if (npc === undefined || npc.status !== 'alive') {
       return;
@@ -517,7 +517,7 @@ export default class FeedingRoom implements Party.Server {
     if (
       this.humanCount() === 1 &&
       this.npcNextSpawnAt === null &&
-      !this.players.some((candidate) => candidate.kind === 'npc')
+      !this.players.some((candidate) => isNPC(candidate))
     ) {
       this.npcNextSpawnAt = now + this.randomSpawnDelayMs();
     }
