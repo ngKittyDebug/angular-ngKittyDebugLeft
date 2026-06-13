@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
 import { TuiButton, TuiCarousel, TuiIcon } from '@taiga-ui/core';
 import { TuiCard } from '@taiga-ui/layout';
-import type { EvolutionNodeModel } from '../../pokemon-profile-page.component';
 import { TranslocoDirective } from '@jsverse/transloco';
+import type { EvolutionNodeModel } from '@features/pokemon-profile/data/services/pokemon-profile.service';
 import { PokemonProfileService } from '@features/pokemon-profile/data/services/pokemon-profile.service';
 
 @Component({

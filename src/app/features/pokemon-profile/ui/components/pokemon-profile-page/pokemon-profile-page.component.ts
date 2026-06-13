@@ -6,15 +6,9 @@ import { EvolutionChainItemComponent } from './evolution-chain-item/evolution-ch
 import { PokemonProfileInfoComponent } from './pokemon-profile-info/pokemon-profile-info/pokemon-profile-info.component';
 import { PokemonProfileStatsComponent } from './pokemon-profile-stats/pokemon-profile-stats/pokemon-profile-stats.component';
 import { PokemonProfileSpeciesBreedingComponent } from './pokemon-profile-species-breeding/pokemon-profile-species-breeding.component';
+import type { EvolutionNodeModel } from '@features/pokemon-profile/data/services/pokemon-profile.service';
 import { PokemonProfileService } from '@features/pokemon-profile/data/services/pokemon-profile.service';
 import { TranslocoDirective } from '@jsverse/transloco';
-
-export interface EvolutionNodeModel {
-  name: string;
-  image: string;
-  condition: string | null;
-  children: EvolutionNodeModel[];
-}
 
 @Component({
   selector: 'left-paw-pokemon-profile-page',

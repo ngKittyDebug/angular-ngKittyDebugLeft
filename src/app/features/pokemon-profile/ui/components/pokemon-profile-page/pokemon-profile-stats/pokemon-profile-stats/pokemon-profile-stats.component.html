@@ -21,19 +21,9 @@
     </div>
     <div
       echarts
-      [options]="getRadarChartOptions(t)"
+      [options]="radarOptions()"
       [initOpts]="{ renderer: 'svg' }"
       class="pokemon__stats_radar"
     ></div>
-    <!-- <div class="pokemon__stats_radar">
-      <tui-arc-chart
-        size="xl"
-        [max]="300"
-        [minLabel]="'0'"
-        [maxLabel]="'300'"
-        class="pokemon_chart"
-        [value]="pokemonStatsValues()!"
-      />
-    </div> -->
   </div>
 </ng-container>

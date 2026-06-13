@@ -1,9 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { TuiProgress } from '@taiga-ui/kit';
 import { TuiCard } from '@taiga-ui/layout';
-import { TranslocoDirective } from '@jsverse/transloco';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
-
 import { NgxEchartsDirective } from 'ngx-echarts';
 import { createRadarChartOptions } from '@features/pokemon-profile/data/helpers/pokemon-profile-radar';
 
@@ -15,6 +14,8 @@ import { createRadarChartOptions } from '@features/pokemon-profile/data/helpers/
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PokemonProfileStatsComponent {
+  private readonly transloco = inject(TranslocoService);
+
   public readonly pokemonProfileData = input.required<PokemonDetailApiData>();
 
   protected readonly pokemonTotalStats = computed(() => {
@@ -29,14 +30,12 @@ export class PokemonProfileStatsComponent {
     return stats.map((s) => s.base_stat ?? 0);
   });
 
-  protected getRadarChartOptions(t: (key: string) => string) {
-    const profile = this.pokemonProfileData();
-
-    return createRadarChartOptions(
-      profile?.stats ?? [],
+  protected readonly radarOptions = computed(() =>
+    createRadarChartOptions(
+      this.pokemonProfileData()?.stats ?? [],
       this.pokemonStatsValues(),
-      profile?.name ?? 'POKEMON',
-      t,
-    );
-  }
+      this.pokemonProfileData()?.name ?? 'POKEMON',
+      (key: string) => this.transloco.translate(key),
+    ),
+  );
 }
