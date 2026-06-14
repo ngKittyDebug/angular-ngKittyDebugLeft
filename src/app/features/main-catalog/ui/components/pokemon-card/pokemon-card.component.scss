@@ -11,6 +11,7 @@ $stats: hp, attack, defense;
   display: block;
   background: var(--gradient-bg);
   width: 13.75rem;
+  min-height: 19.125rem;
   border-radius: 1.6rem;
   border: 1px solid var(--border);
   transition: all 0.3s;
