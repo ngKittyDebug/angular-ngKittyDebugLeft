@@ -1,16 +1,23 @@
-<!-- <left-paw-pokemon-profile-info [pokemonProfileData]="pokemonProfileData()" /> -->
-@if (pokemonProfileData(); as pokemonData) {
-  <left-paw-pokemon-profile-info [pokemonProfileData]="pokemonData" />
-  <left-paw-pokemon-profile-stats [pokemonProfileData]="pokemonData" />
-}
-<section class="pokemon__profile_evolution">
-  @if (pokemonEvolutionChain(); as evolution) {
-    <left-paw-evolution-chain-item
-      [evolutionChain]="evolution"
-      [activeName]="pokemonProfileData()?.name"
-    />
+<ng-container *transloco="let t">
+  @if (pokemonProfile.profileData(); as pokemonData) {
+    <left-paw-pokemon-profile-info [pokemonProfileData]="pokemonData" />
+    <left-paw-pokemon-profile-stats [pokemonProfileData]="pokemonData" />
   }
-</section>
-@if (pokemonProfileDataSpecies(); as species) {
-  <left-paw-pokemon-profile-species-breeding [pokemonProfileDataSpecies]="species" />
-}
+  <section class="pokemon__profile_evolution">
+    @if (pokemonProfile.profileEvolutionError()) {
+      <p class="pokemon__profile_no_data">{{ t('pokemonProfile.no-evolution') }}</p>
+    } @else if (pokemonEvolutionChain(); as evolution) {
+      <left-paw-evolution-chain-item
+        [evolutionChain]="evolution"
+        [activeName]="pokemonProfile.profileData()?.name"
+      />
+    }
+  </section>
+  @if (pokemonProfile.profileSpeciesError()) {
+    <section class="pokemon__profile_evolution">
+      <p class="pokemon__profile_no_data">{{ t('pokemonProfile.no-species') }}</p>
+    </section>
+  } @else if (pokemonProfile.profileSpecies(); as species) {
+    <left-paw-pokemon-profile-species-breeding [pokemonProfileDataSpecies]="species" />
+  }
+</ng-container>

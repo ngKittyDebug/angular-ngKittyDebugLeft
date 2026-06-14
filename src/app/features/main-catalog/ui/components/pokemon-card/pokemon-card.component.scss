@@ -18,6 +18,8 @@ $stats: hp, attack, defense;
   * {
     margin: 0;
     @include mixins.font_function($size: 0.75rem);
+    text-decoration: none;
+    color: inherit;
   }
   &:hover {
     border: 1px solid var(--sidebar-primary);
