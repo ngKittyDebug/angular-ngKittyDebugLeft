@@ -5,6 +5,8 @@ import { PokemonDataService } from '@shared/services/pokemon-data.service';
 
 import { TuiBadge, TuiProgress, TuiSkeleton } from '@taiga-ui/kit';
 
+const STATS_LIMIT = 3;
+
 @Component({
   selector: 'left-paw-pokemon-card',
   imports: [TuiProgress, TuiBadge, TuiSkeleton, TitleCasePipe, RouterLink],
@@ -22,6 +24,8 @@ export class PokemonCardComponent {
   protected readonly pokemonLimitedStats = computed(() => {
     const data = this.pokemonCardData.cardData();
 
-    return data?.stats?.slice(0, 3) ?? [];
+    return data?.stats?.slice(0, STATS_LIMIT) ?? [];
   });
+
+  protected readonly skeletonStats = Array.from({ length: STATS_LIMIT });
 }

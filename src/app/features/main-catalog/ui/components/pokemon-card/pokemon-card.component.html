@@ -28,7 +28,7 @@
         }
       </div>
       @if (!pokemonCardData.cardData()) {
-        @for (fake of '123'.split(''); track $index) {
+        @for (fake of skeletonStats; track $index) {
           <div class="card__line-stats">
             <p class="stats__name" [tuiSkeleton]="1"></p>
             <progress
