@@ -1,67 +1,55 @@
 <div class="wrapper" *transloco="let t">
   <div class="field">
     <div class="field__row">
-      <input
-        class="field__input"
-        placeholder="{{ t('main.filterInputName') }}"
-        type="text"
-        (input)="onNameInput($event)"
-      />
+      <input class="field__input" placeholder="{{ t('main.filterInputName') }}" type="text"
+        (input)="onNameInput($event)" />
       <button type="button" class="field__btn" (click)="onSearchClick()">
         <tui-icon icon="@tui.search" />
       </button>
     </div>
   </div>
   <div class="accordion">
-    <button class="accordion__trigger" (click)="expanded.set(!expanded())">
+    <button class="accordion__trigger" [attr.aria-expanded]="expanded()" (click)="expanded.set(!expanded())">
       <span class="accordion__title">
         <tui-icon class="icon" icon="@tui.sliders-horizontal" />
         {{ t('main.filterAdvancedSearch') }}
         @if (selectedCount()) {
-          <span class="badge">{{ selectedCount() }}</span>
+        <span class="badge">{{ selectedCount() }}</span>
         }
       </span>
       <span class="icon">
         @if (expanded()) {
-          <tui-icon icon="@tui.circle-chevron-up" />
+        <tui-icon icon="@tui.circle-chevron-up" />
         } @else {
-          <tui-icon icon="@tui.circle-chevron-down" />
+        <tui-icon icon="@tui.circle-chevron-down" />
         }
       </span>
     </button>
     @if (expanded()) {
-      <div class="accordion__body">
-        <div class="section">
-          <div class="section__title">{{ t('main.filterType') }}</div>
-          <div class="chips">
-            @for (type of facade.typeList() ?? []; track type) {
-              <button
-                type="button"
-                class="chip"
-                [class.active]="selectedTypeList().includes(type)"
-                (click)="toggleType(type)"
-              >
-                {{ type }}
-              </button>
-            }
-          </div>
-        </div>
-        <div class="section">
-          <div class="section__title">{{ t('main.filterGeneration') }}</div>
-          <div class="chips">
-            @for (gen of facade.generationList() ?? []; track gen) {
-              <button
-                type="button"
-                class="chip"
-                [class.active]="selectedGenerationList().includes(gen)"
-                (click)="toggleGeneration(gen)"
-              >
-                {{ gen }}
-              </button>
-            }
-          </div>
+    <div class="accordion__body">
+      <div class="section">
+        <div class="section__title">{{ t('main.filterType') }}</div>
+        <div class="chips">
+          @for (type of facade.typeList() ?? []; track type) {
+          <button type="button" class="chip" [class.active]="selectedTypeList().includes(type)"
+            [attr.aria-pressed]="selectedTypeList().includes(type)" (click)="toggleType(type)">
+            {{ type }}
+          </button>
+          }
         </div>
       </div>
+      <div class="section">
+        <div class="section__title">{{ t('main.filterGeneration') }}</div>
+        <div class="chips">
+          @for (gen of facade.generationList() ?? []; track gen) {
+          <button type="button" class="chip" [class.active]="selectedGenerationList().includes(gen)"
+            [attr.aria-pressed]="selectedGenerationList().includes(gen)" (click)="toggleGeneration(gen)">
+            {{ gen }}
+          </button>
+          }
+        </div>
+      </div>
+    </div>
     }
   </div>
 </div>
