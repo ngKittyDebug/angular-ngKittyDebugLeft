@@ -61,7 +61,6 @@ export class PokemonProfilePageComponent {
 
     return {
       name: node.species.name,
-      image: '',
       condition,
       children,
     };

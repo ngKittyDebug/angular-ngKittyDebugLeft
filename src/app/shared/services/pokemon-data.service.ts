@@ -7,7 +7,6 @@ import type { EvolutionChainResponse } from '@shared/models/pokemon-evolution-ch
 
 export interface EvolutionNodeModel {
   name: string;
-  image: string;
   condition: string | null;
   children: EvolutionNodeModel[];
 }
