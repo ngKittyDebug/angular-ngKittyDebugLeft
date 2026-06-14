@@ -7,30 +7,54 @@
       )
     "
     [alt]="$safeNavigationMigration(pokemonCardData()?.name)"
+    [tuiSkeleton]="!pokemonCardData()"
   />
+
   <figcaption class="card__information">
     <div class="card__line">
-      <h3 class="card__name">{{ pokemonCardData()?.name | titlecase }}</h3>
-      <p class="card__id">#{{ pokemonCardData()?.id }}</p>
+      <h3 class="card__name" [tuiSkeleton]="!pokemonCardData() ? 2 : false">
+        {{ pokemonCardData()?.name | titlecase }}
+      </h3>
+      <p class="card__id" [tuiSkeleton]="!pokemonCardData() ? 1 : false">
+        @if (pokemonCardData()) {
+          #{{ pokemonCardData()?.id }}
+        }
+      </p>
     </div>
+
     <div class="card__line-left">
-      @for (item of pokemonCardData()?.types; track item.type.name) {
-        <span className="card__type card__type-{{ item.type.name }}" tuiBadge>{{
-          item.type.name
-        }}</span>
+      @if (!pokemonCardData()) {
+        <span class="card__type" tuiBadge [tuiSkeleton]="true"></span>
+        <span class="card__type" tuiBadge [tuiSkeleton]="true"></span>
+      } @else {
+        @for (item of pokemonCardData()?.types; track item.type.name) {
+          <span class="card__type card__type-{{ item.type.name }}" tuiBadge>
+            {{ item.type.name }}
+          </span>
+        }
       }
     </div>
-    @for (item of pokemonLimitedStats(); track item.stat.name) {
-      <div class="card__line-stats">
-        <p class="stats__name">{{ item.stat.name }}</p>
-        <progress
-          class="stats__bar stats__bar-{{ item.stat.name }}"
-          max="300"
-          tuiProgressBar
-          [value]="item.base_stat"
-        ></progress>
-        <p class="stats__value">{{ item.base_stat }}</p>
-      </div>
+    @if (!pokemonCardData()) {
+      @for (fake of '123'.split(''); track $index) {
+        <div class="card__line-stats">
+          <p class="stats__name" [tuiSkeleton]="1"></p>
+          <progress class="stats__bar" tuiProgressBar [value]="0" [tuiSkeleton]="true"></progress>
+          <p class="stats__value" [tuiSkeleton]="1"></p>
+        </div>
+      }
+    } @else {
+      @for (item of pokemonLimitedStats(); track item.stat.name) {
+        <div class="card__line-stats">
+          <p class="stats__name">{{ item.stat.name }}</p>
+          <progress
+            class="stats__bar stats__bar-{{ item.stat.name }}"
+            max="300"
+            tuiProgressBar
+            [value]="item.base_stat"
+          ></progress>
+          <p class="stats__value">{{ item.base_stat }}</p>
+        </div>
+      }
     }
   </figcaption>
 </figure>
