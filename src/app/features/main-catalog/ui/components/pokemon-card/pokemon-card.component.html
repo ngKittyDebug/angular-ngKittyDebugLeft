@@ -31,7 +31,13 @@
         @for (fake of '123'.split(''); track $index) {
           <div class="card__line-stats">
             <p class="stats__name" [tuiSkeleton]="1"></p>
-            <progress class="stats__bar" max="1" tuiProgressBar [value]="0" [tuiSkeleton]="true"></progress>
+            <progress
+              class="stats__bar"
+              max="1"
+              tuiProgressBar
+              [value]="0"
+              [tuiSkeleton]="true"
+            ></progress>
             <p class="stats__value" [tuiSkeleton]="1"></p>
           </div>
         }
