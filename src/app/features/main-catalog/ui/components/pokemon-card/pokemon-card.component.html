@@ -2,12 +2,8 @@
   <figure class="card__cover">
     <img
       class="card__image"
-      [src]="
-        $safeNavigationMigration(
-          pokemonCardData.cardData()?.sprites?.other?.['official-artwork']?.front_default
-        )
-      "
-      [alt]="$safeNavigationMigration(pokemonCardData.cardData()?.name)"
+      [src]="pokemonCardData.cardData()?.sprites?.other?.['official-artwork']?.front_default"
+      [alt]="pokemonCardData.cardData()?.name"
       [tuiSkeleton]="!pokemonCardData.cardData()"
     />
     <figcaption class="card__information">
@@ -25,7 +21,7 @@
           <span class="card__type" tuiBadge [tuiSkeleton]="true"></span>
         } @else {
           @for (item of pokemonCardData.cardData()?.types; track item.type.name) {
-            <span className="card__type card__type-{{ item.type.name }}" tuiBadge>{{
+            <span class="card__type card__type-{{ item.type.name }}" tuiBadge>{{
               item.type.name
             }}</span>
           }
@@ -35,7 +31,7 @@
         @for (fake of '123'.split(''); track $index) {
           <div class="card__line-stats">
             <p class="stats__name" [tuiSkeleton]="1"></p>
-            <progress class="stats__bar" tuiProgressBar [value]="0" [tuiSkeleton]="true"></progress>
+            <progress class="stats__bar" max="1" tuiProgressBar [value]="0" [tuiSkeleton]="true"></progress>
             <p class="stats__value" [tuiSkeleton]="1"></p>
           </div>
         }
