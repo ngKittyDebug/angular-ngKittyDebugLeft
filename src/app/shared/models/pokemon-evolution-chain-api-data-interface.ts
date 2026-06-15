@@ -12,6 +12,14 @@ export interface EvolutionChainItem {
 }
 
 export interface EvolutionDetail {
+  base_form: null;
+  held_item: null;
+  min_damage_taken: null;
+  min_move_count: null;
+  min_steps: null;
+  needs_multiplayer: boolean;
+  region: null;
+  used_move: null;
   trigger: NamedAPIResource;
   min_level: number | null;
   item: NamedAPIResource | null;

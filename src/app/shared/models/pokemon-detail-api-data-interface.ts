@@ -67,6 +67,7 @@ export interface PokemonMoveVersionApiData {
   move_learn_method: NamedApiResourceApiData;
   version_group: NamedApiResourceApiData;
   level_learned_at: number;
+  order: number | null;
 }
 
 export interface PokemonPastTypeApiData {
@@ -134,18 +135,26 @@ export interface PokemonShowdownSpritesApiData {
 }
 
 export interface PokemonSpriteSetApiData {
-  front_default: string | null;
-  front_shiny: string | null;
-  front_female: string | null;
-  front_shiny_female: string | null;
-  back_default: string | null;
-  back_shiny: string | null;
-  back_female: string | null;
-  back_shiny_female: string | null;
-  [key: string]: string | null | undefined;
+  front_default?: string | null;
+  front_shiny?: string | null;
+  front_female?: string | null;
+  front_shiny_female?: string | null;
+  back_default?: string | null;
+  back_shiny?: string | null;
+  back_female?: string | null;
+  back_shiny_female?: string | null;
+  [key: string]: string | null | undefined | unknown;
 }
 
 export interface PokemonCriesApiData {
   latest: string;
   legacy: string;
+}
+
+export interface GenerationVSprites {
+  'black-white': PokemonGenerationVSpriteSet;
+}
+
+export interface PokemonGenerationVSpriteSet extends PokemonSpriteSetApiData {
+  animated?: PokemonSpriteSetApiData;
 }
