@@ -10,6 +10,7 @@
   --aura-wellFed-tint: rgba(150, 230, 150, 0.85);
   --aura-laying-tint: rgba(210, 160, 255, 0.85);
   --aura-pooping-tint: rgba(120, 85, 50, 0.9);
+  --aura-cactus-tint: rgba(120, 200, 90, 0.9);
   position: absolute;
   top: 0;
   left: 0;
@@ -81,7 +82,8 @@
 .scene__shadow--shield,
 .scene__shadow--wellFed,
 .scene__shadow--laying,
-.scene__shadow--pooping {
+.scene__shadow--pooping,
+.scene__shadow--cactus {
   animation: scene-actor-shadow-breathe 2.6s ease-in-out infinite;
 }
 
@@ -99,6 +101,10 @@
 
 .scene__shadow--pooping {
   --shadow-core: var(--aura-pooping-tint);
+}
+
+.scene__shadow--cactus {
+  --shadow-core: var(--aura-cactus-tint);
 }
 
 // shield bubble: a glassy soap-bubble encasing the sprite while the full-invulnerability ward is active, so
@@ -148,17 +154,14 @@
   pointer-events: none;
 }
 
-// laying (egg) aura: the bespoke member of the bubble family — an iridescent rainbow soap-bubble for the
-// easter-egg item-spewing buff. The shared single-tint `leftPawBubbleSkin` can't make a rainbow, so it's built by
-// hand from three composed layers that never fight over one `transform`: the element itself PULSES (scale, same
-// `scene-shield-pulse` as its siblings), its `::before` ROTATES a translucent conic rainbow (the soap-film
-// shimmer, centre masked out so the sprite reads through), and its `::after` holds the STATIC glass (top-left
-// specular highlight + bright rim + volume), a hand-rolled replica of the directive's glass so it matches its
-// siblings. Spin lives only on `::before`, so the highlight stays put while the colours drift.
-.scene__laying {
+// Bespoke auras (laying = egg, cactus = thorns): the two built by hand instead of the shared `leftPawBubbleSkin`.
+// They share this base geometry — centred on the VISIBLE sprite (same `--scene-sprite-offset-y` so the aura wraps
+// winged/offset art) and PULSING via the sibling `scene-shield-pulse` — and differ only in what their `::before`
+// paints (laying also adds a `::after` glass). Spin lives on `::before`, so the parent's pulse stays clean: laying
+// drifts an iridescent rainbow soap-film (centre masked out so the sprite reads through), cactus turns a thorn ring.
+.scene__laying,
+.scene__cactus {
   position: absolute;
-  // Centre on the VISIBLE sprite, not the bare body point: follow the same vertical centring offset the sprite
-  // uses (`--scene-sprite-offset-y` = −spriteOffsetY) so the bubble wraps the art on winged/offset sprites.
   top: calc(var(--scene-sprite-height, 96px) / 2 + var(--scene-sprite-offset-y, 0px));
   left: 50%;
   width: calc(var(--scene-sprite-height, 96px) * 1.5);
@@ -224,6 +227,22 @@
   transform: translate(-50%, -50%);
   animation: scene-shield-pulse 2.6s ease-in-out infinite;
   pointer-events: none;
+}
+
+// Rotating thorn ring: hard-stop conic spokes (sharp green spike / wide transparent gap → ~24 radial thorns),
+// masked to a thin annulus so only a spiky rim shows and the sprite stays clear. Rotation only — parent owns the pulse.
+.scene__cactus::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: repeating-conic-gradient(
+    from 0deg,
+    var(--aura-cactus-tint) 0deg 3deg,
+    transparent 3deg 15deg
+  );
+  mask: radial-gradient(circle, transparent 52%, #000 64%, #000 88%, transparent 97%);
+  animation: scene-rainbow-spin 9s linear infinite;
 }
 
 // Crown marker for the hp-leader: a golden crown bobbing just above the head, so the whole table can spot (and
@@ -488,7 +507,9 @@
   .scene__shield,
   .scene__laying,
   .scene__laying::before,
-  .scene__poop {
+  .scene__poop,
+  .scene__cactus,
+  .scene__cactus::before {
     animation: none;
   }
 

@@ -71,6 +71,7 @@ describe('FrenzyStatsStore', () => {
       shield: 0,
       easterEgg: 0,
       poop: 0,
+      cactus: 0,
     });
     expect(store.totalEaten()).toBe(4);
     expect(store.maxHp()).toBe(150);

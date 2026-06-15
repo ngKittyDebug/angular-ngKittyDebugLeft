@@ -22,6 +22,7 @@ const STATS: FaintedStats = {
     shield: 0,
     easterEgg: 0,
     poop: 0,
+    cactus: 0,
   },
   lifespanSeconds: 42,
   maxHp: 230,

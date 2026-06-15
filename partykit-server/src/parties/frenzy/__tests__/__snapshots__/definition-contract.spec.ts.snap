@@ -124,6 +124,7 @@ exports[`frenzy definition contract > keeps the flat FRENZY read-model values st
     "barbedWire": 0.16,
     "bomb": 0.01,
     "brick": 0.22,
+    "cactus": 0.16,
     "crumb": 0.25,
     "easterEgg": 0.18,
     "food": 0.15,
@@ -145,6 +146,9 @@ exports[`frenzy definition contract > keeps the flat FRENZY read-model values st
         "enabled": true,
       },
       "brick": {
+        "enabled": true,
+      },
+      "cactus": {
         "enabled": true,
       },
       "crumb": {
@@ -188,6 +192,7 @@ exports[`frenzy definition contract > keeps the flat FRENZY read-model values st
   "floatPriority": {
     "appeared": 20,
     "bumped": 50,
+    "cactus": 60,
     "detonated": 80,
     "died": 100,
     "dying": 90,
@@ -212,6 +217,7 @@ exports[`frenzy definition contract > keeps the flat FRENZY read-model values st
     "barbedWire": 0,
     "bomb": 0,
     "brick": 0,
+    "cactus": 0,
     "crumb": 5,
     "easterEgg": 0,
     "food": 10,
@@ -330,6 +336,7 @@ exports[`frenzy definition contract > keeps the flat FRENZY read-model values st
     "barbedWire": 5,
     "bomb": 10,
     "brick": 10,
+    "cactus": 5,
     "crumb": 35,
     "easterEgg": 12,
     "food": 55,
