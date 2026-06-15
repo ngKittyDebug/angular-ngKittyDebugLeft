@@ -24,3 +24,8 @@ $stats: hp, attack, defense, special-attack, special-defense, speed;
   border: 1px solid var(--border);
   padding: 1rem;
 }
+
+.pokemon__profile_no_data {
+  max-width: 70%;
+  text-align: center;
+}

@@ -15,14 +15,14 @@ import { TranslocoHttpLoader } from './transloco-loader';
 import { provideTransloco } from '@jsverse/transloco';
 import { provideTranslocoPersistLang } from '@jsverse/transloco-persist-lang';
 
-export const appConfig: ApplicationConfig = {
+export const appConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideRouter(routes, withComponentInputBinding()),
     provideZoneChangeDetection(),
-    provideTaiga(),
+    provideRouter(routes, withComponentInputBinding()),
     provideStore(),
     provideHttpClient(),
+    provideTaiga(),
     provideTransloco({
       config: {
         availableLangs: ['en', 'ru'],
@@ -37,7 +37,6 @@ export const appConfig: ApplicationConfig = {
         useValue: localStorage,
       },
     }),
-    // TODO При переходе новой версии тайги проверить работоспособность.
     provideSignalFormsConfig({
       classes: {
         'tui-invalid': (field) => field.state().invalid() && field.state().touched(),
@@ -47,4 +46,4 @@ export const appConfig: ApplicationConfig = {
       },
     }),
   ],
-};
+} satisfies ApplicationConfig;

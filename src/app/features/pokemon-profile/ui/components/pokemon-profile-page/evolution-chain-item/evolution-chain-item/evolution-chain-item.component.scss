@@ -30,6 +30,10 @@
 
 .card {
   @include mixins.flex_container_function($direction: column);
-  height: 5rem;
+  height: 6.5rem;
   width: 100%;
+}
+
+.evolution_chain__image {
+  height: 3rem;
 }

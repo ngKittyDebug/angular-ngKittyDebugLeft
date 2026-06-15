@@ -1,8 +1,13 @@
 <ng-container *transloco="let t">
   <div class="card" [class.active]="evolutionChain().name === activeName()">
+    <img
+      [src]="evolutionCardData.cardData()?.sprites?.other?.showdown?.front_default"
+      [alt]="evolutionChain().name"
+      class="evolution_chain__image"
+    />
     <h3>{{ evolutionChain().name }}</h3>
     @if (evolutionChain().condition) {
-      <span class="badge">{{ evolutionChain().condition }}</span>
+      <p>{{ evolutionChain().condition }}</p>
     }
   </div>
 

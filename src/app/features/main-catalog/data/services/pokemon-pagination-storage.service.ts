@@ -1,4 +1,5 @@
-import { inject, resource, Service } from '@angular/core';
+import { httpResource } from '@angular/common/http';
+import { inject, Service } from '@angular/core';
 import { PokemonApiService } from '@core/api/pokemon-api.service';
 import type { PokemonListApiData } from '@shared/models/pokemon-list-api-data-interface';
 
@@ -6,8 +7,7 @@ import type { PokemonListApiData } from '@shared/models/pokemon-list-api-data-in
 export class PokemonPaginationStorageService {
   private readonly pokemonApiService = inject(PokemonApiService);
 
-  public readonly _pokemonPagination = resource({
-    loader: (): Promise<PokemonListApiData> =>
-      this.pokemonApiService.getPokemonPaginationData().then((data) => data.json()),
-  });
+  public readonly _pokemonPagination = httpResource<PokemonListApiData>(() =>
+    this.pokemonApiService.getPokemonPaginationUrl(),
+  );
 }
