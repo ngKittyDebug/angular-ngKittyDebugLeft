@@ -1,0 +1,502 @@
+// Host is the player box the scene-position directive drives (it writes the `translate` CSS property); this
+// `transform` is the static centre anchor, and translateZ(0) promotes its own layer so the repositioning
+// composites cleanly. Children stack in a centred column; the absolutely-positioned auras/hp-bar/sparks sit
+// out of that flow.
+:host {
+  // Per-effect tint — the SINGLE source of truth shared by the grounding-shadow modifiers below and (slice 2) the
+  // pulsing aura bubble (fed into `--left-paw-bubble-tint`), so the shadow tint and the bubble tint can never drift.
+  // laying carries a soft representative iridescent tone here; the full rainbow lives only in the bespoke egg bubble.
+  --aura-shield-tint: rgba(90, 190, 255, 0.9);
+  --aura-wellFed-tint: rgba(150, 230, 150, 0.85);
+  --aura-laying-tint: rgba(210, 160, 255, 0.85);
+  --aura-pooping-tint: rgba(120, 85, 50, 0.9);
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: center;
+  transform: translate(-50%, -50%) translateZ(0);
+  backface-visibility: hidden;
+  pointer-events: none;
+  // Fixed-content absolute box whose insides never affect outside layout — containment lets the engine skip the
+  // ancestors when the sprite/sensors/hp-bar animate. NOT `paint`: sparks, the shield bubble and auras overflow
+  // the box and must stay visible.
+  contain: layout style;
+}
+
+:host(.scene__player--disconnected) {
+  opacity: 0.5;
+  filter: grayscale(1);
+}
+
+// Rock/brick impact sparks burst from where the falling block bonked it, centred on the sprite and riding its
+// drift. Sits above the actors briefly so the starburst isn't clipped by neighbours.
+.scene__player-spark {
+  position: absolute;
+  // Anchor to the BODY (hitbox) top, not the art top: the server collides the block against the AABB body, so the
+  // block reaches the torso (falling through transparent padding/wings) — that's where the bonk really lands. Body
+  // is centred on the actor point, so its top = render-box bottom up by spriteHeight/2 + hitboxHeight/2.
+  bottom: calc(var(--scene-sprite-height, 96px) / 2 + var(--scene-hitbox-height, 96px) / 2);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+
+// Grounding contact shadow under EVERY sprite (own/others/NPC) so it sits ON the seabed instead of floating. Built
+// like the resting-item shadow (a blurred radial ellipse behind the sprite, z-index -1, riding the drift), but its
+// neutral base FLIPS by theme via `--scene-actor-shadow` (dark ellipse on the bright shallows, soft light disc on the
+// dark abyss where a dark shadow would vanish). Anchored at the body's feet: body bottom = sprite centre + offset +
+// half the hitbox. The dominant-effect modifier swaps the gradient core (`--shadow-core`) to that effect's shared
+// tint and breathes it in time with the bubble; the neutral shadow only fades in.
+.scene__shadow {
+  position: absolute;
+  top: calc(
+    var(--scene-sprite-height, 96px) / 2 + var(--scene-sprite-offset-y, 0px) +
+      var(--scene-hitbox-height, 96px) / 2
+  );
+  left: 50%;
+  z-index: -1;
+  // ~1.5× the sprite width (with a 0.28 ellipse profile) so a drifting actor reads as firmly planted on the seabed,
+  // not hovering. The core holds solid to ~36% before fading, so the diffuse ellipse stays expressive instead of
+  // washing out (the earlier narrow 0.9×/0.24 ellipse with an immediate falloff was too faint in both themes).
+  width: calc(var(--scene-sprite-width, 96px) * 1.5);
+  height: calc(var(--scene-sprite-width, 96px) * 1.5 * 0.28);
+  background: radial-gradient(
+    50% 50% at 50% 50%,
+    var(--shadow-core, var(--scene-actor-shadow, rgba(0, 0, 0, 0.4))) 0%,
+    var(--shadow-core, var(--scene-actor-shadow, rgba(0, 0, 0, 0.4))) 36%,
+    transparent 78%
+  );
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  filter: blur(3px);
+  pointer-events: none;
+  animation: scene-actor-shadow-in 150ms ease-out;
+}
+
+// Effect tint: recolour the gradient core to the shared per-effect tint and breathe in time with the bubble pulse.
+.scene__shadow--shield,
+.scene__shadow--wellFed,
+.scene__shadow--laying,
+.scene__shadow--pooping {
+  animation: scene-actor-shadow-breathe 2.6s ease-in-out infinite;
+}
+
+.scene__shadow--shield {
+  --shadow-core: var(--aura-shield-tint);
+}
+
+.scene__shadow--wellFed {
+  --shadow-core: var(--aura-wellFed-tint);
+}
+
+.scene__shadow--laying {
+  --shadow-core: var(--aura-laying-tint);
+}
+
+.scene__shadow--pooping {
+  --shadow-core: var(--aura-pooping-tint);
+}
+
+// shield bubble: a glassy soap-bubble encasing the sprite while the full-invulnerability ward is active, so
+// the Pokémon reads as sealed inside a sphere rather than ringed by a flat halo. The glass itself (cyan
+// fill brightening to the rim, specular highlight, volume shadow) is painted by the shared leftPawBubbleSkin
+// directive from `--left-paw-bubble-tint`; here we only own the circle's size, placement and pulse. Sits
+// behind the sprite (translucent, the sprite shows through) and is purely decorative (aria-hidden).
+.scene__shield {
+  // Tint from the shared per-effect var (on `:host`) so the bubble and the grounding-shadow tint never drift.
+  --left-paw-bubble-tint: var(--aura-shield-tint);
+  position: absolute;
+  // Centre on the VISIBLE sprite, not the bare body point: follow the same vertical centring offset the sprite
+  // uses (`--scene-sprite-offset-y` = −spriteOffsetY) so the ring/bubble wraps the art on winged/offset sprites.
+  top: calc(var(--scene-sprite-height, 96px) / 2 + var(--scene-sprite-offset-y, 0px));
+  left: 50%;
+  width: calc(var(--scene-sprite-height, 96px) * 1.5);
+  height: calc(var(--scene-sprite-height, 96px) * 1.5);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: scene-shield-pulse 2.6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+// One-shot ward flash: a damaging hit was just deflected by the shield. The WHOLE bubble flares — a bright cyan
+// fill blooms with a thick rim and a strong glow, then expands and fades — so the deflect reads loud and clear
+// (a thin ring went unnoticed). A pseudo-element so it LAYERS on the idle pulse instead of replacing the base
+// `animation`; active while a shield-block transient is present (~700ms). The bubble-skin directive only sets
+// background/border/box-shadow inline, so the pseudo-element is free.
+.scene__shield--pulse::after {
+  content: '';
+  position: absolute;
+  inset: -10%;
+  border-radius: 50%;
+  border: 4px solid rgba(200, 245, 255, 1);
+  background: radial-gradient(
+    circle,
+    rgba(205, 247, 255, 0.6) 0%,
+    rgba(150, 225, 255, 0.4) 46%,
+    rgba(150, 225, 255, 0) 72%
+  );
+  box-shadow:
+    0 0 30px rgba(150, 225, 255, 0.95),
+    0 0 12px rgba(255, 255, 255, 0.9),
+    inset 0 0 24px rgba(200, 245, 255, 0.7);
+  opacity: 0;
+  animation: scene-shield-block-flash 0.55s ease-out;
+  pointer-events: none;
+}
+
+// laying (egg) aura: the bespoke member of the bubble family — an iridescent rainbow soap-bubble for the
+// easter-egg item-spewing buff. The shared single-tint `leftPawBubbleSkin` can't make a rainbow, so it's built by
+// hand from three composed layers that never fight over one `transform`: the element itself PULSES (scale, same
+// `scene-shield-pulse` as its siblings), its `::before` ROTATES a translucent conic rainbow (the soap-film
+// shimmer, centre masked out so the sprite reads through), and its `::after` holds the STATIC glass (top-left
+// specular highlight + bright rim + volume), a hand-rolled replica of the directive's glass so it matches its
+// siblings. Spin lives only on `::before`, so the highlight stays put while the colours drift.
+.scene__laying {
+  position: absolute;
+  // Centre on the VISIBLE sprite, not the bare body point: follow the same vertical centring offset the sprite
+  // uses (`--scene-sprite-offset-y` = −spriteOffsetY) so the bubble wraps the art on winged/offset sprites.
+  top: calc(var(--scene-sprite-height, 96px) / 2 + var(--scene-sprite-offset-y, 0px));
+  left: 50%;
+  width: calc(var(--scene-sprite-height, 96px) * 1.5);
+  height: calc(var(--scene-sprite-height, 96px) * 1.5);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: scene-shield-pulse 2.6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+// Rotating rainbow soap-film: a translucent conic rainbow whose centre is masked transparent (so the sprite shows
+// through) and which strengthens toward the rim, slowly spinning to shimmer. Rotation only — the parent owns the pulse.
+.scene__laying::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    rgba(255, 120, 120, 0.42),
+    rgba(255, 210, 120, 0.42),
+    rgba(140, 220, 150, 0.42),
+    rgba(120, 190, 255, 0.42),
+    rgba(210, 140, 255, 0.42),
+    rgba(255, 120, 120, 0.42)
+  );
+  mask: radial-gradient(circle, transparent 40%, #000 82%);
+  animation: scene-rainbow-spin 7s linear infinite;
+}
+
+// Static glass over the rainbow: top-left specular highlight, bright rim and inner/outer volume — a hand-rolled
+// copy of the `leftPawBubbleSkin` layers (it can't sit on a rainbow), kept neutral white so it reads as glass.
+.scene__laying::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 30% 22%,
+    rgba(255, 255, 255, 0.6) 0%,
+    rgba(255, 255, 255, 0) 26%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow:
+    0 0 12px rgba(200, 220, 255, 0.4),
+    inset 0 0 14px rgba(255, 255, 255, 0.2),
+    inset -4px -7px 14px rgba(190, 200, 255, 0.22);
+}
+
+// pooping aura: the cursed twin of the shield bubble — a murky brown pulsing soap-bubble signalling the poop debuff
+// (the Pokémon sprays rock/brick/bomb). Same bubble geometry/skin as `.scene__shield` (glass painted inline by
+// `leftPawBubbleSkin`), recoloured to muddy browns via the shared tint var; no ward-flash (it's a debuff).
+.scene__poop {
+  --left-paw-bubble-tint: var(--aura-pooping-tint);
+  position: absolute;
+  // Centre on the VISIBLE sprite, not the bare body point: follow the same vertical centring offset the sprite
+  // uses (`--scene-sprite-offset-y` = −spriteOffsetY) so the bubble wraps the art on winged/offset sprites.
+  top: calc(var(--scene-sprite-height, 96px) / 2 + var(--scene-sprite-offset-y, 0px));
+  left: 50%;
+  width: calc(var(--scene-sprite-height, 96px) * 1.5);
+  height: calc(var(--scene-sprite-height, 96px) * 1.5);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: scene-shield-pulse 2.6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+// Crown marker for the hp-leader: a golden crown bobbing just above the head, so the whole table can spot (and
+// gang up on) the leader at a glance. Anchored on the VISIBLE sprite top (same offset basis as the floats),
+// nudged up a touch so rising quips pass beneath it. Centred on the sprite, rides its drift, purely decorative.
+.scene__crown {
+  position: absolute;
+  bottom: calc(100% - var(--scene-sprite-offset-y, 0px) + 6px);
+  left: 50%;
+  color: #ffd23f;
+  font-size: 1.25rem;
+  transform: translateX(-50%);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.7));
+  animation: scene-crown-bob 1.8s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 3;
+}
+
+// Buff/debuff badge row pinned to the sprite's top-left corner (the MMO unit-frame spot). Decorative overlay —
+// `pointer-events: none` so it never steals the poke tap; the host's own `pointer-events: none` already applies, this
+// keeps it explicit. Left-aligned row of small glyph chips growing rightward, sitting above the kelp (z 3).
+.scene__badges {
+  position: absolute;
+  // Anchor to the visible art box's top-left: top = sprite top (the vertical centring offset), left = body point −
+  // half the art width + the horizontal centring offset, so it tracks winged/offset sprites the same way the auras do.
+  top: var(--scene-sprite-offset-y, 0px);
+  left: calc(50% - var(--scene-sprite-width, 96px) / 2 + var(--scene-sprite-offset-x, 0px));
+  display: flex;
+  gap: 0.125rem;
+  pointer-events: none;
+  z-index: 3;
+}
+
+// One glyph chip: a small Taiga icon on a translucent dark disc so it stays legible over any sprite/background.
+// Tone drives the colour — positive (default) green, warning amber — matching the floating-status palette.
+.scene__effect-badge {
+  width: 1.05rem;
+  height: 1.05rem;
+  padding: 0.1rem;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: var(--tui-status-positive);
+  font-size: 0.8rem;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6));
+}
+
+.scene__effect-badge--warning {
+  color: var(--tui-status-warning);
+}
+
+.scene__poke {
+  padding: 0;
+  background: none;
+  border: none;
+  line-height: 0;
+  cursor: pointer;
+  // Re-enable clicks on top of the players layer (`:host` is `pointer-events: none`).
+  pointer-events: auto;
+
+  // Keyboard focus only — the sprite is non-rectangular, so a rounded ring offset off the box reads cleanest.
+  &:focus-visible {
+    outline: 3px solid var(--tui-status-positive);
+    outline-offset: 4px;
+    border-radius: 12px;
+  }
+}
+
+.scene__sprite {
+  // Explicit per-stage, per-line box (world px) set via the `--scene-sprite-width`/`--scene-sprite-height` custom
+  // properties on the host — sized to each sprite's real aspect, so the render matches the server's AABB hitbox.
+  // `object-fit: contain` is the safety net: if an authored box is slightly off-aspect the sprite letterboxes
+  // instead of squashing. No `image-rendering: pixelated` — these detailed sprites read cleaner smoothly scaled.
+  width: var(--scene-sprite-width, 96px);
+  height: var(--scene-sprite-height, 96px);
+  object-fit: contain;
+  transition:
+    filter 0.4s ease,
+    transform 0.2s ease;
+  -webkit-user-drag: none;
+}
+
+// Horizontal flip wrapper: kept separate from `.scene__sprite` so the flip doesn't fight the sprite's
+// own transform (evolve pulse / hover). Flip is instant — a transition would squash through 0 width.
+.scene__sprite-flip {
+  display: inline-block;
+  line-height: 0;
+}
+
+// Body-centring offset: translates the full art so its hitbox/body lands on the actor point (the art overhangs
+// around it — wings, tails). Its own element so it composes with the flip (outer) and the evolve pulse (on the
+// img) without clashing. Vars default to 0 (compact sprites, body ≈ art).
+.scene__sprite-offset {
+  display: inline-block;
+  line-height: 0;
+  transform: translate(var(--scene-sprite-offset-x, 0), var(--scene-sprite-offset-y, 0));
+}
+
+.scene__sprite-flip--right {
+  transform: scaleX(-1);
+}
+
+.scene__sprite--sad {
+  filter: saturate(0.6) brightness(0.85);
+}
+
+// Angry-bomb NPC: reddens with its anger (`--npc-anger`, 0..1, set on the host). At rest it looks normal; as
+// players spam-poke it the colour saturates and a red glow swells, telegraphing the impending strong blast. Placed
+// after `--sad` so the NPC never inherits the sad desaturation. The base `.scene__sprite` filter transition makes
+// the reddening glide as anger ramps.
+.scene__sprite--npc {
+  filter: saturate(calc(1 + var(--npc-anger, 0) * 1.6))
+    drop-shadow(0 0 calc(var(--npc-anger, 0) * 10px) rgba(255, 40, 0, var(--npc-anger, 0)));
+}
+
+.scene__sprite--evolving {
+  animation: scene-evolve-pulse 1.5s ease-out;
+}
+
+.scene__label {
+  // Out of flow, anchored just below the sprite. The host centers ONLY the sprite on the authoritative
+  // position (the name was the one other in-flow child — keeping it in flow shifted the column's centre down,
+  // so the sprite drew ~half-a-label above the physics point and never lined up with its hitbox).
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  // Cap the width so a max-length name (24 chars) ellipsises under the sprite instead of spilling out of the
+  // centred column and overrunning neighbouring players.
+  max-width: 7rem;
+  margin-top: 0.25rem;
+  overflow: hidden;
+  color: #f5f5f5;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  // No background pill — a crisp shadow keeps the name legible over the aquarium instead.
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.9),
+    0 0 4px rgba(0, 0, 0, 0.6);
+}
+
+:host(.scene__player--me) .scene__label {
+  color: #8bf58b;
+  font-weight: 600;
+}
+
+// Horizontal hp nameplate above the head for EVERY player (own + others + NPC): sits just above the sprite top,
+// beneath the bobbing crown (same vertical basis as `.scene__crown`/the badges). Centred on the actor point; width
+// scales with the sprite so it spans roughly the body width without overrunning neighbours. The name still rides
+// below the sprite (`.scene__label`), so the unit reads name-below / bar-above like an MMO nameplate.
+.scene__hp-bar {
+  position: absolute;
+  bottom: calc(100% - var(--scene-sprite-offset-y, 0px) + 1px);
+  left: 50%;
+  width: clamp(44px, calc(var(--scene-sprite-width, 96px) * 0.9), 104px);
+  transform: translateX(-50%);
+}
+
+@keyframes scene-shield-pulse {
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: translate(-50%, -50%) scale(0.97);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.03);
+  }
+}
+
+// Ward-deflect flare (on `.scene__shield--pulse::after`): a fast bright bloom over the whole bubble, then expand
+// and fade. The snappy pop-in (to full at 16%) is what makes the deflect register at a glance.
+@keyframes scene-shield-block-flash {
+  0% {
+    opacity: 0;
+    transform: scale(0.78);
+  }
+
+  16% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+
+  45% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.24);
+  }
+}
+
+// Pure rotation for the egg bubble's rainbow `::before` (the element already owns translate + the pulse scale).
+@keyframes scene-rainbow-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes scene-crown-bob {
+  0%,
+  100% {
+    transform: translate(-50%, 0);
+  }
+
+  50% {
+    transform: translate(-50%, -3px);
+  }
+}
+
+@keyframes scene-evolve-pulse {
+  0% {
+    filter: brightness(1) drop-shadow(0 0 0 rgba(255, 255, 200, 0));
+    transform: scale(1);
+  }
+
+  35% {
+    filter: brightness(2.2) drop-shadow(0 0 24px rgba(255, 240, 150, 1));
+    transform: scale(1.3);
+  }
+
+  100% {
+    filter: brightness(1) drop-shadow(0 0 0 rgba(255, 255, 200, 0));
+    transform: scale(1);
+  }
+}
+
+// Neutral grounding shadow only fades in; the breathe (when tinted) preserves the translate so it doesn't drift.
+@keyframes scene-actor-shadow-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scene-actor-shadow-breathe {
+  0%,
+  100% {
+    opacity: 0.78;
+    transform: translate(-50%, -50%) scale(0.97);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.06);
+  }
+}
+
+// Keep the effect auras visible but static under reduced-motion — their job is to signal the buff, not animate.
+@media (prefers-reduced-motion: reduce) {
+  .scene__shadow,
+  .scene__shield,
+  .scene__laying,
+  .scene__laying::before,
+  .scene__poop {
+    animation: none;
+  }
+
+  .scene__shield--pulse::after {
+    animation: none;
+  }
+
+  .scene__crown {
+    animation: none;
+  }
+}

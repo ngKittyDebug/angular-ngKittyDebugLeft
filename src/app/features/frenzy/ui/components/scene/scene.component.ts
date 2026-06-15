@@ -5,148 +5,66 @@ import {
   computed,
   DestroyRef,
   effect,
+  ElementRef,
   inject,
   input,
   output,
-  signal,
+  viewChild,
 } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { TuiProgressBar } from '@taiga-ui/kit';
 
-import { GAME } from '@game/frenzy/constants';
-import type { Item, Player, Stage } from '@game/frenzy/types';
+import { FRENZY } from '@game/frenzy/config';
+import type { Item, Player } from '@game/frenzy/types';
 
-import { isSad } from '../../../data/logic/is-sad';
 import type { Blast } from '../../../data/models/blast';
 import type { OrphanFloat, OwnedFloat } from '../../../data/models/floating-message';
-import { spriteHeightFor } from '../../constants/pokemon-registry';
+import type { HitBurst, OwnedSpark } from '../../../data/models/hit-burst';
+import type { OwnedShieldBlock } from '../../../data/models/shield-block';
 import { ScenePositionDirective } from '../../directives/scene-position.directive';
-import { ItemSpritePipe } from '../../pipes/item-sprite.pipe';
-import { MassToneColorPipe } from '../../pipes/mass-tone-color.pipe';
-import { PokemonSpritePipe } from '../../pipes/pokemon-sprite.pipe';
 import { AquariumDecorComponent } from '../aquarium-decor/aquarium-decor.component';
 import { BubbleBurstComponent } from '../bubble-burst/bubble-burst.component';
+import { DebugOverlayComponent } from '../../../debug/debug-overlay/debug-overlay.component';
+import { parseDebugFlags } from '../../../debug/debug-options';
 import { FloatingTextComponent } from '../floating-text/floating-text.component';
+import { ForegroundKelpComponent } from '../foreground-kelp/foreground-kelp.component';
+import { MidgroundKelpComponent } from '../midground-kelp/midground-kelp.component';
+import { OffscreenIndicatorsComponent } from '../offscreen-indicators/offscreen-indicators.component';
+import { SandPuffComponent } from '../sand-puff/sand-puff.component';
+import { SceneItemComponent } from '../scene-item/scene-item.component';
+import { ScenePlayerComponent } from '../scene-player/scene-player.component';
+import { ItemExtrapolatorService } from './item-extrapolator.service';
+import { PlayerExtrapolatorService } from './player-extrapolator.service';
+import { SceneBurstsService } from './scene-bursts.service';
+import { SceneCameraService } from './scene-camera.service';
+import { SceneSandPuffsService } from './scene-sand-puffs.service';
+import { SceneFacade } from './scene.facade';
+import type { ItemClick, RenderedItem } from './scene-view-models';
 
-const MAX_VISUAL_MASS = GAME.thresholds.stage3;
+// Other players' HP bars use a single absolute scale — the hard ceiling — so a bar's fill reads the same for
+// everyone regardless of stage (the OWN widget instead scales to its next evolution threshold).
+const MAX_VISUAL_HP = FRENZY.maxHp;
 
-// How long a click bubble-burst lives before it is removed (ms). Matches the CSS animation.
-const BURST_LIFETIME_MS = 1000;
-
-// Fixed pixel distance the bomb is batted per click — converted to normalized units against the scene width,
-// so a juggle feels the same on any screen size rather than scaling with it.
-const BOMB_NUDGE_PX = 72;
-
-interface RenderedPlayer {
-  appearance: string;
-  facingRight: boolean;
-  hasShield: boolean;
-  id: string;
-  isDisconnected: boolean;
-  isEvolving: boolean;
-  isMe: boolean;
-  isSad: boolean;
-  label: string;
-  mass: number;
-  spriteHeight: string;
-  stage: Stage;
-  x: number;
-  y: number;
+function clamp01(value: number): number {
+  return Math.min(1, Math.max(0, value));
 }
 
-interface RenderedItem {
-  id: string;
-  type: Item['type'];
-  x: number;
-  y: number;
-  landed: boolean;
-  spinDurationMs: number;
-  spinReverse: boolean;
-}
+// Bucket owner-scoped scene items (floats, sparks) by their `ownerId`. Sparks render inside each `.scene__player`;
+// floats render in the scene's owned-float overlay keyed by the same id. Preserves source order within each bucket.
+function groupByOwner<T extends { ownerId: string }>(items: readonly T[]): Map<string, T[]> {
+  const grouped = new Map<string, T[]>();
 
-interface BubbleBurst {
-  id: number;
-  x: number;
-  y: number;
-}
+  for (const item of items) {
+    const existing = grouped.get(item.ownerId);
 
-export interface ItemClick {
-  itemId: string;
-  /** Bomb bat input: signed normalized horizontal displacement (fixed pixel step ÷ scene width). Undefined for non-bomb items. */
-  nudgeX?: number;
-}
-
-interface ItemBaseline {
-  x: number;
-  y0: number;
-  vy: number;
-  clientStartTime: number;
-}
-
-interface PlayerBaseline {
-  x0: number;
-  y0: number;
-  vx: number;
-  vy: number;
-  clientStartTime: number;
-}
-
-// Falling items tumble: each gets a steady spin whose speed and direction are derived from its id, so the
-// value is stable across frames (the CSS animation isn't restarted) yet varies item to item.
-const ITEM_SPIN_MIN_MS = 2500;
-const ITEM_SPIN_MAX_MS = 6000;
-
-function spinFor(id: string): { durationMs: number; reverse: boolean } {
-  let hash = 0;
-
-  for (const character of id) {
-    hash = (hash * 31 + character.charCodeAt(0)) | 0;
+    if (existing === undefined) {
+      grouped.set(item.ownerId, [item]);
+    } else {
+      existing.push(item);
+    }
   }
 
-  const magnitude = Math.abs(hash);
-
-  return {
-    durationMs: ITEM_SPIN_MIN_MS + (magnitude % (ITEM_SPIN_MAX_MS - ITEM_SPIN_MIN_MS)),
-    reverse: (magnitude & 1) === 1,
-  };
-}
-
-// Closed-form reflective ("ping-pong") drift along one axis: mirrors the server's bounce so the
-// client can extrapolate between snapshots smoothly instead of stepping each snapshot.
-function reflect(p0: number, v: number, elapsedSeconds: number, min: number, max: number): number {
-  const span = max - min;
-
-  if (span <= 0) {
-    return min;
-  }
-
-  const period = span * 2;
-  const offset = p0 - min + v * elapsedSeconds;
-  const wrapped = ((offset % period) + period) % period;
-
-  return min + (wrapped <= span ? wrapped : period - wrapped);
-}
-
-// Instantaneous horizontal direction of the reflective drift (+1 right, -1 left, 0 stationary):
-// the sign of the derivative of `reflect`, which flips on every wall bounce.
-function reflectDirection(
-  p0: number,
-  v: number,
-  elapsedSeconds: number,
-  min: number,
-  max: number,
-): number {
-  const span = max - min;
-
-  if (v === 0 || span <= 0) {
-    return 0;
-  }
-
-  const period = span * 2;
-  const offset = p0 - min + v * elapsedSeconds;
-  const wrapped = ((offset % period) + period) % period;
-
-  return Math.sign(v) * (wrapped <= span ? 1 : -1);
+  return grouped;
 }
 
 @Component({
@@ -154,13 +72,24 @@ function reflectDirection(
   imports: [
     AquariumDecorComponent,
     BubbleBurstComponent,
+    DebugOverlayComponent,
     FloatingTextComponent,
-    ItemSpritePipe,
-    MassToneColorPipe,
-    PokemonSpritePipe,
+    ForegroundKelpComponent,
+    MidgroundKelpComponent,
+    OffscreenIndicatorsComponent,
+    SandPuffComponent,
+    SceneItemComponent,
+    ScenePlayerComponent,
     ScenePositionDirective,
     TranslocoDirective,
-    TuiProgressBar,
+  ],
+  providers: [
+    SceneFacade,
+    ItemExtrapolatorService,
+    PlayerExtrapolatorService,
+    SceneCameraService,
+    SceneBurstsService,
+    SceneSandPuffsService,
   ],
   templateUrl: './scene.component.html',
   styleUrl: './scene.component.scss',
@@ -168,15 +97,28 @@ function reflectDirection(
 })
 export class SceneComponent {
   private readonly destroyRef = inject(DestroyRef);
-  private readonly _renderedItems = signal<readonly RenderedItem[]>([]);
-  private readonly _renderedPlayers = signal<readonly RenderedPlayer[]>([]);
-  private readonly _bursts = signal<readonly BubbleBurst[]>([]);
-  private readonly itemBaselines = new Map<string, ItemBaseline>();
-  private readonly playerBaselines = new Map<string, PlayerBaseline>();
-  private readonly burstTimers = new Set<ReturnType<typeof setTimeout>>();
-  private burstCounter = 0;
+  private readonly facade = inject(SceneFacade);
+  // Optional (not `.required`): the template root sits under `*transloco`, which renders asynchronously, so the
+  // ref is absent for the first few frames. Reading it before then must not throw and kill the rAF loop.
+  private readonly worldRef = viewChild<ElementRef<HTMLElement>>('world');
+  // Foreground parallax INNER tile sheets — the elements the camera translates each frame (their wrappers clip).
+  // Optional like worldRef — absent for the first frames under async *transloco.
+  private readonly parallaxNearRef = viewChild<ElementRef<HTMLElement>>('parallaxNear');
+  private readonly parallaxMidRef = viewChild<ElementRef<HTMLElement>>('parallaxMid');
+  // A component element, so read its host ElementRef explicitly (a bare viewChild would yield the component
+  // instance). The camera writes its width/transform each frame.
+  private readonly foregroundKelpRef = viewChild<ElementRef<HTMLElement>, ElementRef<HTMLElement>>(
+    'foregroundKelp',
+    { read: ElementRef },
+  );
+  // The off-screen indicators overlay — driven imperatively from this loop (positions each frame, structure
+  // throttled) instead of via per-frame inputs, to keep the rAF work off change detection like the rest of the scene.
+  private readonly offscreenIndicators = viewChild(OffscreenIndicatorsComponent);
 
   public readonly blasts = input<readonly Blast[]>([]);
+  public readonly hitBursts = input<readonly HitBurst[]>([]);
+  public readonly ownedSparks = input<readonly OwnedSpark[]>([]);
+  public readonly ownedShieldBlocks = input<readonly OwnedShieldBlock[]>([]);
   public readonly evolvingPlayers = input<ReadonlyMap<string, number>>(new Map());
   public readonly orphanFloats = input<readonly OrphanFloat[]>([]);
   public readonly ownedFloats = input<readonly OwnedFloat[]>([]);
@@ -184,242 +126,155 @@ export class SceneComponent {
   public readonly items = input.required<readonly Item[]>();
   public readonly myId = input<string | null>(null);
   public readonly players = input.required<readonly Player[]>();
+  // The crowned player id (alive hp-leader; null when there's no meaningful leader, e.g. a lone survivor). Gated
+  // and resolved upstream via the shared `crownIdOf`, so the scene marker matches the pill and minimap exactly.
+  public readonly crownId = input<string | null>(null);
   public readonly selfPoke = output<void>();
+  public readonly pokeNpc = output<string>();
   public readonly steer = output<{ x: number; y: number }>();
 
-  protected readonly renderedItems = this._renderedItems.asReadonly();
-  protected readonly renderedPlayers = this._renderedPlayers.asReadonly();
-  protected readonly bursts = this._bursts.asReadonly();
-  protected readonly maxMass = MAX_VISUAL_MASS;
-  // Owned floats grouped by their player, so each `.scene__player` can render (and carry) its own quips.
-  protected readonly floatsByOwner = computed(() => {
-    const grouped = new Map<string, OwnedFloat[]>();
+  protected readonly renderedItems = this.facade.renderedItems;
+  // Paint items far→near for seabed perspective: sort by y ascending so an item lower on screen (nearer the camera,
+  // higher y) renders LATER and overlaps the ones behind it. DOM order is the depth cue at the shared item z-index
+  // (the bomb keeps its own lift; players paint after all items, so they stay above). track-by-id means a reorder
+  // just moves the existing nodes — no re-create, no animation reset.
+  protected readonly renderedItemsByDepth = computed(() =>
+    [...this.renderedItems()].sort((first, second) => first.y - second.y),
+  );
 
-    for (const float of this.ownedFloats()) {
-      const existing = grouped.get(float.ownerId);
-
-      if (existing === undefined) {
-        grouped.set(float.ownerId, [float]);
-      } else {
-        existing.push(float);
-      }
-    }
-
-    return grouped;
-  });
-
+  protected readonly renderedPlayers = this.facade.renderedPlayers;
+  protected readonly bursts = this.facade.bursts;
+  protected readonly sandPuffs = this.facade.sandPuffs;
+  protected readonly maxHp = MAX_VISUAL_HP;
+  protected readonly worldWidth = FRENZY.world.width;
+  protected readonly worldHeight = FRENZY.world.height;
+  // Item sprite size from the shared contract, exposed to CSS so render size tracks the server bound source.
+  protected readonly itemSize = `${FRENZY.physicalSizePx.item}px`;
+  // The bomb's larger collidable size (sensor-horn reach) — for the `?debug` box so it frames the real trigger area.
+  protected readonly bombSize = `${FRENZY.physicalSizePx.bomb}px`;
+  // Per-category `?debug` overlay toggles parsed from the query param (`?debug` = all; `?debug=pokemon-borders`,
+  // `item-borders`, `speed` = pick) — lets a session draw just the boxes it needs against the sprite silhouette.
+  // Snapshot read; no reactivity.
+  protected readonly debug = parseDebugFlags(inject(ActivatedRoute).snapshot.queryParamMap);
+  // Owned floats grouped by their player, so the owned-float overlay renders each sprite's quips on its body point.
+  protected readonly floatsByOwner = computed(() => groupByOwner(this.ownedFloats()));
+  // Rock/brick impact sparks grouped by the struck player, so each `.scene__player` renders (and carries) its own.
+  protected readonly sparksByOwner = computed(() => groupByOwner(this.ownedSparks()));
+  // Shield-ward cues grouped by the warded player, so each `.scene__player` pulses its bubble + clinks in place.
+  protected readonly shieldBlocksByOwner = computed(() => groupByOwner(this.ownedShieldBlocks()));
   public constructor() {
+    // Re-anchor item/player baselines from each snapshot and paint immediately (before the rAF loop starts).
+    // Reading evolving/myId here too keeps the first paint consistent with them.
     effect(() => {
-      const items = this.items();
-      const now = performance.now();
-      const currentIds = new Set<string>();
-
-      for (const item of items) {
-        currentIds.add(item.id);
-
-        const baseline = this.itemBaselines.get(item.id);
-
-        if (baseline === undefined) {
-          this.itemBaselines.set(item.id, {
-            x: item.x,
-            y0: item.y,
-            vy: item.vy,
-            clientStartTime: now,
-          });
-        } else if (baseline.x !== item.x) {
-          // A nudge (bomb juggle) moved the item sideways — snap the baseline so it tracks the click
-          // instantly, without waiting for a snapshot. Vertical fall (y0/vy/clientStartTime) keeps going.
-          baseline.x = item.x;
-        }
-      }
-
-      for (const id of this.itemBaselines.keys()) {
-        if (!currentIds.has(id)) {
-          this.itemBaselines.delete(id);
-        }
-      }
-
-      this._renderedItems.set(this.computeItems(items, now));
+      this.facade.ingestItems(this.items(), performance.now());
     });
 
     effect(() => {
-      const players = this.players();
-      const now = performance.now();
-
-      this.syncPlayerBaselines(players, now);
-      // Read evolving/myId here too so the first paint (before rAF) reflects them.
-      this._renderedPlayers.set(this.computePlayers(now));
+      this.facade.ingestPlayers(
+        this.players(),
+        this.myId(),
+        this.evolvingPlayers(),
+        performance.now(),
+      );
     });
 
     afterNextRender(() => {
       let rafId = 0;
       const loop = (): void => {
+        // Schedule the next frame first, so a throw anywhere below can never kill the animation loop.
+        rafId = requestAnimationFrame(loop);
+
         const now = performance.now();
 
-        this._renderedItems.set(this.computeItems(this.items(), now));
-        this._renderedPlayers.set(this.computePlayers(now));
-        rafId = requestAnimationFrame(loop);
+        this.facade.tickItems(this.items(), now);
+        this.facade.tickPlayers(this.players(), this.myId(), this.evolvingPlayers(), now);
+
+        const world = this.worldRef()?.nativeElement;
+
+        if (world !== undefined) {
+          this.facade.updateCamera(
+            world,
+            this.parallaxNearRef()?.nativeElement,
+            this.parallaxMidRef()?.nativeElement,
+            this.foregroundKelpRef()?.nativeElement,
+          );
+          // Right after the camera writes this frame's transform, reposition the off-screen indicators off the
+          // matching snapshot (zero phase skew); the overlay throttles its own structural recompute internally.
+          this.offscreenIndicators()?.frame(this.facade.cameraSnapshot(), now);
+        }
       };
 
       rafId = requestAnimationFrame(loop);
       this.destroyRef.onDestroy(() => cancelAnimationFrame(rafId));
     });
-
-    this.destroyRef.onDestroy(() => {
-      for (const timer of this.burstTimers) {
-        clearTimeout(timer);
-      }
-    });
   }
 
   protected onItemClick(item: RenderedItem, event: MouseEvent): void {
-    // Bomb is batted: tapping the left half of the sprite knocks it right, the right half knocks it left.
-    const nudgeX = item.type === 'bomb' ? this.batNudge(event) : undefined;
+    // Bomb is shoved away from wherever it was tapped: tap a side and it drifts off in the opposite direction.
+    const shove = item.type === 'bomb' ? this.batNudge(event) : undefined;
 
-    this.itemClick.emit({ itemId: item.id, nudgeX });
+    this.itemClick.emit({ itemId: item.id, nudgeX: shove?.x, nudgeY: shove?.y });
   }
 
   protected onSelfPoke(): void {
     this.selfPoke.emit();
   }
 
-  // Press anywhere bubbles up here: always spawn a short-lived decorative bubble burst, and — unless the press
-  // landed on an actionable element (an item to eat, my own Pokémon to poke) — steer my Pokémon toward the point.
-  // Open water, decor and other players all count as steering targets. Item/poke taps keep their own (click) actions.
+  protected onPokeNpc(npcId: string): void {
+    this.pokeNpc.emit(npcId);
+  }
+
+  // Press anywhere bubbles up here. A tap that misses an item spawns the airy bubble burst (the success cue for a
+  // hit is the dense converging burst, driven server-side from `eaten`); and — unless the press landed on an
+  // actionable element (an item to eat, my own Pokémon to poke) — it steers my Pokémon toward the point. Open
+  // water, decor and other players all count as steering targets. Item/poke taps keep their own (click) actions.
   protected onScenePointerDown(event: PointerEvent): void {
-    const host = event.currentTarget as HTMLElement;
-    const bounds = host.getBoundingClientRect();
+    // Coordinates are normalized against the camera-translated world rect (not the viewport), so a tap maps to
+    // the same world point regardless of scroll. Clamped to 0..1 for taps landing in a letterbox margin.
+    const world = this.worldRef()?.nativeElement;
+
+    if (world === undefined) {
+      return;
+    }
+
+    const bounds = world.getBoundingClientRect();
 
     if (bounds.width === 0 || bounds.height === 0) {
       return;
     }
 
-    const id = ++this.burstCounter;
-    const x = (event.clientX - bounds.left) / bounds.width;
-    const y = (event.clientY - bounds.top) / bounds.height;
+    const x = clamp01((event.clientX - bounds.left) / bounds.width);
+    const y = clamp01((event.clientY - bounds.top) / bounds.height);
+    const target = event.target as HTMLElement;
 
-    this._bursts.update((bursts) => [...bursts, { id, x, y }]);
+    // Bubbles are the miss cue — suppressed on an item hit (the converging success burst comes from `eaten`).
+    if (target.closest('.scene__item') === null) {
+      this.facade.spawnBurst(x, y);
+    }
 
-    const timer = setTimeout(() => {
-      this.burstTimers.delete(timer);
-      this._bursts.update((bursts) => bursts.filter((burst) => burst.id !== id));
-    }, BURST_LIFETIME_MS);
-
-    this.burstTimers.add(timer);
-
-    if ((event.target as HTMLElement).closest('.scene__item, .scene__poke') === null) {
+    if (target.closest('.scene__item, .scene__poke, .scene__poke-npc') === null) {
+      // Optimistically steer my own sprite this frame, then send the authoritative request. The server confirms
+      // via the next snapshot, which reconciles only a sub-pixel gap (same steer math both sides).
+      this.facade.predictSteer(this.myId(), x, y, performance.now());
       this.steer.emit({ x, y });
     }
   }
 
-  // Signed normalized bat displacement: a fixed pixel step (BOMB_NUDGE_PX) converted to scene-width units,
-  // pushed right when the click landed left of the item's centre and left otherwise. Undefined if the scene
-  // can't be measured (server then falls back to its own step).
-  private batNudge(event: MouseEvent): number | undefined {
+  // Shove direction (unit vector) pointing from the tapped point toward the bomb's centre — i.e. AWAY from the side
+  // that was hit, so tapping the right edge pushes it left, the top pushes it down, a corner pushes diagonally. The
+  // server scales this by a fixed `bomb.clickImpulse`, so only the direction matters here. A dead-centre tap falls
+  // back to a straight-up nudge.
+  private batNudge(event: MouseEvent): { x: number; y: number } {
     const button = event.currentTarget as HTMLElement;
     const bounds = button.getBoundingClientRect();
-    const centerX = bounds.left + bounds.width / 2;
-    const direction = event.clientX < centerX ? 1 : -1;
-    const sceneWidth = button.closest('.scene')?.getBoundingClientRect().width ?? 0;
+    const deltaX = bounds.left + bounds.width / 2 - event.clientX;
+    const deltaY = bounds.top + bounds.height / 2 - event.clientY;
+    const magnitude = Math.hypot(deltaX, deltaY);
 
-    if (sceneWidth <= 0) {
-      return undefined;
+    if (magnitude === 0) {
+      return { x: 0, y: -1 };
     }
 
-    return (direction * BOMB_NUDGE_PX) / sceneWidth;
-  }
-
-  // Reset a player's baseline only when the server actually moved it (new snapshot position/velocity).
-  // Non-positional updates (mass on `eaten`, stage on `evolved`) keep the baseline so drift stays smooth.
-  private syncPlayerBaselines(players: readonly Player[], now: number): void {
-    const currentIds = new Set<string>();
-
-    for (const player of players) {
-      currentIds.add(player.id);
-
-      const baseline = this.playerBaselines.get(player.id);
-      const moved =
-        baseline === undefined ||
-        baseline.x0 !== player.x ||
-        baseline.y0 !== player.y ||
-        baseline.vx !== player.vx ||
-        baseline.vy !== player.vy;
-
-      if (moved) {
-        this.playerBaselines.set(player.id, {
-          x0: player.x,
-          y0: player.y,
-          vx: player.vx,
-          vy: player.vy,
-          clientStartTime: now,
-        });
-      }
-    }
-
-    for (const id of this.playerBaselines.keys()) {
-      if (!currentIds.has(id)) {
-        this.playerBaselines.delete(id);
-      }
-    }
-  }
-
-  private computePlayers(now: number): RenderedPlayer[] {
-    const me = this.myId();
-    const evolving = this.evolvingPlayers();
-    const zone = GAME.playerDriftZone;
-    // Effect expiry is server-clock (Date.now), independent of the rAF `now` (performance.now) — drop the
-    // aura the moment the shield lapses rather than waiting for the snapshot to prune it.
-    const wallNow = Date.now();
-
-    return this.players().map((player) => {
-      const baseline = this.playerBaselines.get(player.id);
-      const elapsed = baseline === undefined ? 0 : (now - baseline.clientStartTime) / 1000;
-      const x0 = baseline?.x0 ?? player.x;
-      const y0 = baseline?.y0 ?? player.y;
-      const vx = baseline?.vx ?? player.vx;
-      const vy = baseline?.vy ?? player.vy;
-
-      return {
-        appearance: player.appearance,
-        facingRight: reflectDirection(x0, vx, elapsed, zone.minX, zone.maxX) > 0,
-        hasShield: player.effects.some(
-          (effect) => effect.kind === 'shield' && effect.expiresAt > wallNow,
-        ),
-        id: player.id,
-        isDisconnected: player.status === 'disconnected',
-        isEvolving: evolving.has(player.id),
-        isMe: player.id === me,
-        isSad: isSad(player.mass, player.stage),
-        label: player.name,
-        mass: player.mass,
-        spriteHeight: spriteHeightFor(player.stage),
-        stage: player.stage,
-        x: reflect(x0, vx, elapsed, zone.minX, zone.maxX),
-        y: reflect(y0, vy, elapsed, zone.minY, zone.maxY),
-      };
-    });
-  }
-
-  private computeItems(items: readonly Item[], now: number): RenderedItem[] {
-    return items.map((item) => {
-      const baseline = this.itemBaselines.get(item.id);
-      const x = baseline?.x ?? item.x;
-      const y0 = baseline?.y0 ?? item.y;
-      const vy = baseline?.vy ?? item.vy;
-      const elapsed = baseline === undefined ? 0 : (now - baseline.clientStartTime) / 1000;
-      const y = Math.min(1, y0 + vy * elapsed);
-      const spin = spinFor(item.id);
-
-      return {
-        id: item.id,
-        type: item.type,
-        x,
-        y,
-        // Reached the floor (rendered or server-rested) → freeze the tumble.
-        landed: y >= 1 || item.restMs !== undefined,
-        spinDurationMs: spin.durationMs,
-        spinReverse: spin.reverse,
-      };
-    });
+    return { x: deltaX / magnitude, y: deltaY / magnitude };
   }
 }

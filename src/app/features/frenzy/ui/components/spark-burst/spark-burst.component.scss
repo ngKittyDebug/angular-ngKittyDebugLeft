@@ -1,0 +1,131 @@
+/* =============================================================================
+   Spark burst — one-shot cartoon "bonk" stars over a rock/brick-struck Pokémon.
+   The parent (.scene__player-spark) anchors the host above the head; here the
+   origin is the host's top-left (0×0 box), and shards radiate from it.
+   ========================================================================== */
+
+:host {
+  display: block;
+  pointer-events: none;
+}
+
+.spark-burst {
+  position: relative;
+  display: block;
+
+  // Central pop — a warm flash where the rock hit, fading fast.
+  &__flash {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 20px;
+    height: 20px;
+    translate: -50% -50%;
+    border-radius: 50%;
+    background: radial-gradient(
+      circle,
+      rgba(255, 255, 220, 0.95),
+      rgba(255, 206, 84, 0.55) 50%,
+      rgba(255, 206, 84, 0) 72%
+    );
+    // Dark blurred halo so the warm flash reads against the light theme's pale water (drop-shadow follows the
+    // gradient's alpha, outlining the actual glow shape rather than its bounding box).
+    filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.55));
+    opacity: 0;
+    animation: spark-flash 0.45s ease-out forwards;
+  }
+
+  // Gold shard pointing down from the origin; `--angle` rotates it into one of eight directions and the keyframe
+  // shoots it outward along that direction, then fades. transform-origin sits on the burst origin (top-centre).
+  &__shard {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 13px;
+    margin-left: -1.5px;
+    border-radius: 2px;
+    transform-origin: 50% 0;
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 255, 220, 0.95),
+      rgba(255, 206, 84, 0.95) 55%,
+      rgba(255, 150, 40, 0) 100%
+    );
+    // Same dark halo on each shard — keeps the gold "bonk" star crisp over the light theme.
+    filter: drop-shadow(0 0 1.5px rgba(0, 0, 0, 0.6));
+    opacity: 0;
+    animation: spark-shoot 0.8s ease-out forwards;
+
+    &:nth-child(2) {
+      --angle: 0deg;
+    }
+    &:nth-child(3) {
+      --angle: 45deg;
+      height: 16px;
+      animation-delay: 0.02s;
+    }
+    &:nth-child(4) {
+      --angle: 90deg;
+      height: 11px;
+    }
+    &:nth-child(5) {
+      --angle: 135deg;
+      height: 15px;
+      animation-delay: 0.03s;
+    }
+    &:nth-child(6) {
+      --angle: 180deg;
+      height: 12px;
+    }
+    &:nth-child(7) {
+      --angle: 225deg;
+      height: 16px;
+      animation-delay: 0.02s;
+    }
+    &:nth-child(8) {
+      --angle: 270deg;
+      height: 11px;
+    }
+    &:nth-child(9) {
+      --angle: 315deg;
+      height: 15px;
+      animation-delay: 0.03s;
+    }
+  }
+}
+
+@keyframes spark-shoot {
+  0% {
+    transform: rotate(var(--angle, 0deg)) translateY(2px) scaleY(0.4);
+    opacity: 0;
+  }
+  18% {
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(var(--angle, 0deg)) translateY(22px) scaleY(1);
+    opacity: 0;
+  }
+}
+
+@keyframes spark-flash {
+  0% {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.3);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spark-burst__flash,
+  .spark-burst__shard {
+    animation: none;
+  }
+}

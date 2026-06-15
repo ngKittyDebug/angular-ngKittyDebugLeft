@@ -5,40 +5,89 @@
   [class.current-pokemon-status--compact]="compact()"
   [attr.aria-label]="t('ariaLabel')"
 >
-  <header class="current-pokemon-status__header">
-    @if (!compact()) {
-      <span class="current-pokemon-status__label">{{ t('label') }}</span>
+  <!-- HP as a rounded corner badge (tinted by HP tone — green → amber → red, like the bar). Pulled out of the
+       foot row so a 3-digit value can never overflow the fixed-width card; pinned to the top-left corner. -->
+  <span
+    class="current-pokemon-status__hp-badge"
+    [style.background]="hp() | hpToneColor"
+    [leftPawHpFlash]="hp()"
+  >
+    <span class="current-pokemon-status__hp-value">{{ hp() }}</span>
+    <span class="current-pokemon-status__hp-unit">{{ t('hpLabel') }}</span>
+  </span>
+
+  <!-- Evolution stage as the mirror of the HP badge: same chip metrics + font (shared rule), pinned top-right. -->
+  <span class="current-pokemon-status__stage-badge">{{ t('stageBadge', { stage: stage() }) }}</span>
+
+  <span
+    tuiAvatar
+    size="m"
+    class="current-pokemon-status__avatar"
+    [attr.aria-label]="t(faceLabelKey())"
+  >
+    <img [src]="moodSprite()" alt="" draggable="false" />
+  </span>
+
+  <div class="current-pokemon-status__body">
+    @if (buffChips().length) {
+      <!-- Active buff/debuff mirror of the over-head sprite badges: a chip row above the panel content. Hidden when
+           no effects are active. Icon + tone come from the shared EFFECT_BADGE registry; label from frenzy.effects. -->
+      <div
+        class="current-pokemon-status__buffs"
+        *transloco="let tEffects; prefix: 'frenzy.effects'"
+      >
+        @for (chip of buffChips(); track chip.kind) {
+          <span
+            class="current-pokemon-status__buff"
+            [class.current-pokemon-status__buff--warning]="chip.tone === 'warning'"
+            role="img"
+            [attr.aria-label]="tEffects(chip.kind)"
+            [attr.title]="tEffects(chip.kind)"
+          >
+            <tui-icon [icon]="chip.icon" />
+          </span>
+        }
+      </div>
     }
-    <span class="current-pokemon-status__value">{{ mass() }}</span>
-    @if (compact()) {
-      <!-- Mobile: the mood sits inline in the header (no dedicated bottom row) to keep the card short. -->
-      <tui-icon
-        class="current-pokemon-status__mood-icon"
-        [icon]="moodVisual().icon"
-        [style.color]="moodVisual().color"
-        [attr.aria-label]="t('mood.' + mood())"
-      />
+
+    <div class="current-pokemon-status__head">
+      <span class="current-pokemon-status__name">{{ name() }}</span>
+    </div>
+
+    <div class="current-pokemon-status__bar-wrap">
+      <!-- Stage zones: three tinted bands behind the fill, split at the two evolution gates so the whole HP
+           journey reads at a glance (base → stage-2 → stage-3). Decorative, sits under the bar. -->
+      <span
+        class="current-pokemon-status__zones"
+        aria-hidden="true"
+        [style.background]="zonesBackground()"
+      ></span>
+      <progress
+        tuiProgressBar
+        class="current-pokemon-status__bar"
+        size="s"
+        [value]="hp()"
+        [max]="maxHp"
+        [color]="hp() | hpToneColor"
+      ></progress>
+      <!-- Evolution markers: a notch on the absolute 0→max bar at EACH evolution threshold; a passed gate reads
+           muted, the upcoming one bright. Both stay visible on the final stage (the foot line is what drops). -->
+      @for (mark of stageMarks(); track $index) {
+        <span
+          class="current-pokemon-status__tick"
+          aria-hidden="true"
+          [class.current-pokemon-status__tick--reached]="mark.reached"
+          [style.left.%]="mark.percent"
+        ></span>
+      }
+    </div>
+
+    @if (untilEvolution() !== null) {
+      <div class="current-pokemon-status__foot">
+        <span class="current-pokemon-status__until">
+          {{ t('untilEvolution', { value: untilEvolution() }) }}
+        </span>
+      </div>
     }
-    <span class="current-pokemon-status__stage" [attr.aria-label]="t('stage', { stage: stage() })">
-      {{ stage() | stageRoman }}
-    </span>
-  </header>
-  <progress
-    tuiProgressBar
-    class="current-pokemon-status__bar"
-    size="s"
-    [value]="mass()"
-    [max]="max"
-    [color]="mass() | massToneColor"
-  ></progress>
-  @if (!compact()) {
-    <p class="current-pokemon-status__mood" [attr.aria-label]="t('mood.' + mood())">
-      <tui-icon
-        class="current-pokemon-status__mood-icon"
-        [icon]="moodVisual().icon"
-        [style.color]="moodVisual().color"
-      />
-      <span class="current-pokemon-status__mood-label">{{ t('mood.' + mood()) }}</span>
-    </p>
-  }
+  </div>
 </section>

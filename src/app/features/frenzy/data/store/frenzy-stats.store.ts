@@ -10,7 +10,7 @@ import {
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { tap } from 'rxjs';
 
-import { GAME } from '@game/frenzy/constants';
+import { FRENZY } from '@game/frenzy/config';
 import type { ItemType, ServerMessage, Stage } from '@game/frenzy/types';
 
 import { FrenzyStore } from './frenzy.store';
@@ -21,30 +21,35 @@ type EatenCounts = Record<ItemType, number>;
 interface FrenzyStatsState {
   eatenByType: EatenCounts;
   endedAt: number | null;
-  maxMass: number;
+  maxHp: number;
   maxStage: Stage;
   startedAt: number | null;
 }
 
-// `bomb` and `vitamin` are never "eaten" (bomb explodes; vitamin grants an effect), so their counts stay 0 and the fainted breakdown skips them.
+// `bomb`, `vitamin`, `shield`, `easterEgg` and `poop` are never "eaten" (bomb explodes; the others grant effects),
+// so their counts stay 0 and the fainted breakdown skips them.
 function emptyCounts(): EatenCounts {
   return {
     food: 0,
     rotten: 0,
     rock: 0,
+    brick: 0,
     rareCandy: 0,
     bomb: 0,
     goldenBerry: 0,
     crumb: 0,
     mushroom: 0,
     vitamin: 0,
+    shield: 0,
+    easterEgg: 0,
+    poop: 0,
   };
 }
 
 const initialState: FrenzyStatsState = {
   eatenByType: emptyCounts(),
   endedAt: null,
-  maxMass: 0,
+  maxHp: 0,
   maxStage: 1,
   startedAt: null,
 };
@@ -57,7 +62,7 @@ function accumulate(current: FrenzyStatsState, message: ServerMessage): Partial<
           ...current.eatenByType,
           [message.itemType]: current.eatenByType[message.itemType] + 1,
         },
-        maxMass: Math.max(current.maxMass, message.newMass),
+        maxHp: Math.max(current.maxHp, message.newHp),
       };
     }
 
@@ -107,7 +112,7 @@ export const FrenzyStatsStore = signalStore(
       patchState(store, {
         eatenByType: emptyCounts(),
         endedAt: null,
-        maxMass: GAME.startingMass,
+        maxHp: FRENZY.startingHp,
         maxStage: 1,
         startedAt: Date.now(),
       });

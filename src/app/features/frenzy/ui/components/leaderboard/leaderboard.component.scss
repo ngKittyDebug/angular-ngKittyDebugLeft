@@ -1,20 +1,100 @@
 @use 'utility/hud-pill' as *;
 
-.leaderboard {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  width: 18rem;
-  padding: 0.6rem 0.8rem 0.7rem;
+// Shared opaque glass for the collapsed pill and the open panel — same chrome as the legend/minimap so the HUD
+// widgets read consistently.
+%leaderboard-surface {
   border-radius: 0.6rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
 
   @include hud_pill;
+}
 
+.leaderboard {
+  // HUD widget over the scene: re-enable pointer events the parent column switches off.
+  pointer-events: auto;
+  user-select: none;
+
+  &__pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    // Pin to the shared HUD-widget width so it lines up with the sound toggle and legend pill (aligned edges).
+    width: var(--frenzy-hud-widget, 12rem);
+    padding: 0.45rem 0.7rem;
+    border: none;
+    color: var(--tui-text-primary);
+    font: inherit;
+    cursor: pointer;
+
+    @extend %leaderboard-surface;
+
+    &:focus-visible {
+      outline: 2px solid var(--tui-status-positive);
+      outline-offset: 2px;
+    }
+  }
+
+  // Champion shown in the collapsed pill: name (ellipsised) + HP chip, so the header still names the leader.
+  // `flex: 0 1 auto` + `min-width: 0` lets a long name shrink and ellipsise within the fixed-width pill rather
+  // than push the HP chip past its right edge.
+  &__pill-name {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 8rem;
+    overflow: hidden;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    &--me {
+      color: var(--tui-status-positive);
+    }
+  }
+
+  &__pill-hp {
+    flex: 0 0 auto;
+    // Push the HP chip to the pill's right edge so the champion line reads like a mini scoreboard (name left, HP right).
+    margin-inline-start: auto;
+    padding: 0.05rem 0.45rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--tui-status-positive) 18%, transparent);
+    color: var(--tui-status-positive);
+    font-size: 0.8rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__panel {
+    display: flex;
+    flex-direction: column;
+    width: 18rem;
+    max-height: 60vh;
+    overflow: hidden;
+
+    @extend %leaderboard-surface;
+  }
+
+  // The whole header is the collapse button.
   &__header {
     display: flex;
     align-items: center;
     gap: 0.45rem;
+    width: 100%;
+    padding: 0.45rem 0.6rem;
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+
+    @include hud_pill;
+
+    border: none;
+    border-bottom: 1px solid var(--tui-border-normal);
+
+    &:focus-visible {
+      outline: 2px solid var(--tui-status-positive);
+      outline-offset: -2px;
+    }
   }
 
   &__crown {
@@ -32,19 +112,21 @@
     color: var(--tui-text-primary);
   }
 
-  &__empty {
-    margin: 0.2rem 0 0;
-    font-size: 0.8rem;
+  &__header-icon {
+    margin-inline-start: auto;
+    block-size: 1rem;
+    inline-size: 1rem;
     color: var(--tui-text-secondary);
   }
 
   &__list {
     margin: 0;
-    padding: 0;
+    padding: 0.5rem 0.6rem 0.6rem;
     list-style: none;
     display: flex;
     flex-direction: column;
     gap: 0.3rem;
+    overflow-y: auto;
   }
 
   &__row {
@@ -127,47 +209,8 @@
     color: var(--tui-status-warning);
   }
 
-  &__mass {
+  &__hp {
     font-weight: 700;
-    font-variant-numeric: tabular-nums;
-    color: var(--tui-status-positive);
-  }
-
-  &__pill {
-    display: inline-flex;
-    gap: 0.4rem;
-    align-items: center;
-    padding: 0.4rem 0.7rem;
-    border-radius: 999px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    line-height: 1;
-
-    @include hud_pill;
-  }
-
-  // Name and mass share a baseline so the champion line reads evenly (the crown and avatar
-  // stay vertically centred against the taller pill via the parent's `align-items: center`).
-  &__pill-stats {
-    display: inline-flex;
-    gap: 0.4rem;
-    align-items: baseline;
-    min-width: 0;
-  }
-
-  &__pill-name {
-    max-width: 7rem;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-
-    &--me {
-      color: var(--tui-status-positive);
-    }
-  }
-
-  &__pill-mass {
-    flex: 0 0 auto;
     font-variant-numeric: tabular-nums;
     color: var(--tui-status-positive);
   }

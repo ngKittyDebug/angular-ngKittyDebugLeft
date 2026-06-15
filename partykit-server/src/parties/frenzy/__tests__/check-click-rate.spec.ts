@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { GAME } from '@game/frenzy/constants';
-import { checkClickRate } from '../engine/check-click-rate';
+import { FRENZY } from '@game/frenzy/config';
+import { checkClickRate } from '../check-click-rate';
 
-const WINDOW = GAME.clickRateLimitWindowMs;
-const MAX = GAME.clickRateLimitMax;
+const WINDOW = FRENZY.clickRateLimitWindowMs;
+const MAX = FRENZY.clickRateLimitMax;
 
 describe('checkClickRate', () => {
   it('allows the first click on an empty history', () => {

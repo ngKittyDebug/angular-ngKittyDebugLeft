@@ -1,0 +1,5 @@
+// Host carries no box of its own: `display: contents` lets the debug boxes/pills inside position absolutely
+// against `.scene__world` (the nearest positioned ancestor) exactly as they did when inlined in the scene.
+:host {
+  display: contents;
+}

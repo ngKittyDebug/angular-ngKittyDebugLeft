@@ -4,17 +4,21 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Player, ServerMessage, ServerState } from '@game/frenzy/types';
 
+import { bodyForAppearance } from '../../../ui/constants/pokemon-registry';
 import { FrenzyStore } from '../../store/frenzy.store';
 import { FloatingMessagesStore } from './floating-messages.store';
 import { PresenceTracker } from './presence-tracker.service';
 
 function player(id: string, name: string, x = 0.5, y = 0.5): Player {
   return {
+    kind: 'human',
     id,
     name,
     appearance: 'pidgey',
+    body: bodyForAppearance('pidgey'),
     stage: 1,
-    mass: 100,
+    hp: 100,
+    mana: 0,
     x,
     y,
     vx: 0,
@@ -23,11 +27,36 @@ function player(id: string, name: string, x = 0.5, y = 0.5): Player {
     disconnectedAt: null,
     joinedAt: 0,
     effects: [],
+    scores: {},
   };
 }
 
 function snapshot(players: Player[]): ServerMessage {
   return { type: 'snapshot', state: { players, items: [], tick: 0 } };
+}
+
+function slimSnapshot(players: Player[]): ServerMessage {
+  return {
+    type: 'slimSnapshot',
+    state: {
+      players: players.map((full) => ({
+        id: full.id,
+        stage: full.stage,
+        hp: full.hp,
+        mana: full.mana,
+        x: full.x,
+        y: full.y,
+        vx: full.vx,
+        vy: full.vy,
+        status: full.status,
+        disconnectedAt: full.disconnectedAt,
+        effects: full.effects,
+        scores: full.scores,
+      })),
+      items: [],
+      tick: 1,
+    },
+  };
 }
 
 describe('PresenceTracker', () => {
@@ -84,6 +113,28 @@ describe('PresenceTracker', () => {
     expect(died.who).toBe('Ash');
     expect(died.x).toBe(0.4);
     expect(died.y).toBe(0.6);
+  });
+
+  it('refreshes the last-known position from slim snapshots, so the death quip lands where the player was', () => {
+    tracker.handle(snapshot([player('other', 'Ash', 0.4, 0.6)]));
+    // The player drifts between roster changes — only slim snapshots arrive, carrying the fresh position.
+    tracker.handle(slimSnapshot([player('other', 'Ash', 0.8, 0.3)]));
+    tracker.handle({ type: 'fainted', playerId: 'other' });
+
+    const messages = floats.orphanMessages();
+    const died = messages[messages.length - 1];
+
+    expect(died.textKey).toContain('statusMessage.died');
+    expect(died.who).toBe('Ash'); // the name survives from the full snapshot — slim carries none
+    expect(died.x).toBe(0.8);
+    expect(died.y).toBe(0.3);
+  });
+
+  it('does not announce a slim-only id (the announcing full snapshot owns the appeared quip)', () => {
+    tracker.handle(snapshot([player('me', 'Me')]));
+    tracker.handle(slimSnapshot([player('me', 'Me'), player('ghost', 'Ghost')]));
+
+    expect(floats.ownedMessages()).toHaveLength(0);
   });
 
   it('stays silent when my own Pokémon faints', () => {

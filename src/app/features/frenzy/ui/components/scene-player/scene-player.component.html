@@ -1,0 +1,106 @@
+<ng-container *transloco="let t; prefix: 'frenzy.scene'">
+  <!-- Grounding contact shadow under EVERY sprite (own/others/NPC), behind it (z-index -1), riding the drift.
+       Neutral theme-flipped base; the dominant-effect modifier class (null = none) recolours + breathes it. -->
+  <span class="scene__shadow" [class]="player().shadowEffectClass" aria-hidden="true"></span>
+
+  @for (aura of player().effectAuras; track aura.className) {
+    @switch (aura.render) {
+      @case ('shield') {
+        <!-- shield ward: the glassy bubble + a one-shot ward-flash when a hit is deflected. -->
+        <span
+          [class]="aura.className"
+          [class.scene__shield--pulse]="shieldBlocks().length > 0"
+          leftPawBubbleSkin
+          aria-hidden="true"
+        ></span>
+      }
+      @case ('bubble') {
+        <!-- single-tint pulsing soap bubble (e.g. pooping → brown); tint comes from the class's CSS var. -->
+        <span [class]="aura.className" leftPawBubbleSkin aria-hidden="true"></span>
+      }
+      @case ('bespoke') {
+        <!-- iridescent rainbow egg bubble — styled wholly in SCSS, no single-tint directive. -->
+        <span [class]="aura.className" aria-hidden="true"></span>
+      }
+    }
+  }
+
+  @if (player().effectBadges.length) {
+    <!-- Active buff/debuff badges, top-left over the sprite. Decorative overlay (pointer-events: none) so it never
+         intercepts the poke; each icon carries its own aria-label from the frenzy.effects namespace. -->
+    <span class="scene__badges" *transloco="let tEffects; prefix: 'frenzy.effects'">
+      @for (badge of player().effectBadges; track badge.kind) {
+        <tui-icon
+          class="scene__effect-badge"
+          [class.scene__effect-badge--warning]="badge.tone === 'warning'"
+          [icon]="badge.icon"
+          role="img"
+          [attr.aria-label]="tEffects(badge.kind)"
+        />
+      }
+    </span>
+  }
+
+  @if (isLeader()) {
+    <tui-icon class="scene__crown" icon="@tui.crown" aria-hidden="true" />
+  }
+
+  @if (player().isMe) {
+    <button
+      class="scene__poke"
+      type="button"
+      [attr.aria-label]="t('pokeAriaLabel')"
+      (click)="poke.emit()"
+    >
+      <ng-container [ngTemplateOutlet]="sprite" />
+    </button>
+  } @else if (player().isNpc) {
+    <button
+      class="scene__poke scene__poke-npc"
+      type="button"
+      [attr.aria-label]="t('pokeNpcAriaLabel')"
+      (click)="pokeNpc.emit(player().id)"
+    >
+      <ng-container [ngTemplateOutlet]="sprite" />
+    </button>
+  } @else {
+    <ng-container [ngTemplateOutlet]="sprite" />
+  }
+
+  @if (!player().isNpc) {
+    <span class="scene__label">{{ player().label }}</span>
+  }
+
+  <!-- Overhead hp nameplate for EVERY player (including my own sprite): a horizontal bar above the head, under the
+       crown. The name stays below the sprite (see `.scene__label`). -->
+  <progress
+    tuiProgressBar
+    class="scene__hp-bar"
+    size="xs"
+    [value]="player().hp"
+    [max]="maxHp()"
+    [color]="player().hp | hpToneColor"
+  ></progress>
+
+  @for (spark of sparks(); track spark.id) {
+    <left-paw-spark-burst class="scene__player-spark" />
+  }
+</ng-container>
+
+<ng-template #sprite>
+  <span class="scene__sprite-flip" [class.scene__sprite-flip--right]="player().facingRight">
+    <!-- Centring offset: shifts the full art so the body (hitbox) sits on the actor point. Inside the flip wrapper
+         so the horizontal offset mirrors with facing; separate from the img's own evolve-pulse transform. -->
+    <span class="scene__sprite-offset">
+      <img
+        class="scene__sprite"
+        [class.scene__sprite--npc]="player().isNpc"
+        [class.scene__sprite--evolving]="player().isEvolving"
+        [class.scene__sprite--sad]="player().isSad"
+        [src]="player().appearance | pokemonSprite: player().stage"
+        [alt]="player().isNpc ? '' : player().label"
+        draggable="false"
+      />
+    </span>
+  </span>
+</ng-template>

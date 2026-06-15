@@ -5,19 +5,24 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ItemType, Player, ServerMessage, ServerState } from '@game/frenzy/types';
 
 import { BadEatSoundService } from '../sound/bad-eat-sound.service';
+import { BrickSoundService } from '../sound/brick-sound.service';
 import { EatSoundService } from '../sound/eat-sound.service';
 import { RockSoundService } from '../sound/rock-sound.service';
+import { bodyForAppearance } from '../../../ui/constants/pokemon-registry';
 import { FrenzyStore } from '../../store/frenzy.store';
 import { EatEffect } from './eat-effect.service';
 import { FloatingMessagesStore } from './floating-messages.store';
 
 function player(id: string, name: string): Player {
   return {
+    kind: 'human',
     id,
     name,
     appearance: 'pidgey',
+    body: bodyForAppearance('pidgey'),
     stage: 1,
-    mass: 100,
+    hp: 100,
+    mana: 0,
     x: 0.5,
     y: 0.5,
     vx: 0,
@@ -26,6 +31,16 @@ function player(id: string, name: string): Player {
     disconnectedAt: null,
     joinedAt: 0,
     effects: [],
+    scores: {},
+  };
+}
+
+function npcPlayer(id: string): Player {
+  return {
+    ...player(id, 'angryBomb'),
+    kind: 'npc',
+    npcKind: 'angryBomb',
+    appearance: 'angryBomb',
   };
 }
 
@@ -35,10 +50,11 @@ function eaten(partial: Partial<Extract<ServerMessage, { type: 'eaten' }>> = {})
     itemId: 'i1',
     itemType: 'food',
     playerId: 'me',
-    newMass: 110,
+    newHp: 110,
     delta: 10,
     x: 0.9,
     y: 0.8,
+    via: 'click',
     ...partial,
   };
 }
@@ -49,15 +65,17 @@ describe('EatEffect', () => {
   let eatSound: { play: ReturnType<typeof vi.fn> };
   let badEatSound: { play: ReturnType<typeof vi.fn> };
   let rockSound: { play: ReturnType<typeof vi.fn> };
+  let brickSound: { play: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
     vi.useFakeTimers();
     eatSound = { play: vi.fn() };
     badEatSound = { play: vi.fn() };
     rockSound = { play: vi.fn() };
+    brickSound = { play: vi.fn() };
 
     const state = signal<ServerState | null>({
-      players: [player('other', 'Ash')],
+      players: [player('other', 'Ash'), npcPlayer('npc-1')],
       items: [],
       tick: 0,
     });
@@ -69,6 +87,7 @@ describe('EatEffect', () => {
         { provide: EatSoundService, useValue: eatSound },
         { provide: BadEatSoundService, useValue: badEatSound },
         { provide: RockSoundService, useValue: rockSound },
+        { provide: BrickSoundService, useValue: brickSound },
         { provide: FrenzyStore, useValue: { myId: signal('me'), state } },
       ],
     });
@@ -106,6 +125,14 @@ describe('EatEffect', () => {
     expect(eatSound.play).not.toHaveBeenCalled();
   });
 
+  it('plays the brick thunk for a brick regardless of delta', () => {
+    effect.handle(eaten({ itemType: 'brick' as ItemType, delta: 0 }));
+
+    expect(brickSound.play).toHaveBeenCalledOnce();
+    expect(rockSound.play).not.toHaveBeenCalled();
+    expect(eatSound.play).not.toHaveBeenCalled();
+  });
+
   it('plays the bad-eat sound and uses a negative tone for a harmful eat', () => {
     effect.handle(eaten({ itemType: 'rotten', delta: -15 }));
 
@@ -118,5 +145,12 @@ describe('EatEffect', () => {
 
     expect(last().who).toBe('Ash');
     expect(eatSound.play).not.toHaveBeenCalled();
+  });
+
+  it('omits the name on the NPC eater float (its name is the internal appearance id)', () => {
+    effect.handle(eaten({ playerId: 'npc-1' }));
+
+    expect(last().ownerId).toBe('npc-1');
+    expect(last().who).toBeUndefined();
   });
 });

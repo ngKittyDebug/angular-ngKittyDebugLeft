@@ -1,0 +1,66 @@
+@if (flags().pokemonBorders || flags().speed) {
+  @for (player of players(); track player.id) {
+    @if (flags().pokemonBorders) {
+      <!-- Yellow = full art box (render size), shifted by the same centring offset as the sprite. -->
+      <left-paw-debug-box
+        variant="art"
+        [leftPawScenePosition]="{ x: player.x, y: player.y }"
+        [scenePositionTransform]="true"
+        [width]="player.spriteWidth"
+        [height]="player.spriteHeight"
+        [offsetX]="-player.spriteOffsetX + 'px'"
+        [offsetY]="-player.spriteOffsetY + 'px'"
+      />
+      <!-- Green = body hitbox (what the server collides), centred on the actor point. -->
+      <left-paw-debug-box
+        variant="body"
+        [leftPawScenePosition]="{ x: player.x, y: player.y }"
+        [scenePositionTransform]="true"
+        [width]="player.hitboxWidth"
+        [height]="player.hitboxHeight"
+      />
+    }
+    @if (flags().speed) {
+      <!-- Readout pill sitting flush on the art box top, left-aligned to the sprite — current drift speed. -->
+      <left-paw-debug-readout
+        [leftPawScenePosition]="{ x: player.x, y: player.y }"
+        [scenePositionTransform]="true"
+        [style.--debug-readout-offset-x]="player.debugReadoutOffsetX"
+        [style.--debug-readout-offset-y]="player.debugReadoutOffsetY"
+        label="v"
+        [value]="player.debugSpeed"
+      />
+    }
+  }
+}
+
+@if (flags().itemBorders) {
+  @for (item of items(); track item.id) {
+    <!-- The bomb's box is its larger sensor-horn reach (the real detonation contact), others use the item size. -->
+    <left-paw-debug-box
+      variant="item"
+      [leftPawScenePosition]="{ x: item.x, y: item.y }"
+      [scenePositionTransform]="true"
+      [width]="item.type === 'bomb' ? bombSize() : itemSize()"
+      [height]="item.type === 'bomb' ? bombSize() : itemSize()"
+    />
+  }
+}
+
+@if (flags().speed) {
+  @for (item of items(); track item.id) {
+    <!-- Drift-speed readout for physics items that carry one (the bomb), sitting flush on the box top, left-aligned
+         to it — same as the per-Pokémon pills. The box is centred on the point, so its top-left corner is at
+         (-itemSize/2, -itemSize/2); the readout's own translateY(-100%) lifts the pill onto the top edge. -->
+    @if (item.debugSpeed; as speed) {
+      <left-paw-debug-readout
+        [leftPawScenePosition]="{ x: item.x, y: item.y }"
+        [scenePositionTransform]="true"
+        [style.--debug-readout-offset-x]="'calc(' + itemSize() + ' * -0.5)'"
+        [style.--debug-readout-offset-y]="'calc(' + itemSize() + ' * -0.5)'"
+        label="v"
+        [value]="speed"
+      />
+    }
+  }
+}

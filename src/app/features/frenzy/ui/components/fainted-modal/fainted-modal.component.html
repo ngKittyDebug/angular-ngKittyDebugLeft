@@ -1,5 +1,5 @@
 <section *transloco="let t; prefix: 'frenzy.faintedModal'" class="fainted-modal" role="dialog">
-  <h2 class="fainted-modal__title">{{ t('title') }}</h2>
+  <h2 class="fainted-modal__title">{{ t(epitaph().textKey, epitaph().params) }}</h2>
 
   <dl class="fainted-modal__stats">
     <div class="fainted-modal__stat">
@@ -9,8 +9,8 @@
       </dd>
     </div>
     <div class="fainted-modal__stat">
-      <dt class="fainted-modal__stat-label">{{ t('maxMass') }}</dt>
-      <dd class="fainted-modal__stat-value">{{ stats().maxMass }}</dd>
+      <dt class="fainted-modal__stat-label">{{ t('maxHp') }}</dt>
+      <dd class="fainted-modal__stat-value">{{ stats().maxHp }}</dd>
     </div>
     <div class="fainted-modal__stat">
       <dt class="fainted-modal__stat-label">{{ t('maxStage') }}</dt>

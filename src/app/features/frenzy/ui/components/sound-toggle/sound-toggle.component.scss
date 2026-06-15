@@ -11,12 +11,29 @@
 
   @include hud_pill;
 
+  // Desktop: pin to the shared HUD-widget width so the sound toggle, legend pill and leaderboard pill line up.
+  // The slider absorbs the slack; on mobile the pill stays content-sized.
+  &:not(&--compact) {
+    inline-size: var(--frenzy-hud-widget, 12rem);
+    justify-content: space-between;
+  }
+
+  // Mobile: fixed height shared with the legend pill (via the column's --frenzy-hud-row-h) so the two right-hand
+  // widgets are equal and their stack lines up with the status card. Trim the block padding so the switch fits.
+  &--compact {
+    box-sizing: border-box;
+    block-size: var(--frenzy-hud-row-h, 1.9rem);
+    padding-block: 0;
+  }
+
   &__icon {
     block-size: 1rem;
     inline-size: 1rem;
   }
 
+  // The slider only renders on desktop (hidden when compact or muted); it flexes to fill the fixed-width pill.
   &__slider {
-    inline-size: 5rem;
+    flex: 1;
+    min-inline-size: 4rem;
   }
 }
