@@ -24,6 +24,10 @@ export const PLAYER_COLLISION = {
   /** Closing speed along the contact normal (normalized units/sec) above which a contact counts as a deliberate
    * ram — below it, contacts separate silently. Sized above cruise drift so lazy bumping never deals damage. */
   bumpSpeedThreshold: 0.05,
+  /** Lowered gate for a contact whose rammer has a `contactRam` aura (cactus): a fifth of the ram threshold, so
+   * even a lazy touch pricks — yet a resting contact (closing speed damped to ~0) stays below it, keeping the
+   * "no repeat damage while just leaning together" property the ram threshold gives for free. */
+  scratchSpeedThreshold: 0.01,
   /** Hp removed from each player on a qualifying ram (negative). Light — collisions jostle, they don't kill. */
   bumpDamage: -5,
   /** Base extra knockback along the normal on a ram (normalized units/sec), split by inverse mass (the heavier

@@ -62,6 +62,18 @@ export interface EmissionSpec {
 }
 
 /**
+ * A contact-hazard aura's collision damage (`EffectDefinition.modifiers.contactRam`), split by contact force. Both
+ * are negative hp deltas that REPLACE the generic `PlayerCollisionSpec.bumpDamage` for this holder's outgoing hits.
+ */
+export interface ContactRamSpec {
+  /** Hp removed when the holder rams hard (closing speed at/above `bumpSpeedThreshold`). */
+  ramDamage: number;
+  /** Hp removed when the holder merely scratches — a gentle contact below `bumpSpeedThreshold`, reachable only
+   * because this aura lowers the gate to `scratchSpeedThreshold`. Lighter than `ramDamage`. */
+  scratchDamage: number;
+}
+
+/**
  * What a timed effect DOES, as data. An effect with no fields is a pure marker. The engine consumes the
  * modifiers in its passes (decay step, hp-delta resolution, bump damage), `emission` in the emissions pass and
  * `exclusiveGroup` when granting (a new effect replaces any active effect sharing its group).
@@ -80,6 +92,12 @@ export interface EffectDefinition {
     damageTaken?: Partial<Record<DamageSource, number>>;
     /** Outgoing-damage multiplier per source the holder DEALS (e.g. a barbed-wire aura: `{ bump: 2 }`). */
     damageDealt?: Partial<Record<DamageSource, number>>;
+    /** A contact hazard (a spiky aura, e.g. cactus): contacts where THIS body is the rammer register as a hit at
+     * the lowered `scratchSpeedThreshold`, so it pricks on the gentlest touch, not just a hard ram — and it deals
+     * its OWN damage (overriding the generic `bumpDamage`), split by contact force (`ramDamage` vs `scratchDamage`).
+     * The lowered bar applies only to the damage this body DEALS — the other side keeps the normal threshold, so
+     * brushing a cactus chips the toucher, not the holder. */
+    contactRam?: ContactRamSpec;
   };
   emission?: EmissionSpec;
   exclusiveGroup?: string;
@@ -185,6 +203,10 @@ export interface PlayerCollisionSpec {
   restitution: number;
   maxCorrectionPx: number;
   bumpSpeedThreshold: number;
+  /** Lowered closing-speed gate (normalized units/sec) used in place of `bumpSpeedThreshold` for a contact whose
+   * rammer carries a `contactRam` effect (cactus): a gentle touch now pricks, while a resting contact (closing
+   * speed damped to ~0) stays below it, so sustained overlap never tick-drains hp. */
+  scratchSpeedThreshold: number;
   bumpDamage: number;
   bumpImpulse: number;
   bumpImpulseScale: number;

@@ -50,21 +50,45 @@ describe('applyBumpDamage', () => {
     const a = makePlayer({ id: 'a' });
     const b = makePlayer({ id: 'b' });
     const bumps: BumpDamage[] = [
-      { playerId: 'a', killerId: 'b' },
-      { playerId: 'b', killerId: 'a' },
+      { playerId: 'a', killerId: 'b', scratch: false },
+      { playerId: 'b', killerId: 'a', scratch: false },
     ];
     const result = applyBumpDamage(FRENZY_DEFINITION, stateWith([a, b]), bumps);
 
     expect(result.state.players.find((player) => player.id === 'a')?.hp).toBe(100 + BUMP_DAMAGE);
     expect(result.state.players.find((player) => player.id === 'b')?.hp).toBe(100 + BUMP_DAMAGE);
-    expect(result.events).toContainEqual({ type: 'bumped', playerId: 'a' });
-    expect(result.events).toContainEqual({ type: 'bumped', playerId: 'b' });
+    expect(result.events).toContainEqual({ type: 'bumped', playerId: 'a', amount: BUMP_DAMAGE });
+    expect(result.events).toContainEqual({ type: 'bumped', playerId: 'b', amount: BUMP_DAMAGE });
+  });
+
+  it('lets a cactus rammer deal its ramDamage on a hard ram, overriding the generic bump', () => {
+    const victim = makePlayer({ id: 'victim' });
+    const cactus = makePlayer({ id: 'cactus', effects: [{ kind: 'cactus', expiresAt: 10_000 }] });
+    const result = applyBumpDamage(FRENZY_DEFINITION, stateWith([victim, cactus]), [
+      { playerId: 'victim', killerId: 'cactus', scratch: false },
+    ]);
+
+    // Cactus ram = -12 (its contactRam.ramDamage), not the generic -5.
+    expect(result.state.players.find((player) => player.id === 'victim')?.hp).toBe(100 - 12);
+    expect(result.events).toContainEqual({ type: 'bumped', playerId: 'victim', amount: -12 });
+  });
+
+  it('lets a cactus rammer deal the lighter scratchDamage on a gentle scratch', () => {
+    const victim = makePlayer({ id: 'victim' });
+    const cactus = makePlayer({ id: 'cactus', effects: [{ kind: 'cactus', expiresAt: 10_000 }] });
+    const result = applyBumpDamage(FRENZY_DEFINITION, stateWith([victim, cactus]), [
+      { playerId: 'victim', killerId: 'cactus', scratch: true },
+    ]);
+
+    // Cactus scratch = -6 (its contactRam.scratchDamage), half the ram.
+    expect(result.state.players.find((player) => player.id === 'victim')?.hp).toBe(100 - 6);
+    expect(result.events).toContainEqual({ type: 'bumped', playerId: 'victim', amount: -6 });
   });
 
   it('reuses applyHpDeltas to faint a victim, naming the rammer, and floats no bump quip for it', () => {
     const frail = makePlayer({ id: 'frail', hp: -BUMP_DAMAGE });
     const result = applyBumpDamage(FRENZY_DEFINITION, stateWith([frail]), [
-      { playerId: 'frail', killerId: 'rammer' },
+      { playerId: 'frail', killerId: 'rammer', scratch: false },
     ]);
 
     expect(result.state.players).toHaveLength(0);
@@ -79,12 +103,16 @@ describe('applyBumpDamage', () => {
   it('sums damage but floats once for a victim rammed by two rivals in one tick', () => {
     const victim = makePlayer({ id: 'victim' });
     const bumps: BumpDamage[] = [
-      { playerId: 'victim', killerId: 'r1' },
-      { playerId: 'victim', killerId: 'r2' },
+      { playerId: 'victim', killerId: 'r1', scratch: false },
+      { playerId: 'victim', killerId: 'r2', scratch: false },
     ];
     const result = applyBumpDamage(FRENZY_DEFINITION, stateWith([victim]), bumps);
 
+    const bumpEvents = result.events.filter((event) => event.type === 'bumped');
+
     expect(result.state.players[0].hp).toBe(100 + BUMP_DAMAGE * 2);
-    expect(result.events.filter((event) => event.type === 'bumped')).toHaveLength(1);
+    expect(bumpEvents).toHaveLength(1);
+    // The single float carries the SUMMED hit, not one rammer's share.
+    expect(bumpEvents[0]).toMatchObject({ playerId: 'victim', amount: BUMP_DAMAGE * 2 });
   });
 });

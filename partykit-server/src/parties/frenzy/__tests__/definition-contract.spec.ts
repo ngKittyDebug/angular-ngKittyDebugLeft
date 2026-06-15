@@ -77,7 +77,7 @@ describe('frenzy definition contract', () => {
       'rareCandy',
       'goldenBerry',
     ]);
-    expect(Object.keys(FRENZY.poopEmitWeights)).toEqual(['rock', 'brick', 'bomb']);
+    expect(Object.keys(FRENZY.poopEmitWeights)).toEqual(['rock', 'brick', 'bomb', 'cactus']);
   });
 
   it('keeps the flat FRENZY read-model values stable', () => {

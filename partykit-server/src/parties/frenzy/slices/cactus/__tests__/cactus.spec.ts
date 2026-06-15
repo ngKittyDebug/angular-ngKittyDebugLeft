@@ -5,15 +5,15 @@ import { CACTUS_EFFECT } from '@game/frenzy/definition/effects/cactus';
 import { CACTUS_ITEM } from '@game/frenzy/definition/items/cactus';
 import type { ItemType, PlayerEffectKind } from '@game/frenzy/types';
 
-import { damageDealtMultiplier } from '../../../../../engine/core/effect-modifiers';
+import { contactRamSpec, isContactRammer } from '../../../../../engine/core/effect-modifiers';
 import { pickItemType } from '../../../../../engine/core/pick-item-type';
 import { resolveInteraction } from '../../../../../engine/verbs';
 
 /**
  * The cactus slice: a NEW item + effect shipped as two definition files and ZERO engine edits, ENABLED from the
  * start (unlike the dormant barbed-wire demo). These specs prove the live contract — the spiky pickup grants a
- * 10s aura through the closed verb set, and the holder's outgoing bump damage is tripled — exactly the generic
- * vocabulary (grant resolution, `damageDealt` consultation) the engine already speaks.
+ * 30s aura through the closed verb set, and that aura makes the holder a contact hazard dealing its own split
+ * collision damage (12 on a ram, 6 on a scratch) — the generic `contactRam` vocabulary the engine already speaks.
  */
 
 /** The roster ids — what definition-level machinery speaks (cactus is enabled, so it is also in the public union). */
@@ -69,18 +69,22 @@ describe('cactus slice (enabled)', () => {
     expect(interaction).toEqual({
       hpDeltas: [],
       consumed: true,
-      effects: [{ playerId: 'p1', kind: 'cactus', durationMs: 10_000 }],
+      effects: [{ playerId: 'p1', kind: 'cactus', durationMs: 30_000 }],
     });
   });
 
-  it('triples the outgoing bump damage of the holder and nothing else', () => {
+  it('makes the holder a contact hazard with split ram/scratch damage', () => {
     const holder = [{ kind: 'cactus' as const, expiresAt: 1 }];
 
-    // The generic bump pass already consults `damageDealt` — granting the effect IS the whole feature.
-    expect(damageDealtMultiplier({ cactus: CACTUS_EFFECT }, holder, 'bump')).toBe(3);
-    expect(damageDealtMultiplier({ cactus: CACTUS_EFFECT }, holder, 'item')).toBe(1);
-    expect(damageDealtMultiplier({ cactus: CACTUS_EFFECT }, holder, 'blast')).toBe(1);
-    expect(damageDealtMultiplier({ cactus: CACTUS_EFFECT }, [], 'bump')).toBe(1);
+    // Granting the effect IS the whole feature: the separation pass reads `contactRam` to lower the ram threshold,
+    // and `applyBumpDamage` reads its split damage (a ram takes 12, a scratch only 6).
+    expect(isContactRammer({ cactus: CACTUS_EFFECT }, holder)).toBe(true);
+    expect(isContactRammer({ cactus: CACTUS_EFFECT }, [])).toBe(false);
+    expect(contactRamSpec({ cactus: CACTUS_EFFECT }, holder)).toEqual({
+      ramDamage: -12,
+      scratchDamage: -6,
+    });
+    expect(contactRamSpec({ cactus: CACTUS_EFFECT }, [])).toBeUndefined();
   });
 
   it('keeps the slice values stable', () => {

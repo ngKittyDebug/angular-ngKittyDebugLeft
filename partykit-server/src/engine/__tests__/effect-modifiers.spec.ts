@@ -51,9 +51,9 @@ describe('effect modifiers', () => {
   });
 
   it('deals unscaled damage for every enabled effect that declares no damageDealt modifier', () => {
-    // Effects that DON'T shape outgoing damage must leave it at ×1. The two that do (the enabled `cactus`, whose
-    // bump tripling is pinned by its own slice spec, and the dormant flagged-off barbed-wire demo that can never
-    // reach a player's effects) are excluded here.
+    // Effects that DON'T shape outgoing damage must leave it at ×1. The cactus now deals its collision damage via
+    // `contactRam` (not `damageDealt`), so it belongs here too; only the dormant flagged-off barbed-wire demo
+    // (which declares `damageDealt` but can never reach a player's effects) is filtered out by `enabled !== false`.
     const kinds = (Object.keys(FRENZY_EFFECTS) as (keyof typeof FRENZY_EFFECTS)[]).filter(
       (kind): kind is PlayerEffectKind => {
         // Widening lookup — the roster's literal slice types don't all carry the optional `enabled` field.

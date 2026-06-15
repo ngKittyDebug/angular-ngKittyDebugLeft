@@ -7,7 +7,7 @@ import { pickItemType } from '../core/pick-item-type';
 
 describe('pickItemType', () => {
   // Cumulative weight bands over FRENZY.spawnWeights in insertion order:
-  // food=55 rotten=15 rock=20 brick=10 rareCandy=5 bomb=10 goldenBerry=5 crumb=35 mushroom=12 vitamin=8 shield=6 easterEgg=12 poop=6 cactus=5 → total=204.
+  // food=55 rotten=15 rock=20 brick=10 rareCandy=5 bomb=10 goldenBerry=5 crumb=35 mushroom=12 vitamin=8 shield=6 easterEgg=12 poop=6 cactus=10 → total=209.
   // Multiplied roll bands: food<55, rotten<70, rock<90, brick<100, rareCandy<105, bomb<115, goldenBerry<120,
   // crumb<155, mushroom<167, vitamin<175, shield<181, easterEgg<193, poop<199, else cactus. Rolls below pick a band midpoint.
   it('returns food for low rolls', () => {
@@ -36,7 +36,7 @@ describe('pickItemType', () => {
   });
 
   it('returns goldenBerry in the 115..120 roll band', () => {
-    expect(pickItemType(() => 0.575, isItemEnabled, SPAWN_POOLS.world)).toBe('goldenBerry');
+    expect(pickItemType(() => 0.56, isItemEnabled, SPAWN_POOLS.world)).toBe('goldenBerry');
   });
 
   it('returns crumb in the 120..155 roll band', () => {
@@ -48,21 +48,21 @@ describe('pickItemType', () => {
   });
 
   it('returns vitamin in the 167..175 roll band', () => {
-    expect(pickItemType(() => 0.84, isItemEnabled, SPAWN_POOLS.world)).toBe('vitamin');
+    expect(pickItemType(() => 0.82, isItemEnabled, SPAWN_POOLS.world)).toBe('vitamin');
   });
 
   it('returns shield in the 175..181 roll band', () => {
-    expect(pickItemType(() => 0.87, isItemEnabled, SPAWN_POOLS.world)).toBe('shield');
+    expect(pickItemType(() => 0.85, isItemEnabled, SPAWN_POOLS.world)).toBe('shield');
   });
 
   it('returns easterEgg in the 181..193 roll band', () => {
+    expect(pickItemType(() => 0.91, isItemEnabled, SPAWN_POOLS.world)).toBe('easterEgg');
     expect(pickItemType(() => 0.92, isItemEnabled, SPAWN_POOLS.world)).toBe('easterEgg');
-    expect(pickItemType(() => 0.93, isItemEnabled, SPAWN_POOLS.world)).toBe('easterEgg');
   });
 
   it('returns poop in the 193..199 roll band', () => {
+    expect(pickItemType(() => 0.94, isItemEnabled, SPAWN_POOLS.world)).toBe('poop');
     expect(pickItemType(() => 0.95, isItemEnabled, SPAWN_POOLS.world)).toBe('poop');
-    expect(pickItemType(() => 0.96, isItemEnabled, SPAWN_POOLS.world)).toBe('poop');
   });
 
   it('returns cactus at the top end', () => {

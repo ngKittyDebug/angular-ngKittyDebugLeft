@@ -2,13 +2,16 @@ import type { GameDefinition } from '@game/engine/definition';
 import { halfExtentNorm } from '@game/engine/geometry';
 import type { Player } from '@game/engine/types';
 
-import { isFullyWarded } from '../effect-modifiers';
+import { isContactRammer, isFullyWarded } from '../effect-modifiers';
 import type { PlayerImpulse } from '../../verbs';
 
 /** A collision bump that dealt damage: the victim and the rival that rammed it (its killer, for the obituary). */
 export interface BumpDamage {
   playerId: string;
   killerId: string;
+  /** True when the hit only landed because the rammer's contact-hazard aura lowered the gate (closing speed below
+   * the normal `bumpSpeedThreshold`) — a gentle scratch, not a hard ram. Selects the holder's split damage. */
+  scratch: boolean;
 }
 
 /** Outcome of the separation pass: bodies with corrected (and re-clamped) positions, plus bump knockback + damage to apply. */
@@ -159,31 +162,51 @@ function resolvePair<TItemId extends string, TEffectId extends string, TNpcId ex
 
   const closingSpeed = -closing;
 
-  if (closingSpeed >= config.bumpSpeedThreshold) {
-    const kick =
-      config.bumpImpulse + (closingSpeed - config.bumpSpeedThreshold) * config.bumpImpulseScale;
+  // The ram gate is evaluated per direction: the threshold drops to `scratchSpeedThreshold` when the RAMMER is a
+  // contact hazard (cactus), so its spikes prick the toucher on a gentle touch — one-directional, since the other
+  // side keeps the full `bumpSpeedThreshold` (brushing a cactus chips the toucher, not the holder). A normal pair
+  // uses `bumpSpeedThreshold` both ways, identical to before.
+  const rammThreshold = (rammer: Player<TEffectId, TNpcId>): number =>
+    isContactRammer(game.effects, rammer.effects)
+      ? config.scratchSpeedThreshold
+      : config.bumpSpeedThreshold;
 
-    // Each side takes ram damage + an outward kick unless warded — the ward covers the holder's hit, not the other's.
-    if (!isBumpWarded(a)) {
-      impulses.push({
-        playerId: a.id,
-        ix: -normalX * kick * shareA,
-        iy: -normalY * kick * shareA,
-        maxFactor: config.impulseMaxFactor,
-      });
-      bumps.push({ playerId: a.id, killerId: b.id });
+  /**
+   * Records a ram on `victim` dealt by `rammer` when the closing speed clears the rammer's threshold and the
+   * victim isn't bump-warded: light hp damage plus an outward kick (split by the victim's inverse-mass `share`,
+   * oriented along the normal by `sign` — −1 for `a`, +1 for `b`). The kick scales from the SAME threshold, so a
+   * gentle scratch recoils softly.
+   */
+  const addRam = (
+    victim: Player<TEffectId, TNpcId>,
+    rammer: Player<TEffectId, TNpcId>,
+    share: number,
+    sign: number,
+  ): void => {
+    const threshold = rammThreshold(rammer);
+
+    if (closingSpeed < threshold || isBumpWarded(victim)) {
+      return;
     }
 
-    if (!isBumpWarded(b)) {
-      impulses.push({
-        playerId: b.id,
-        ix: normalX * kick * shareB,
-        iy: normalY * kick * shareB,
-        maxFactor: config.impulseMaxFactor,
-      });
-      bumps.push({ playerId: b.id, killerId: a.id });
-    }
-  }
+    const kick = config.bumpImpulse + (closingSpeed - threshold) * config.bumpImpulseScale;
+
+    impulses.push({
+      playerId: victim.id,
+      ix: sign * normalX * kick * share,
+      iy: sign * normalY * kick * share,
+      maxFactor: config.impulseMaxFactor,
+    });
+    // A hit below the normal ram threshold can only have landed via the lowered scratch gate — mark it a scratch.
+    bumps.push({
+      playerId: victim.id,
+      killerId: rammer.id,
+      scratch: closingSpeed < config.bumpSpeedThreshold,
+    });
+  };
+
+  addRam(a, b, shareA, -1);
+  addRam(b, a, shareB, 1);
 
   return { idA: a.id, idB: b.id, moveA, moveB, impulses, bumps };
 }

@@ -4,8 +4,9 @@ exports[`cactus slice (enabled) > keeps the slice values stable 1`] = `
 {
   "effect": {
     "modifiers": {
-      "damageDealt": {
-        "bump": 3,
+      "contactRam": {
+        "ramDamage": -12,
+        "scratchDamage": -6,
       },
     },
   },
@@ -13,12 +14,12 @@ exports[`cactus slice (enabled) > keeps the slice values stable 1`] = `
     "enabled": true,
     "interactions": {
       "onClick": {
-        "durationMs": 10000,
+        "durationMs": 30000,
         "effectId": "cactus",
         "verb": "grantEffect",
       },
       "onCollide": {
-        "durationMs": 10000,
+        "durationMs": 30000,
         "effectId": "cactus",
         "verb": "grantEffect",
       },
@@ -27,7 +28,8 @@ exports[`cactus slice (enabled) > keeps the slice values stable 1`] = `
       "fallSpeed": 0.16,
     },
     "spawn": {
-      "world": 5,
+      "poopEmit": 6,
+      "world": 10,
     },
   },
 }

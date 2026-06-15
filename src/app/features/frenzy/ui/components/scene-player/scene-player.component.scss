@@ -154,13 +154,12 @@
   pointer-events: none;
 }
 
-// Bespoke auras (laying = egg, cactus = thorns): the two built by hand instead of the shared `leftPawBubbleSkin`.
-// They share this base geometry — centred on the VISIBLE sprite (same `--scene-sprite-offset-y` so the aura wraps
-// winged/offset art) and PULSING via the sibling `scene-shield-pulse` — and differ only in what their `::before`
-// paints (laying also adds a `::after` glass). Spin lives on `::before`, so the parent's pulse stays clean: laying
-// drifts an iridescent rainbow soap-film (centre masked out so the sprite reads through), cactus turns a thorn ring.
-.scene__laying,
-.scene__cactus {
+// Bespoke laying (egg) aura: built by hand instead of the shared `leftPawBubbleSkin`. Centred on the VISIBLE sprite
+// (same `--scene-sprite-offset-y` so the aura wraps winged/offset art) and PULSING via the sibling
+// `scene-shield-pulse`; spin lives on `::before` so the parent's pulse stays clean. The `::before` drifts an
+// iridescent rainbow soap-film (centre masked out so the sprite reads through), and `::after` adds a glass layer.
+// (The cactus thorn crown is its own bespoke aura below — bigger, static SVG, breathing instead of spinning.)
+.scene__laying {
   position: absolute;
   top: calc(var(--scene-sprite-height, 96px) / 2 + var(--scene-sprite-offset-y, 0px));
   left: 50%;
@@ -229,20 +228,28 @@
   pointer-events: none;
 }
 
-// Rotating thorn ring: hard-stop conic spokes (sharp green spike / wide transparent gap → ~24 radial thorns),
-// masked to a thin annulus so only a spiky rim shows and the sprite stays clear. Rotation only — parent owns the pulse.
+// Cactus thorn crown: a bespoke ring of 14 long, sharp, slightly uneven thorns (hollow centre so the sprite reads
+// through) — see `public/frenzy/fx/cactus-thorns.svg`. Bigger than the bubble auras: the thorns must clear the
+// sprite and radiate beyond it, so the box is ~2.1× the sprite (vs 1.5× for the encasing bubbles). Centred on the
+// VISIBLE sprite and BREATHING (a smooth grow/shrink pulse, no spin — the thorns just bristle in and out).
+.scene__cactus {
+  position: absolute;
+  top: calc(var(--scene-sprite-height, 96px) / 2 + var(--scene-sprite-offset-y, 0px));
+  left: 50%;
+  width: calc(var(--scene-sprite-height, 96px) * 2.1);
+  height: calc(var(--scene-sprite-height, 96px) * 2.1);
+  transform: translate(-50%, -50%);
+  animation: scene-cactus-pulse 2.3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+// The thorn ring itself: the static SVG, sized to the box. Baked green matches `--aura-cactus-tint` (the cactus is
+// always green, so the shared tint var stays the single source for the grounding-shadow only).
 .scene__cactus::before {
   content: '';
   position: absolute;
   inset: 0;
-  border-radius: 50%;
-  background: repeating-conic-gradient(
-    from 0deg,
-    var(--aura-cactus-tint) 0deg 3deg,
-    transparent 3deg 15deg
-  );
-  mask: radial-gradient(circle, transparent 52%, #000 64%, #000 88%, transparent 97%);
-  animation: scene-rainbow-spin 9s linear infinite;
+  background: url('/frenzy/fx/cactus-thorns.svg') center / contain no-repeat;
 }
 
 // Crown marker for the hp-leader: a golden crown bobbing just above the head, so the whole table can spot (and
@@ -392,13 +399,35 @@
 // Horizontal hp nameplate above the head for EVERY player (own + others + NPC): sits just above the sprite top,
 // beneath the bobbing crown (same vertical basis as `.scene__crown`/the badges). Centred on the actor point; width
 // scales with the sprite so it spans roughly the body width without overrunning neighbours. The name still rides
-// below the sprite (`.scene__label`), so the unit reads name-below / bar-above like an MMO nameplate.
-.scene__hp-bar {
+// below the sprite (`.scene__label`), so the unit reads name-below / bar-above like an MMO nameplate. A column so
+// the live hp value stacks at the TOP-LEFT above the bar (echoing the status card's corner hp badge).
+.scene__hp {
   position: absolute;
   bottom: calc(100% - var(--scene-sprite-offset-y, 0px) + 1px);
   left: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
   width: clamp(44px, calc(var(--scene-sprite-width, 96px) * 0.9), 104px);
   transform: translateX(-50%);
+}
+
+// Live hp readout, left-aligned just above the bar: small + bold + white with a hard dark shadow so it stays legible
+// over the aquarium at any fill tone. Decorative duplicate of the bar value (the bar itself still carries it for AT).
+.scene__hp-value {
+  font-size: 0.6rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.9),
+    0 0 3px rgba(0, 0, 0, 0.7);
+}
+
+.scene__hp-bar {
+  display: block;
+  width: 100%;
 }
 
 @keyframes scene-shield-pulse {
@@ -411,6 +440,21 @@
   50% {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1.03);
+  }
+}
+
+// Cactus thorn crown breathing pulse: a wide grow/shrink so the ring of thorns clearly bristles in and out (no
+// spin). Keeps the translate so the centred ring doesn't drift as it scales.
+@keyframes scene-cactus-pulse {
+  0%,
+  100% {
+    opacity: 0.72;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.17);
   }
 }
 
@@ -508,8 +552,7 @@
   .scene__laying,
   .scene__laying::before,
   .scene__poop,
-  .scene__cactus,
-  .scene__cactus::before {
+  .scene__cactus {
     animation: none;
   }
 

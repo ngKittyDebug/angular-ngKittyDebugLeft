@@ -254,12 +254,13 @@ export interface EffectGrantedEvent<TEffectId extends string = string> {
   via: PickupVia;
 }
 
-// Two players rammed each other hard enough to deal collision damage. `playerId` is a hit-but-survived player
-// (a player the ram finished off gets a `fainted` event instead); the client floats a quip over it. The damage
-// amount isn't carried — the HP bar reconciles on the next snapshot, like a bomb blast.
+// A collision dealt damage to a player who survived it (a ram that finished them off emits `fainted` instead).
+// `playerId` is the victim; `amount` is the net hp it lost this tick from collisions (negative, summed when more
+// than one rival rammed it), so the client floats the actual number over it — both a hard ram and a cactus scratch.
 export interface BumpedEvent {
   type: 'bumped';
   playerId: string;
+  amount: number;
   priority?: number;
 }
 

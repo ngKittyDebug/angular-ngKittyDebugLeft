@@ -134,7 +134,7 @@ describe('HitBurstEffect', () => {
   });
 
   it('sparks over the rammed Pokémon on a bump — no bubble burst', () => {
-    effect.handle({ type: 'bumped', playerId: 'victim' });
+    effect.handle({ type: 'bumped', playerId: 'victim', amount: -5 });
 
     expect(effect.hitBursts()).toHaveLength(0);
 
