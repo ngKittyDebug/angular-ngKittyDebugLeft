@@ -54,6 +54,7 @@ export class FrenzyPageComponent implements OnInit {
   protected readonly leaderboard = this.facade.leaderboard;
   protected readonly crownId = this.facade.crownId;
   protected readonly me = this.facade.me;
+  protected readonly activeEffects = this.facade.activeEffects;
   protected readonly myId = this.facade.myId;
   protected readonly players = this.facade.players;
   protected readonly presenceCount = this.facade.presenceCount;

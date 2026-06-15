@@ -6,6 +6,7 @@ import { isNPC } from '@game/frenzy/types';
 import type { Player, PlayerEffectKind } from '@game/frenzy/types';
 
 import { isSad } from '../../../data/logic/is-sad';
+import { EFFECT_BADGE } from '../../../data/models/effect-badge';
 import { spriteRenderFor } from '../../constants/pokemon-registry';
 import { clamp, decayedOffset, OFFSET_DECAY_TAU_MS, reflect, reflectDirection } from './drift-math';
 import type { RenderedPlayer } from './scene-view-models';
@@ -214,9 +215,14 @@ export class PlayerExtrapolatorService {
         baseline === undefined
           ? 0
           : decayedOffset(baseline.offsetY, now - baseline.offsetStamp, OFFSET_DECAY_TAU_MS);
-      const effectAuras = player.effects
-        .filter((effect) => effect.expiresAt > wallNow)
-        .map((effect) => EFFECT_AURA_CLASS[effect.kind]);
+      const liveEffects = player.effects.filter((effect) => effect.expiresAt > wallNow);
+      const effectAuras = liveEffects.map((effect) => EFFECT_AURA_CLASS[effect.kind]);
+      // Overhead buff badges track the same live effects as the auras — including the NPC, which CAN pick up an
+      // effect by colliding with an item (e.g. shield), so its badge must match the aura ring it already shows.
+      const effectBadges = liveEffects.map((effect) => ({
+        kind: effect.kind,
+        ...EFFECT_BADGE[effect.kind],
+      }));
       // Hitbox (collidable torso) comes from the authoritative `body`; the full-art render box + centring offset
       // are client-only, looked up from the local roster by appearance/stage.
       const hitbox = player.body[player.stage];
@@ -225,6 +231,7 @@ export class PlayerExtrapolatorService {
       return {
         appearance: player.appearance,
         effectAuras,
+        effectBadges,
         facingRight: reflectDirection(x0, vx, elapsed, zone.minX, zone.maxX) > 0,
         id: player.id,
         isDisconnected: player.status === 'disconnected',

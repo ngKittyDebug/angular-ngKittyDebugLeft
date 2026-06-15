@@ -12,6 +12,22 @@
     }
   }
 
+  @if (player().effectBadges.length) {
+    <!-- Active buff/debuff badges, top-left over the sprite. Decorative overlay (pointer-events: none) so it never
+         intercepts the poke; each icon carries its own aria-label from the frenzy.effects namespace. -->
+    <span class="scene__badges" *transloco="let tEffects; prefix: 'frenzy.effects'">
+      @for (badge of player().effectBadges; track badge.kind) {
+        <tui-icon
+          class="scene__effect-badge"
+          [class.scene__effect-badge--warning]="badge.tone === 'warning'"
+          [icon]="badge.icon"
+          role="img"
+          [attr.aria-label]="tEffects(badge.kind)"
+        />
+      }
+    </span>
+  }
+
   @if (isLeader()) {
     <tui-icon class="scene__crown" icon="@tui.crown" aria-hidden="true" />
   }
@@ -42,16 +58,16 @@
     <span class="scene__label">{{ player().label }}</span>
   }
 
-  @if (!player().isMe) {
-    <progress
-      tuiProgressBar
-      class="scene__hp-bar"
-      size="xs"
-      [value]="player().hp"
-      [max]="maxHp()"
-      [color]="player().hp | hpToneColor"
-    ></progress>
-  }
+  <!-- Overhead hp nameplate for EVERY player (including my own sprite): a horizontal bar above the head, under the
+       crown. The name stays below the sprite (see `.scene__label`). -->
+  <progress
+    tuiProgressBar
+    class="scene__hp-bar"
+    size="xs"
+    [value]="player().hp"
+    [max]="maxHp()"
+    [color]="player().hp | hpToneColor"
+  ></progress>
 
   @for (spark of sparks(); track spark.id) {
     <left-paw-spark-burst class="scene__player-spark" />

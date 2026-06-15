@@ -178,6 +178,38 @@
   z-index: 3;
 }
 
+// Buff/debuff badge row pinned to the sprite's top-left corner (the MMO unit-frame spot). Decorative overlay —
+// `pointer-events: none` so it never steals the poke tap; the host's own `pointer-events: none` already applies, this
+// keeps it explicit. Left-aligned row of small glyph chips growing rightward, sitting above the kelp (z 3).
+.scene__badges {
+  position: absolute;
+  // Anchor to the visible art box's top-left: top = sprite top (the vertical centring offset), left = body point −
+  // half the art width + the horizontal centring offset, so it tracks winged/offset sprites the same way the auras do.
+  top: var(--scene-sprite-offset-y, 0px);
+  left: calc(50% - var(--scene-sprite-width, 96px) / 2 + var(--scene-sprite-offset-x, 0px));
+  display: flex;
+  gap: 0.125rem;
+  pointer-events: none;
+  z-index: 3;
+}
+
+// One glyph chip: a small Taiga icon on a translucent dark disc so it stays legible over any sprite/background.
+// Tone drives the colour — positive (default) green, warning amber — matching the floating-status palette.
+.scene__effect-badge {
+  width: 1.05rem;
+  height: 1.05rem;
+  padding: 0.1rem;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: var(--tui-status-positive);
+  font-size: 0.8rem;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6));
+}
+
+.scene__effect-badge--warning {
+  color: var(--tui-status-warning);
+}
+
 .scene__poke {
   padding: 0;
   background: none;
@@ -274,17 +306,16 @@
   font-weight: 600;
 }
 
-// Vertical health bar for other players: just to the right of the sprite with a small gap, centred on it. The
-// horizontal offset is half the sprite width (so it clears the sprite's right edge whatever its size) plus the
-// gap — the old hardcoded 58px only fit the former single 96px sprite. Host is centred on the actor's point, so
-// `50%` is the sprite centre; the bar length is fixed.
+// Horizontal hp nameplate above the head for EVERY player (own + others + NPC): sits just above the sprite top,
+// beneath the bobbing crown (same vertical basis as `.scene__crown`/the badges). Centred on the actor point; width
+// scales with the sprite so it spans roughly the body width without overrunning neighbours. The name still rides
+// below the sprite (`.scene__label`), so the unit reads name-below / bar-above like an MMO nameplate.
 .scene__hp-bar {
   position: absolute;
-  top: 50%;
-  left: calc(50% + var(--scene-sprite-width, 96px) / 2 + 14px);
-  width: 64px;
-  transform: translate(-50%, -50%) rotate(-90deg);
-  transform-origin: center;
+  bottom: calc(100% - var(--scene-sprite-offset-y, 0px) + 1px);
+  left: 50%;
+  width: clamp(44px, calc(var(--scene-sprite-width, 96px) * 0.9), 104px);
+  transform: translateX(-50%);
 }
 
 @keyframes scene-shield-pulse {

@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 
 import { FRENZY } from '@game/frenzy/config';
 
+import { EFFECT_BADGE } from '../../models/effect-badge';
 import type { FloatingTone, OrphanFloat, OwnedFloat } from '../../models/floating-message';
 import { OwnerReleaseQueue } from './owner-release-queue';
 import { createTransientId, TransientList } from './transient-list';
@@ -47,10 +48,12 @@ const STATUS_CONFIG: Record<StatusKind, StatusConfig> = {
   appeared: { tone: 'positive', icon: '@tui.user-plus', durationMs: 2500, phraseCount: 4 },
   died: { tone: 'neutral', icon: '@tui.skull', durationMs: 5500, phraseCount: 4 },
   poke: { tone: 'neutral', icon: '@tui.laugh', durationMs: 1400, phraseCount: 12 },
-  shield: { tone: 'positive', icon: '@tui.shield', durationMs: 2500, phraseCount: 4 },
-  wellFed: { tone: 'positive', icon: '@tui.heart', durationMs: 2500, phraseCount: 4 },
-  laying: { tone: 'positive', icon: '@tui.egg', durationMs: 2500, phraseCount: 4 },
-  pooping: { tone: 'warning', icon: '@tui.wind', durationMs: 2500, phraseCount: 4 },
+  // icon + tone derive from the shared EFFECT_BADGE registry (single source); only the float timing/phrase count
+  // are local. Keeps the over-head badges, the status-card strip and these quips on one palette.
+  shield: { ...EFFECT_BADGE.shield, durationMs: 2500, phraseCount: 4 },
+  wellFed: { ...EFFECT_BADGE.wellFed, durationMs: 2500, phraseCount: 4 },
+  laying: { ...EFFECT_BADGE.laying, durationMs: 2500, phraseCount: 4 },
+  pooping: { ...EFFECT_BADGE.pooping, durationMs: 2500, phraseCount: 4 },
   npcAppeared: { tone: 'warning', icon: '@tui.bomb', durationMs: 2500, phraseCount: 4 },
   npcPoke: { tone: 'negative', icon: '@tui.flame', durationMs: 1400, phraseCount: 10 },
   npcDied: { tone: 'negative', icon: '@tui.bomb', durationMs: 5500, phraseCount: 4 },

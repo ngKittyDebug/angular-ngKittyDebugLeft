@@ -26,6 +26,32 @@
     min-width: 0;
   }
 
+  // Buff-chip strip above the panel content — small tone-coloured glyph chips mirroring the over-head sprite badges
+  // (same EFFECT_BADGE icon/tone). A flex row that wraps; the whole block is absent when no effect is active.
+  &__buffs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
+  // One chip: a glyph on a faint tone-tinted disc. Positive (default) green, warning amber — matching the badges.
+  &__buff {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.15rem;
+    height: 1.15rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--tui-status-positive) 22%, transparent);
+    color: var(--tui-status-positive);
+    font-size: 0.85rem;
+
+    &--warning {
+      background: color-mix(in srgb, var(--tui-status-warning) 22%, transparent);
+      color: var(--tui-status-warning);
+    }
+  }
+
   &__head {
     display: flex;
     align-items: center;

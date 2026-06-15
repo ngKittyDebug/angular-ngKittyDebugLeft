@@ -1,14 +1,17 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
+import { TuiIcon } from '@taiga-ui/core';
 import { TuiAvatar, TuiProgressBar } from '@taiga-ui/kit';
 
 import { FRENZY } from '@game/frenzy/config';
-import type { PlayerBody, Stage } from '@game/frenzy/types';
+import type { PlayerBody, PlayerEffect, Stage } from '@game/frenzy/types';
 
 import { getMood, type PokemonMood } from '../../../data/logic/pokemon-mood';
+import { EFFECT_BADGE } from '../../../data/models/effect-badge';
 import type { ReactionFace } from '../../../data/services/effects/reactive-mood-effect.service';
 import { HpFlashDirective } from '../../directives/hp-flash.directive';
 import { HpToneColorPipe } from '../../pipes/hp-tone-color.pipe';
+import type { RenderedEffectBadge } from '../scene/scene-view-models';
 
 // Juicy 3D mood faces (Microsoft Fluent Emoji, same set as the item sprites) keyed by mood; far more expressive
 // than the flat Taiga line icons. Files live in public/frenzy/mood/<mood>.png.
@@ -31,7 +34,14 @@ const REACTION_SPRITE: Record<ReactionFace, string> = {
 
 @Component({
   selector: 'left-paw-current-pokemon-status',
-  imports: [HpFlashDirective, HpToneColorPipe, TranslocoDirective, TuiAvatar, TuiProgressBar],
+  imports: [
+    HpFlashDirective,
+    HpToneColorPipe,
+    TranslocoDirective,
+    TuiAvatar,
+    TuiIcon,
+    TuiProgressBar,
+  ],
   templateUrl: './current-pokemon-status.component.html',
   styleUrl: './current-pokemon-status.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -45,6 +55,13 @@ export class CurrentPokemonStatusComponent {
   public readonly body = input.required<PlayerBody>();
   // A transient reaction (bomb/collision/poison/buff) that briefly takes over the avatar face; null most of the time.
   public readonly reaction = input<ReactionFace | null>(null);
+  // My Pokémon's currently-active timed effects (parent pre-filters by `expiresAt`); mirrored as a buff-chip strip.
+  public readonly effects = input<readonly PlayerEffect[]>([]);
+  // Active effects projected to display chips (icon + tone + kind) via the shared EFFECT_BADGE registry — the same
+  // single source the over-head sprite badges read, so the card and scene never show a different icon/colour.
+  protected readonly buffChips = computed<readonly RenderedEffectBadge[]>(() =>
+    this.effects().map((effect) => ({ kind: effect.kind, ...EFFECT_BADGE[effect.kind] })),
+  );
   // The bar uses one absolute scale (0 → hard ceiling); ticks mark BOTH evolution thresholds along it, and
   // `untilEvolution` is the HP still needed to reach the next one — the foot line vanishes on the final stage.
   protected readonly maxHp = FRENZY.maxHp;

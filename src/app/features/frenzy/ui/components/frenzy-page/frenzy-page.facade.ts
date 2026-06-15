@@ -79,6 +79,11 @@ export class FrenzyPageFacade {
     return entries.length > 0 ? entries[0] : null;
   });
   public readonly me = this.store.me;
+  // My Pokémon's currently-active timed effects, pruned by `expiresAt` on the cooldown ticker (and on snapshot
+  // change), feeding the status-card buff strip. Empty when I'm not in play.
+  public readonly activeEffects = computed(() =>
+    (this.me()?.effects ?? []).filter((effect) => effect.expiresAt > this.nowMs()),
+  );
   public readonly myId = this.store.myId;
   // The crowned player id (alive hp-leader, shared selector) — gates the leaderboard pill's crown so it never
   // disagrees with the scene marker.

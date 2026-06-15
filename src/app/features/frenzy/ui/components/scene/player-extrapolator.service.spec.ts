@@ -94,6 +94,57 @@ describe('PlayerExtrapolatorService', () => {
     expect(service.rendered()[0].effectAuras).toEqual([]);
   });
 
+  it('emits an effect badge (icon + tone) for a live effect and drops it once expired', () => {
+    const service = new PlayerExtrapolatorService();
+    const live = player({
+      id: 'p1',
+      effects: [{ kind: 'shield', expiresAt: Date.now() + 10_000 }],
+    });
+
+    service.ingest([live], null, NONE, 0);
+    expect(service.rendered()[0].effectBadges).toEqual([
+      { kind: 'shield', icon: '@tui.shield', tone: 'positive' },
+    ]);
+
+    const expired = player({
+      id: 'p1',
+      effects: [{ kind: 'shield', expiresAt: Date.now() - 1000 }],
+    });
+
+    service.ingest([expired], null, NONE, 1);
+    expect(service.rendered()[0].effectBadges).toEqual([]);
+  });
+
+  it('tones the pooping debuff badge as a warning, distinct from positive buffs', () => {
+    const service = new PlayerExtrapolatorService();
+
+    service.ingest(
+      [player({ id: 'p1', effects: [{ kind: 'pooping', expiresAt: Date.now() + 10_000 }] })],
+      null,
+      NONE,
+      0,
+    );
+
+    expect(service.rendered()[0].effectBadges).toEqual([
+      { kind: 'pooping', icon: '@tui.wind', tone: 'warning' },
+    ]);
+  });
+
+  it('badges the NPC too when it picks up an effect, matching its aura ring', () => {
+    const service = new PlayerExtrapolatorService();
+
+    service.ingest(
+      [npc({ id: 'bomb', effects: [{ kind: 'shield', expiresAt: Date.now() + 10_000 }] })],
+      null,
+      NONE,
+      0,
+    );
+
+    expect(service.rendered()[0].effectBadges).toEqual([
+      { kind: 'shield', icon: '@tui.shield', tone: 'positive' },
+    ]);
+  });
+
   it('flags the NPC and normalizes its mana into anger (0..1)', () => {
     const service = new PlayerExtrapolatorService();
     const half = FRENZY.npc.anger.max / 2;

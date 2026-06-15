@@ -23,6 +23,12 @@
       "pumped": "Pumped"
     }
   },
+  "effects": {
+    "shield": "Shielded",
+    "wellFed": "Well fed",
+    "laying": "Laying eggs",
+    "pooping": "Upset stomach"
+  },
   "joinError": {
     "invalidName": "Please enter a name.",
     "invalidAppearance": "That Pokémon isn't available — pick another.",

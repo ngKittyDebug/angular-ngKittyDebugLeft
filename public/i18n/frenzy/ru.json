@@ -23,6 +23,12 @@
       "pumped": "В ударе"
     }
   },
+  "effects": {
+    "shield": "Под щитом",
+    "wellFed": "Сыт",
+    "laying": "Несёт яйца",
+    "pooping": "Несварение"
+  },
   "joinError": {
     "invalidName": "Введите имя.",
     "invalidAppearance": "Этот покемон недоступен — выберите другого.",

@@ -29,6 +29,27 @@
   </span>
 
   <div class="current-pokemon-status__body">
+    @if (buffChips().length) {
+      <!-- Active buff/debuff mirror of the over-head sprite badges: a chip row above the panel content. Hidden when
+           no effects are active. Icon + tone come from the shared EFFECT_BADGE registry; label from frenzy.effects. -->
+      <div
+        class="current-pokemon-status__buffs"
+        *transloco="let tEffects; prefix: 'frenzy.effects'"
+      >
+        @for (chip of buffChips(); track chip.kind) {
+          <span
+            class="current-pokemon-status__buff"
+            [class.current-pokemon-status__buff--warning]="chip.tone === 'warning'"
+            role="img"
+            [attr.aria-label]="tEffects(chip.kind)"
+            [attr.title]="tEffects(chip.kind)"
+          >
+            <tui-icon [icon]="chip.icon" />
+          </span>
+        }
+      </div>
+    }
+
     <div class="current-pokemon-status__head">
       <span class="current-pokemon-status__name">{{ name() }}</span>
     </div>

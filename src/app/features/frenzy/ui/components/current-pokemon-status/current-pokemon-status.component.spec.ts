@@ -29,6 +29,12 @@ function createFixture(
                   starving: 'Starving',
                 },
               },
+              effects: {
+                shield: 'Shielded',
+                wellFed: 'Well fed',
+                laying: 'Laying eggs',
+                pooping: 'Upset stomach',
+              },
             },
           },
         },
@@ -83,5 +89,29 @@ describe('CurrentPokemonStatusComponent', () => {
     const element = createFixture().nativeElement as HTMLElement;
 
     expect(element.querySelector('.current-pokemon-status__avatar')).not.toBeNull();
+  });
+
+  it('hides the buff strip when there are no active effects', () => {
+    const element = createFixture().nativeElement as HTMLElement;
+
+    expect(element.querySelector('.current-pokemon-status__buffs')).toBeNull();
+  });
+
+  it('renders a buff chip per active effect, labelled from frenzy.effects', () => {
+    const fixture = createFixture();
+
+    fixture.componentRef.setInput('effects', [
+      { kind: 'shield', expiresAt: 0 },
+      { kind: 'pooping', expiresAt: 0 },
+    ]);
+    fixture.detectChanges();
+
+    const chips = (fixture.nativeElement as HTMLElement).querySelectorAll(
+      '.current-pokemon-status__buff',
+    );
+
+    expect(chips).toHaveLength(2);
+    expect(chips[0].getAttribute('aria-label')).toBe('Shielded');
+    expect(chips[1].getAttribute('aria-label')).toBe('Upset stomach');
   });
 });

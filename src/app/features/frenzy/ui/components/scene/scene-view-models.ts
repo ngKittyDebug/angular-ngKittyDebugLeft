@@ -1,11 +1,23 @@
 // View models the scene renders each frame, derived from the authoritative server state by the extrapolator
 // services. Plain data — kept framework-free so the extrapolators and their specs share one source of truth.
 
-import type { Item, Stage } from '@game/frenzy/types';
+import type { Item, PlayerEffectKind, Stage } from '@game/frenzy/types';
+
+import type { EffectBadge } from '../../../data/models/effect-badge';
+
+// One overhead buff/debuff badge shown over a sprite: the registry icon + tone plus the effect `kind`, which the
+// scene resolves to an aria-label (`frenzy.effects.<kind>`).
+export interface RenderedEffectBadge extends EffectBadge {
+  kind: PlayerEffectKind;
+}
 
 export interface RenderedPlayer {
   appearance: string;
   effectAuras: readonly string[];
+  // Active timed effects as overhead badges (icon + tone + kind), present while `expiresAt` is in the future —
+  // same instant-expiry filter as `effectAuras`, shown for every actor including the NPC (it can pick up an effect
+  // by colliding with an item, and then shows the matching aura ring already).
+  effectBadges: readonly RenderedEffectBadge[];
   facingRight: boolean;
   id: string;
   isDisconnected: boolean;
