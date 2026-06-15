@@ -12,9 +12,7 @@
         <h3 class="card__name" [tuiSkeleton]="!card ? 2 : false">
           {{ card?.name | titlecase }}
         </h3>
-        <p class="card__id" [tuiSkeleton]="!card ? 1 : false">
-          #{{ card?.id }}
-        </p>
+        <p class="card__id" [tuiSkeleton]="!card ? 1 : false">#{{ card?.id }}</p>
       </div>
       <div class="card__line-left">
         @if (!card) {
