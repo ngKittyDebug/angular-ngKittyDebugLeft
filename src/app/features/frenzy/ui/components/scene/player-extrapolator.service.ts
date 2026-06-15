@@ -9,19 +9,29 @@ import { isSad } from '../../../data/logic/is-sad';
 import { EFFECT_BADGE } from '../../../data/models/effect-badge';
 import { spriteRenderFor } from '../../constants/pokemon-registry';
 import { clamp, decayedOffset, OFFSET_DECAY_TAU_MS, reflect, reflectDirection } from './drift-math';
-import type { RenderedPlayer } from './scene-view-models';
+import type { RenderedAura, RenderedPlayer } from './scene-view-models';
 
-// CSS class for the decorative aura ring drawn around a sprite per active effect kind.
-const EFFECT_AURA_CLASS: Record<PlayerEffectKind, string> = {
-  shield: 'scene__shield',
-  wellFed: 'scene__well-fed',
-  laying: 'scene__laying',
-  pooping: 'scene__poop',
+// Aura descriptor per active effect kind: the CSS class plus the render mode the template branches on (so the
+// template carries no magic class strings and needs no shield-class plumbing). `null` = no aura — wellFed reads
+// from its badge + the grounding-shadow tint instead. The render mode is data, not a guessed class comparison:
+// shield/bubble wear the shared single-tint soap-bubble skin; the bespoke egg bubble is styled wholly in SCSS.
+const EFFECT_AURA: Record<PlayerEffectKind, RenderedAura | null> = {
+  shield: { className: 'scene__shield', render: 'shield' },
+  pooping: { className: 'scene__poop', render: 'bubble' },
+  laying: { className: 'scene__laying', render: 'bespoke' },
+  wellFed: null,
 };
 
-// Which aura class wears the glassy bubble skin (the shield ward) — the rest are flat rings. Exposed so the
-// presentational player can pick the bubble-skin variant without re-deriving the mapping.
-export const SHIELD_AURA_CLASS = EFFECT_AURA_CLASS.shield;
+// Precedence for the single grounding-shadow tint when effects stack (max 3: shield + wellFed + one emitter):
+// the emitter (egg/poop) wins over shield, shield over wellFed. laying/pooping are mutually exclusive, so their
+// order relative to each other is moot — both outrank shield. The first kind found among the live effects tints
+// the shadow; none → neutral.
+const SHADOW_TINT_PRECEDENCE: readonly PlayerEffectKind[] = [
+  'laying',
+  'pooping',
+  'shield',
+  'wellFed',
+];
 
 interface PlayerBaseline {
   x0: number;
@@ -216,7 +226,15 @@ export class PlayerExtrapolatorService {
           ? 0
           : decayedOffset(baseline.offsetY, now - baseline.offsetStamp, OFFSET_DECAY_TAU_MS);
       const liveEffects = player.effects.filter((effect) => effect.expiresAt > wallNow);
-      const effectAuras = liveEffects.map((effect) => EFFECT_AURA_CLASS[effect.kind]);
+      const effectAuras = liveEffects
+        .map((effect) => EFFECT_AURA[effect.kind])
+        .filter((aura): aura is RenderedAura => aura !== null);
+      // Single dominant effect tinting the grounding shadow — first match by precedence; none → neutral base.
+      const dominantEffect = SHADOW_TINT_PRECEDENCE.find((kind) =>
+        liveEffects.some((effect) => effect.kind === kind),
+      );
+      const shadowEffectClass =
+        dominantEffect === undefined ? null : `scene__shadow--${dominantEffect}`;
       // Overhead buff badges track the same live effects as the auras — including the NPC, which CAN pick up an
       // effect by colliding with an item (e.g. shield), so its badge must match the aura ring it already shows.
       const effectBadges = liveEffects.map((effect) => ({
@@ -231,6 +249,7 @@ export class PlayerExtrapolatorService {
       return {
         appearance: player.appearance,
         effectAuras,
+        shadowEffectClass,
         effectBadges,
         facingRight: reflectDirection(x0, vx, elapsed, zone.minX, zone.maxX) > 0,
         id: player.id,

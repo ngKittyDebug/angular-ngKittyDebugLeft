@@ -34,7 +34,7 @@ import { SandPuffComponent } from '../sand-puff/sand-puff.component';
 import { SceneItemComponent } from '../scene-item/scene-item.component';
 import { ScenePlayerComponent } from '../scene-player/scene-player.component';
 import { ItemExtrapolatorService } from './item-extrapolator.service';
-import { PlayerExtrapolatorService, SHIELD_AURA_CLASS } from './player-extrapolator.service';
+import { PlayerExtrapolatorService } from './player-extrapolator.service';
 import { SceneBurstsService } from './scene-bursts.service';
 import { SceneCameraService } from './scene-camera.service';
 import { SceneSandPuffsService } from './scene-sand-puffs.service';
@@ -148,8 +148,6 @@ export class SceneComponent {
   protected readonly maxHp = MAX_VISUAL_HP;
   protected readonly worldWidth = FRENZY.world.width;
   protected readonly worldHeight = FRENZY.world.height;
-  // Which aura class wears the glassy bubble skin (the shield ward) — the rest are flat rings.
-  protected readonly shieldAuraClass = SHIELD_AURA_CLASS;
   // Item sprite size from the shared contract, exposed to CSS so render size tracks the server bound source.
   protected readonly itemSize = `${FRENZY.physicalSizePx.item}px`;
   // The bomb's larger collidable size (sensor-horn reach) — for the `?debug` box so it frames the real trigger area.

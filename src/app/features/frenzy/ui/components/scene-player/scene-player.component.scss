@@ -3,6 +3,13 @@
 // composites cleanly. Children stack in a centred column; the absolutely-positioned auras/hp-bar/sparks sit
 // out of that flow.
 :host {
+  // Per-effect tint — the SINGLE source of truth shared by the grounding-shadow modifiers below and (slice 2) the
+  // pulsing aura bubble (fed into `--left-paw-bubble-tint`), so the shadow tint and the bubble tint can never drift.
+  // laying carries a soft representative iridescent tone here; the full rainbow lives only in the bespoke egg bubble.
+  --aura-shield-tint: rgba(90, 190, 255, 0.9);
+  --aura-wellFed-tint: rgba(150, 230, 150, 0.85);
+  --aura-laying-tint: rgba(210, 160, 255, 0.85);
+  --aura-pooping-tint: rgba(120, 85, 50, 0.9);
   position: absolute;
   top: 0;
   left: 0;
@@ -38,13 +45,70 @@
   z-index: 2;
 }
 
+// Grounding contact shadow under EVERY sprite (own/others/NPC) so it sits ON the seabed instead of floating. Built
+// like the resting-item shadow (a blurred radial ellipse behind the sprite, z-index -1, riding the drift), but its
+// neutral base FLIPS by theme via `--scene-actor-shadow` (dark ellipse on the bright shallows, soft light disc on the
+// dark abyss where a dark shadow would vanish). Anchored at the body's feet: body bottom = sprite centre + offset +
+// half the hitbox. The dominant-effect modifier swaps the gradient core (`--shadow-core`) to that effect's shared
+// tint and breathes it in time with the bubble; the neutral shadow only fades in.
+.scene__shadow {
+  position: absolute;
+  top: calc(
+    var(--scene-sprite-height, 96px) / 2 + var(--scene-sprite-offset-y, 0px) +
+      var(--scene-hitbox-height, 96px) / 2
+  );
+  left: 50%;
+  z-index: -1;
+  // ~1.5× the sprite width (with a 0.28 ellipse profile) so a drifting actor reads as firmly planted on the seabed,
+  // not hovering. The core holds solid to ~36% before fading, so the diffuse ellipse stays expressive instead of
+  // washing out (the earlier narrow 0.9×/0.24 ellipse with an immediate falloff was too faint in both themes).
+  width: calc(var(--scene-sprite-width, 96px) * 1.5);
+  height: calc(var(--scene-sprite-width, 96px) * 1.5 * 0.28);
+  background: radial-gradient(
+    50% 50% at 50% 50%,
+    var(--shadow-core, var(--scene-actor-shadow, rgba(0, 0, 0, 0.4))) 0%,
+    var(--shadow-core, var(--scene-actor-shadow, rgba(0, 0, 0, 0.4))) 36%,
+    transparent 78%
+  );
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  filter: blur(3px);
+  pointer-events: none;
+  animation: scene-actor-shadow-in 150ms ease-out;
+}
+
+// Effect tint: recolour the gradient core to the shared per-effect tint and breathe in time with the bubble pulse.
+.scene__shadow--shield,
+.scene__shadow--wellFed,
+.scene__shadow--laying,
+.scene__shadow--pooping {
+  animation: scene-actor-shadow-breathe 2.6s ease-in-out infinite;
+}
+
+.scene__shadow--shield {
+  --shadow-core: var(--aura-shield-tint);
+}
+
+.scene__shadow--wellFed {
+  --shadow-core: var(--aura-wellFed-tint);
+}
+
+.scene__shadow--laying {
+  --shadow-core: var(--aura-laying-tint);
+}
+
+.scene__shadow--pooping {
+  --shadow-core: var(--aura-pooping-tint);
+}
+
 // shield bubble: a glassy soap-bubble encasing the sprite while the full-invulnerability ward is active, so
 // the Pokémon reads as sealed inside a sphere rather than ringed by a flat halo. The glass itself (cyan
 // fill brightening to the rim, specular highlight, volume shadow) is painted by the shared leftPawBubbleSkin
 // directive from `--left-paw-bubble-tint`; here we only own the circle's size, placement and pulse. Sits
 // behind the sprite (translucent, the sprite shows through) and is purely decorative (aria-hidden).
 .scene__shield {
-  --left-paw-bubble-tint: rgba(120, 220, 255, 0.9);
+  // Tint from the shared per-effect var (on `:host`) so the bubble and the grounding-shadow tint never drift.
+  --left-paw-bubble-tint: var(--aura-shield-tint);
   position: absolute;
   // Centre on the VISIBLE sprite, not the bare body point: follow the same vertical centring offset the sprite
   // uses (`--scene-sprite-offset-y` = −spriteOffsetY) so the ring/bubble wraps the art on winged/offset sprites.
@@ -84,81 +148,81 @@
   pointer-events: none;
 }
 
-// wellFed aura: a soft healthy-green ring while the vitamin's decay-pause buff is active. Shares the SAME ring
-// construction as the laying/poop auras (flat tint + the radial `mask` band + matching border/glow) so the buff
-// rings read as one visual family; recoloured green and kept gentle — a slow pulse, not the festive/cursed spin —
-// since it only stalls decay ("kept fed", not "invulnerable"). Nested a touch smaller (1.45× vs laying's 1.6×) so
-// when buffs stack it still reads as a distinct inner ring rather than overlapping its sibling.
-.scene__well-fed {
-  position: absolute;
-  // Centre on the VISIBLE sprite, not the bare body point: follow the same vertical centring offset the sprite
-  // uses (`--scene-sprite-offset-y` = −spriteOffsetY) so the ring wraps the art on winged/offset sprites.
-  top: calc(var(--scene-sprite-height, 96px) / 2 + var(--scene-sprite-offset-y, 0px));
-  left: 50%;
-  width: calc(var(--scene-sprite-height, 96px) * 1.45);
-  height: calc(var(--scene-sprite-height, 96px) * 1.45);
-  border-radius: 50%;
-  border: 2px solid rgba(150, 230, 150, 0.85);
-  background: rgba(150, 230, 150, 0.28);
-  mask: radial-gradient(circle, transparent 56%, #000 60%, #000 88%, transparent 100%);
-  box-shadow: 0 0 14px rgba(150, 230, 150, 0.6);
-  transform: translate(-50%, -50%);
-  animation: scene-shield-pulse 2.2s ease-in-out infinite;
-  pointer-events: none;
-}
-
-// laying aura: a festive multicolour ring that slowly spins, signalling the easter-egg item-spewing buff.
+// laying (egg) aura: the bespoke member of the bubble family — an iridescent rainbow soap-bubble for the
+// easter-egg item-spewing buff. The shared single-tint `leftPawBubbleSkin` can't make a rainbow, so it's built by
+// hand from three composed layers that never fight over one `transform`: the element itself PULSES (scale, same
+// `scene-shield-pulse` as its siblings), its `::before` ROTATES a translucent conic rainbow (the soap-film
+// shimmer, centre masked out so the sprite reads through), and its `::after` holds the STATIC glass (top-left
+// specular highlight + bright rim + volume), a hand-rolled replica of the directive's glass so it matches its
+// siblings. Spin lives only on `::before`, so the highlight stays put while the colours drift.
 .scene__laying {
   position: absolute;
   // Centre on the VISIBLE sprite, not the bare body point: follow the same vertical centring offset the sprite
-  // uses (`--scene-sprite-offset-y` = −spriteOffsetY) so the ring/bubble wraps the art on winged/offset sprites.
+  // uses (`--scene-sprite-offset-y` = −spriteOffsetY) so the bubble wraps the art on winged/offset sprites.
   top: calc(var(--scene-sprite-height, 96px) / 2 + var(--scene-sprite-offset-y, 0px));
   left: 50%;
-  width: calc(var(--scene-sprite-height, 96px) * 1.6);
-  height: calc(var(--scene-sprite-height, 96px) * 1.6);
+  width: calc(var(--scene-sprite-height, 96px) * 1.5);
+  height: calc(var(--scene-sprite-height, 96px) * 1.5);
   border-radius: 50%;
-  border: 2px solid rgba(255, 170, 210, 0.85);
-  background: conic-gradient(
-    from 0deg,
-    rgba(255, 120, 120, 0.28),
-    rgba(255, 210, 120, 0.28),
-    rgba(140, 220, 150, 0.28),
-    rgba(120, 190, 255, 0.28),
-    rgba(210, 140, 255, 0.28),
-    rgba(255, 120, 120, 0.28)
-  );
-  mask: radial-gradient(circle, transparent 56%, #000 60%, #000 88%, transparent 100%);
-  box-shadow: 0 0 14px rgba(255, 170, 210, 0.6);
   transform: translate(-50%, -50%);
-  animation: scene-laying-spin 3s linear infinite;
+  animation: scene-shield-pulse 2.6s ease-in-out infinite;
   pointer-events: none;
 }
 
-// pooping aura: the cursed twin of the laying ring — a murky brown spinning halo signalling the poop debuff
-// (the Pokémon sprays rock/brick/bomb). Same geometry/spin as `.scene__laying`, recoloured to muddy browns.
-.scene__poop {
+// Rotating rainbow soap-film: a translucent conic rainbow whose centre is masked transparent (so the sprite shows
+// through) and which strengthens toward the rim, slowly spinning to shimmer. Rotation only — the parent owns the pulse.
+.scene__laying::before {
+  content: '';
   position: absolute;
-  // Centre on the VISIBLE sprite, not the bare body point: follow the same vertical centring offset the sprite
-  // uses (`--scene-sprite-offset-y` = −spriteOffsetY) so the ring/bubble wraps the art on winged/offset sprites.
-  top: calc(var(--scene-sprite-height, 96px) / 2 + var(--scene-sprite-offset-y, 0px));
-  left: 50%;
-  width: calc(var(--scene-sprite-height, 96px) * 1.6);
-  height: calc(var(--scene-sprite-height, 96px) * 1.6);
+  inset: 0;
   border-radius: 50%;
-  border: 2px solid rgba(120, 85, 50, 0.85);
   background: conic-gradient(
     from 0deg,
-    rgba(90, 60, 35, 0.3),
-    rgba(140, 100, 60, 0.3),
-    rgba(110, 75, 45, 0.3),
-    rgba(70, 50, 30, 0.3),
-    rgba(140, 100, 60, 0.3),
-    rgba(90, 60, 35, 0.3)
+    rgba(255, 120, 120, 0.42),
+    rgba(255, 210, 120, 0.42),
+    rgba(140, 220, 150, 0.42),
+    rgba(120, 190, 255, 0.42),
+    rgba(210, 140, 255, 0.42),
+    rgba(255, 120, 120, 0.42)
   );
-  mask: radial-gradient(circle, transparent 56%, #000 60%, #000 88%, transparent 100%);
-  box-shadow: 0 0 14px rgba(120, 85, 50, 0.6);
+  mask: radial-gradient(circle, transparent 40%, #000 82%);
+  animation: scene-rainbow-spin 7s linear infinite;
+}
+
+// Static glass over the rainbow: top-left specular highlight, bright rim and inner/outer volume — a hand-rolled
+// copy of the `leftPawBubbleSkin` layers (it can't sit on a rainbow), kept neutral white so it reads as glass.
+.scene__laying::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 30% 22%,
+    rgba(255, 255, 255, 0.6) 0%,
+    rgba(255, 255, 255, 0) 26%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow:
+    0 0 12px rgba(200, 220, 255, 0.4),
+    inset 0 0 14px rgba(255, 255, 255, 0.2),
+    inset -4px -7px 14px rgba(190, 200, 255, 0.22);
+}
+
+// pooping aura: the cursed twin of the shield bubble — a murky brown pulsing soap-bubble signalling the poop debuff
+// (the Pokémon sprays rock/brick/bomb). Same bubble geometry/skin as `.scene__shield` (glass painted inline by
+// `leftPawBubbleSkin`), recoloured to muddy browns via the shared tint var; no ward-flash (it's a debuff).
+.scene__poop {
+  --left-paw-bubble-tint: var(--aura-pooping-tint);
+  position: absolute;
+  // Centre on the VISIBLE sprite, not the bare body point: follow the same vertical centring offset the sprite
+  // uses (`--scene-sprite-offset-y` = −spriteOffsetY) so the bubble wraps the art on winged/offset sprites.
+  top: calc(var(--scene-sprite-height, 96px) / 2 + var(--scene-sprite-offset-y, 0px));
+  left: 50%;
+  width: calc(var(--scene-sprite-height, 96px) * 1.5);
+  height: calc(var(--scene-sprite-height, 96px) * 1.5);
+  border-radius: 50%;
   transform: translate(-50%, -50%);
-  animation: scene-laying-spin 3s linear infinite;
+  animation: scene-shield-pulse 2.6s ease-in-out infinite;
   pointer-events: none;
 }
 
@@ -355,13 +419,14 @@
   }
 }
 
-@keyframes scene-laying-spin {
+// Pure rotation for the egg bubble's rainbow `::before` (the element already owns translate + the pulse scale).
+@keyframes scene-rainbow-spin {
   from {
-    transform: translate(-50%, -50%) rotate(0deg);
+    transform: rotate(0deg);
   }
 
   to {
-    transform: translate(-50%, -50%) rotate(360deg);
+    transform: rotate(360deg);
   }
 }
 
@@ -393,11 +458,36 @@
   }
 }
 
+// Neutral grounding shadow only fades in; the breathe (when tinted) preserves the translate so it doesn't drift.
+@keyframes scene-actor-shadow-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scene-actor-shadow-breathe {
+  0%,
+  100% {
+    opacity: 0.78;
+    transform: translate(-50%, -50%) scale(0.97);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.06);
+  }
+}
+
 // Keep the effect auras visible but static under reduced-motion — their job is to signal the buff, not animate.
 @media (prefers-reduced-motion: reduce) {
+  .scene__shadow,
   .scene__shield,
-  .scene__well-fed,
   .scene__laying,
+  .scene__laying::before,
   .scene__poop {
     animation: none;
   }

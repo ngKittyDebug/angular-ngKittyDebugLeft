@@ -11,9 +11,25 @@ export interface RenderedEffectBadge extends EffectBadge {
   kind: PlayerEffectKind;
 }
 
+// How a sprite's effect aura is drawn. `shield`/`bubble` are the single-tint pulsing soap-bubble (the shared
+// `leftPawBubbleSkin`), differing only by tint; `bespoke` is the iridescent rainbow egg bubble, which the
+// single-tint skin can't produce, so its template branch wears no directive and is styled wholly in SCSS.
+export type AuraRender = 'shield' | 'bubble' | 'bespoke';
+
+// One active aura: the CSS class carrying its geometry/tint plus the render mode the template `@switch`es on.
+export interface RenderedAura {
+  className: string;
+  render: AuraRender;
+}
+
 export interface RenderedPlayer {
   appearance: string;
-  effectAuras: readonly string[];
+  effectAuras: readonly RenderedAura[];
+  // Modifier class for the grounding-shadow tint: the single dominant active effect by fixed precedence
+  // (emitter egg/poop > shield > wellFed), as `scene__shadow--<kind>`. `null` when no effect is active — the
+  // shadow stays its neutral theme-flipped base. The shadow always echoes the visible bubble; wellFed (which
+  // has no bubble) only tints the shadow when it is the sole effect.
+  shadowEffectClass: string | null;
   // Active timed effects as overhead badges (icon + tone + kind), present while `expiresAt` is in the future —
   // same instant-expiry filter as `effectAuras`, shown for every actor including the NPC (it can pick up an effect
   // by colliding with an item, and then shows the matching aura ring already).

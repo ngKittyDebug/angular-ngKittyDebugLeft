@@ -75,7 +75,7 @@ describe('PlayerExtrapolatorService', () => {
     expect(service.rendered().find((p) => p.id === 'p1')?.isMe).toBe(false);
   });
 
-  it('emits an aura class for a live effect and drops it once expired', () => {
+  it('emits an aura render descriptor for a live effect and drops it once expired', () => {
     const service = new PlayerExtrapolatorService();
     const live = player({
       id: 'p1',
@@ -83,7 +83,9 @@ describe('PlayerExtrapolatorService', () => {
     });
 
     service.ingest([live], null, NONE, 0);
-    expect(service.rendered()[0].effectAuras).toContain('scene__shield');
+    expect(service.rendered()[0].effectAuras).toEqual([
+      { className: 'scene__shield', render: 'shield' },
+    ]);
 
     const expired = player({
       id: 'p1',
@@ -92,6 +94,127 @@ describe('PlayerExtrapolatorService', () => {
 
     service.ingest([expired], null, NONE, 1);
     expect(service.rendered()[0].effectAuras).toEqual([]);
+  });
+
+  it('maps each aura-bearing effect to its render mode (shield / bubble / bespoke)', () => {
+    const service = new PlayerExtrapolatorService();
+
+    service.ingest(
+      [
+        player({
+          id: 'p1',
+          effects: [
+            { kind: 'shield', expiresAt: Date.now() + 10_000 },
+            { kind: 'pooping', expiresAt: Date.now() + 10_000 },
+            { kind: 'laying', expiresAt: Date.now() + 10_000 },
+          ],
+        }),
+      ],
+      null,
+      NONE,
+      0,
+    );
+
+    expect(service.rendered()[0].effectAuras).toEqual([
+      { className: 'scene__shield', render: 'shield' },
+      { className: 'scene__poop', render: 'bubble' },
+      { className: 'scene__laying', render: 'bespoke' },
+    ]);
+  });
+
+  it('gives wellFed no aura at all — only its badge (and the grounding-shadow tint)', () => {
+    const service = new PlayerExtrapolatorService();
+
+    service.ingest(
+      [player({ id: 'p1', effects: [{ kind: 'wellFed', expiresAt: Date.now() + 10_000 }] })],
+      null,
+      NONE,
+      0,
+    );
+
+    const rendered = service.rendered()[0];
+
+    expect(rendered.effectAuras).toEqual([]);
+    expect(rendered.effectBadges).toEqual([
+      { kind: 'wellFed', icon: '@tui.heart', tone: 'positive' },
+    ]);
+  });
+
+  it('resolves no grounding-shadow tint when the player has no active effects', () => {
+    const service = new PlayerExtrapolatorService();
+
+    service.ingest([player({ id: 'p1' })], null, NONE, 0);
+
+    expect(service.rendered()[0].shadowEffectClass).toBeNull();
+  });
+
+  it('tints the grounding shadow for the sole active effect (wellFed alone, which has no bubble)', () => {
+    const service = new PlayerExtrapolatorService();
+
+    service.ingest(
+      [player({ id: 'p1', effects: [{ kind: 'wellFed', expiresAt: Date.now() + 10_000 }] })],
+      null,
+      NONE,
+      0,
+    );
+
+    expect(service.rendered()[0].shadowEffectClass).toBe('scene__shadow--wellFed');
+  });
+
+  it('prefers shield over wellFed for the grounding-shadow tint when both stack', () => {
+    const service = new PlayerExtrapolatorService();
+
+    service.ingest(
+      [
+        player({
+          id: 'p1',
+          effects: [
+            { kind: 'wellFed', expiresAt: Date.now() + 10_000 },
+            { kind: 'shield', expiresAt: Date.now() + 10_000 },
+          ],
+        }),
+      ],
+      null,
+      NONE,
+      0,
+    );
+
+    expect(service.rendered()[0].shadowEffectClass).toBe('scene__shadow--shield');
+  });
+
+  it('prefers the emitter (laying) over shield and wellFed for the grounding-shadow tint', () => {
+    const service = new PlayerExtrapolatorService();
+
+    service.ingest(
+      [
+        player({
+          id: 'p1',
+          effects: [
+            { kind: 'wellFed', expiresAt: Date.now() + 10_000 },
+            { kind: 'shield', expiresAt: Date.now() + 10_000 },
+            { kind: 'laying', expiresAt: Date.now() + 10_000 },
+          ],
+        }),
+      ],
+      null,
+      NONE,
+      0,
+    );
+
+    expect(service.rendered()[0].shadowEffectClass).toBe('scene__shadow--laying');
+  });
+
+  it('drops the grounding-shadow tint once the only effect expires (neutral again)', () => {
+    const service = new PlayerExtrapolatorService();
+
+    service.ingest(
+      [player({ id: 'p1', effects: [{ kind: 'shield', expiresAt: Date.now() - 1000 }] })],
+      null,
+      NONE,
+      0,
+    );
+
+    expect(service.rendered()[0].shadowEffectClass).toBeNull();
   });
 
   it('emits an effect badge (icon + tone) for a live effect and drops it once expired', () => {

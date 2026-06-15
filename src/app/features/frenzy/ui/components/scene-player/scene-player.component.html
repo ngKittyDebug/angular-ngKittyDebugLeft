@@ -1,14 +1,27 @@
 <ng-container *transloco="let t; prefix: 'frenzy.scene'">
-  @for (aura of player().effectAuras; track aura) {
-    @if (aura === shieldAuraClass()) {
-      <span
-        [class]="aura"
-        [class.scene__shield--pulse]="shieldBlocks().length > 0"
-        leftPawBubbleSkin
-        aria-hidden="true"
-      ></span>
-    } @else {
-      <span [class]="aura" aria-hidden="true"></span>
+  <!-- Grounding contact shadow under EVERY sprite (own/others/NPC), behind it (z-index -1), riding the drift.
+       Neutral theme-flipped base; the dominant-effect modifier class (null = none) recolours + breathes it. -->
+  <span class="scene__shadow" [class]="player().shadowEffectClass" aria-hidden="true"></span>
+
+  @for (aura of player().effectAuras; track aura.className) {
+    @switch (aura.render) {
+      @case ('shield') {
+        <!-- shield ward: the glassy bubble + a one-shot ward-flash when a hit is deflected. -->
+        <span
+          [class]="aura.className"
+          [class.scene__shield--pulse]="shieldBlocks().length > 0"
+          leftPawBubbleSkin
+          aria-hidden="true"
+        ></span>
+      }
+      @case ('bubble') {
+        <!-- single-tint pulsing soap bubble (e.g. pooping → brown); tint comes from the class's CSS var. -->
+        <span [class]="aura.className" leftPawBubbleSkin aria-hidden="true"></span>
+      }
+      @case ('bespoke') {
+        <!-- iridescent rainbow egg bubble — styled wholly in SCSS, no single-tint directive. -->
+        <span [class]="aura.className" aria-hidden="true"></span>
+      }
     }
   }
 

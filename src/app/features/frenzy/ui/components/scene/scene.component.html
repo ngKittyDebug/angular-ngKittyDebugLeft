@@ -83,7 +83,6 @@
         [sparks]="sparksByOwner().get(player.id) ?? []"
         [shieldBlocks]="shieldBlocksByOwner().get(player.id) ?? []"
         [maxHp]="maxHp"
-        [shieldAuraClass]="shieldAuraClass"
         [isLeader]="player.id === crownId()"
         (poke)="onSelfPoke()"
         (pokeNpc)="onPokeNpc($event)"

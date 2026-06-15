@@ -51,7 +51,6 @@ export class ScenePlayerComponent {
   public readonly sparks = input<readonly OwnedSpark[]>([]);
   public readonly shieldBlocks = input<readonly OwnedShieldBlock[]>([]);
   public readonly maxHp = input.required<number>();
-  public readonly shieldAuraClass = input.required<string>();
   /** Whether this player currently wears the crown (the alive hp-leader). Draws a crown marker over the head. */
   public readonly isLeader = input(false);
   public readonly poke = output<void>();

@@ -33,6 +33,10 @@
   --aq-sand-debris-rim: rgba(40, 22, 0, 0.6);
   // Soft shadow a resting item casts on the sand — warm brown so it reads as a shadow on the tan shallows.
   --aq-item-shadow: rgba(70, 48, 18, 0.34);
+  // Grounding shadow under the drifting actors. Light theme: a real dark shadow (the players cross the bright
+  // shallows). Dark theme flips it (below) to a light disc — over the dark abyss a dark shadow would disappear.
+  // Kept dense (the diffuse ellipse otherwise reads too faint over the busy seabed).
+  --scene-actor-shadow: rgba(34, 21, 7, 0.48);
   --aq-ray: rgba(255, 255, 255, 0.9);
   --aq-bubble: rgba(255, 255, 255, 0.95);
   // Bright-white specks (like the bubbles): motes + the foreground parallax are pure white, scaled up and lifted
@@ -78,6 +82,9 @@
   --aq-sand-debris-rim: rgba(0, 0, 0, 0.7);
   // Deep shadow (darker than the violet silt so it still reads on the dark seabed).
   --aq-item-shadow: rgba(8, 4, 26, 0.55);
+  // Flip for the abyss: a soft cool-white disc under the actors, since a dark shadow would vanish into the dark water.
+  // Brighter/denser than a literal shadow so it actually reads as a glow-pool on the near-black silt.
+  --scene-actor-shadow: rgba(205, 225, 255, 0.42);
   --aq-ray: rgba(120, 160, 255, 0.28);
   --aq-bubble: rgba(180, 210, 255, 0.6);
   --aq-plankton: rgba(150, 220, 255, 1);
