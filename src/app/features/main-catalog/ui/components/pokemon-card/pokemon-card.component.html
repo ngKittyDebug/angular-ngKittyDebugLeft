@@ -1,33 +1,34 @@
-<a [routerLink]="['/pokemon', pokemonCardData.cardData()?.name]" class="card__link">
+@let card = pokemonCardData.cardData();
+<a [routerLink]="['/pokemon', card?.name]" class="card__link">
   <figure class="card__cover">
     <img
       class="card__image"
-      [src]="pokemonCardData.cardData()?.sprites?.other?.['official-artwork']?.front_default"
-      [alt]="pokemonCardData.cardData()?.name"
-      [tuiSkeleton]="!pokemonCardData.cardData()"
+      [src]="card?.sprites?.other?.['official-artwork']?.front_default"
+      [alt]="card?.name"
+      [tuiSkeleton]="!card"
     />
     <figcaption class="card__information">
       <div class="card__line">
-        <h3 class="card__name" [tuiSkeleton]="!pokemonCardData.cardData() ? 2 : false">
-          {{ pokemonCardData.cardData()?.name | titlecase }}
+        <h3 class="card__name" [tuiSkeleton]="!card ? 2 : false">
+          {{ card?.name | titlecase }}
         </h3>
-        <p class="card__id" [tuiSkeleton]="!pokemonCardData.cardData() ? 1 : false">
-          #{{ pokemonCardData.cardData()?.id }}
+        <p class="card__id" [tuiSkeleton]="!card ? 1 : false">
+          #{{ card?.id }}
         </p>
       </div>
       <div class="card__line-left">
-        @if (!pokemonCardData.cardData()) {
+        @if (!card) {
           <span class="card__type" tuiBadge [tuiSkeleton]="true"></span>
           <span class="card__type" tuiBadge [tuiSkeleton]="true"></span>
         } @else {
-          @for (item of pokemonCardData.cardData()?.types; track item.type.name) {
+          @for (item of card?.types; track item.type.name) {
             <span class="card__type card__type-{{ item.type.name }}" tuiBadge>{{
               item.type.name
             }}</span>
           }
         }
       </div>
-      @if (!pokemonCardData.cardData()) {
+      @if (!card) {
         @for (fake of skeletonStats; track $index) {
           <div class="card__line-stats">
             <p class="stats__name" [tuiSkeleton]="1"></p>
