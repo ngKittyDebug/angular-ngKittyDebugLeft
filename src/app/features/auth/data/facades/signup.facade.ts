@@ -1,12 +1,15 @@
-import { inject, Service, signal } from '@angular/core';
+import { DestroyRef, inject, Service, signal } from '@angular/core';
 import { AuthApiService } from '@features/auth/api/auth-api.service';
 import { SignupFormService } from '../services/signup-form.service';
 import { submit } from '@angular/forms/signals';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { finalize } from 'rxjs';
 
 @Service({ autoProvided: false })
 export class SignUpFacade {
   private readonly authApiService = inject(AuthApiService);
   private readonly signupFormService = inject(SignupFormService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly signupFormModel = this.signupFormService.signupFormModel;
 
   public readonly signupForm = this.signupFormService.signupForm;
@@ -16,9 +19,20 @@ export class SignUpFacade {
     this.isLoading.set(true);
 
     submit(this.signupForm, async () => {
-      localStorage.setItem('loginFormData', JSON.stringify(this.signupFormModel()));
-
-      this.isLoading.set(false);
+      this.authApiService
+        .onRegistrationSubmit(this.signupFormModel())
+        .pipe(
+          finalize(() => this.isLoading.set(false)),
+          takeUntilDestroyed(this.destroyRef),
+        )
+        .subscribe({
+          next: (data) => {
+            //TODO тут будем сетапить в отдельный AuthService вместо локал стораджа
+            localStorage.setItem('loginFormData', JSON.stringify(data));
+          },
+          //TODO далее ошибки будем обрабатывать в отдельном сервисе, на консоль лог не обращайте внимание
+          error: (error) => console.log(error),
+        });
 
       return null;
     });

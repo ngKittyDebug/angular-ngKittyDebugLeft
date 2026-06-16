@@ -22,7 +22,7 @@ export class AuthApiService {
   public onRegistrationSubmit(signupModel: SignupModel) {
     const convertedSignUpModel = convertSignUpModelToSignUpApiModel(signupModel);
 
-    return this.httpClient.post(`${this.authURLToken}/auth/register`, convertedSignUpModel, {
+    return this.httpClient.post(`${this.authURLToken}auth/register`, convertedSignUpModel, {
       withCredentials: true,
     });
   }
