@@ -687,8 +687,16 @@ describe('applyTick', () => {
 
     expect(movedA.hp).toBe(PLAYER.hp + FRENZY.playerCollision.bumpDamage);
     expect(movedB.hp).toBe(PLAYER.hp + FRENZY.playerCollision.bumpDamage);
-    expect(events).toContainEqual({ type: 'bumped', playerId: 'a' });
-    expect(events).toContainEqual({ type: 'bumped', playerId: 'b' });
+    expect(events).toContainEqual({
+      type: 'bumped',
+      playerId: 'a',
+      amount: FRENZY.playerCollision.bumpDamage,
+    });
+    expect(events).toContainEqual({
+      type: 'bumped',
+      playerId: 'b',
+      amount: FRENZY.playerCollision.bumpDamage,
+    });
   });
 
   it('spares a shielded player from bump damage and its float (the rammer still takes both)', () => {
@@ -721,7 +729,11 @@ describe('applyTick', () => {
     expect(next.players.find((player) => player.id === 'rammer')?.hp).toBe(
       PLAYER.hp + FRENZY.playerCollision.bumpDamage,
     );
-    expect(events).toContainEqual({ type: 'bumped', playerId: 'rammer' });
+    expect(events).toContainEqual({
+      type: 'bumped',
+      playerId: 'rammer',
+      amount: FRENZY.playerCollision.bumpDamage,
+    });
     expect(events).not.toContainEqual({ type: 'bumped', playerId: 'shielded' });
   });
 

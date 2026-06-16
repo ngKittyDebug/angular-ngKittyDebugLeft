@@ -21,8 +21,8 @@ function sequenceRng(values: number[]): () => number {
 describe('spawnItem', () => {
   // The rng draw order (type → x → budget) is load-bearing under a seeded rng — pin it with a scripted sequence.
   it('draws type, then x, then the click budget — in that order — for a budget-carrying item', () => {
-    // Roll 0.57 lands in the bomb band of the world pool (see pick-item-type.spec band map).
-    const item = spawnItem(FRENZY_DEFINITION, sequenceRng([0.57, 0.5, 0]), () => 'id-1');
+    // Roll 0.54 lands in the bomb band of the world pool (see pick-item-type.spec band map).
+    const item = spawnItem(FRENZY_DEFINITION, sequenceRng([0.54, 0.5, 0]), () => 'id-1');
     const [minX, maxX] = FRENZY_DEFINITION.spawn.xRange;
     const [minClicks] = FRENZY.bomb.clicksToExplodeRange;
 
@@ -38,7 +38,7 @@ describe('spawnItem', () => {
   it('stamps the budget range inclusively at the top edge', () => {
     const [, maxClicks] = FRENZY.bomb.clicksToExplodeRange;
     // rng → 0.999…: floor(rng * (max - min + 1)) hits the last bucket → max, never max + 1.
-    const item = spawnItem(FRENZY_DEFINITION, sequenceRng([0.57, 0.5, 0.999999]), () => 'id-2');
+    const item = spawnItem(FRENZY_DEFINITION, sequenceRng([0.54, 0.5, 0.999999]), () => 'id-2');
 
     expect(item.clicksLeft).toBe(maxClicks);
   });

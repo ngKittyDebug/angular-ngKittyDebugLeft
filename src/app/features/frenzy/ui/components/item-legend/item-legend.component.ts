@@ -39,6 +39,7 @@ const ITEM_GROUP: Record<ItemType, GroupKey> = {
   rareCandy: 'good',
   vitamin: 'good',
   shield: 'good',
+  cactus: 'good',
   mushroom: 'risky',
   easterEgg: 'risky',
   rotten: 'bad',

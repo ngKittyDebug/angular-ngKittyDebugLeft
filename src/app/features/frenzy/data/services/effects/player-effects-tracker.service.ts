@@ -12,11 +12,15 @@ import type { FrenzyEffect } from './frenzy-effect';
 import { FloatingMessagesStore } from './floating-messages.store';
 
 // Status-float phrase set to play per granted effect kind (keys live under `frenzy.scene.statusMessage`).
-const STATUS_FOR_EFFECT: Record<PlayerEffectKind, 'shield' | 'wellFed' | 'laying' | 'pooping'> = {
+const STATUS_FOR_EFFECT: Record<
+  PlayerEffectKind,
+  'shield' | 'wellFed' | 'laying' | 'pooping' | 'cactus'
+> = {
   shield: 'shield',
   wellFed: 'wellFed',
   laying: 'laying',
   pooping: 'pooping',
+  cactus: 'cactus',
 };
 
 /** Turns each `effectGranted` event into a status quip over the taker and (for effects landing on me) a sound cue. */
@@ -30,6 +34,8 @@ export class PlayerEffectsTracker implements FrenzyEffect {
     wellFed: inject(WellFedSoundService),
     laying: inject(EasterEggSoundService),
     pooping: inject(PoopEatSoundService),
+    // Cactus reuses the shield buff-pickup cue (both are defensive wards; no bespoke sound for the MVP).
+    cactus: inject(ShieldSoundService),
   };
 
   public handle(message: ServerMessage): void {

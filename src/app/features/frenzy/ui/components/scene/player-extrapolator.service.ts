@@ -19,16 +19,18 @@ const EFFECT_AURA: Record<PlayerEffectKind, RenderedAura | null> = {
   shield: { className: 'scene__shield', render: 'shield' },
   pooping: { className: 'scene__poop', render: 'bubble' },
   laying: { className: 'scene__laying', render: 'bespoke' },
+  cactus: { className: 'scene__cactus', render: 'bespoke' },
   wellFed: null,
 };
 
-// Precedence for the single grounding-shadow tint when effects stack (max 3: shield + wellFed + one emitter):
-// the emitter (egg/poop) wins over shield, shield over wellFed. laying/pooping are mutually exclusive, so their
-// order relative to each other is moot — both outrank shield. The first kind found among the live effects tints
+// Precedence for the single grounding-shadow tint when effects stack: the emitter (egg/poop) wins over the spiky
+// cactus ward, which wins over shield, which wins over wellFed. laying/pooping are mutually exclusive, so their
+// order relative to each other is moot — both outrank cactus. The first kind found among the live effects tints
 // the shadow; none → neutral.
 const SHADOW_TINT_PRECEDENCE: readonly PlayerEffectKind[] = [
   'laying',
   'pooping',
+  'cactus',
   'shield',
   'wellFed',
 ];
