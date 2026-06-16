@@ -62,10 +62,21 @@ interface PlayerBaseline {
 export class PlayerExtrapolatorService {
   private readonly baselines = new Map<string, PlayerBaseline>();
   private readonly _rendered = signal<readonly RenderedPlayer[]>([]);
+  // The live per-frame view models. `tick` refreshes this (read by the imperative position writer, the `?debug=perf`
+  // gap and consumers that must see this frame) WITHOUT touching the `rendered` signal — players have no structural
+  // field that changes mid-extrapolation (facing is a flag written imperatively; hp/stage/effects come from a
+  // snapshot), so per-frame motion never triggers change detection. See ADR 0001.
+  private _frame: readonly RenderedPlayer[] = [];
 
+  // Structure signal: changes only on `ingest` (a server snapshot). Drives the `@for` and the `?debug` box overlay.
   public readonly rendered = this._rendered.asReadonly();
 
-  // Re-anchor baselines from a fresh snapshot, then publish the extrapolated positions.
+  // The latest per-frame view models (positions + facing), live every tick. Not a signal — read imperatively.
+  public frame(): readonly RenderedPlayer[] {
+    return this._frame;
+  }
+
+  // Re-anchor baselines from a fresh snapshot, then publish the extrapolated positions (structure + frame).
   public ingest(
     players: readonly Player[],
     myId: string | null,
@@ -73,17 +84,25 @@ export class PlayerExtrapolatorService {
     now: number,
   ): void {
     this.sync(players, now);
-    this._rendered.set(this.compute(players, myId, evolving, now));
+    this._frame = this.compute(players, myId, evolving, now);
+    this._rendered.set(this._frame);
   }
 
-  // Per-frame republish (rAF loop): advance along existing baselines without re-anchoring.
+  // Per-frame recompute (rAF loop): advance along existing baselines without re-anchoring. Updates only the live
+  // `frame` — never the `rendered` signal — so moving sprites costs no change detection.
   public tick(
     players: readonly Player[],
     myId: string | null,
     evolving: ReadonlyMap<string, number>,
     now: number,
   ): void {
-    this._rendered.set(this.compute(players, myId, evolving, now));
+    this._frame = this.compute(players, myId, evolving, now);
+  }
+
+  // Mirror the current frame into the structure signal. Used only by the `?debug` box overlay, which needs the
+  // boxes to track the sprites every frame (a dev tool — the per-frame change detection it reintroduces is fine).
+  public publishFrame(): void {
+    this._rendered.set(this._frame);
   }
 
   // Client-side prediction for the local Pokémon only: re-anchor my baseline at its current rendered position and

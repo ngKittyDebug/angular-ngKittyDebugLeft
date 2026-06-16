@@ -16,8 +16,8 @@
 
     @for (item of renderedItemsByDepth(); track item.id) {
       <left-paw-scene-item
-        [leftPawScenePosition]="{ x: item.x, y: item.y }"
-        [scenePositionTransform]="true"
+        leftPawActorHost="item"
+        [actorId]="item.id"
         [item]="item"
         (clicked)="onItemClick(item, $event)"
       />
@@ -54,8 +54,8 @@
         @if (floats.length) {
           <div
             class="scene__owned-floats"
-            [leftPawScenePosition]="{ x: player.x, y: player.y }"
-            [scenePositionTransform]="true"
+            leftPawActorHost="float"
+            [actorId]="player.id"
             [style.--scene-sprite-height]="player.spriteHeight"
             [style.--scene-sprite-offset-y]="-player.spriteOffsetY + 'px'"
           >
@@ -77,8 +77,8 @@
 
     @for (player of renderedPlayers(); track player.id) {
       <left-paw-scene-player
-        [leftPawScenePosition]="{ x: player.x, y: player.y }"
-        [scenePositionTransform]="true"
+        leftPawActorHost="player"
+        [actorId]="player.id"
         [player]="player"
         [sparks]="sparksByOwner().get(player.id) ?? []"
         [shieldBlocks]="shieldBlocksByOwner().get(player.id) ?? []"
@@ -156,7 +156,7 @@
   <left-paw-perf-readout
     [enabled]="debug.perf"
     [players]="players()"
-    [renderedPlayers]="renderedPlayers()"
+    [renderedPlayers]="perfPlayers()"
     [myId]="myId()"
   />
 </section>

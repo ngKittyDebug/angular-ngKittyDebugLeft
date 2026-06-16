@@ -315,7 +315,9 @@ describe('PlayerExtrapolatorService', () => {
     service.predictSteer('me', 0.9, 0.5, 0); // steer right
     service.tick([me], 'me', NONE, 500); // advance 0.5s
 
-    expect(service.rendered()[0].x).toBeGreaterThan(0.5);
+    // `tick` advances the live per-frame view models (`frame`), not the structure signal (`rendered`), which only
+    // republishes on a snapshot — so the post-tick position is read from `frame`. See ADR 0001.
+    expect(service.frame()[0].x).toBeGreaterThan(0.5);
   });
 
   it('ignores a steer when there is no local player', () => {
@@ -358,7 +360,8 @@ describe('PlayerExtrapolatorService', () => {
         now + 5,
       );
 
-      const rendered = service.rendered()[0];
+      // Post-tick position lives in `frame` (the structure signal only republishes on a snapshot). See ADR 0001.
+      const rendered = service.frame()[0];
 
       expect(rendered.x).toBeGreaterThanOrEqual(zone.minX);
       expect(rendered.x).toBeLessThanOrEqual(zone.maxX);

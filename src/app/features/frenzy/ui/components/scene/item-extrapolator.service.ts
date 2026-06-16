@@ -34,6 +34,36 @@ const ITEM_HALF_WIDTH = halfExtentNorm(FRENZY.physicalSizePx.item, FRENZY.world.
 // Same size-aware top wall on the vertical axis — keeps the bomb's reflective drift from clipping the ceiling.
 const ITEM_HALF_HEIGHT = halfExtentNorm(FRENZY.physicalSizePx.item, FRENZY.world.height);
 
+// The ids of the currently-landed items in a frame — the structural signature whose change (a landed rising edge)
+// is the only per-frame reason to republish the item structure signal.
+function landedIds(frame: readonly RenderedItem[]): Set<string> {
+  const ids = new Set<string>();
+
+  for (const item of frame) {
+    if (item.landed) {
+      ids.add(item.id);
+    }
+  }
+
+  return ids;
+}
+
+// Set equality by membership (the live frame's item set is identical between snapshots, so only landed flips move
+// this) — a size check plus a membership scan, no allocation.
+function sameIds(a: Set<string>, b: Set<string>): boolean {
+  if (a.size !== b.size) {
+    return false;
+  }
+
+  for (const id of a) {
+    if (!b.has(id)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 /**
  * Client-side extrapolation of falling items between server snapshots. Owns the per-item baselines and publishes
  * the rendered positions; pure of the DOM so it is unit-tested directly. `ingest` re-anchors from a fresh
@@ -43,8 +73,29 @@ const ITEM_HALF_HEIGHT = halfExtentNorm(FRENZY.physicalSizePx.item, FRENZY.world
 export class ItemExtrapolatorService {
   private readonly baselines = new Map<string, ItemBaseline>();
   private readonly _rendered = signal<readonly RenderedItem[]>([]);
+  // The live per-frame view models, refreshed every `tick` (read by the imperative position writer and the
+  // sand-puff detector) WITHOUT republishing the `rendered` signal — plain position changes never trigger change
+  // detection. See ADR 0001.
+  private _frame: readonly RenderedItem[] = [];
+  // Ids of items currently published as `landed` in the structure signal. An item's `landed` rising edge happens
+  // during extrapolation (the fall reaching the seabed line), and it gates real structure — the buried shadow, the
+  // wavy sand clip and the spin-freeze — which can't be moved imperatively, so that one edge republishes structure.
+  private publishedLanded = new Set<string>();
 
+  // Structure signal: changes on `ingest` (a snapshot) and on a `landed` rising edge. Drives the `@for` (incl. its
+  // depth re-sort) and the `?debug` box overlay.
   public readonly rendered = this._rendered.asReadonly();
+
+  // The latest per-frame view models (positions + landed/spin), live every tick. Not a signal — read imperatively.
+  public frame(): readonly RenderedItem[] {
+    return this._frame;
+  }
+
+  // Mirror the current frame into the structure signal. Used only by the `?debug` box overlay (boxes must track the
+  // items every frame); the per-frame change detection it reintroduces is acceptable for a dev tool.
+  public publishFrame(): void {
+    this._rendered.set(this._frame);
+  }
 
   // Re-anchor baselines from a fresh snapshot, then publish the extrapolated positions.
   public ingest(items: readonly Item[], now: number): void {
@@ -133,12 +184,23 @@ export class ItemExtrapolatorService {
       }
     }
 
-    this._rendered.set(this.compute(items, now));
+    this._frame = this.compute(items, now);
+    this._rendered.set(this._frame);
+    this.publishedLanded = landedIds(this._frame);
   }
 
-  // Per-frame republish (rAF loop): advance each item along its existing baseline without re-anchoring.
+  // Per-frame recompute (rAF loop): advance each item along its existing baseline without re-anchoring. Updates the
+  // live `frame`; republishes the structure signal ONLY when the set of landed items changed (a `landed` rising
+  // edge), so plain falling motion costs no change detection.
   public tick(items: readonly Item[], now: number): void {
-    this._rendered.set(this.compute(items, now));
+    this._frame = this.compute(items, now);
+
+    const landed = landedIds(this._frame);
+
+    if (!sameIds(landed, this.publishedLanded)) {
+      this.publishedLanded = landed;
+      this._rendered.set(this._frame);
+    }
   }
 
   private compute(items: readonly Item[], now: number): RenderedItem[] {

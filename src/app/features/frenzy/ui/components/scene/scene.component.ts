@@ -9,6 +9,7 @@ import {
   inject,
   input,
   output,
+  signal,
   viewChild,
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
@@ -21,6 +22,7 @@ import type { Blast } from '../../../data/models/blast';
 import type { OrphanFloat, OwnedFloat } from '../../../data/models/floating-message';
 import type { HitBurst, OwnedSpark } from '../../../data/models/hit-burst';
 import type { OwnedShieldBlock } from '../../../data/models/shield-block';
+import { ActorHostDirective } from '../../directives/actor-host.directive';
 import { ScenePositionDirective } from '../../directives/scene-position.directive';
 import { AquariumDecorComponent } from '../aquarium-decor/aquarium-decor.component';
 import { BubbleBurstComponent } from '../bubble-burst/bubble-burst.component';
@@ -36,11 +38,12 @@ import { SceneItemComponent } from '../scene-item/scene-item.component';
 import { ScenePlayerComponent } from '../scene-player/scene-player.component';
 import { ItemExtrapolatorService } from './item-extrapolator.service';
 import { PlayerExtrapolatorService } from './player-extrapolator.service';
+import { SceneActorRegistryService } from './scene-actor-registry.service';
 import { SceneBurstsService } from './scene-bursts.service';
 import { SceneCameraService } from './scene-camera.service';
 import { SceneSandPuffsService } from './scene-sand-puffs.service';
 import { SceneFacade } from './scene.facade';
-import type { ItemClick, RenderedItem } from './scene-view-models';
+import type { ItemClick, RenderedItem, RenderedPlayer } from './scene-view-models';
 
 // Other players' HP bars use a single absolute scale — the hard ceiling — so a bar's fill reads the same for
 // everyone regardless of stage (the OWN widget instead scales to its next evolution threshold).
@@ -71,6 +74,7 @@ function groupByOwner<T extends { ownerId: string }>(items: readonly T[]): Map<s
 @Component({
   selector: 'left-paw-scene',
   imports: [
+    ActorHostDirective,
     AquariumDecorComponent,
     BubbleBurstComponent,
     DebugOverlayComponent,
@@ -89,6 +93,7 @@ function groupByOwner<T extends { ownerId: string }>(items: readonly T[]): Map<s
     SceneFacade,
     ItemExtrapolatorService,
     PlayerExtrapolatorService,
+    SceneActorRegistryService,
     SceneCameraService,
     SceneBurstsService,
     SceneSandPuffsService,
@@ -158,6 +163,14 @@ export class SceneComponent {
   // `item-borders`, `speed` = pick) — lets a session draw just the boxes it needs against the sprite silhouette.
   // Snapshot read; no reactivity.
   protected readonly debug = parseDebugFlags(inject(ActivatedRoute).snapshot.queryParamMap);
+  // The box-drawing debug categories (a dev tool). When any is on, the structure signals are republished every frame
+  // so the overlay's boxes track the imperatively-moved sprites. `perf` is NOT here — it must measure the optimized
+  // path, so it never reintroduces per-frame change detection on the actors.
+  protected readonly debugBoxesActive =
+    this.debug.pokemonBorders || this.debug.itemBorders || this.debug.speed;
+  // Live per-frame player VMs fed to the `?debug=perf` panel only (set each frame solely under `?debug=perf`), so the
+  // panel reads the true rendered position for its gap without forcing the actors through change detection.
+  protected readonly perfPlayers = signal<readonly RenderedPlayer[]>([]);
   // Owned floats grouped by their player, so the owned-float overlay renders each sprite's quips on its body point.
   protected readonly floatsByOwner = computed(() => groupByOwner(this.ownedFloats()));
   // Rock/brick impact sparks grouped by the struck player, so each `.scene__player` renders (and carries) its own.
@@ -191,6 +204,16 @@ export class SceneComponent {
 
         this.facade.tickItems(this.items(), now);
         this.facade.tickPlayers(this.players(), this.myId(), this.evolvingPlayers(), now);
+
+        // Feed the perf panel the live rendered positions (only under `?debug=perf`), so its gap reflects the
+        // optimized path. The box overlay (a dev tool) instead republishes structure so its boxes track the sprites.
+        if (this.debug.perf) {
+          this.perfPlayers.set(this.facade.playerFrame());
+        }
+
+        if (this.debugBoxesActive) {
+          this.facade.publishDebugFrame();
+        }
 
         const world = this.worldRef()?.nativeElement;
 

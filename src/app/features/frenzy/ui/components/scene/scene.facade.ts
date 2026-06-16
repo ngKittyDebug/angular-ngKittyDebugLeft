@@ -4,9 +4,11 @@ import type { Item, Player } from '@game/frenzy/types';
 
 import { ItemExtrapolatorService } from './item-extrapolator.service';
 import { PlayerExtrapolatorService } from './player-extrapolator.service';
+import { SceneActorRegistryService } from './scene-actor-registry.service';
 import { SceneBurstsService } from './scene-bursts.service';
 import { SceneCameraService } from './scene-camera.service';
 import type { CameraSnapshot } from './scene-camera.service';
+import type { RenderedPlayer } from './scene-view-models';
 import { SceneSandPuffsService } from './scene-sand-puffs.service';
 
 /**
@@ -18,6 +20,7 @@ import { SceneSandPuffsService } from './scene-sand-puffs.service';
 export class SceneFacade {
   private readonly items = inject(ItemExtrapolatorService);
   private readonly players = inject(PlayerExtrapolatorService);
+  private readonly registry = inject(SceneActorRegistryService);
   private readonly camera = inject(SceneCameraService);
   private readonly burstsService = inject(SceneBurstsService);
   private readonly sandPuffsService = inject(SceneSandPuffsService);
@@ -29,6 +32,9 @@ export class SceneFacade {
 
   public ingestItems(items: readonly Item[], now: number): void {
     this.items.ingest(items, now);
+    // Position existing item hosts on the corrected snapshot, and store this frame so an item appearing on THIS
+    // snapshot is placed immediately when its host registers (no origin pop-in). See ADR 0001.
+    this.registry.writeItems(this.items.frame());
   }
 
   public ingestPlayers(
@@ -38,12 +44,15 @@ export class SceneFacade {
     now: number,
   ): void {
     this.players.ingest(players, myId, evolving, now);
+    this.registry.writePlayers(this.players.frame());
   }
 
   public tickItems(items: readonly Item[], now: number): void {
     this.items.tick(items, now);
+    // Write the freshly extrapolated positions straight to the DOM (off change detection).
+    this.registry.writeItems(this.items.frame());
     // Rising-edge sand puffs are driven off the freshly extrapolated items (touchdowns), so detect right after.
-    this.sandPuffsService.observe(this.items.rendered());
+    this.sandPuffsService.observe(this.items.frame());
   }
 
   public tickPlayers(
@@ -53,6 +62,20 @@ export class SceneFacade {
     now: number,
   ): void {
     this.players.tick(players, myId, evolving, now);
+    this.registry.writePlayers(this.players.frame());
+  }
+
+  // The live per-frame player view models — for the `?debug=perf` panel, which must measure the optimized render
+  // path (the imperative positions), not the rarely-republished structure signal.
+  public playerFrame(): readonly RenderedPlayer[] {
+    return this.players.frame();
+  }
+
+  // Mirror the current frame into the structure signals — used only by the `?debug` box overlay so its boxes track
+  // the sprites every frame (a dev tool; the per-frame change detection it reintroduces is acceptable there).
+  public publishDebugFrame(): void {
+    this.items.publishFrame();
+    this.players.publishFrame();
   }
 
   public updateCamera(
