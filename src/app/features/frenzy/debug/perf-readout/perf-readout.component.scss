@@ -29,3 +29,18 @@
 .perf-readout--on {
   display: flex;
 }
+
+// One metric line. Inherits the panel's blue while healthy; a tone modifier overrides the colour (and weight) once
+// the reading degrades, so a bad value jumps out against the others.
+.perf-readout__metric {
+  // Amber: the reading is off-target but still playable (FPS dipping, prediction starting to lead).
+  &--warn {
+    color: #fc6;
+  }
+
+  // Red: the reading is at an unacceptable level (choppy FPS, large overshoot, snapshots stalling).
+  &--bad {
+    color: #f66;
+    font-weight: 700;
+  }
+}

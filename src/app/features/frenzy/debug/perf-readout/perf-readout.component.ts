@@ -17,6 +17,47 @@ import type { RenderedPlayer } from '../../ui/components/scene/scene-view-models
 const WORLD_WIDTH = FRENZY.world.width;
 const WORLD_HEIGHT = FRENZY.world.height;
 
+// Per-metric tone for the readout colour: `ok` keeps the default blue, `warn` goes amber, `bad` goes red.
+type MetricTone = 'ok' | 'warn' | 'bad';
+
+// Colour thresholds, picked so normal play stays blue and only real degradation lights up. FPS is higher-is-better
+// (<50 not perfectly smooth → amber; <30 visibly choppy, where the steering rubber-band shows → red). gap/staleness
+// are lower-is-better: gap in world px (a tens-of-px lead is a visible overshoot/snap-back); staleness in ms, where
+// the snapshot cadence is ~300ms, so up to ~500ms is normal jitter and only a sustained climb means snapshots are
+// stalling.
+const FPS_WARN = 50;
+const FPS_BAD = 30;
+const GAP_WARN_PX = 20;
+const GAP_BAD_PX = 50;
+const STALE_WARN_MS = 500;
+const STALE_BAD_MS = 1000;
+
+// Higher-is-better tone (FPS): a non-positive value is startup/no-data → neutral, not "bad".
+function toneAbove(value: number, warn: number, bad: number): MetricTone {
+  if (value <= 0) {
+    return 'ok';
+  }
+
+  if (value < bad) {
+    return 'bad';
+  }
+
+  return value < warn ? 'warn' : 'ok';
+}
+
+// Lower-is-better tone (gap/staleness): the -1 sentinel (no own sprite yet) is neutral, not "bad".
+function toneBelow(value: number, warn: number, bad: number): MetricTone {
+  if (value < 0) {
+    return 'ok';
+  }
+
+  if (value > bad) {
+    return 'bad';
+  }
+
+  return value > warn ? 'warn' : 'ok';
+}
+
 /**
  * `?debug=perf` readout: a screen-space corner panel showing a smoothed FPS plus, for my own sprite, the
  * prediction-gap (how far the rendered/client-predicted position leads the authoritative one, in world px) and the
@@ -69,6 +110,13 @@ export class PerfReadoutComponent {
 
     return staleness < 0 ? '—' : `${staleness}ms`;
   });
+
+  // Colour tones for each metric — drives the amber/red highlight when a reading degrades past its threshold.
+  protected readonly fpsTone = computed(() => toneAbove(this.fps(), FPS_WARN, FPS_BAD));
+  protected readonly gapTone = computed(() => toneBelow(this.gap(), GAP_WARN_PX, GAP_BAD_PX));
+  protected readonly stalenessTone = computed(() =>
+    toneBelow(this.staleness(), STALE_WARN_MS, STALE_BAD_MS),
+  );
 
   public constructor() {
     afterNextRender(() => {
