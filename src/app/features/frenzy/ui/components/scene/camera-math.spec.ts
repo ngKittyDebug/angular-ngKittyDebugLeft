@@ -5,7 +5,6 @@ import {
   centerCameraAxis,
   clampCameraAxis,
   deadZoneCameraAxis,
-  visibleNormBounds,
   wrapParallaxPhase,
 } from './camera-math';
 
@@ -106,44 +105,5 @@ describe('wrapParallaxPhase', () => {
       expect(phase).toBeGreaterThan(-125);
       expect(phase).toBeLessThanOrEqual(0);
     }
-  });
-});
-
-describe('visibleNormBounds', () => {
-  it('maps the viewport to the normalized world slice it shows (inverse of the camera projection)', () => {
-    // camX=0, scale=1, viewport 1000×600 over a 2000×1000 world, no margin: the window shows the top-left
-    // quadrant-ish — x up to 1000/2000 = 0.5, y up to 600/1000 = 0.6.
-    const bounds = visibleNormBounds(0, 0, 1, 1000, 600, 2000, 1000, 0);
-
-    expect(bounds.xMin).toBeCloseTo(0);
-    expect(bounds.xMax).toBeCloseTo(0.5);
-    expect(bounds.yMin).toBeCloseTo(0);
-    expect(bounds.yMax).toBeCloseTo(0.6);
-  });
-
-  it('follows the camera offset: a world scrolled left reveals its right half', () => {
-    // camX=-1000 (the world shifted 1000px left), scale=1, viewport 1000 over world 2000 → x ∈ [0.5, 1.0].
-    const bounds = visibleNormBounds(-1000, 0, 1, 1000, 600, 2000, 1000, 0);
-
-    expect(bounds.xMin).toBeCloseTo(0.5);
-    expect(bounds.xMax).toBeCloseTo(1);
-  });
-
-  it('shrinks the visible slice as the camera zooms in (larger scale)', () => {
-    // scale=2 → spanX = 4000; the same 1000px viewport now shows only a quarter of the world width.
-    const bounds = visibleNormBounds(0, 0, 2, 1000, 600, 2000, 1000, 0);
-
-    expect(bounds.xMax).toBeCloseTo(0.25);
-  });
-
-  it('expands the bounds outward by the screen-px margin on every side', () => {
-    const noMargin = visibleNormBounds(0, 0, 1, 1000, 600, 2000, 1000, 0);
-    const margin = visibleNormBounds(0, 0, 1, 1000, 600, 2000, 1000, 100);
-
-    // 100px / (2000 world × 1 scale) = 0.05 added to each horizontal edge; 100/1000 = 0.1 to each vertical edge.
-    expect(margin.xMin).toBeCloseTo(noMargin.xMin - 0.05);
-    expect(margin.xMax).toBeCloseTo(noMargin.xMax + 0.05);
-    expect(margin.yMin).toBeCloseTo(noMargin.yMin - 0.1);
-    expect(margin.yMax).toBeCloseTo(noMargin.yMax + 0.1);
   });
 });

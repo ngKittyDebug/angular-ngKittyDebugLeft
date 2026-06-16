@@ -101,40 +101,6 @@ export function wrapParallaxPhase(offset: number, tile: number): number {
   return ((offset % tile) - tile) % tile;
 }
 
-// Inclusive normalized bounds of the world region currently inside the camera viewport, expanded by `marginPx`
-// screen px on every side. An actor at normalized (x,y) is on-screen-ish iff xMin ≤ x ≤ xMax and yMin ≤ y ≤ yMax
-// — the scene uses this to skip rendering items fully outside the window (off-screen culling). Bounds aren't
-// clamped to [0,1]: when a whole world axis fits the viewport the range simply spans past 0/1 and every actor on
-// that axis passes. Inverse of the camera projection `norm * world * scale + cam`, so screen px map back to
-// normalized as `(screenPx - cam) / (world * scale)`.
-export interface VisibleNormBounds {
-  xMin: number;
-  xMax: number;
-  yMin: number;
-  yMax: number;
-}
-
-export function visibleNormBounds(
-  camX: number,
-  camY: number,
-  scale: number,
-  viewportWidth: number,
-  viewportHeight: number,
-  worldWidth: number,
-  worldHeight: number,
-  marginPx: number,
-): VisibleNormBounds {
-  const spanX = worldWidth * scale;
-  const spanY = worldHeight * scale;
-
-  return {
-    xMin: (-marginPx - camX) / spanX,
-    xMax: (viewportWidth + marginPx - camX) / spanX,
-    yMin: (-marginPx - camY) / spanY,
-    yMax: (viewportHeight + marginPx - camY) / spanY,
-  };
-}
-
 // One-axis dead-zone target (px): keep the current offset while the focus stays inside the band [lowFraction,
 // highFraction] (fractions of the viewport); once it crosses a band edge, return the offset that pins it back to
 // that edge. Always clamped to the world bounds. The band is passed in so each axis can use its own width.

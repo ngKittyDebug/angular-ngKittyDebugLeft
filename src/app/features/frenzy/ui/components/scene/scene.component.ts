@@ -41,7 +41,6 @@ import { PlayerExtrapolatorService } from './player-extrapolator.service';
 import { SceneActorRegistryService } from './scene-actor-registry.service';
 import { SceneBurstsService } from './scene-bursts.service';
 import { SceneCameraService } from './scene-camera.service';
-import { SceneItemCullingService } from './scene-item-culling.service';
 import { SceneSandPuffsService } from './scene-sand-puffs.service';
 import { SceneFacade } from './scene.facade';
 import type { ItemClick, RenderedItem, RenderedPlayer } from './scene-view-models';
@@ -96,7 +95,6 @@ function groupByOwner<T extends { ownerId: string }>(items: readonly T[]): Map<s
     PlayerExtrapolatorService,
     SceneActorRegistryService,
     SceneCameraService,
-    SceneItemCullingService,
     SceneBurstsService,
     SceneSandPuffsService,
   ],
@@ -107,7 +105,6 @@ function groupByOwner<T extends { ownerId: string }>(items: readonly T[]): Map<s
 export class SceneComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly facade = inject(SceneFacade);
-  private readonly cull = inject(SceneItemCullingService);
   // Optional (not `.required`): the template root sits under `*transloco`, which renders asynchronously, so the
   // ref is absent for the first few frames. Reading it before then must not throw and kill the rAF loop.
   private readonly worldRef = viewChild<ElementRef<HTMLElement>>('world');
@@ -151,16 +148,6 @@ export class SceneComponent {
   protected readonly renderedItemsByDepth = computed(() =>
     [...this.renderedItems()].sort((first, second) => first.y - second.y),
   );
-  // Off-screen culling applied to the depth-sorted list: items fully outside the camera window (+ margin) are
-  // dropped here so the `@for` never renders them (no component, no paint). The cull set changes only when an
-  // item crosses the boundary, so this re-filters on crossings (and on snapshots), not every frame. `null` =
-  // culling not yet active (before the camera's first frame) → render everything, so the first paint isn't blank.
-  protected readonly visibleItemsByDepth = computed(() => {
-    const visible = this.cull.visibleIds();
-    const items = this.renderedItemsByDepth();
-
-    return visible === null ? items : items.filter((item) => visible.has(item.id));
-  });
 
   protected readonly renderedPlayers = this.facade.renderedPlayers;
   protected readonly bursts = this.facade.bursts;
@@ -239,12 +226,7 @@ export class SceneComponent {
           );
           // Right after the camera writes this frame's transform, reposition the off-screen indicators off the
           // matching snapshot (zero phase skew); the overlay throttles its own structural recompute internally.
-          const snapshot = this.facade.cameraSnapshot();
-
-          this.offscreenIndicators()?.frame(snapshot, now);
-          // Recompute which items fall inside the camera window from the same snapshot. This is a cheap pure test
-          // every frame; it only publishes (→ change detection) when an item crosses the margin boundary.
-          this.cull.update(snapshot, this.facade.itemFrame());
+          this.offscreenIndicators()?.frame(this.facade.cameraSnapshot(), now);
         }
       };
 

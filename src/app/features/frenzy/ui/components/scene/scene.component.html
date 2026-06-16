@@ -14,11 +14,7 @@
   >
     <left-paw-aquarium-decor />
 
-    <!-- Off-screen culling: `visibleItemsByDepth` is the depth-sorted list with items outside the camera window
-         (+ margin) already filtered out, so the `@for` never renders them (no component, no paint). The list
-         changes only when an item crosses the boundary (or on a snapshot), not every frame — see
-         SceneItemCullingService. track-by-id means re-entering items reuse their view without an animation reset. -->
-    @for (item of visibleItemsByDepth(); track item.id) {
+    @for (item of renderedItemsByDepth(); track item.id) {
       <left-paw-scene-item
         leftPawActorHost="item"
         [actorId]="item.id"
