@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthApiService } from '@features/auth/api/auth-api.service';
@@ -8,8 +8,6 @@ import { AuthLoginFacade } from '@features/auth/data/facades/auth-login.facade';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { TuiButton, TuiError, TuiInput, TuiLabel, TuiTextfieldComponent } from '@taiga-ui/core';
 import { TuiForm } from '@taiga-ui/layout';
-import { finalize } from 'rxjs';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'left-paw-login-form',
@@ -35,26 +33,15 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 })
 export class LoginFormComponent {
   private readonly authLoginFacade = inject(AuthLoginFacade);
-  private destroyRef = inject(DestroyRef);
-  public readonly loginForm = this.authLoginFacade.loginForm;
+  protected readonly loginForm = this.authLoginFacade.loginForm;
+  protected readonly isLoading = this.authLoginFacade.isLoading;
 
-  protected readonly isPending = signal(false);
+  protected readonly returnUrl = input<string>('/');
 
-  protected onSubmit(): void {
+  protected onLoginSubmit(): void {
     if (this.loginForm.invalid) {
       return;
     }
-
-    this.isPending.set(true);
-
-    this.authLoginFacade
-      .onLoginSubmit(this.loginForm.controls)
-      .pipe(
-        finalize(() => this.isPending.set(false)),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe({
-        next: (data) => localStorage.setItem('loginFormData', JSON.stringify(data)),
-      });
+    this.authLoginFacade.onLoginSubmit(this.loginForm.controls, this.returnUrl);
   }
 }
