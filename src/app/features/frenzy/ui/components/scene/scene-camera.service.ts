@@ -41,8 +41,8 @@ export interface CameraSnapshot {
 /**
  * Owns the camera's per-frame state (offset + first-frame snap) and writes the easing result to the world layer
  * (a sub-pixel translate + responsive scale) and the foreground parallax layers via Renderer2. The focus point
- * is read from the player extrapolator's rendered "me"; math lives in `camera-math` so this stays a thin
- * DOM-writing shell.
+ * is read from the player extrapolator's live per-frame "me" (`frame()`, not the snapshot-throttled `rendered`
+ * signal); math lives in `camera-math` so this stays a thin DOM-writing shell.
  */
 @Injectable()
 export class SceneCameraService {
@@ -79,7 +79,11 @@ export class SceneCameraService {
       return;
     }
 
-    const me = this.players.rendered().find((player) => player.isMe);
+    // Read the LIVE per-frame "me" (`frame()`), not the `rendered` signal: since ADR 0001 throttled `rendered` to
+    // snapshot cadence (~every 300ms), following it made the camera chase a target that stepped a few times a
+    // second while the sprite drifted smoothly every frame — a rhythmic scroll lurch. `frame()` updates each tick,
+    // so the camera follows the sprite continuously.
+    const me = this.players.frame().find((player) => player.isMe);
     const focusX = me?.x ?? 0.5;
     const focusY = me?.y ?? 0.5;
     // The camera math works in on-screen world px = world px × scale (the world layer has transform-origin 0 0,
