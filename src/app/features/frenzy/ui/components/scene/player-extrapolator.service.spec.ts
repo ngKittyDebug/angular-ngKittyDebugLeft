@@ -5,6 +5,7 @@ import { ANGRY_BOMB_NPC } from '@game/frenzy/definition/npcs/angry-bomb';
 import type { HumanPlayer, NpcPlayer, Player } from '@game/frenzy/types';
 
 import { bodyForAppearance } from '../../constants/pokemon-registry';
+import { MAX_OFFSET_COLLAPSE_PER_FRAME } from './drift-math';
 import { PlayerExtrapolatorService } from './player-extrapolator.service';
 
 function player(partial: Partial<HumanPlayer> & Pick<Player, 'id'>): Player {
@@ -368,6 +369,32 @@ describe('PlayerExtrapolatorService', () => {
       expect(rendered.y).toBeGreaterThanOrEqual(zone.minY);
       expect(rendered.y).toBeLessThanOrEqual(zone.maxY);
     }
+  });
+
+  it('stretches the reconciliation glide on a slow client so no single frame snaps the sprite', () => {
+    const service = new PlayerExtrapolatorService();
+    const slowFrameMs = 60; // ~17fps
+
+    // Establish a baseline, then warm the frame-interval estimate with several slow frames.
+    service.ingest([player({ id: 'me', x: 0.5, y: 0.5 })], 'me', NONE, 0);
+
+    for (let frame = 1; frame <= 12; frame += 1) {
+      service.tick([player({ id: 'me', x: 0.5, y: 0.5 })], 'me', NONE, frame * slowFrameMs);
+    }
+
+    // The server now reports the player at a new position: a reconciliation gap of ~0.2 is captured as an offset.
+    const correctionNow = 13 * slowFrameMs;
+
+    service.ingest([player({ id: 'me', x: 0.7, y: 0.5 })], 'me', NONE, correctionNow);
+    const gap = Math.abs(0.7 - service.frame()[0].x); // ≈ 0.2 right after the correction
+
+    // Advance one slow frame: the sprite must glide, not snap — at most MAX_OFFSET_COLLAPSE_PER_FRAME of the gap
+    // closes in this single frame (frame-aware τ). With the plain wall-clock τ ~half the gap would vanish here.
+    service.tick([player({ id: 'me', x: 0.7, y: 0.5 })], 'me', NONE, correctionNow + slowFrameMs);
+    const remaining = Math.abs(0.7 - service.frame()[0].x);
+
+    expect(gap).toBeGreaterThan(0.15);
+    expect(remaining).toBeGreaterThanOrEqual((1 - MAX_OFFSET_COLLAPSE_PER_FRAME) * gap - 1e-6);
   });
 
   it('drops players absent from the latest snapshot', () => {

@@ -8,7 +8,14 @@ import type { Player, PlayerEffectKind } from '@game/frenzy/types';
 import { isSad } from '../../../data/logic/is-sad';
 import { EFFECT_BADGE } from '../../../data/models/effect-badge';
 import { spriteRenderFor } from '../../constants/pokemon-registry';
-import { clamp, decayedOffset, OFFSET_DECAY_TAU_MS, reflect, reflectDirection } from './drift-math';
+import {
+  clamp,
+  decayedOffset,
+  frameAwareTau,
+  OFFSET_DECAY_TAU_MS,
+  reflect,
+  reflectDirection,
+} from './drift-math';
 import type { RenderedAura, RenderedPlayer } from './scene-view-models';
 
 // Aura descriptor per active effect kind: the CSS class plus the render mode the template branches on (so the
@@ -34,6 +41,14 @@ const SHADOW_TINT_PRECEDENCE: readonly PlayerEffectKind[] = [
   'shield',
   'wellFed',
 ];
+
+// EMA weight for the frame-interval estimate that feeds the frame-aware reconciliation τ (higher = adapts faster
+// to an FPS change, noisier). Light smoothing so a single hitched frame doesn't spike τ.
+const FRAME_EMA_WEIGHT = 0.2;
+
+// Frame deltas above this (ms, ~4fps) are treated as a stall/hitch and skipped, so a backgrounded tab or GC pause
+// can't bloat the average and freeze the glide. Genuine low-end frames (down to ~4fps) still update it.
+const FRAME_DT_CAP_MS = 250;
 
 interface PlayerBaseline {
   x0: number;
@@ -67,6 +82,13 @@ export class PlayerExtrapolatorService {
   // field that changes mid-extrapolation (facing is a flag written imperatively; hp/stage/effects come from a
   // snapshot), so per-frame motion never triggers change detection. See ADR 0001.
   private _frame: readonly RenderedPlayer[] = [];
+  // Smoothed frame interval (ms), measured in `tick`; 0 until the first interval is seen. Feeds the frame-aware
+  // reconciliation τ so a slow tablet stretches the correction glide across enough frames instead of snapping it.
+  private smoothedFrameMs = 0;
+  private lastTickNow = 0;
+  // Current reconciliation τ: the base on a fast client, raised on a slow one (frame-aware). Read by
+  // compute/sync/predictSteer so every reconciliation read this frame agrees. See ADR 0003.
+  private tauMs = OFFSET_DECAY_TAU_MS;
 
   // Structure signal: changes only on `ingest` (a server snapshot). Drives the `@for` and the `?debug` box overlay.
   public readonly rendered = this._rendered.asReadonly();
@@ -96,6 +118,7 @@ export class PlayerExtrapolatorService {
     evolving: ReadonlyMap<string, number>,
     now: number,
   ): void {
+    this.measureFrame(now);
     this._frame = this.compute(players, myId, evolving, now);
   }
 
@@ -123,13 +146,13 @@ export class PlayerExtrapolatorService {
     const elapsed = (now - baseline.clientStartTime) / 1000;
     const renderedX = clamp(
       reflect(baseline.x0, baseline.vx, elapsed, zone.minX, zone.maxX) +
-        decayedOffset(baseline.offsetX, now - baseline.offsetStamp, OFFSET_DECAY_TAU_MS),
+        decayedOffset(baseline.offsetX, now - baseline.offsetStamp, this.tauMs),
       zone.minX,
       zone.maxX,
     );
     const renderedY = clamp(
       reflect(baseline.y0, baseline.vy, elapsed, zone.minY, zone.maxY) +
-        decayedOffset(baseline.offsetY, now - baseline.offsetStamp, OFFSET_DECAY_TAU_MS),
+        decayedOffset(baseline.offsetY, now - baseline.offsetStamp, this.tauMs),
       zone.minY,
       zone.maxY,
     );
@@ -147,6 +170,26 @@ export class PlayerExtrapolatorService {
       offsetY: 0,
       offsetStamp: now,
     });
+  }
+
+  // Track the smoothed frame interval from the rAF cadence and derive the frame-aware reconciliation τ. Only `tick`
+  // calls this (one per animation frame); `ingest` runs on the ~300ms snapshot cadence and must not be mistaken for
+  // a frame. Non-positive deltas and long stalls (backgrounded tab, GC pause) are skipped so they can't bloat the
+  // estimate and freeze the glide.
+  private measureFrame(now: number): void {
+    if (this.lastTickNow !== 0) {
+      const dt = now - this.lastTickNow;
+
+      if (dt > 0 && dt <= FRAME_DT_CAP_MS) {
+        this.smoothedFrameMs =
+          this.smoothedFrameMs === 0
+            ? dt
+            : this.smoothedFrameMs * (1 - FRAME_EMA_WEIGHT) + dt * FRAME_EMA_WEIGHT;
+        this.tauMs = frameAwareTau(OFFSET_DECAY_TAU_MS, this.smoothedFrameMs);
+      }
+    }
+
+    this.lastTickNow = now;
   }
 
   // Reset a player's baseline only when the server actually moved it (new snapshot position/velocity).
@@ -183,13 +226,13 @@ export class PlayerExtrapolatorService {
         // while the sprite was pinned at a wall can't capture an out-of-zone overshoot and keep gliding from it.
         const renderedX = clamp(
           reflect(prior.x0, prior.vx, elapsed, zone.minX, zone.maxX) +
-            decayedOffset(prior.offsetX, now - prior.offsetStamp, OFFSET_DECAY_TAU_MS),
+            decayedOffset(prior.offsetX, now - prior.offsetStamp, this.tauMs),
           zone.minX,
           zone.maxX,
         );
         const renderedY = clamp(
           reflect(prior.y0, prior.vy, elapsed, zone.minY, zone.maxY) +
-            decayedOffset(prior.offsetY, now - prior.offsetStamp, OFFSET_DECAY_TAU_MS),
+            decayedOffset(prior.offsetY, now - prior.offsetStamp, this.tauMs),
           zone.minY,
           zone.maxY,
         );
@@ -241,11 +284,11 @@ export class PlayerExtrapolatorService {
       const decayX =
         baseline === undefined
           ? 0
-          : decayedOffset(baseline.offsetX, now - baseline.offsetStamp, OFFSET_DECAY_TAU_MS);
+          : decayedOffset(baseline.offsetX, now - baseline.offsetStamp, this.tauMs);
       const decayY =
         baseline === undefined
           ? 0
-          : decayedOffset(baseline.offsetY, now - baseline.offsetStamp, OFFSET_DECAY_TAU_MS);
+          : decayedOffset(baseline.offsetY, now - baseline.offsetStamp, this.tauMs);
       const liveEffects = player.effects.filter((effect) => effect.expiresAt > wallNow);
       const effectAuras = liveEffects
         .map((effect) => EFFECT_AURA[effect.kind])
