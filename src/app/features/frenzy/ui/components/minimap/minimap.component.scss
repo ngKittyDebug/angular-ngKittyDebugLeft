@@ -124,15 +124,15 @@
   }
 
   // The scaled-down playfield. Aspect ratio mirrors the world (WORLD.world 2400×900 = 8/3), so normalized
-  // (0..1) blips land where they sit in the real arena. A faint tint + light blur keeps blips readable while
-  // the live scene shows through.
+  // (0..1) blips land where they sit in the real arena. A denser tint keeps blips readable while the live scene
+  // still shows through faintly — replaces `backdrop-filter: blur(2px)`, which re-blurred the moving scene behind
+  // the map every frame (a per-frame GPU cost on weak devices); the denser tint does the legibility job without it.
   &__map {
     position: relative;
     width: 100%;
     aspect-ratio: 2400 / 900;
     overflow: hidden;
-    background: color-mix(in srgb, var(--tui-background-base) 45%, transparent);
-    backdrop-filter: blur(2px);
+    background: color-mix(in srgb, var(--tui-background-base) 72%, transparent);
   }
 
   // Inset plotting area: blips are centered on their point, so without this margin a blip at an edge (e.g. an

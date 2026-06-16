@@ -101,7 +101,9 @@
     top: -10%;
     height: 130%;
     transform-origin: top center;
-    filter: blur(10px);
+    // No `filter: blur()`: the rays sway (rotate) every frame, so a per-ray blur is re-rasterized each frame on top
+    // of the container's screen blend — a real fill-rate cost on weak GPUs (~20fps tablets). They still read as soft
+    // light shafts via the screen blend + the vertical fade-to-transparent of this gradient.
     background: linear-gradient(to bottom, var(--aq-ray) 0%, rgba(255, 255, 255, 0) 78%);
     animation: aq-ray-sway 9s ease-in-out infinite alternate;
 
@@ -126,8 +128,16 @@
   &__mote {
     position: absolute;
     border-radius: 50%;
-    background: var(--aq-plankton);
-    box-shadow: 0 0 6px var(--aq-glow);
+    // Glow baked into the fill as a radial gradient — a bright plankton core fading through the glow tint to
+    // transparent, the same soft halo the old `box-shadow: 0 0 6px var(--aq-glow)` drew. Painted into the element
+    // once, it just composites as the mote drifts, with no per-frame blur re-raster (a fill-rate cost on weak GPUs
+    // for 16 continuously-moving motes). The element box below is enlarged to hold the former glow radius.
+    background: radial-gradient(
+      circle,
+      var(--aq-plankton) 0 22%,
+      var(--aq-glow) 44%,
+      transparent 72%
+    );
     // `scale` (independent of the drift `transform`) enlarges motes in the light theme; 1 in dark = unchanged.
     scale: var(--aq-mote-scale, 1);
     animation: aq-mote-drift 16s ease-in-out infinite alternate;
@@ -136,11 +146,14 @@
     @for $i from 1 through 16 {
       &:nth-child(#{$i}) {
         $size: 1.5 + $i % 3;
+        // Box = core + glow halo room (the gradient fades to transparent inside it), so the baked halo replaces the
+        // old 6px box-shadow spread. The few-px shift from the larger box is imperceptible on scattered decor motes.
+        $box: $size + 10;
 
         left: (($i * 37) % 100) * 1%;
         top: (($i * 53) % 100) * 1%;
-        width: #{$size}px;
-        height: #{$size}px;
+        width: #{$box}px;
+        height: #{$box}px;
         --dx: #{($i % 7 - 3) * 8}px;
         --dy: #{-($i % 5 * 7)}px;
         --peak: #{0.4 + $i % 6 * 0.1};

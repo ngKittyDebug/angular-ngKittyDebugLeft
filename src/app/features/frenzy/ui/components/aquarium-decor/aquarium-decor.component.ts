@@ -34,7 +34,6 @@ interface Plant {
   root: number;
   rotation: number;
   brightness: number;
-  blur: number;
   zIndex: number;
   color: string;
   art: KelpBlade;
@@ -52,7 +51,7 @@ function buildPlants(count: number): Plant[] {
   return Array.from({ length: count }, (_, index) => {
     const i = index + 1;
     const shape = (i - 1) % 3;
-    // Continuous depth 0 (far) .. ~0.6 (mid), pseudo-random per blade: size, brightness, blur and z-index all
+    // Continuous depth 0 (far) .. ~0.6 (mid), pseudo-random per blade: size, brightness and z-index all
     // interpolate along it, so the back forest reads as a smooth far→mid gradient. Capped below the NEAR range
     // on purpose — the near tier lives in `MidgroundKelpComponent` IN FRONT of the actors, so the Pokémon nestles
     // between this background and that near layer (deeper in the weeds). This layer stays below the actors (z 0).
@@ -76,7 +75,6 @@ function buildPlants(count: number): Plant[] {
       root: 6 + (1 - depth) * 11,
       rotation: -3 - (i % 4),
       brightness: 0.55 + depth * 0.5,
-      blur: (1 - depth) * 2.2,
       zIndex: Math.round(depth * 6),
       color: KELP_COLORS[shape],
       art: KELP_BLADES[shape],

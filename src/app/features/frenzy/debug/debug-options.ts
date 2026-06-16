@@ -9,6 +9,9 @@ export interface DebugFlags {
   itemBorders: boolean;
   // Per-Pokémon drift-speed readout pill.
   speed: boolean;
+  // Screen-space perf readout panel: FPS, own-sprite prediction-gap (px) and authoritative-snapshot staleness (ms)
+  // — for diagnosing framerate and the steering rubber-band on low-end devices.
+  perf: boolean;
 }
 
 // Public slug ⇆ flag map. Slugs are the kebab-case category names a user types in the URL; the keys they flip
@@ -17,12 +20,18 @@ const FLAG_BY_SLUG: Readonly<Record<string, keyof DebugFlags>> = {
   'pokemon-borders': 'pokemonBorders',
   'item-borders': 'itemBorders',
   speed: 'speed',
+  perf: 'perf',
 };
 
-const NONE: DebugFlags = { pokemonBorders: false, itemBorders: false, speed: false };
+const NONE: DebugFlags = {
+  pokemonBorders: false,
+  itemBorders: false,
+  speed: false,
+  perf: false,
+};
 
 function all(): DebugFlags {
-  return { pokemonBorders: true, itemBorders: true, speed: true };
+  return { pokemonBorders: true, itemBorders: true, speed: true, perf: true };
 }
 
 /**

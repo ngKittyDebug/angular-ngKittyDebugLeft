@@ -332,9 +332,13 @@
 
 // Horizontal flip wrapper: kept separate from `.scene__sprite` so the flip doesn't fight the sprite's
 // own transform (evolve pulse / hover). Flip is instant — a transition would squash through 0 width.
+// Direction comes from the inherited `--scene-facing` custom property (1 = left/default, -1 = right), set
+// imperatively on the host by the scene's per-frame position writer — off change detection, no `[class]`
+// binding re-running this component every frame. See ADR 0001.
 .scene__sprite-flip {
   display: inline-block;
   line-height: 0;
+  transform: scaleX(var(--scene-facing, 1));
 }
 
 // Body-centring offset: translates the full art so its hitbox/body lands on the actor point (the art overhangs
@@ -344,10 +348,6 @@
   display: inline-block;
   line-height: 0;
   transform: translate(var(--scene-sprite-offset-x, 0), var(--scene-sprite-offset-y, 0));
-}
-
-.scene__sprite-flip--right {
-  transform: scaleX(-1);
 }
 
 .scene__sprite--sad {

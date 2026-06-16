@@ -9,7 +9,12 @@ function flagsFor(parameters: Params): ReturnType<typeof parseDebugFlags> {
 
 describe('parseDebugFlags', () => {
   it('returns everything off when the debug param is absent', () => {
-    expect(flagsFor({})).toEqual({ pokemonBorders: false, itemBorders: false, speed: false });
+    expect(flagsFor({})).toEqual({
+      pokemonBorders: false,
+      itemBorders: false,
+      speed: false,
+      perf: false,
+    });
   });
 
   it('turns everything on for a bare ?debug (empty value)', () => {
@@ -17,6 +22,7 @@ describe('parseDebugFlags', () => {
       pokemonBorders: true,
       itemBorders: true,
       speed: true,
+      perf: true,
     });
   });
 
@@ -25,6 +31,16 @@ describe('parseDebugFlags', () => {
       pokemonBorders: false,
       itemBorders: false,
       speed: true,
+      perf: false,
+    });
+  });
+
+  it('enables only the perf readout', () => {
+    expect(flagsFor({ debug: 'perf' })).toEqual({
+      pokemonBorders: false,
+      itemBorders: false,
+      speed: false,
+      perf: true,
     });
   });
 
@@ -33,6 +49,7 @@ describe('parseDebugFlags', () => {
       pokemonBorders: true,
       itemBorders: false,
       speed: true,
+      perf: false,
     });
   });
 
@@ -41,6 +58,7 @@ describe('parseDebugFlags', () => {
       pokemonBorders: true,
       itemBorders: true,
       speed: false,
+      perf: false,
     });
   });
 
@@ -49,6 +67,7 @@ describe('parseDebugFlags', () => {
       pokemonBorders: false,
       itemBorders: true,
       speed: false,
+      perf: false,
     });
   });
 });

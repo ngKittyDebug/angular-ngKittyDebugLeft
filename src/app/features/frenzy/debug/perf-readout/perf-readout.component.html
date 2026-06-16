@@ -1,0 +1,22 @@
+<!-- Class toggle (not @if) so the panel adds no control-flow branch and the values stay bound; visibility is a
+     display:none/flex flip driven by `enabled`. Non-interactive, aria-hidden — a real-time visual-only aid. -->
+<div class="perf-readout" [class.perf-readout--on]="enabled()" aria-hidden="true">
+  <span
+    class="perf-readout__metric"
+    [class.perf-readout__metric--warn]="fpsTone() === 'warn'"
+    [class.perf-readout__metric--bad]="fpsTone() === 'bad'"
+    >FPS {{ fps() }}</span
+  >
+  <span
+    class="perf-readout__metric"
+    [class.perf-readout__metric--warn]="gapTone() === 'warn'"
+    [class.perf-readout__metric--bad]="gapTone() === 'bad'"
+    >gap {{ gapText() }}</span
+  >
+  <span
+    class="perf-readout__metric"
+    [class.perf-readout__metric--warn]="stalenessTone() === 'warn'"
+    [class.perf-readout__metric--bad]="stalenessTone() === 'bad'"
+    >stale {{ stalenessText() }}</span
+  >
+</div>

@@ -5,6 +5,8 @@ import {
   centerCameraAxis,
   clampCameraAxis,
   deadZoneCameraAxis,
+  visibleNormBounds,
+  withinNormBounds,
   wrapParallaxPhase,
 } from './camera-math';
 
@@ -76,6 +78,41 @@ describe('deadZoneCameraAxis', () => {
     // offset = 580 - 0.5*2000 = -420 (scrolled 20px further to keep the focus framed).
     expect(deadZoneCameraAxis(-400, 0.5, 1000, 2000, 0.35, 0.65)).toBe(-400);
     expect(deadZoneCameraAxis(-400, 0.5, 1000, 2000, 0.42, 0.58)).toBe(-420);
+  });
+});
+
+describe('visibleNormBounds', () => {
+  it('inverts the camera projection to the visible normalized rect, widened by the cull margin', () => {
+    // World 2400×900 at scale 1, a 1200×900 viewport scrolled right by 600px (camX -600), no vertical scroll.
+    // Raw visible x = [600, 1800]px = [0.25, 0.75]; the 160px margin widens it by 160/2400 each side.
+    const bounds = visibleNormBounds(-600, 0, 1, 1200, 900, 2400, 900);
+
+    expect(bounds?.minX).toBeCloseTo(0.25 - 160 / 2400, 6);
+    expect(bounds?.maxX).toBeCloseTo(0.75 + 160 / 2400, 6);
+    // Viewport height equals the world height here, so the whole 0..1 band is visible (margin spills past it).
+    expect(bounds?.minY).toBeCloseTo(-160 / 900, 6);
+    expect(bounds?.maxY).toBeCloseTo(1 + 160 / 900, 6);
+  });
+
+  it('returns null for a degenerate (pre-first-frame) projection so callers cull nothing', () => {
+    expect(visibleNormBounds(0, 0, 0, 1200, 900, 2400, 900)).toBeNull();
+  });
+});
+
+describe('withinNormBounds', () => {
+  const bounds = { minX: 0.2, maxX: 0.8, minY: 0.1, maxY: 0.9 };
+
+  it('keeps a point inside the rect', () => {
+    expect(withinNormBounds(0.5, 0.5, bounds)).toBe(true);
+  });
+
+  it('culls a point past an edge on either axis', () => {
+    expect(withinNormBounds(0.1, 0.5, bounds)).toBe(false);
+    expect(withinNormBounds(0.5, 0.95, bounds)).toBe(false);
+  });
+
+  it('keeps a point exactly on the boundary (inclusive, so an entering actor writes a frame early)', () => {
+    expect(withinNormBounds(0.2, 0.9, bounds)).toBe(true);
   });
 });
 
