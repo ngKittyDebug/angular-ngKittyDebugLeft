@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import type { Observable } from 'rxjs';
 import { delay, of, throwError } from 'rxjs';
 import type { LoginFormGroup } from '@features/auth/data/models/login-form.model';
+import type { SignupModel } from '../data/models/signup-form.model';
 
 // Объявляем строгие интерфейсы ответов сервера, которые ожидает ваше приложение
 export interface AuthSuccessResponse {
@@ -20,9 +21,7 @@ export interface RefreshSuccessResponse {
   providedIn: 'root',
 })
 export class AuthApiService {
-  /**
-   * Затычка для LOGIN (Вход)
-   */
+  // TODO на этапе мержа перепроверить и в случае необходимости убрать. Разработка велась одновременно с сервисом.
   public onAuthSubmit(loginFormGroup: LoginFormGroup): Observable<AuthSuccessResponse> {
     console.log('[Mock API] Метод onAuthSubmit вызван с данными:', loginFormGroup);
 
@@ -40,12 +39,8 @@ export class AuthApiService {
     return of(mockResponse).pipe(delay(1000));
   }
 
-  /**
-   * Затычка для REGISTER (Регистрация)
-   */
-  public onRegisterSubmit(
-    registerFormGroup: Record<string, unknown>,
-  ): Observable<AuthSuccessResponse> {
+  // TODO на этапе мержа перепроверить и в случае необходимости убрать. Разработка велась одновременно с сервисом.
+  public onRegistrationSubmit(registerFormGroup: SignupModel): Observable<AuthSuccessResponse> {
     console.log('[Mock API] Метод onRegisterSubmit вызван с данными:', registerFormGroup);
 
     const mockResponse: AuthSuccessResponse = {
@@ -56,9 +51,7 @@ export class AuthApiService {
     return of(mockResponse).pipe(delay(1000));
   }
 
-  /**
-   * Затычка для REFRESH (Обновление токена)
-   */
+  // TODO на этапе мержа перепроверить и в случае необходимости убрать. Разработка велась одновременно с сервисом.
   public onRefresh(): Observable<RefreshSuccessResponse> {
     console.log('[Mock API] Сеть: запрос на обновление токена /auth/refresh');
 
@@ -69,9 +62,7 @@ export class AuthApiService {
     return of(mockResponse).pipe(delay(800));
   }
 
-  /**
-   * Затычка для LOGOUT (Выход)
-   */
+  // TODO на этапе мержа перепроверить и в случае необходимости убрать. Разработка велась одновременно с сервисом.
   public onLogout(): Observable<void> {
     console.log('[Mock API] Сеть: запрос на инвалидацию сессии /auth/logout');
 
