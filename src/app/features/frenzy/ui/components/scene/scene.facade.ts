@@ -34,7 +34,7 @@ export class SceneFacade {
     this.items.ingest(items, now);
     // Position existing item hosts on the corrected snapshot, and store this frame so an item appearing on THIS
     // snapshot is placed immediately when its host registers (no origin pop-in). See ADR 0001.
-    this.registry.writeItems(this.items.frame());
+    this.registry.writeItems(this.items.frame(), this.camera.visibleBounds());
   }
 
   public ingestPlayers(
@@ -49,8 +49,10 @@ export class SceneFacade {
 
   public tickItems(items: readonly Item[], now: number): void {
     this.items.tick(items, now);
-    // Write the freshly extrapolated positions straight to the DOM (off change detection).
-    this.registry.writeItems(this.items.frame());
+    // Write the freshly extrapolated positions straight to the DOM (off change detection). Pass the camera's
+    // visible bounds so off-screen items skip the write (soft cull) — one frame stale here (tickItems runs before
+    // updateCamera in the rAF loop), which the cull margin absorbs.
+    this.registry.writeItems(this.items.frame(), this.camera.visibleBounds());
     // Rising-edge sand puffs are driven off the freshly extrapolated items (touchdowns), so detect right after.
     this.sandPuffsService.observe(this.items.frame());
   }

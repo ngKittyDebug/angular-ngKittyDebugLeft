@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 
 import { FRENZY } from '@game/frenzy/config';
 
+import { withinNormBounds } from './camera-math';
+import type { VisibleNormBounds } from './camera-math';
 import type { RenderedItem, RenderedPlayer } from './scene-view-models';
 
 // World px size — the actors' offsetParent (`.scene__world`) is set to exactly this many px, so a normalized
@@ -81,13 +83,22 @@ export class SceneActorRegistryService {
   }
 
   // Per-frame write for falling items: position only (landed/spin are structural, kept on change detection).
-  public writeItems(frame: readonly RenderedItem[]): void {
+  // `visible` (when given) soft-culls: items outside the camera viewport + margin keep their DOM node (NO view
+  // churn — unlike conditional render) but skip the translate write, the dominant per-frame cost. A frozen item
+  // resumes the moment it re-enters the margin band, before it's truly visible, so the freeze is never seen.
+  public writeItems(
+    frame: readonly RenderedItem[],
+    visible: VisibleNormBounds | null = null,
+  ): void {
     this.lastItemFrame = frame;
 
     for (const item of frame) {
       const element = this.items.get(item.id);
 
-      if (element !== undefined) {
+      if (
+        element !== undefined &&
+        (visible === null || withinNormBounds(item.x, item.y, visible))
+      ) {
         this.writeTranslate(element, item.x, item.y);
       }
     }

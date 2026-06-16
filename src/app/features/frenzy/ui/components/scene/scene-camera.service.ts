@@ -17,8 +17,10 @@ import {
   PARALLAX_NEAR,
   PARALLAX_TILE_MID,
   PARALLAX_TILE_NEAR,
+  visibleNormBounds,
   wrapParallaxPhase,
 } from './camera-math';
+import type { VisibleNormBounds } from './camera-math';
 import { PlayerExtrapolatorService } from './player-extrapolator.service';
 
 /**
@@ -159,6 +161,24 @@ export class SceneCameraService {
       viewportHeight: this.viewportHeight,
       ready: this.cameraReady,
     };
+  }
+
+  // The normalized world rect visible this frame (+ cull margin), for soft-culling off-screen item position
+  // writes. Null before the first frame snaps the camera (read in the loop one frame stale — the margin absorbs it).
+  public visibleBounds(): VisibleNormBounds | null {
+    if (!this.cameraReady) {
+      return null;
+    }
+
+    return visibleNormBounds(
+      this.camX,
+      this.camY,
+      this.scale,
+      this.viewportWidth,
+      this.viewportHeight,
+      this.worldWidth,
+      this.worldHeight,
+    );
   }
 
   // Drive the screen-space foreground kelp: pan horizontally a touch faster than the world (PARALLAX_FRONT) for a
