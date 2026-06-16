@@ -101,7 +101,9 @@
     top: -10%;
     height: 130%;
     transform-origin: top center;
-    filter: blur(10px);
+    // No `filter: blur()`: the rays sway (rotate) every frame, so a per-ray blur is re-rasterized each frame on top
+    // of the container's screen blend — a real fill-rate cost on weak GPUs (~20fps tablets). They still read as soft
+    // light shafts via the screen blend + the vertical fade-to-transparent of this gradient.
     background: linear-gradient(to bottom, var(--aq-ray) 0%, rgba(255, 255, 255, 0) 78%);
     animation: aq-ray-sway 9s ease-in-out infinite alternate;
 
