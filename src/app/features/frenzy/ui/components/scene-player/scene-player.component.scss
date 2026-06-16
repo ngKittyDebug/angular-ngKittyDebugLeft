@@ -47,7 +47,7 @@
 }
 
 // Grounding contact shadow under EVERY sprite (own/others/NPC) so it sits ON the seabed instead of floating. Built
-// like the resting-item shadow (a blurred radial ellipse behind the sprite, z-index -1, riding the drift), but its
+// like the resting-item shadow (a soft-gradient radial ellipse behind the sprite, z-index -1, riding the drift), but its
 // neutral base FLIPS by theme via `--scene-actor-shadow` (dark ellipse on the bright shallows, soft light disc on the
 // dark abyss where a dark shadow would vanish). Anchored at the body's feet: body bottom = sprite centre + offset +
 // half the hitbox. The dominant-effect modifier swaps the gradient core (`--shadow-core`) to that effect's shared
@@ -61,19 +61,18 @@
   left: 50%;
   z-index: -1;
   // ~1.5× the sprite width (with a 0.28 ellipse profile) so a drifting actor reads as firmly planted on the seabed,
-  // not hovering. The core holds solid to ~36% before fading, so the diffuse ellipse stays expressive instead of
-  // washing out (the earlier narrow 0.9×/0.24 ellipse with an immediate falloff was too faint in both themes).
+  // not hovering. The core holds solid to ~30% then fades out over a wide band, so the soft diffuse edge is baked
+  // into the gradient itself — no `filter: blur()` (a per-actor blur pass was a real fill-rate cost on weak GPUs).
   width: calc(var(--scene-sprite-width, 96px) * 1.5);
   height: calc(var(--scene-sprite-width, 96px) * 1.5 * 0.28);
   background: radial-gradient(
     50% 50% at 50% 50%,
     var(--shadow-core, var(--scene-actor-shadow, rgba(0, 0, 0, 0.4))) 0%,
-    var(--shadow-core, var(--scene-actor-shadow, rgba(0, 0, 0, 0.4))) 36%,
-    transparent 78%
+    var(--shadow-core, var(--scene-actor-shadow, rgba(0, 0, 0, 0.4))) 30%,
+    transparent 84%
   );
   border-radius: 50%;
   transform: translate(-50%, -50%);
-  filter: blur(3px);
   pointer-events: none;
   animation: scene-actor-shadow-in 150ms ease-out;
 }
