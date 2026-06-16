@@ -149,4 +149,13 @@
        a screen-space sibling of the world (NOT inside it — the world is camera-transformed). Driven imperatively by
        the scene's rAF loop via its `frame()`; aria-hidden as a real-time visual-only aid. -->
   <left-paw-offscreen-indicators [players]="players()" aria-hidden="true" />
+
+  <!-- ?debug=perf readout: FPS / own-sprite prediction-gap / authoritative-snapshot staleness. A screen-space
+       sibling of the world (NOT inside it — the world is camera-transformed), so the panel stays pinned. A class
+       toggles visibility (not @if) so it adds no template control-flow branch; the metrics only tick under ?debug=perf. -->
+  <div class="scene__perf" [class.scene__perf--on]="debug.perf" aria-hidden="true">
+    <span>FPS {{ perfFps() }}</span>
+    <span>gap {{ perfGapText() }}</span>
+    <span>stale {{ perfStalenessText() }}</span>
+  </div>
 </section>

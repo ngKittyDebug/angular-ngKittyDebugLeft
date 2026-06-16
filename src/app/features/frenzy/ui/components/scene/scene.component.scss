@@ -19,6 +19,33 @@
     will-change: transform;
   }
 
+  // ?debug=perf readout: a small screen-space corner panel (FPS / own-sprite prediction-gap / authoritative
+  // staleness) for diagnosing framerate and the steering rubber-band on low-end devices. Sibling of the world so
+  // it never rides the camera transform. Debug-only, non-interactive.
+  &__perf {
+    position: absolute;
+    bottom: 0.5rem;
+    left: 0.5rem;
+    z-index: 10;
+    display: none;
+    flex-direction: column;
+    gap: 2px;
+    padding: 0.25rem 0.4rem;
+    border-radius: 6px;
+    // Near-opaque so the readout stays legible over the seabed/sprites (the top-left corner is taken by the HUD
+    // status card + minimap, so the panel lives bottom-left out of their way).
+    background: rgba(0, 0, 0, 0.82);
+    color: #6cf;
+    font-family: ui-monospace, monospace;
+    font-size: 0.7rem;
+    line-height: 1.2;
+    pointer-events: none;
+  }
+
+  &__perf--on {
+    display: flex;
+  }
+
   // Owned-float overlay: one zero-size box per live player, parked on the body point by the scene-position
   // directive's compositor `translate` (top-left lands on the point — no static centring transform, so the box
   // origin IS the body point). It carries the player's sprite vars so the quips anchor to the head; rendered as a
