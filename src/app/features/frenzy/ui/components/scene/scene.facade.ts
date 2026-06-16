@@ -8,7 +8,7 @@ import { SceneActorRegistryService } from './scene-actor-registry.service';
 import { SceneBurstsService } from './scene-bursts.service';
 import { SceneCameraService } from './scene-camera.service';
 import type { CameraSnapshot } from './scene-camera.service';
-import type { RenderedPlayer } from './scene-view-models';
+import type { RenderedItem, RenderedPlayer } from './scene-view-models';
 import { SceneSandPuffsService } from './scene-sand-puffs.service';
 
 /**
@@ -69,6 +69,12 @@ export class SceneFacade {
   // path (the imperative positions), not the rarely-republished structure signal.
   public playerFrame(): readonly RenderedPlayer[] {
     return this.players.frame();
+  }
+
+  // The live per-frame item view models — for the off-screen item culling, which tests each item's current
+  // (extrapolated) position against the camera window every frame (see SceneItemCullingService).
+  public itemFrame(): readonly RenderedItem[] {
+    return this.items.frame();
   }
 
   // Mirror the current frame into the structure signals — used only by the `?debug` box overlay so its boxes track
