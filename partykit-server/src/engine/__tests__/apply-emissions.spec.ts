@@ -236,9 +236,9 @@ describe('applyEmissions', () => {
     expect(schedule.get('p1')).toBe(FRENZY.poop.emitIntervalMs);
   });
 
-  it('a pooping player only ever sprays the nasty trio — never poop itself — across the whole pool', () => {
+  it('a pooping player sprays the nasty pool (rock/brick/bomb/cactus) — never poop itself — across the whole pool', () => {
     // Always due; the first rng sweeps pickItemType across the whole poopEmitWeights pool.
-    const allowed = new Set(['rock', 'brick', 'bomb']);
+    const allowed = new Set(['rock', 'brick', 'bomb', 'cactus']);
     const seen = new Set<string>();
 
     for (let i = 0; i < 100; i++) {

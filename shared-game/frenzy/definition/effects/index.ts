@@ -1,5 +1,6 @@
 import type { EffectDefinition } from '../../../engine/definition';
 import { BARBED_WIRE_EFFECT } from './barbed-wire';
+import { CACTUS_EFFECT } from './cactus';
 import { LAYING_EFFECT } from './laying';
 import { POOPING_EFFECT } from './pooping';
 import { SHIELD_EFFECT } from './shield';
@@ -18,6 +19,7 @@ export const FRENZY_EFFECTS = {
   laying: LAYING_EFFECT,
   pooping: POOPING_EFFECT,
   barbedWire: BARBED_WIRE_EFFECT,
+  cactus: CACTUS_EFFECT,
 } as const satisfies Record<string, EffectDefinition>;
 
 /** Internal id union of the roster; the public alias is `PlayerEffectKind` in `frenzy/types.ts`. */

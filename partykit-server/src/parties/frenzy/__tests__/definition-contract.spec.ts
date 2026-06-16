@@ -19,8 +19,8 @@ describe('frenzy definition contract', () => {
   it('keeps the item/effect/npc unions exactly equal to the legacy literal sets', () => {
     // Each const compiles ONLY while the derived union matches the legacy literals byte-for-byte — a drifted
     // (widened to `string`, grown or shrunk) union turns `Equal<...>` into `false` and breaks the assignment.
-    // The dormant `barbedWire` demo slices (phase 6, `enabled: false`) are deliberately absent: `EnabledKey`
-    // keeps flagged-off slices out of the public unions until their flags flip.
+    // `cactus` (enabled) IS in the public unions; the dormant `barbedWire` demo slices (`enabled: false`) stay
+    // out — `EnabledKey` keeps flagged-off slices out of the public unions until their flags flip.
     const itemTypeStable: Equal<
       ItemType,
       | 'food'
@@ -36,18 +36,21 @@ describe('frenzy definition contract', () => {
       | 'shield'
       | 'easterEgg'
       | 'poop'
+      | 'cactus'
     > = true;
-    const effectKindStable: Equal<PlayerEffectKind, 'shield' | 'wellFed' | 'laying' | 'pooping'> =
-      true;
+    const effectKindStable: Equal<
+      PlayerEffectKind,
+      'shield' | 'wellFed' | 'laying' | 'pooping' | 'cactus'
+    > = true;
     const npcKindStable: Equal<NpcKind, 'angryBomb'> = true;
 
     expect([itemTypeStable, effectKindStable, npcKindStable]).toEqual([true, true, true]);
   });
 
   it('keeps weight-pool key order byte-stable (pickItemType walks Object.entries cumulatively)', () => {
-    // `barbedWire` (the dormant phase-6 demo slice) trails the pool: membership is total over the roster, but
-    // `pickItemType` filters disabled entries BEFORE the cumulative walk, so the rng mapping of the enabled
-    // prefix is untouched — the golden master proves it. A dormant slice may only ever APPEND here.
+    // New slices only ever APPEND to the pool, never reorder: `barbedWire` (dormant, `enabled: false`) trails it
+    // filtered out before the cumulative walk; `cactus` (enabled) trails it as a live tail band. Appending keeps
+    // the enabled PREFIX's rng mapping byte-stable — the golden master proves the scripted scenario is untouched.
     expect(Object.keys(FRENZY.spawnWeights)).toEqual([
       'food',
       'rotten',
@@ -63,6 +66,7 @@ describe('frenzy definition contract', () => {
       'easterEgg',
       'poop',
       'barbedWire',
+      'cactus',
     ]);
     expect(Object.keys(FRENZY.eggEmitWeights)).toEqual([
       'food',
@@ -73,7 +77,7 @@ describe('frenzy definition contract', () => {
       'rareCandy',
       'goldenBerry',
     ]);
-    expect(Object.keys(FRENZY.poopEmitWeights)).toEqual(['rock', 'brick', 'bomb']);
+    expect(Object.keys(FRENZY.poopEmitWeights)).toEqual(['rock', 'brick', 'bomb', 'cactus']);
   });
 
   it('keeps the flat FRENZY read-model values stable', () => {

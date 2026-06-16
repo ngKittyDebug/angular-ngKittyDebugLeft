@@ -3,6 +3,7 @@ import type { EffectKey } from '../effects';
 import { BARBED_WIRE_ITEM } from './barbed-wire';
 import { BOMB_ITEM } from './bomb';
 import { BRICK_ITEM } from './brick';
+import { CACTUS_ITEM } from './cactus';
 import { CRUMB_ITEM } from './crumb';
 import { EASTER_EGG_ITEM } from './easter-egg';
 import { FOOD_ITEM } from './food';
@@ -40,6 +41,7 @@ export const FRENZY_ITEMS = {
   easterEgg: EASTER_EGG_ITEM,
   poop: POOP_ITEM,
   barbedWire: BARBED_WIRE_ITEM,
+  cactus: CACTUS_ITEM,
 } as const satisfies Record<string, ItemDefinition<EffectKey>>;
 
 /** Internal id union of the roster; the public alias is `ItemType` in `frenzy/types.ts`. */

@@ -69,6 +69,7 @@ const ITEM_ART: Record<ItemType, ItemArt> = {
   shield: { sprite: 'shield.svg', dotColor: '#22d3ee', sandPuff: 0.5 },
   easterEgg: { sprite: 'easter-egg.png', dotColor: '#f0932b', sandPuff: 0.45 },
   poop: { sprite: 'poop.png', dotColor: '#7a5230', sandPuff: 0.45 },
+  cactus: { sprite: 'cactus.png', dotColor: '#3fa34d', sandPuff: 0.4 },
 };
 
 // NPC appearances are rendered from a single static PNG scaled per evolution stage — deliberately NOT routed

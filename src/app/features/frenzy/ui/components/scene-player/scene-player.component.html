@@ -71,16 +71,20 @@
     <span class="scene__label">{{ player().label }}</span>
   }
 
-  <!-- Overhead hp nameplate for EVERY player (including my own sprite): a horizontal bar above the head, under the
-       crown. The name stays below the sprite (see `.scene__label`). -->
-  <progress
-    tuiProgressBar
-    class="scene__hp-bar"
-    size="xs"
-    [value]="player().hp"
-    [max]="maxHp()"
-    [color]="player().hp | hpToneColor"
-  ></progress>
+  <!-- Overhead hp nameplate for EVERY player (my own sprite, others AND the NPC): the live hp value sits at the
+       top-left ABOVE the bar (echoing the status card's corner hp badge), then the horizontal bar beneath it, under
+       the crown. The name stays below the sprite (see `.scene__label`). -->
+  <span class="scene__hp">
+    <span class="scene__hp-value" aria-hidden="true">{{ player().hp }}</span>
+    <progress
+      tuiProgressBar
+      class="scene__hp-bar"
+      size="xs"
+      [value]="player().hp"
+      [max]="maxHp()"
+      [color]="player().hp | hpToneColor"
+    ></progress>
+  </span>
 
   @for (spark of sparks(); track spark.id) {
     <left-paw-spark-burst class="scene__player-spark" />

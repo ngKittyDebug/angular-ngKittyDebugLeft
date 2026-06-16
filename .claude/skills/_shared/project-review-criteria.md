@@ -159,3 +159,26 @@ The tools (full playbook in `pr-review/reference/taiga-mcp.md`):
 - `mcp__taiga-ui__get_migration_guide` — only when the work is a Taiga version bump.
 
 If the MCP is unavailable, fall back to `CLAUDE.md` Taiga conventions and say in the finding that you couldn't verify against the docs — don't assert an API you can't confirm.
+
+---
+
+## 5. Accepted trade-offs — deliberate, do NOT flag or re-file
+
+This is a **learning project** (RS School). A few findings that read as "inconsistency" or "tech
+debt" are in fact **conscious teaching choices** the team has accepted — surfacing them only churns
+the backlog and the PR threads. Unlike the false-positive traps in §3 (where the code isn't actually
+wrong), here the code _is_ as described — it's just **won't-fix by team decision**.
+
+Treat every entry below as already-resolved in **both** delivery skills:
+
+- **`pr-review`** — don't leave a comment about it.
+- **`codebase-audit`** — don't file a new issue, and **don't reopen** a closed one even though the
+  code still matches (the closed issue is the decision record). Note it in the run report as
+  `<slug> → принятое исключение, пропущено`.
+
+| Accepted trade-off                                                                                                                                         | Audit class slug      | Why it's OK here                                                                                                                                                                                              |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Фича `auth` намеренно использует две парадигмы форм: Reactive Forms (`login-form`) и Signal Forms (`signup-form`, `@angular/forms/signals`) в одной фиче. | `mixed-form-paradigms` | Учебный проект: цель — показать оба form-API Angular бок о бок. Несогласованность здесь — учебная задача, а не долг к погашению. Решение зафиксировано закрытием issue #163 (label `AI TechDebt`, scope `auth`). |
+
+Adding a new row here is a **team decision, not an audit call** — record it only after the maintainer
+has explicitly signed off, and link the issue/PR that captures the decision so the row stays auditable.
