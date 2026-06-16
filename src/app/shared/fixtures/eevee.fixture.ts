@@ -1,6 +1,6 @@
 import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
 
-export const POKEMON_LIST_DATA = {
+export const POKEMON_DATA_FIXTURE = {
   abilities: [
     {
       ability: {

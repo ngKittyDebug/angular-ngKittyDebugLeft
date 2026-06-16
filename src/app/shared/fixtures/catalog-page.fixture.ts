@@ -1,6 +1,6 @@
 import type { PokemonListApiData } from '@shared/models/pokemon-list-api-data-interface';
 
-export const POKEMON_LIST_DATA = {
+export const CATALOG_PAGE_FIXTURE = {
   count: 1350,
   next: 'https://pokeapi.co/api/v2/pokemon?offset=20&limit=20',
   previous: null,

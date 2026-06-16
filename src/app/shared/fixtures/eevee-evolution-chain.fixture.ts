@@ -1,6 +1,6 @@
 import type { EvolutionChainResponse } from '@shared/models/pokemon-evolution-chain-api-data-interface';
 
-export const POKEMON_EVOLUTION_CHAIN_DATA = {
+export const POKEMON_EVOLUTION_CHAIN_FIXTURE = {
   baby_trigger_item: null,
   chain: {
     evolution_details: [],

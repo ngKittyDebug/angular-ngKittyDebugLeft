@@ -1,6 +1,6 @@
 import type { PokemonSpeciesApiData } from '@shared/models/pokemon-species-api-data-interface';
 
-export const POKEMON_SPECIES_DATA = {
+export const POKEMON_SPECIES_FIXTURE = {
   base_happiness: 70,
   capture_rate: 45,
   color: {
