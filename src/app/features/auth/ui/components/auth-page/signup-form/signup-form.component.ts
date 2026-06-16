@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
@@ -40,6 +40,8 @@ export class SignupFormComponent {
   protected readonly signupFacade = inject(SignUpFacade);
   protected readonly isLoading = this.signupFacade.isLoading;
 
+  protected readonly returnUrl = input<string>('/');
+
   protected firstErrorKey(field: Field<string>): string | null {
     const state = field();
 
@@ -48,6 +50,6 @@ export class SignupFormComponent {
 
   protected onSubmit(event: Event): void {
     event.preventDefault();
-    this.signupFacade.onSignUpSubmit();
+    this.signupFacade.onSignUpSubmit(this.returnUrl);
   }
 }

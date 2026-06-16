@@ -62,9 +62,13 @@
   <div class="login__title-wrapper">
     <p class="login__form_text">
       {{ t('auth.login.endingText') }}
-      <a [routerLink]="['/auth', 'signup']" tuiLink class="login__form_link">{{
-        t('auth.login.loginLink')
-      }}</a>
+      <a
+        [routerLink]="['/auth', 'signup']"
+        queryParamsHandling="preserve"
+        tuiLink
+        class="login__form_link"
+        >{{ t('auth.login.loginLink') }}</a
+      >
     </p>
   </div>
 </form>
