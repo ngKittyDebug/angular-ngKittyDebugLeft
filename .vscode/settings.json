@@ -46,6 +46,5 @@
       "style": "scss",
       "externalTemplate": true
     }
-  },
-  "kiroAgent.configureMCP": "Disabled"
+  }
 }
