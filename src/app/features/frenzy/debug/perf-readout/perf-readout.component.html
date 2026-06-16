@@ -1,0 +1,7 @@
+<!-- Class toggle (not @if) so the panel adds no control-flow branch and the values stay bound; visibility is a
+     display:none/flex flip driven by `enabled`. Non-interactive, aria-hidden — a real-time visual-only aid. -->
+<div class="perf-readout" [class.perf-readout--on]="enabled()" aria-hidden="true">
+  <span>FPS {{ fps() }}</span>
+  <span>gap {{ gapText() }}</span>
+  <span>stale {{ stalenessText() }}</span>
+</div>

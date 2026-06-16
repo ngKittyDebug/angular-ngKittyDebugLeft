@@ -9,7 +9,6 @@ import {
   inject,
   input,
   output,
-  signal,
   viewChild,
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
@@ -27,6 +26,7 @@ import { AquariumDecorComponent } from '../aquarium-decor/aquarium-decor.compone
 import { BubbleBurstComponent } from '../bubble-burst/bubble-burst.component';
 import { DebugOverlayComponent } from '../../../debug/debug-overlay/debug-overlay.component';
 import { parseDebugFlags } from '../../../debug/debug-options';
+import { PerfReadoutComponent } from '../../../debug/perf-readout/perf-readout.component';
 import { FloatingTextComponent } from '../floating-text/floating-text.component';
 import { ForegroundKelpComponent } from '../foreground-kelp/foreground-kelp.component';
 import { MidgroundKelpComponent } from '../midground-kelp/midground-kelp.component';
@@ -78,6 +78,7 @@ function groupByOwner<T extends { ownerId: string }>(items: readonly T[]): Map<s
     ForegroundKelpComponent,
     MidgroundKelpComponent,
     OffscreenIndicatorsComponent,
+    PerfReadoutComponent,
     SandPuffComponent,
     SceneItemComponent,
     ScenePlayerComponent,
@@ -115,15 +116,6 @@ export class SceneComponent {
   // The off-screen indicators overlay — driven imperatively from this loop (positions each frame, structure
   // throttled) instead of via per-frame inputs, to keep the rAF work off change detection like the rest of the scene.
   private readonly offscreenIndicators = viewChild(OffscreenIndicatorsComponent);
-
-  // `?debug=perf` metric state, sampled each rAF frame (see `updatePerfMetrics`). `lastAuth*` track my sprite's
-  // authoritative position so a change stamps `lastAuthChange`; the NaN seeds force the first sample to stamp.
-  private lastPerfFrame = 0;
-  private fpsEma = 0;
-  private lastAuthX = Number.NaN;
-  private lastAuthY = Number.NaN;
-  private lastAuthChange = 0;
-  private lastPerfEmit = 0;
 
   public readonly blasts = input<readonly Blast[]>([]);
   public readonly hitBursts = input<readonly HitBurst[]>([]);
@@ -173,23 +165,6 @@ export class SceneComponent {
   // Shield-ward cues grouped by the warded player, so each `.scene__player` pulses its bubble + clinks in place.
   protected readonly shieldBlocksByOwner = computed(() => groupByOwner(this.ownedShieldBlocks()));
 
-  // `?debug=perf` readout values, emitted at ~5Hz from the rAF loop. `perfFps` is a smoothed frame rate; `perfGap`
-  // is how far my rendered (client-predicted) sprite leads the authoritative position in world px; `perfStaleness`
-  // is the ms since that authoritative position last advanced. gap/staleness are -1 until my own sprite exists.
-  protected readonly perfFps = signal(0);
-  protected readonly perfGap = signal(-1);
-  protected readonly perfStaleness = signal(-1);
-  protected readonly perfGapText = computed(() => {
-    const gap = this.perfGap();
-
-    return gap < 0 ? '—' : `${gap}px`;
-  });
-  protected readonly perfStalenessText = computed(() => {
-    const staleness = this.perfStaleness();
-
-    return staleness < 0 ? '—' : `${staleness}ms`;
-  });
-
   public constructor() {
     // Re-anchor item/player baselines from each snapshot and paint immediately (before the rAF loop starts).
     // Reading evolving/myId here too keeps the first paint consistent with them.
@@ -229,10 +204,6 @@ export class SceneComponent {
           // Right after the camera writes this frame's transform, reposition the off-screen indicators off the
           // matching snapshot (zero phase skew); the overlay throttles its own structural recompute internally.
           this.offscreenIndicators()?.frame(this.facade.cameraSnapshot(), now);
-        }
-
-        if (this.debug.perf) {
-          this.updatePerfMetrics(now);
         }
       };
 
@@ -308,55 +279,5 @@ export class SceneComponent {
     }
 
     return { x: deltaX / magnitude, y: deltaY / magnitude };
-  }
-
-  // Sample the `?debug=perf` metrics for this frame: a smoothed FPS plus, for my own sprite, the prediction-gap
-  // (how far the rendered/client-predicted position leads the authoritative one, in world px) and the authoritative
-  // staleness (ms since that position last advanced). Both climb when a starved main thread delays snapshot
-  // processing — the mechanism behind the steering rubber-band on low-end devices. Emits to the readout signals at
-  // ~5Hz so the panel stays legible (change detection already runs per frame).
-  private updatePerfMetrics(now: number): void {
-    const delta = now - this.lastPerfFrame;
-
-    this.lastPerfFrame = now;
-
-    if (delta > 0 && delta < 1000) {
-      const instantFps = 1000 / delta;
-
-      this.fpsEma = this.fpsEma === 0 ? instantFps : this.fpsEma * 0.85 + instantFps * 0.15;
-    }
-
-    const myPlayerId = this.myId();
-    let gap = -1;
-    let staleness = -1;
-
-    if (myPlayerId !== null) {
-      const authoritative = this.players().find((player) => player.id === myPlayerId);
-      const rendered = this.renderedPlayers().find((player) => player.id === myPlayerId);
-
-      if (authoritative !== undefined && rendered !== undefined) {
-        gap = Math.hypot(
-          (rendered.x - authoritative.x) * this.worldWidth,
-          (rendered.y - authoritative.y) * this.worldHeight,
-        );
-
-        if (authoritative.x !== this.lastAuthX || authoritative.y !== this.lastAuthY) {
-          this.lastAuthX = authoritative.x;
-          this.lastAuthY = authoritative.y;
-          this.lastAuthChange = now;
-        }
-
-        staleness = now - this.lastAuthChange;
-      }
-    }
-
-    if (now - this.lastPerfEmit < 200) {
-      return;
-    }
-
-    this.lastPerfEmit = now;
-    this.perfFps.set(Math.round(this.fpsEma));
-    this.perfGap.set(gap < 0 ? -1 : Math.round(gap));
-    this.perfStaleness.set(staleness < 0 ? -1 : Math.round(staleness));
   }
 }

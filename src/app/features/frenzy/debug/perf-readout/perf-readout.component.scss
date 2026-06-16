@@ -1,0 +1,31 @@
+// Host adds no box (`display: contents`), so the panel positions against the scene like the inline div it
+// replaced — placed as a screen-space sibling of `.scene__world`, it never rides the camera transform.
+:host {
+  display: contents;
+}
+
+// `?debug=perf` readout: a small screen-space corner panel (FPS / own-sprite prediction-gap / authoritative
+// staleness) for diagnosing framerate and the steering rubber-band on low-end devices. The top-left corner is taken
+// by the HUD status card + minimap, so the panel lives bottom-left out of their way. Hidden until enabled.
+.perf-readout {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 0.5rem;
+  z-index: 10;
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0.25rem 0.4rem;
+  border-radius: 6px;
+  // Near-opaque so the readout stays legible over the seabed/sprites.
+  background: rgba(0, 0, 0, 0.82);
+  color: #6cf;
+  font-family: ui-monospace, monospace;
+  font-size: 0.7rem;
+  line-height: 1.2;
+  pointer-events: none;
+}
+
+.perf-readout--on {
+  display: flex;
+}
