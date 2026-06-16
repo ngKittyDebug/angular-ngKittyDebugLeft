@@ -8,7 +8,7 @@ import { finalize } from 'rxjs';
 import { Router } from '@angular/router';
 
 @Service({ autoProvided: false })
-export class AuthLoginFacade {
+export class LoginFacade {
   private readonly authApiService = inject(AuthApiService);
   private readonly loginFormService = inject(LoginFormService);
   private readonly destroyRef = inject(DestroyRef);
@@ -22,7 +22,7 @@ export class AuthLoginFacade {
     this.isLoading.set(true);
 
     this.authApiService
-      .onAuthSubmit(loginFormGroup)
+      .onLoginSubmit(loginFormGroup)
       .pipe(
         finalize(() => this.isLoading.set(false)),
         takeUntilDestroyed(this.destroyRef),

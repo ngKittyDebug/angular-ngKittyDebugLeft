@@ -6,7 +6,10 @@ import { TuiButton, TuiError, TuiInput, TuiLabel, TuiTextfieldComponent } from '
 import { TuiForm } from '@taiga-ui/layout';
 import type { Field } from '@angular/forms/signals';
 import { FormField } from '@angular/forms/signals';
-import { SignupFormService } from '@features/auth/data/services/signup-form.service';
+import { AUTH_SERVER_URL } from '@core/constants/pokemon-constants';
+import { AUTH_SERVER_URL_TOKEN } from '@core/tokens/auth-server-url.token';
+import { AuthApiService } from '@features/auth/api/auth-api.service';
+import { SignUpFacade } from '@features/auth/data/facades/signup.facade';
 
 @Component({
   selector: 'left-paw-signup-form',
@@ -25,11 +28,17 @@ import { SignupFormService } from '@features/auth/data/services/signup-form.serv
   templateUrl: './signup-form.component.html',
   styleUrl: './signup-form.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [
+    AuthApiService,
+    SignUpFacade,
+    { provide: AUTH_SERVER_URL_TOKEN, useValue: AUTH_SERVER_URL },
+  ],
 })
 export class SignupFormComponent {
-  protected readonly signupFormService = inject(SignupFormService);
-
   protected loginRouterPath = '../login';
+
+  protected readonly signupFacade = inject(SignUpFacade);
+  protected readonly isLoading = this.signupFacade.isLoading;
 
   protected firstErrorKey(field: Field<string>): string | null {
     const state = field();
@@ -39,6 +48,6 @@ export class SignupFormComponent {
 
   protected onSubmit(event: Event): void {
     event.preventDefault();
-    this.signupFormService.submitForm();
+    this.signupFacade.onSignUpSubmit();
   }
 }

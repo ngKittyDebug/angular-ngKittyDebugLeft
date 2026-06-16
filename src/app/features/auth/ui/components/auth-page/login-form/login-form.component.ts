@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { AuthApiService } from '@features/auth/api/auth-api.service';
 import { AUTH_SERVER_URL } from '@core/constants/pokemon-constants';
 import { AUTH_SERVER_URL_TOKEN } from '@core/tokens/auth-server-url.token';
-import { AuthLoginFacade } from '@features/auth/data/facades/auth-login.facade';
+import { LoginFacade } from '@features/auth/data/facades/login.facade';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { TuiButton, TuiError, TuiInput, TuiLabel, TuiTextfieldComponent } from '@taiga-ui/core';
 import { TuiForm } from '@taiga-ui/layout';
@@ -27,14 +27,14 @@ import { TuiForm } from '@taiga-ui/layout';
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [
     AuthApiService,
-    AuthLoginFacade,
+    LoginFacade,
     { provide: AUTH_SERVER_URL_TOKEN, useValue: AUTH_SERVER_URL },
   ],
 })
 export class LoginFormComponent {
-  private readonly authLoginFacade = inject(AuthLoginFacade);
-  protected readonly loginForm = this.authLoginFacade.loginForm;
-  protected readonly isLoading = this.authLoginFacade.isLoading;
+  private readonly loginFacade = inject(LoginFacade);
+  protected readonly loginForm = this.loginFacade.loginForm;
+  protected readonly isLoading = this.loginFacade.isLoading;
 
   protected readonly returnUrl = input<string>('/');
 
@@ -42,6 +42,6 @@ export class LoginFormComponent {
     if (this.loginForm.invalid) {
       return;
     }
-    this.authLoginFacade.onLoginSubmit(this.loginForm.controls, this.returnUrl);
+    this.loginFacade.onLoginSubmit(this.loginForm.controls, this.returnUrl);
   }
 }

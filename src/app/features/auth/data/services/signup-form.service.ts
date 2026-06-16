@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
-import type { SignupModel } from '../models/signup-form.model';
-import { form, pattern, required, submit, validate } from '@angular/forms/signals';
+import type { SignupModel } from '../models/signup/signup-form.model';
+import { form, pattern, required, validate } from '@angular/forms/signals';
 import {
   EMAIL_PATTERN,
   PASSWORD_PATTERN,
@@ -49,12 +49,4 @@ export class SignupFormService {
       return null;
     });
   });
-
-  public submitForm(): void {
-    submit(this.signupForm, async () => {
-      localStorage.setItem('loginFormData', JSON.stringify(this.signupFormModel()));
-
-      return null;
-    });
-  }
 }
