@@ -1,10 +1,14 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { LoginFormService } from '@features/auth/data/services/login-form.service';
+import { AuthApiService } from '@features/auth/api/auth-api.service';
+import { AUTH_SERVER_URL } from '@core/constants/pokemon-constants';
+import { AUTH_SERVER_URL_TOKEN } from '@core/tokens/auth-server-url.token';
+import { AuthLoginFacade } from '@features/auth/data/facades/auth-login.facade';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { TuiButton, TuiError, TuiInput, TuiLabel, TuiTextfieldComponent } from '@taiga-ui/core';
 import { TuiForm } from '@taiga-ui/layout';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'left-paw-login-form',
@@ -22,18 +26,30 @@ import { TuiForm } from '@taiga-ui/layout';
   templateUrl: './login-form.component.html',
   styleUrl: './login-form.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [
+    AuthApiService,
+    AuthLoginFacade,
+    { provide: AUTH_SERVER_URL_TOKEN, useValue: AUTH_SERVER_URL },
+  ],
 })
 export class LoginFormComponent {
-  private readonly loginFormService = inject(LoginFormService);
-  public readonly loginForm = this.loginFormService.loginForm;
+  private readonly authLoginFacade = inject(AuthLoginFacade);
+  public readonly loginForm = this.authLoginFacade.loginForm;
+
+  protected readonly isPending = signal(false);
 
   protected onSubmit(): void {
     if (this.loginForm.invalid) {
       return;
     }
 
-    const formData = this.loginForm.getRawValue();
+    this.isPending.set(true);
 
-    localStorage.setItem('loginFormData', JSON.stringify(formData));
+    this.authLoginFacade
+      .onLoginSubmit(this.loginForm.controls)
+      .pipe(finalize(() => this.isPending.set(false)))
+      .subscribe({
+        next: (data) => localStorage.setItem('loginFormData', JSON.stringify(data)),
+      });
   }
 }

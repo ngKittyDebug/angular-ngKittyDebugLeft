@@ -55,7 +55,7 @@
     tuiButton
     appearance="brand-accent"
     type="submit"
-    [disabled]="loginForm.invalid"
+    [disabled]="loginForm.invalid || isPending()"
   >
     {{ t('auth.login.button') }}
   </button>
