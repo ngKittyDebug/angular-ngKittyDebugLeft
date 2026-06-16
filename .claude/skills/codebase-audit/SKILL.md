@@ -231,6 +231,12 @@ A slug hit = same class, full stop. A fuzzy title/keyword hit = judge whether it
 class. Then route by what you found — **never refile, but don't just skip either**; a periodic
 audit's job is to keep the existing issue honest:
 
+- **Class slug is listed in "Accepted trade-offs" (§5 of the shared criteria)** → it's a deliberate
+  won't-fix the team has signed off on. Skip it entirely: do **not** file a new issue, and do **not**
+  reopen the closed decision-record issue even though the code still matches (otherwise the audit
+  re-litigates a settled decision every run). One line in the run report:
+  `<slug> → принятое исключение, пропущено`. This check comes **first** — before the open/closed
+  routing below.
 - **Existing issue is OPEN and you found occurrences NOT in its checklist** → extend it with a
   comment (don't edit the body — comments leave an audit trail):
 
