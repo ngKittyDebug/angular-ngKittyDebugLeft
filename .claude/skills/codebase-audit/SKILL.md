@@ -294,6 +294,38 @@ audit's job is to keep the existing issue honest:
   # body: одна строка контекста (когда и где сканировали) + новые пункты `- [ ] path:line`
   ```
 
+- **Existing issue is OPEN, the violation still reproduces, but its `## Рекомендация` / `## Где`
+  has drifted from the code** — the suggested fix points somewhere that moved: the logic the body
+  says to extract from `X.component.ts` now lives in `X.service.ts`, a recommended file/path was
+  renamed, or the suggested Angular/Taiga API changed. Keep the issue honest about _how_ to fix it,
+  not only _that_ it's open. A stale recommendation is worse than a stale occurrence list: it
+  actively steers whoever picks up the ticket toward a file or API that's gone, so they waste time
+  before realizing the advice is outdated. First **prove the drift** the same way a close is
+  verified — grep the class across the issue's whole area (the #115 lesson: "moved" is demonstrated,
+  never inferred from a path alone). Then keep it honest, touching **only** marker-carrying issues:
+  - **Default — a correcting comment** (preserves the audit trail, same spirit as the extend path):
+
+    ```bash
+    gh issue comment <NUMBER> --body-file /tmp/recommendation_drift.md
+    # body: что сместилось и куда теперь ведёт фикс (старый путь/API → новый) + строка контекста
+    ```
+
+  - **When the drift makes the body itself misleading** (it names a file/API that no longer exists,
+    so a contributor would start in the wrong place) → **also** patch just the stale
+    `## Рекомендация` / `## Где` lines. Fetch the current body, edit only those lines — leave the
+    rest, **and the `<!-- ai-codebase-audit:class=… -->` marker**, intact — prepend a dated note so
+    the change stays auditable, then re-submit. Never silently rewrite the body:
+
+    ```bash
+    # in the patched section, above the corrected text:
+    # > Обновлено аудитом <дата>: <что сместилось> — рекомендация перенацелена на <новое место>.
+    gh issue edit <NUMBER> --body-file /tmp/updated_body.md
+    ```
+
+  This is an **update, not a close** — the violation is still real, only the route to the fix
+  changed. Don't confuse it with the close branch below: violation **gone** → close; violation
+  **still here but the advice mis-points** → correct.
+
 - **Existing issue is CLOSED but the occurrences are still (or again) in the code** → reopen with
   an explanation, do NOT open a twin:
 
@@ -326,9 +358,10 @@ audit's job is to keep the existing issue honest:
   report ("`onpush-missing` → уже #42, без изменений").
 - **Nothing similar** → go to 5b.
 
-In interactive mode, show the planned comment/reopen/close to the user before executing it, same
-as a new issue (for a close, show the per-item verification you did). In autonomous mode (see
-below) execute directly — comments, reopens and closes don't count against the new-issue cap.
+In interactive mode, show the planned comment/edit/reopen/close to the user before executing it,
+same as a new issue (for a close, show the per-item verification you did; for a body edit, show the
+before/after of the lines you'll change). In autonomous mode (see below) execute directly —
+comments, edits, reopens and closes don't count against the new-issue cap.
 
 **5b. Present this one issue to the user and wait.** Show the full draft — title (emoji + count),
 **severity + the Priority (P0/P1/P2), Size (XS–XL) and Scope(s) you derived**, and the complete body — and the dedup result ("ничего похожего не нашёл" / "есть #42, но про другое"). Then **stop and ask for explicit confirmation for this specific issue.** Do not proceed to the next issue until the user answers. They may say create / edit / skip (and they may override the priority, size, or scopes).
@@ -405,8 +438,9 @@ What changes (and only this):
   report (title + slug + occurrence count), so the next run (or a human) can pick them up.
   Comments on existing issues and reopens don't count against the cap.
 - **End every run with a report** in the final message: scope scanned, classes found, what was
-  filed (links), what was extended/reopened, what was **closed as fixed/irrelevant** (with the
-  one-line verification per issue), what was withheld by the cap, what was skipped as unchanged.
+  filed (links), what was extended/reopened, what was **re-pointed** (a drifted recommendation
+  corrected), what was **closed as fixed/irrelevant** (with the one-line verification per issue),
+  what was withheld by the cap, what was skipped as unchanged.
   The report is the only place a human sees what an unattended run did — write it like a changelog
   entry, not a log dump.
 
