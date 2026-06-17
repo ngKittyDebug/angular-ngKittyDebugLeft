@@ -1,4 +1,4 @@
-import { computed, inject, Service, signal } from '@angular/core';
+import { inject, Service, signal } from '@angular/core';
 import type { LoginFormGroup } from '../models/login-form.model';
 import type { Observable } from 'rxjs';
 import { map, tap } from 'rxjs';
@@ -11,7 +11,7 @@ export class AuthService {
 
   private readonly accessToken = signal<string | null>(null);
 
-  public readonly getToken = computed(() => this.accessToken());
+  public readonly token = this.accessToken.asReadonly();
 
   // TODO на этапе мержа перепроверить и в случае необходимости исправить типы. Разработка велась одновременно с сервисом.
   public login(loginFormGroup: LoginFormGroup): Observable<void> {
@@ -29,7 +29,7 @@ export class AuthService {
   public register(registerFormGroup: SignupModel): Observable<void> {
     return this.authApiService.onRegistrationSubmit(registerFormGroup).pipe(
       tap((response) => {
-        if (response && response.accessToken) {
+        if (response.accessToken) {
           this.saveToken(response.accessToken);
         }
       }),
@@ -40,7 +40,7 @@ export class AuthService {
   public refresh(): Observable<void> {
     return this.authApiService.onRefresh().pipe(
       tap((response) => {
-        if (response && response.accessToken) {
+        if (response.accessToken) {
           this.saveToken(response.accessToken);
         }
       }),
