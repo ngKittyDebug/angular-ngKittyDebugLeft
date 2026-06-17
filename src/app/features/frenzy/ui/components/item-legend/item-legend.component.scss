@@ -1,0 +1,177 @@
+@use 'utility/hud-pill' as *;
+
+// Shared opaque glass for the collapsed pill and the panel — same chrome as the minimap so the HUD widgets
+// read consistently.
+%legend-surface {
+  border-radius: 0.6rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+
+  @include hud_pill;
+}
+
+.legend {
+  // HUD widget over the scene: re-enable pointer events the parent column switches off.
+  pointer-events: auto;
+  user-select: none;
+
+  &__pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 0.7rem;
+    border: none;
+    color: var(--tui-text-primary);
+    font: inherit;
+    cursor: pointer;
+
+    @extend %legend-surface;
+
+    &:focus-visible {
+      outline: 2px solid var(--tui-status-positive);
+      outline-offset: 2px;
+    }
+  }
+
+  &__pill-icon {
+    block-size: 1rem;
+    inline-size: 1rem;
+    color: var(--tui-text-secondary);
+  }
+
+  &__pill-text {
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  // Desktop: pin the collapsed pill to the shared HUD-widget width so it lines up with the sound toggle and
+  // leaderboard pill (same width, aligned edges).
+  &:not(&--compact) &__pill {
+    width: var(--frenzy-hud-widget, 12rem);
+  }
+
+  // Compact (mobile): the pill stretches full width, and takes the shared row height (--frenzy-hud-row-h) so it
+  // matches the sound toggle and the stack lines up with the status card.
+  &--compact &__pill {
+    box-sizing: border-box;
+    block-size: var(--frenzy-hud-row-h, 1.9rem);
+    width: 100%;
+    padding-block: 0;
+  }
+
+  &__panel {
+    display: flex;
+    flex-direction: column;
+    width: min(15rem, 60vw);
+    max-height: 60vh;
+    overflow: hidden;
+
+    @extend %legend-surface;
+  }
+
+  &--compact &__panel {
+    width: min(15rem, 70vw);
+  }
+
+  // The whole header is the collapse button.
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.4rem 0.6rem;
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+
+    @include hud_pill;
+
+    border: none;
+    border-bottom: 1px solid var(--tui-border-normal);
+
+    &:focus-visible {
+      outline: 2px solid var(--tui-status-positive);
+      outline-offset: -2px;
+    }
+  }
+
+  &__title {
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  &__header-icon {
+    margin-inline-start: auto;
+    block-size: 1rem;
+    inline-size: 1rem;
+    color: var(--tui-text-secondary);
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.55rem 0.6rem 0.65rem;
+    overflow-y: auto;
+  }
+
+  &__group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  &__group-title {
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  // Category accent on the group header — same semantics as the floating-text/HP cues.
+  &__group--good &__group-title {
+    color: var(--tui-status-positive);
+  }
+
+  &__group--risky &__group-title {
+    color: var(--tui-status-warning);
+  }
+
+  &__group--bad &__group-title {
+    color: var(--tui-status-negative);
+  }
+
+  &__entries {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__entry {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  // The exact hue this item shows as a minimap blip — the legend doubles as the minimap colour key.
+  &__swatch {
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+  }
+
+  &__sprite {
+    flex: none;
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+  }
+
+  &__name {
+    font-size: 0.78rem;
+  }
+}

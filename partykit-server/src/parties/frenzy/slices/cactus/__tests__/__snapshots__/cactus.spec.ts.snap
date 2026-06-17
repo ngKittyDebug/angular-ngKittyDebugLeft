@@ -1,0 +1,36 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`cactus slice (enabled) > keeps the slice values stable 1`] = `
+{
+  "effect": {
+    "modifiers": {
+      "contactRam": {
+        "ramDamage": -12,
+        "scratchDamage": -6,
+      },
+    },
+  },
+  "item": {
+    "enabled": true,
+    "interactions": {
+      "onClick": {
+        "durationMs": 30000,
+        "effectId": "cactus",
+        "verb": "grantEffect",
+      },
+      "onCollide": {
+        "durationMs": 30000,
+        "effectId": "cactus",
+        "verb": "grantEffect",
+      },
+    },
+    "physics": {
+      "fallSpeed": 0.16,
+    },
+    "spawn": {
+      "poopEmit": 6,
+      "world": 10,
+    },
+  },
+}
+`;

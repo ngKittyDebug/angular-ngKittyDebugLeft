@@ -1,15 +1,19 @@
 import { describe, expect, it } from 'vitest';
 
-import { markDisconnected } from '../engine/mark-disconnected';
-import { restoreConnected } from '../engine/restore-connected';
+import { markDisconnected } from '../mark-disconnected';
+import { restoreConnected } from '../restore-connected';
+import { TEST_BODY } from '../../../engine/__tests__/test-body';
 import type { Player, ServerState } from '@game/frenzy/types';
 
 const ALIVE_PLAYER: Player = {
+  kind: 'human',
   id: 't1',
   name: 'Ash',
   appearance: 'caterpie',
+  body: TEST_BODY,
   stage: 1,
-  mass: 100,
+  hp: 100,
+  mana: 0,
   x: 0.5,
   y: 0.5,
   vx: 0,
@@ -18,6 +22,7 @@ const ALIVE_PLAYER: Player = {
   disconnectedAt: null,
   joinedAt: 0,
   effects: [],
+  scores: {},
 };
 
 const STATE: ServerState = { players: [ALIVE_PLAYER], items: [], tick: 0 };

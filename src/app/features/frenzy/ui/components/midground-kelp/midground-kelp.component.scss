@@ -1,0 +1,50 @@
+// In-world layer that sits IN FRONT of the actors (z-index 2 > the actors' 1) but inside `.scene__world`, so it
+// pans and scales with the camera and the Pokémon can hide behind it. Never interactive.
+:host {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: block;
+  pointer-events: none;
+}
+
+.mid-kelp {
+  position: absolute;
+  inset: 0;
+
+  &__blade-wrap {
+    position: absolute;
+    bottom: var(--root, 8%);
+    transform-origin: 50% 100%;
+    // A hair brighter/more saturated than the backdrop so the near layer reads as in front of the scene.
+    filter: saturate(1.08) brightness(1.03);
+    animation: mid-kelp-sway 6s ease-in-out infinite alternate;
+  }
+
+  &__blade {
+    display: block;
+    width: var(--w, 50px);
+    height: var(--h, 280px);
+    fill: currentColor;
+
+    &--coral {
+      opacity: 0.92;
+    }
+  }
+}
+
+@keyframes mid-kelp-sway {
+  0% {
+    transform: rotate(var(--rot, -4deg));
+  }
+
+  100% {
+    transform: rotate(calc(var(--rot, -4deg) * -1));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mid-kelp__blade-wrap {
+    animation: none;
+  }
+}

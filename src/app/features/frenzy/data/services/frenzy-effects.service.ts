@@ -1,14 +1,21 @@
 import { DestroyRef, inject, Injectable } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
+import { BumpEffect } from './effects/bump-effect.service';
 import { DetonationEffect } from './effects/detonation-effect.service';
 import { EatEffect } from './effects/eat-effect.service';
+import { EmissionSoundEffect } from './effects/emission-sound-effect.service';
 import { EvolutionEffect } from './effects/evolution-effect.service';
 import type { FrenzyEffect } from './effects/frenzy-effect';
 import { FloatingMessagesStore } from './effects/floating-messages.store';
+import { HitBurstEffect } from './effects/hit-burst-effect.service';
+import { IntroQuipsEffect } from './effects/intro-quips-effect.service';
+import { NpcQuipEffect } from './effects/npc-quip-effect.service';
 import { PlayerEffectsTracker } from './effects/player-effects-tracker.service';
 import { PresenceTracker } from './effects/presence-tracker.service';
+import { ReactiveMoodEffect } from './effects/reactive-mood-effect.service';
 import { SelfMoodEffect } from './effects/self-mood-effect.service';
+import { ShieldBlockEffect } from './effects/shield-block-effect.service';
 import { FrenzySocketService } from './frenzy-socket.service';
 
 /**
@@ -24,20 +31,37 @@ export class FrenzyEffectsService {
   private readonly eat = inject(EatEffect);
   private readonly evolution = inject(EvolutionEffect);
   private readonly detonation = inject(DetonationEffect);
+  private readonly bump = inject(BumpEffect);
+  private readonly hitBurst = inject(HitBurstEffect);
+  private readonly shieldBlock = inject(ShieldBlockEffect);
   private readonly presence = inject(PresenceTracker);
   private readonly playerEffects = inject(PlayerEffectsTracker);
+  private readonly emissionSound = inject(EmissionSoundEffect);
   private readonly selfMood = inject(SelfMoodEffect);
+  private readonly reactiveMood = inject(ReactiveMoodEffect);
+  private readonly npcQuip = inject(NpcQuipEffect);
+  // Injected only to construct it — its `effect()` floats the random intro quips on each spawn on its own.
+  private readonly introQuips = inject(IntroQuipsEffect);
   private readonly handlers: readonly FrenzyEffect[] = [
     this.eat,
     this.evolution,
     this.detonation,
+    this.bump,
+    this.hitBurst,
+    this.shieldBlock,
     this.presence,
     this.playerEffects,
+    this.emissionSound,
+    this.reactiveMood,
   ];
 
   public readonly ownedFloats = this.floats.ownedMessages;
+  public readonly reactionFace = this.reactiveMood.reactionFace;
   public readonly orphanFloats = this.floats.orphanMessages;
   public readonly blasts = this.detonation.blasts;
+  public readonly hitBursts = this.hitBurst.hitBursts;
+  public readonly ownedSparks = this.hitBurst.ownedSparks;
+  public readonly ownedShieldBlocks = this.shieldBlock.ownedShieldBlocks;
   public readonly evolvingPlayers = this.evolution.evolvingPlayers;
 
   public constructor() {
@@ -50,5 +74,9 @@ export class FrenzyEffectsService {
 
   public pokeSelf(): void {
     this.selfMood.pokeSelf();
+  }
+
+  public pokeNpc(npcId: string): void {
+    this.npcQuip.pokeNpc(npcId);
   }
 }

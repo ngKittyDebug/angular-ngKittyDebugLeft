@@ -11,6 +11,8 @@ interface FloatingBase {
   icon?: string;
   who?: string;
   delta?: number;
+  /** Release order within an owner's column: higher floats up first, ties break FIFO. */
+  priority: number;
 }
 
 /**
@@ -19,8 +21,6 @@ interface FloatingBase {
  */
 export interface OwnedFloat extends FloatingBase {
   ownerId: string;
-  /** Vertical slot above the owner's head (0 = closest), so co-existing floats of one player don't overlap. Assigned by the store. */
-  lane: number;
 }
 
 /**

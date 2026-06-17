@@ -1,0 +1,124 @@
+@use 'utility/hud-pill' as *;
+
+.disconnected-modal {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  align-items: center;
+  width: min(21rem, 90vw);
+  padding: 1.75rem 2rem;
+  border-radius: 1rem;
+  text-align: center;
+
+  @include hud_pill;
+
+  // Deep-sea glass tinted with the warning accent (theme-aware) + an amber ambient halo.
+  backdrop-filter: blur(14px) saturate(1.2);
+  border: 1px solid color-mix(in srgb, var(--tui-status-warning) 55%, var(--tui-border-normal));
+  box-shadow:
+    0 18px 50px -12px rgba(0, 0, 0, 0.55),
+    0 0 42px -10px color-mix(in srgb, var(--tui-status-warning) 50%, transparent);
+  animation: disconnected-modal-rise 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+
+  // Beacon: a filled amber disc emitting concentric "lost signal" rings.
+  // Amber carries the warning (graphic), so the glyph sits white on the disc — high contrast in both themes.
+  &__beacon {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 3.25rem;
+    height: 3.25rem;
+    border-radius: 50%;
+    background: var(--tui-status-warning);
+    box-shadow: 0 6px 20px -6px color-mix(in srgb, var(--tui-status-warning) 75%, transparent);
+    animation: disconnected-modal-pulse 1.6s ease-in-out infinite;
+
+    &::before,
+    &::after {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: 50%;
+      border: 2px solid color-mix(in srgb, var(--tui-status-warning) 70%, transparent);
+      animation: disconnected-modal-ring 2s ease-out infinite;
+    }
+
+    &::after {
+      animation-delay: 1s;
+    }
+  }
+
+  &__icon {
+    position: relative;
+    font-size: 1.6rem;
+    color: #fff;
+  }
+
+  &__title {
+    margin: 0;
+    // Theme-aware high-contrast text (dark on light theme, light on dark) — never amber-on-white.
+    color: var(--tui-text-primary);
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+
+  &__message {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    color: var(--tui-text-secondary);
+    font-size: 0.95rem;
+  }
+
+  &__spinner {
+    flex: none;
+  }
+}
+
+@keyframes disconnected-modal-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes disconnected-modal-ring {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.7;
+  }
+
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+@keyframes disconnected-modal-pulse {
+  0%,
+  100% {
+    scale: 0.96;
+  }
+
+  50% {
+    scale: 1.05;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .disconnected-modal,
+  .disconnected-modal__beacon,
+  .disconnected-modal__beacon::before,
+  .disconnected-modal__beacon::after {
+    animation: none;
+  }
+}

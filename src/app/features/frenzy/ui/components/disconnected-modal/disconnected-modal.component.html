@@ -1,0 +1,18 @@
+<section
+  *transloco="let t; prefix: 'frenzy.disconnectedModal'"
+  class="disconnected-modal"
+  role="alertdialog"
+  aria-live="assertive"
+  [attr.aria-label]="t('ariaLabel')"
+>
+  <span class="disconnected-modal__beacon" aria-hidden="true">
+    <tui-icon class="disconnected-modal__icon" icon="@tui.wifi-off" />
+  </span>
+
+  <h2 class="disconnected-modal__title">{{ t('title') }}</h2>
+
+  <p class="disconnected-modal__message">
+    <tui-loader class="disconnected-modal__spinner" size="s" [inheritColor]="true" />
+    <span>{{ t('message') }}</span>
+  </p>
+</section>

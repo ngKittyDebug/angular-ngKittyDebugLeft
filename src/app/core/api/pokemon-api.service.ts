@@ -20,4 +20,11 @@ export class PokemonApiService {
   public getEvolutionChain(pokemonEndpoint: string): string {
     return `${POKEMON_BASE_API}evolution-chain/${pokemonEndpoint}`;
   }
+  public async getTypeList(): Promise<Response> {
+    return fetch(`${POKEMON_BASE_API}type`);
+  }
+
+  public async getGenerationList(): Promise<Response> {
+    return fetch(`${POKEMON_BASE_API}generation`);
+  }
 }

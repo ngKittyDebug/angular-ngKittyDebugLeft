@@ -1,19 +1,64 @@
+@use 'utility/hud-pill' as *;
+
 :host {
+  position: relative;
   display: flex;
   flex: 1;
   min-height: 0;
-  // Cancel the .root-wrapper horizontal padding (2rem) so the game is full-bleed.
+  // Cancel the .root-wrapper horizontal padding so the game is full-bleed. The wrapper padding is RESPONSIVE
+  // (2rem desktop; 0.5rem at ≤410px — see styles.scss / $screen-x-small), so the bleed must match it per
+  // breakpoint. The mobile override lives below — a fixed `-2rem` over-pulled on narrow phones, shifting the page
+  // and its pinned HUD off-centre and clipping the right edge.
   margin-inline: -2rem;
   width: calc(100% + 4rem);
+  // Paint the host with the theme background so the mobile tab-bar reservation strip (see below)
+  // is themed, never the unpainted white tui-root background.
+  background: var(--gradient-bg);
+}
+
+// At ≤410px the wrapper's horizontal padding drops to 0.5rem (styles.scss / $screen-x-small). Match the bleed to
+// it so the page stays exactly viewport-width and centred — the desktop `-2rem` over-pulled here, sliding the page
+// (and the pinned top-left HUD) off-screen to the left and clipping the right edge.
+@media (max-width: 410px) {
+  :host {
+    margin-inline: -0.5rem;
+    width: calc(100% + 1rem);
+  }
+}
+
+// Thematic "seabed" label that fills the mobile tab-bar reservation strip (hidden on desktop, where
+// there is no reservation). Pinned to the host bottom, it sits inside the reserved padding area.
+.frenzy-page__floor {
+  display: none;
 }
 
 // At/below the layout's tablet breakpoint (TABLE_BREAKPOINT = 800px) the mobile tab bar is rendered as a
 // position:fixed bar at the viewport bottom — out of flow, so the full-bleed page would otherwise extend
 // behind it and hide low-drifting Pokémon and floor items. Reserve the bar's height (Taiga tab bar host =
 // --tui-height-l, plus its 1px top border) so the whole play area ends just above the bar.
+// Use padding (not margin) so the reserved strip stays inside the host box and is painted by the
+// host background above — a transparent margin would expose the white tui-root background.
 @media (max-width: 800px) {
   :host {
-    margin-block-end: calc(var(--tui-height-l) + 1px);
+    padding-block-end: calc(var(--tui-height-l) + 1px);
+  }
+
+  .frenzy-page__floor {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: calc(var(--tui-height-l) + 1px);
+    color: var(--tui-text-secondary);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    user-select: none;
+    pointer-events: none;
   }
 }
 
@@ -22,7 +67,9 @@
   flex: 1;
   min-height: 0;
   width: 100%;
-  overflow: hidden;
+  // `clip` (not `hidden`) so a Tab-focused, off-screen scene element can't scroll the page aside — see the same
+  // note on `.scene`. The page never scrolls by design; this just blocks the focus-driven scroll.
+  overflow: clip;
   background: var(--gradient-bg);
   color: var(--tui-text-primary);
   touch-action: manipulation;
@@ -33,12 +80,31 @@
     display: block;
   }
 
-  &__hud-top-left {
+  // Left HUD column pinned top-left: satiety status bar on top, minimap below it.
+  &__hud-left {
     position: absolute;
     top: 1rem;
     left: 1rem;
     z-index: 5;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    // Desktop: stretch so the status bar and expanded map both fill the column. Kept deliberately narrow (13.5rem)
+    // so the status card and minimap claim little of the play area and falling items don't crowd against them.
+    align-items: stretch;
+    width: min(13.5rem, calc(100% - 2rem));
+    // Status is non-interactive; the minimap re-enables pointer events on itself.
     pointer-events: none;
+  }
+
+  // Mobile: a compact column of left-aligned pills (status + minimap) that doesn't collide with the right-hand
+  // HUD (sound/leaderboard). FIXED width (viewport-derived, NOT content-derived): with `width: auto` the column
+  // tracked the widest child's intrinsic width, so the status card's right edge jittered every time the HP digit
+  // count changed. A set width pins that edge; `calc(100% - 9rem)` still shrinks it on narrow phones.
+  &--mobile &__hud-left {
+    width: min(16rem, calc(100% - 9rem));
+    // Stretch so the status bar and the (full-width) minimap pill share the same width.
+    align-items: stretch;
   }
 
   &__hud-top-right {
@@ -49,6 +115,10 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    // One shared width for the right-hand HUD widgets so the sound toggle, legend pill and leaderboard pill line up
+    // (equal width → aligned edges). A custom property inherits across component boundaries, so each widget reads it
+    // instead of hardcoding the value. Only the desktop (non-compact) widget rules consume it.
+    --frenzy-hud-widget: 12rem;
     align-items: flex-end;
     pointer-events: none;
   }
@@ -76,14 +146,53 @@
   &__status {
     margin: 0;
     padding: 1rem 2rem;
-    background: rgba(0, 0, 0, 0.7);
     border-radius: 0.5rem;
-    color: #f5f5f5;
     font-size: 1.125rem;
+
+    // Theme-aware glass (was a hardcoded dark scrim + #f5f5f5 text) so the status box matches the rest of the HUD
+    // chrome and follows light/dark like everything else.
+    @include hud_pill;
   }
 
+  // Non-blocking "reconnecting" pill pinned top-centre over the live scene — the inbound-stall recovery is
+  // self-healing, so it nudges rather than tears the game down (unlike the disconnected modal).
+  &__reconnecting {
+    position: absolute;
+    inset-block-start: 1rem;
+    inset-inline: 0;
+    margin: 0 auto;
+    width: fit-content;
+    padding: 0.375rem 1rem;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    pointer-events: none;
+
+    // Theme-aware glass, matching the connection status box and the rest of the HUD (was a hardcoded dark scrim).
+    @include hud_pill;
+    z-index: 11;
+  }
+
+  // Disconnected scrim: blurs + dims the frozen scene/HUD behind the modal and,
+  // as an interactive overlay child, swallows pointer events so the game is non-interactive.
+  &__backdrop {
+    position: absolute;
+    inset: 0;
+    background: color-mix(in srgb, var(--tui-background-base) 40%, transparent);
+    backdrop-filter: blur(6px);
+  }
+
+  // Mobile: the right column holds just two widgets (sound + legend; the leaderboard is desktop-only). Give them
+  // one shared height so the stack lines up with the left status card and the column stops looking jumpy — the
+  // sound switch is naturally taller than the legend pill, so without this they differ (39 vs 33px). 1.9rem each
+  // + the 0.5rem gap ≈ the status card's height.
+  &--mobile &__hud-top-right {
+    --frenzy-hud-row-h: 1.9rem;
+  }
+
+  // Centre the overlay content (fainted/disconnected modals, picker) on mobile too — bottom-pinning left a big
+  // empty gap above on tall phones. The picker also centres itself via its host; this aligns the plain modals.
   &--mobile &__overlay {
-    align-items: flex-end;
-    padding-block-end: max(1.5rem, env(safe-area-inset-bottom));
+    align-items: center;
+    padding-block: max(1rem, env(safe-area-inset-bottom));
   }
 }

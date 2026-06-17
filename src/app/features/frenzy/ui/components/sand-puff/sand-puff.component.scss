@@ -1,0 +1,115 @@
+// Anchored bottom-centre on the touchdown point: the directive writes left/top and this lone `translate(-50%,
+// -100%)` puts the cloud's base on that point (exactly like the items use, so the dust is centred on where the
+// item landed). The weight scaling lives on `.sand-puff` instead — NOT here as the `scale` property, because
+// combining the `scale` property with a percentage `translate` shifted the host sideways. Decorative — never
+// interactive or selectable.
+:host {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+  transform: translate(-50%, -100%);
+}
+
+.sand-puff {
+  position: relative;
+  display: block;
+  width: 120px;
+  height: 56px;
+  // `--puff-weight` (0..~1.1) scales the whole burst and its opacity, with a wide weight response so a heavy
+  // rock/brick clearly kicks up far more sand than a crumb. Scaled about the bottom-centre so the contact point
+  // stays put and the growth is horizontally symmetric (origin x = 50% = centre → no sideways drift).
+  transform: scale(calc(0.45 + var(--puff-weight, 0.5) * 0.95));
+  transform-origin: 50% 100%;
+  // `min(…, 1)` keeps the graduated ramp honest: rock/brick/bomb weights exceed 1, which would otherwise all
+  // pin to full opacity and flatten the heavy end of the scale.
+  opacity: calc(0.4 + min(var(--puff-weight, 0.5), 1) * 0.55);
+
+  // Soft low dust blob that blooms then dissolves — the body of the cloud. Wider than the falling item (≥60px
+  // sprite) so the disturbed-sand footprint reads as a real impact dent rather than a tiny tuft.
+  &__cloud {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 96px;
+    height: 38px;
+    transform: translateX(-50%);
+    background: radial-gradient(
+      60% 80% at 50% 100%,
+      var(--aq-sand-crest, #f7e8bf) 0%,
+      var(--aq-sand-grain, rgba(122, 88, 44, 0.2)) 45%,
+      transparent 75%
+    );
+    border-radius: 50%;
+    filter: blur(2px);
+    opacity: 0;
+    animation: sand-puff-cloud 1150ms ease-out forwards;
+  }
+
+  // Individual grains flicked outward and up, then falling back as they fade. Per-grain trajectory (`--gx`/`--gy`),
+  // size (`--g-size`) and launch delay (`--g-delay`) are computed in TS from the weight (see SandPuffComponent) and
+  // bound as inline custom properties, so heavier debris sprays more, wider grains here without per-grain CSS.
+  &__grain {
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    width: var(--g-size, 4px);
+    height: var(--g-size, 4px);
+    border-radius: 50%;
+    // Contrasty debris colour (not the pale cloud crest) plus a thin opposite-lightness halo, so each grain reads
+    // crisply against both the soft puff cloud and the water behind it.
+    background: var(--aq-sand-debris, #b96f12);
+    box-shadow: 0 0 0 1px var(--aq-sand-debris-rim, rgba(40, 22, 0, 0.6));
+    opacity: 0;
+    animation: sand-puff-grain 1100ms ease-out forwards;
+    animation-delay: var(--g-delay, 0ms);
+  }
+}
+
+@keyframes sand-puff-cloud {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.4);
+  }
+
+  25% {
+    opacity: 0.8;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) scale(1.3);
+  }
+}
+
+@keyframes sand-puff-grain {
+  // The leading `-50%` centres each grain on its `left: 50%` anchor (it's only the grain's own few px, but it
+  // keeps the fan symmetric about the cloud centre rather than left-edge biased to the right).
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 0);
+  }
+
+  20% {
+    opacity: 1;
+  }
+
+  100% {
+    // Up-and-out, then a slight settle (the grains arc out then drop back toward the floor as they fade).
+    opacity: 0;
+    transform: translate(calc(-50% + var(--gx, 0px)), calc(var(--gy, -18px) + 8px));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  // Belt-and-braces: the service already skips spawning puffs under reduced motion, but if one is ever shown,
+  // don't animate it.
+  .sand-puff__cloud,
+  .sand-puff__grain {
+    animation: none;
+    opacity: 0;
+  }
+}

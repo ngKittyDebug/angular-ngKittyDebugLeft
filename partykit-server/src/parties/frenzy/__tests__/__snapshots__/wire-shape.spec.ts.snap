@@ -1,0 +1,37 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`wire shape — serialized form of every ServerMessage type > freezes the "bumped" frame 1`] = `"{"type":"bumped","playerId":"player-1","amount":-12,"priority":3}"`;
+
+exports[`wire shape — serialized form of every ServerMessage type > freezes the "detonated" frame 1`] = `"{"type":"detonated","itemId":"item-2","x":0.4568,"y":0.5,"radius":0.1833,"hits":[{"playerId":"player-1","delta":-34.5679},{"playerId":"player-2","delta":-12.3}],"priority":0}"`;
+
+exports[`wire shape — serialized form of every ServerMessage type > freezes the "eaten" frame 1`] = `"{"type":"eaten","itemId":"item-1","itemType":"food","playerId":"player-1","newHp":152,"delta":10,"x":0.1235,"y":0.9877,"via":"click","priority":2}"`;
+
+exports[`wire shape — serialized form of every ServerMessage type > freezes the "effectGranted" frame 1`] = `"{"type":"effectGranted","playerId":"player-1","effect":{"kind":"shield","expiresAt":1750000005000},"itemId":"item-3","x":0.1111,"y":0.2222,"via":"collision"}"`;
+
+exports[`wire shape — serialized form of every ServerMessage type > freezes the "evolved" frame 1`] = `"{"type":"evolved","playerId":"player-1","newStage":2,"priority":1}"`;
+
+exports[`wire shape — serialized form of every ServerMessage type > freezes the "fainted" frame 1`] = `"{"type":"fainted","playerId":"player-1","cause":{"by":"item","itemType":"bomb","killerId":"player-2"},"priority":0}"`;
+
+exports[`wire shape — serialized form of every ServerMessage type > freezes the "identifyRejected" frame 1`] = `"{"type":"identifyRejected"}"`;
+
+exports[`wire shape — serialized form of every ServerMessage type > freezes the "itemNudged" frame 1`] = `"{"type":"itemNudged","itemId":"item-2","x":0.4568,"y":0.5,"vx":0.1235,"vy":-0.0877,"clicksLeft":2}"`;
+
+exports[`wire shape — serialized form of every ServerMessage type > freezes the "joinRejected" frame 1`] = `"{"type":"joinRejected","reason":"invalidBody"}"`;
+
+exports[`wire shape — serialized form of every ServerMessage type > freezes the "joined" frame 1`] = `"{"type":"joined","playerId":"player-1"}"`;
+
+exports[`wire shape — serialized form of every ServerMessage type > freezes the "npcAngered" frame 1`] = `"{"type":"npcAngered","npcId":"npc-1","mana":123.4568}"`;
+
+exports[`wire shape — serialized form of every ServerMessage type > freezes the "ping" frame 1`] = `"{"type":"ping"}"`;
+
+exports[`wire shape — serialized form of every ServerMessage type > freezes the "rejoined" frame 1`] = `"{"type":"rejoined","playerId":"player-1"}"`;
+
+exports[`wire shape — serialized form of every ServerMessage type > freezes the "roomFull" frame 1`] = `"{"type":"roomFull"}"`;
+
+exports[`wire shape — serialized form of every ServerMessage type > freezes the "slimSnapshot" frame 1`] = `"{"type":"slimSnapshot","state":{"players":[{"id":"player-1","stage":1,"hp":142,"mana":0,"x":0.3142,"y":0.2718,"vx":-0.0123,"vy":0.0877,"status":"alive","disconnectedAt":null,"effects":[{"kind":"wellFed","expiresAt":1750000005000}],"scores":{"timeAlive":73}}],"items":[{"id":"item-1","type":"food","x":0.1235,"y":0.9877,"vy":0.15}],"tick":45}}"`;
+
+exports[`wire shape — serialized form of every ServerMessage type > freezes the "snapshot" frame 1`] = `"{"type":"snapshot","state":{"players":[{"kind":"human","id":"player-1","name":"Trainer","appearance":"pidgey","body":{"1":{"width":60,"height":60,"speed":0.03,"maxSpeed":0.07,"hp":0},"2":{"width":90,"height":90,"speed":0.028,"maxSpeed":0.065,"hp":200},"3":{"width":120,"height":120,"speed":0.024,"maxSpeed":0.055,"hp":500}},"stage":1,"hp":142,"mana":0,"x":0.3142,"y":0.2718,"vx":-0.0123,"vy":0.0877,"status":"alive","disconnectedAt":null,"joinedAt":1750000000000,"effects":[{"kind":"shield","expiresAt":1750000005000}],"scores":{"kills":2,"timeAlive":73}}],"items":[{"id":"item-1","type":"food","x":0.1235,"y":0.9877,"vy":0.15},{"id":"item-2","type":"bomb","x":0.4568,"y":0.5,"vy":0.01,"vx":-0.0346,"ownerId":"player-1","armed":true,"lastNudgedBy":"player-2","clicksLeft":3}],"tick":42}}"`;
+
+exports[`wire shape — serialized form of every ServerMessage type > freezes the "spawned" frame 1`] = `"{"type":"spawned","item":{"id":"item-2","type":"bomb","x":0.4568,"y":0.5,"vy":0.01,"vx":-0.0346,"ownerId":"player-1","armed":true,"lastNudgedBy":"player-2","clicksLeft":3}}"`;
+
+exports[`wire shape — serialized form of every ServerMessage type > freezes the "steered" frame 1`] = `"{"type":"steered","playerId":"player-1","x":0.7852,"y":0.5201,"vx":-0.0405,"vy":-0.0327}"`;

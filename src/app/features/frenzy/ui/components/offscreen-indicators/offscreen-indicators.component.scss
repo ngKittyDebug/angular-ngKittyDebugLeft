@@ -1,0 +1,46 @@
+// Screen-space overlay pinned over the whole scene, in front of the foreground kelp (z 3). Never interactive — a
+// pure directional read-out, so taps fall through to the scene (steer/eat) underneath.
+:host {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+
+// An edge badge. The component writes `translate` (the edge point, px) every frame; the static `transform` anchor
+// centres the badge on that point and composes with `translate` (individual transform props apply outside the
+// `transform` matrix). Starts hidden — `opacity` is raised by the position pass once it has a real edge point, so a
+// just-mounted node never flashes at the origin; only `opacity` transitions (positional props must stay instant to
+// track the eased pan without rubber-banding).
+.offscreen-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.55rem;
+  border-radius: 1rem;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--tui-text-primary);
+  background: color-mix(in srgb, var(--tui-background-base) 72%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tui-text-primary) 22%, transparent);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 35%);
+  opacity: 0;
+  transition: opacity 150ms ease;
+  will-change: translate;
+}
+
+// Count-badge for a crowd: a stronger accent fill so a cluster reads at a glance, distinct from a single name.
+.offscreen-indicator--cluster {
+  color: var(--tui-text-primary-on-accent-1);
+  background: color-mix(in srgb, var(--tui-background-accent-1) 82%, transparent);
+  border-color: color-mix(in srgb, var(--tui-background-accent-1) 90%, transparent);
+}
+
+.offscreen-indicator__label {
+  font-variant-numeric: tabular-nums;
+}

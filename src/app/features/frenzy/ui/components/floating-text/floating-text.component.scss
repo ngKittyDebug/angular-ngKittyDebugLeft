@@ -1,12 +1,20 @@
 :host {
+  // Tint for the bubble skin (painted by leftPawBubbleSkin). Overridden per tone below; theme-aware via
+  // Taiga status tokens.
+  --left-paw-bubble-tint: rgba(220, 236, 255, 0.92);
+  // No specular highlight on quips (the shield keeps its default) — a glare on a rising pill reads as noise.
+  --left-paw-bubble-highlight: 0;
   position: absolute;
   z-index: 4;
   display: inline-flex;
   gap: 0.35rem;
   align-items: center;
-  padding: 0.2rem 0.55rem;
+  padding: 0.25rem 0.6rem;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.65);
+  // Dark base under the glassy bubble so light text stays legible over any scene/theme; the tinted glass
+  // (rim, highlight, volume) is layered on top by the leftPawBubbleSkin host directive. Floor is deliberately
+  // opaque enough (0.58) that even a lightened tone clears WCAG AA against the brightest light-theme scene.
+  background-color: rgba(0, 0, 0, 0.58);
   color: #f5f5f5;
   font-weight: 700;
   font-size: 0.95rem;
@@ -15,31 +23,36 @@
   pointer-events: none;
   user-select: none;
   transform: translate(-50%, -50%);
-  // Duration is overridden per message via the host `animation-duration` style binding.
-  animation: floating-text-rise 1s ease-out forwards;
+  // Linear timing so the per-owner release stagger maps to an EVEN vertical gap; the rise distance is set
+  // per message (`--ft-rise`, proportional to lifetime) to keep a constant climb speed, so quips never
+  // overlap as they chase up the column. Duration is overridden per message via host `animation-duration`.
+  animation: floating-text-rise 1000ms linear forwards;
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
 }
 
+// Text colour is DECOUPLED from the bubble tint: the saturated status token paints the glass (rim/volume via
+// leftPawBubbleSkin), but the readout itself is a lightened mix of that token toward white so it clears AA on the
+// dark glass in BOTH themes (a raw red/green/orange token sat too close to the floor in some tone×theme combos).
 :host(.floating-text--positive) {
-  color: var(--tui-status-positive);
-  box-shadow: 0 0 0 1px var(--tui-status-positive);
+  --left-paw-bubble-tint: var(--tui-status-positive);
+  color: color-mix(in srgb, var(--tui-status-positive) 45%, #ffffff);
 }
 
 :host(.floating-text--negative) {
-  color: var(--tui-status-negative);
-  box-shadow: 0 0 0 1px var(--tui-status-negative);
+  --left-paw-bubble-tint: var(--tui-status-negative);
+  color: color-mix(in srgb, var(--tui-status-negative) 50%, #ffffff);
 }
 
 :host(.floating-text--neutral) {
-  color: rgba(255, 255, 255, 0.75);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35);
+  --left-paw-bubble-tint: rgba(220, 236, 255, 0.92);
+  color: rgba(255, 255, 255, 0.82);
 }
 
-// Death warning — brighter and more prominent than the rest.
+// Death warning — brighter and more prominent than the rest; lightened amber keeps the glow legible.
 :host(.floating-text--warning) {
-  color: var(--tui-status-warning);
+  --left-paw-bubble-tint: var(--tui-status-warning);
+  color: color-mix(in srgb, var(--tui-status-warning) 50%, #ffffff);
   font-size: 1.05rem;
-  box-shadow: 0 0 0 1px var(--tui-status-warning);
   text-shadow: 0 0 10px var(--tui-status-warning);
 }
 
@@ -68,47 +81,29 @@
   font-variant-numeric: tabular-nums;
 }
 
-// Uniform fade: after a quick pop-in the opacity steps down evenly to 0 across the whole rise,
-// instead of holding full and dropping only near the end.
+// Rises a fixed distance (`--ft-rise`, set per message ∝ lifetime → constant speed). After a quick pop-in the
+// bubble HOLDS full opacity (readable) until 70%, then fades to 0 only over the final stretch — so it reads
+// solid early and dissolves near the "surface", instead of fading the whole climb. Meanwhile it swells gently
+// (1.05 → 1.25) like an air bubble rising in water; the swell peaks just as it fades, so grown quips never
+// crowd the column. translateY is kept linear (the 8% keyframe sits at 8% of the travel; the 70% keyframe sets
+// ONLY opacity, so transform keeps interpolating linearly 8%→100%) so equally-staggered quips stay equally spaced.
 @keyframes floating-text-rise {
   0% {
     opacity: 0;
     transform: translate(-50%, -50%) scale(0.85);
   }
 
-  12% {
+  8% {
     opacity: 1;
-    transform: translate(-50%, -72%) scale(1.05);
-  }
-
-  41% {
-    opacity: 0.7;
+    transform: translate(-50%, calc(-50% - var(--ft-rise, 50px) * 0.08)) scale(1.05);
   }
 
   70% {
-    opacity: 0.4;
-    transform: translate(-50%, -135%) scale(1);
+    opacity: 1;
   }
 
   100% {
     opacity: 0;
-    transform: translate(-50%, -185%) scale(0.96);
+    transform: translate(-50%, calc(-50% - var(--ft-rise, 50px))) scale(1.25);
   }
-}
-
-/* =============================================================================
-   Aquarium bubble sheen — REMOVABLE cosmetic layer.
-   Lays a glassy top-left highlight + thin rim over the existing pill so each
-   floating message reads like a water bubble, WITHOUT replacing its dark base
-   (keeps text contrast intact). Delete this whole block to revert; nothing
-   else depends on it.
-   ========================================================================== */
-:host {
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  background-image: radial-gradient(
-    125% 125% at 28% 22%,
-    rgba(255, 255, 255, 0.38),
-    rgba(255, 255, 255, 0.05) 55%,
-    rgba(255, 255, 255, 0) 100%
-  );
 }

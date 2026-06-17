@@ -1,0 +1,24 @@
+<div class="mid-kelp" aria-hidden="true">
+  @for (blade of blades; track $index) {
+    <div
+      class="mid-kelp__blade-wrap"
+      [style.left.%]="blade.left"
+      [style.color]="blade.color"
+      [style.--h]="blade.height + 'px'"
+      [style.--w]="blade.width + 'px'"
+      [style.--root]="blade.root + '%'"
+      [style.--rot]="blade.rotation + 'deg'"
+      [style.animation-duration.s]="blade.duration"
+      [style.animation-delay.s]="blade.delay"
+    >
+      <svg
+        class="mid-kelp__blade"
+        [class.mid-kelp__blade--coral]="blade.art.coral"
+        [attr.viewBox]="blade.art.viewBox"
+        preserveAspectRatio="none"
+      >
+        <path [attr.d]="blade.art.path" />
+      </svg>
+    </div>
+  }
+</div>

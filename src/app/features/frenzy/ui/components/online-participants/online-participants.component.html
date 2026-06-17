@@ -1,0 +1,16 @@
+<span
+  *transloco="let t; prefix: 'frenzy.presence'"
+  class="online-participants"
+  role="status"
+  [tuiHint]="compact() ? null : t('onlineAriaLabel')"
+  [attr.aria-label]="t('onlineAriaLabel')"
+>
+  <tui-icon icon="@tui.users-round" />
+  <span class="online-participants__text">
+    @if (compact()) {
+      {{ count() }}
+    } @else {
+      {{ t('online', { count: count() }) }}
+    }
+  </span>
+</span>

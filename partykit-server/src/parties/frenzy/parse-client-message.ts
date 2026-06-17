@@ -1,7 +1,6 @@
-import type { ClientMessage } from '@game/frenzy/types';
+import type { ClientMessage, PlayerBody, Stage } from '@game/frenzy/types';
 
-// Max length of the opaque appearance id — bounds garbage without coupling the server to the client's roster.
-const APPEARANCE_MAX_LENGTH = 32;
+const STAGES: readonly Stage[] = [1, 2, 3];
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -11,10 +10,29 @@ function isNonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.length > 0;
 }
 
-// The server doesn't know the Pokémon roster — it only checks the appearance is a sane, bounded string and
-// relays it. The client maps it to a sprite (with a fallback for ids it doesn't recognise).
-function isAppearance(value: unknown): value is string {
-  return isNonEmptyString(value) && value.length <= APPEARANCE_MAX_LENGTH;
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
+}
+
+// Form check only: a per-stage body has stages 1/2/3, each with five finite numbers. Bounds/monotonicity are
+// game policy, validated in `validate-join` so the join handler can answer with a specific `joinRejected` reason.
+function isPlayerBodyShape(value: unknown): value is PlayerBody {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return STAGES.every((stage) => {
+    const stageBody = value[stage];
+
+    return (
+      isRecord(stageBody) &&
+      isFiniteNumber(stageBody.width) &&
+      isFiniteNumber(stageBody.height) &&
+      isFiniteNumber(stageBody.speed) &&
+      isFiniteNumber(stageBody.maxSpeed) &&
+      isFiniteNumber(stageBody.hp)
+    );
+  });
 }
 
 // The only place that trusts wire data: JSON.parse + shape validation.
@@ -39,10 +57,12 @@ export function parseClientMessage(raw: string): ClientMessage | null {
         : null;
     }
     case 'join': {
+      // Form only — name/appearance just have to be strings and `body` the right shape. Emptiness, length caps
+      // and body bounds are policy checked in `validate-join`, which yields a user-facing `joinRejected` reason.
       return typeof data.name === 'string' &&
-        data.name.trim().length > 0 &&
-        isAppearance(data.appearance)
-        ? { type: 'join', name: data.name, appearance: data.appearance }
+        typeof data.appearance === 'string' &&
+        isPlayerBodyShape(data.body)
+        ? { type: 'join', name: data.name, appearance: data.appearance, body: data.body }
         : null;
     }
     case 'click': {
@@ -52,8 +72,10 @@ export function parseClientMessage(raw: string): ClientMessage | null {
 
       const nudgeX =
         typeof data.nudgeX === 'number' && Number.isFinite(data.nudgeX) ? data.nudgeX : undefined;
+      const nudgeY =
+        typeof data.nudgeY === 'number' && Number.isFinite(data.nudgeY) ? data.nudgeY : undefined;
 
-      return { type: 'click', itemId: data.itemId, nudgeX };
+      return { type: 'click', itemId: data.itemId, nudgeX, nudgeY };
     }
     case 'steer': {
       return typeof data.x === 'number' &&
@@ -61,6 +83,13 @@ export function parseClientMessage(raw: string): ClientMessage | null {
         typeof data.y === 'number' &&
         Number.isFinite(data.y)
         ? { type: 'steer', x: data.x, y: data.y }
+        : null;
+    }
+    case 'pokeNpc': {
+      // npcId is a server-generated UUID (36 chars); cap the length so a tampered client can't pass an oversized
+      // string through parsing (mirrors the appearance length policy in validate-join).
+      return isNonEmptyString(data.npcId) && data.npcId.length <= 64
+        ? { type: 'pokeNpc', npcId: data.npcId }
         : null;
     }
     case 'leave': {
