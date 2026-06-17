@@ -2,9 +2,9 @@ import { ChangeDetectionStrategy, Component, computed, inject, input } from '@an
 import { TuiProgress } from '@taiga-ui/kit';
 import { TuiCard } from '@taiga-ui/layout';
 import type { EvolutionChainItem } from '@shared/models/pokemon-evolution-chain-api-data-interface';
-import { EvolutionChainItemComponent } from './evolution-chain-item/evolution-chain-item/evolution-chain-item.component';
-import { PokemonProfileInfoComponent } from './pokemon-profile-info/pokemon-profile-info/pokemon-profile-info.component';
-import { PokemonProfileStatsComponent } from './pokemon-profile-stats/pokemon-profile-stats/pokemon-profile-stats.component';
+import { EvolutionChainItemComponent } from './evolution-chain-item/evolution-chain-item.component';
+import { PokemonProfileInfoComponent } from './pokemon-profile-info/pokemon-profile-info.component';
+import { PokemonProfileStatsComponent } from './pokemon-profile-stats/pokemon-profile-stats.component';
 import { PokemonProfileSpeciesBreedingComponent } from './pokemon-profile-species-breeding/pokemon-profile-species-breeding.component';
 
 import { TranslocoDirective } from '@jsverse/transloco';
@@ -34,12 +34,6 @@ export class PokemonProfilePageComponent {
   protected readonly pokemonProfile = this.profileService.createPokemonProfileData(() =>
     this.pokemonEndpoint().toLowerCase(),
   );
-
-  protected readonly pokemonTotalStats = computed(() => {
-    return this.pokemonProfile
-      .profileData()
-      ?.stats.reduce((sum, entry) => sum + (entry.base_stat ?? 0), 0);
-  });
 
   protected readonly pokemonEvolutionChain = computed(() => {
     const data = this.pokemonProfile.profileEvolution()?.chain;
