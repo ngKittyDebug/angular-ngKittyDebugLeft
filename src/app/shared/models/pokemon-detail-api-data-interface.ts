@@ -146,9 +146,9 @@ export interface PokemonSpriteSetApiData {
   [key: string]: string | null | undefined;
 }
 
-export type PokemonVersionsApiData = Record<string, Record<string, PokemonVersionSpriteData>>;
+export type PokemonVersionsApiData = Record<string, Record<string, PokemonVersionSpriteApiData>>;
 
-export type PokemonVersionSpriteData = PokemonSpriteSetApiData | PokemonNestedSpriteSetApiData;
+export type PokemonVersionSpriteApiData = PokemonSpriteSetApiData | PokemonNestedSpriteSetApiData;
 
 export type PokemonNestedSpriteSetApiData = Record<
   string,
