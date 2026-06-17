@@ -104,6 +104,55 @@ FILES=$(git -C "$WORKTREE_PATH" ls-files "$SCOPE" | grep -E '\.(ts|html|scss)$')
 
 Respect the **skip list** from the shared criteria (lock files, `dist/`, `.angular/`, IDE/OS noise).
 
+### Step 1.5 — Reconcile cloud-stranded board items (interactive mode only)
+
+The scheduled **cloud routine** (`Autonomous mode`, below) files its issues over the GitHub MCP
+backend, where project-board mutations aren't reachable — so those issues come out **created and
+labeled but never wired to the board**: Status stays `Backlog`, Priority/Size empty (the routine
+reports the gap but cannot close it). An interactive local run *does* hold the `project` scope, so
+it is the place to reconcile them. Run this **once per interactive invocation, before scanning** —
+so the Step 5a dedup sees issues in their right column, and so the board reflects reality regardless
+of which scope this run audits (the stranded issues are usually from other features).
+
+1. List audit-filed open issues and their board fields. A **stranded** item is audit-marked + open
+   + Status `Backlog`/unset (and/or missing Priority/Size):
+
+   ```bash
+   gh issue list --state open --search "ai-codebase-audit in:body" --limit 200 --json number,title
+   gh project item-list 2 --owner ngKittyDebug --format json --limit 200 \
+     | jq -r '.items[] | select(.content.number) | "#\(.content.number)\t\(.status // "—")\tP:\(.priority // "—")\tS:\(.size // "—")"'
+   ```
+
+   Only touch issues carrying the `ai-codebase-audit` provenance marker — a markerless issue a human
+   deliberately parked in `Backlog` is off-limits.
+
+2. Derive the fields the cloud run couldn't set:
+   - **Status** → `AI technical debt` **only if** the item is still `Backlog`/unset. If a human has
+     already moved it into a working lane (`In progress`/`In review`/`Ready`/`Done`), leave that
+     Status alone — it's deliberate triage — and only fill the missing Priority/Size.
+   - **Priority** → from the title's severity emoji, same mapping as Step 3 (🔴/🤮 → P0, 👺/💩 → P1, 🟡/🫥 → P2).
+   - **Size** → estimate from the body per the Step 3 Size rubric (occurrence count, whether a new
+     abstraction is needed). If genuinely unclear, leave Size unset rather than guess.
+
+3. Show the **whole batch** (issue → Status/Priority/Size you'll set) and take **one confirmation**
+   for the lot — these are mechanical moves into each issue's rightful column, not new tickets, so
+   don't confirm per-issue. On confirm, set the fields with the verified board ids already baked into
+   `create_issue.sh` (reuse them, don't re-discover): `PROJECT_ID`, `STATUS_FIELD_ID` +
+   `STATUS_OPTION_ID`, `PRIORITY_FIELD_ID`, `SIZE_FIELD_ID`, and the P0/P1/P2 + XS…XL option ids in
+   its `case` blocks. First resolve each issue's project item id:
+
+   ```bash
+   gh project item-list 2 --owner ngKittyDebug --format json --limit 200 \
+     | jq -r '.items[] | select(.content.number == <N>) | .id'
+   gh project item-edit --id <ITEM_ID> --project-id "$PROJECT_ID" --field-id "$STATUS_FIELD_ID"   --single-select-option-id "$STATUS_OPTION_ID"
+   gh project item-edit --id <ITEM_ID> --project-id "$PROJECT_ID" --field-id "$PRIORITY_FIELD_ID" --single-select-option-id "<P0|P1|P2 option>"
+   gh project item-edit --id <ITEM_ID> --project-id "$PROJECT_ID" --field-id "$SIZE_FIELD_ID"     --single-select-option-id "<XS..XL option>"
+   ```
+
+   Note what was reconciled in the run report (issue → fields set). Nothing stranded → one line
+   saying so, and move on. **This step is skipped entirely in `Autonomous mode`** — a cloud run has
+   no project scope and must not attempt it.
+
 ### Step 2 — Read criteria and scan
 
 1. **Read** `.claude/skills/_shared/project-review-criteria.md` in full from the **project root**. Then read the `docs/*.md` style guides it points to **from `$WORKTREE_PATH/docs/`** (naming + folder structure always; testing guide if `*.spec.ts` is in scope) — the worktree has `develop`'s version of those.
@@ -338,7 +387,9 @@ the `gh` CLI and `create_issue.sh`, exactly as written. Cloud routine sandboxes 
 that file maps each operation (dedup search, create-with-marker, comment, reopen) to its MCP
 equivalent; the provenance marker `<!-- ai-codebase-audit:class=<slug> -->` and the labels become
 your manual responsibility, board wiring is skipped and reported. Don't improvise outside the
-playbook; state the chosen backend in the run report.
+playbook; state the chosen backend in the run report. The board fields a cloud run can't set
+(Status → `Backlog`, empty Priority/Size) get reconciled by the next interactive run — see
+**Step 1.5**; a cloud run must not attempt them itself.
 
 What changes (and only this):
 
