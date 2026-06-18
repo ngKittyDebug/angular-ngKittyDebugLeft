@@ -10,6 +10,7 @@
   --aura-wellFed-tint: rgba(150, 230, 150, 0.85);
   --aura-laying-tint: rgba(210, 160, 255, 0.85);
   --aura-pooping-tint: rgba(120, 85, 50, 0.9);
+  --aura-cactus-tint: rgba(120, 200, 90, 0.9);
   position: absolute;
   top: 0;
   left: 0;
@@ -46,7 +47,7 @@
 }
 
 // Grounding contact shadow under EVERY sprite (own/others/NPC) so it sits ON the seabed instead of floating. Built
-// like the resting-item shadow (a blurred radial ellipse behind the sprite, z-index -1, riding the drift), but its
+// like the resting-item shadow (a soft-gradient radial ellipse behind the sprite, z-index -1, riding the drift), but its
 // neutral base FLIPS by theme via `--scene-actor-shadow` (dark ellipse on the bright shallows, soft light disc on the
 // dark abyss where a dark shadow would vanish). Anchored at the body's feet: body bottom = sprite centre + offset +
 // half the hitbox. The dominant-effect modifier swaps the gradient core (`--shadow-core`) to that effect's shared
@@ -60,19 +61,18 @@
   left: 50%;
   z-index: -1;
   // ~1.5× the sprite width (with a 0.28 ellipse profile) so a drifting actor reads as firmly planted on the seabed,
-  // not hovering. The core holds solid to ~36% before fading, so the diffuse ellipse stays expressive instead of
-  // washing out (the earlier narrow 0.9×/0.24 ellipse with an immediate falloff was too faint in both themes).
+  // not hovering. The core holds solid to ~30% then fades out over a wide band, so the soft diffuse edge is baked
+  // into the gradient itself — no `filter: blur()` (a per-actor blur pass was a real fill-rate cost on weak GPUs).
   width: calc(var(--scene-sprite-width, 96px) * 1.5);
   height: calc(var(--scene-sprite-width, 96px) * 1.5 * 0.28);
   background: radial-gradient(
     50% 50% at 50% 50%,
     var(--shadow-core, var(--scene-actor-shadow, rgba(0, 0, 0, 0.4))) 0%,
-    var(--shadow-core, var(--scene-actor-shadow, rgba(0, 0, 0, 0.4))) 36%,
-    transparent 78%
+    var(--shadow-core, var(--scene-actor-shadow, rgba(0, 0, 0, 0.4))) 30%,
+    transparent 84%
   );
   border-radius: 50%;
   transform: translate(-50%, -50%);
-  filter: blur(3px);
   pointer-events: none;
   animation: scene-actor-shadow-in 150ms ease-out;
 }
@@ -81,7 +81,8 @@
 .scene__shadow--shield,
 .scene__shadow--wellFed,
 .scene__shadow--laying,
-.scene__shadow--pooping {
+.scene__shadow--pooping,
+.scene__shadow--cactus {
   animation: scene-actor-shadow-breathe 2.6s ease-in-out infinite;
 }
 
@@ -99,6 +100,10 @@
 
 .scene__shadow--pooping {
   --shadow-core: var(--aura-pooping-tint);
+}
+
+.scene__shadow--cactus {
+  --shadow-core: var(--aura-cactus-tint);
 }
 
 // shield bubble: a glassy soap-bubble encasing the sprite while the full-invulnerability ward is active, so
@@ -148,17 +153,13 @@
   pointer-events: none;
 }
 
-// laying (egg) aura: the bespoke member of the bubble family — an iridescent rainbow soap-bubble for the
-// easter-egg item-spewing buff. The shared single-tint `leftPawBubbleSkin` can't make a rainbow, so it's built by
-// hand from three composed layers that never fight over one `transform`: the element itself PULSES (scale, same
-// `scene-shield-pulse` as its siblings), its `::before` ROTATES a translucent conic rainbow (the soap-film
-// shimmer, centre masked out so the sprite reads through), and its `::after` holds the STATIC glass (top-left
-// specular highlight + bright rim + volume), a hand-rolled replica of the directive's glass so it matches its
-// siblings. Spin lives only on `::before`, so the highlight stays put while the colours drift.
+// Bespoke laying (egg) aura: built by hand instead of the shared `leftPawBubbleSkin`. Centred on the VISIBLE sprite
+// (same `--scene-sprite-offset-y` so the aura wraps winged/offset art) and PULSING via the sibling
+// `scene-shield-pulse`; spin lives on `::before` so the parent's pulse stays clean. The `::before` drifts an
+// iridescent rainbow soap-film (centre masked out so the sprite reads through), and `::after` adds a glass layer.
+// (The cactus thorn crown is its own bespoke aura below — bigger, static SVG, breathing instead of spinning.)
 .scene__laying {
   position: absolute;
-  // Centre on the VISIBLE sprite, not the bare body point: follow the same vertical centring offset the sprite
-  // uses (`--scene-sprite-offset-y` = −spriteOffsetY) so the bubble wraps the art on winged/offset sprites.
   top: calc(var(--scene-sprite-height, 96px) / 2 + var(--scene-sprite-offset-y, 0px));
   left: 50%;
   width: calc(var(--scene-sprite-height, 96px) * 1.5);
@@ -224,6 +225,30 @@
   transform: translate(-50%, -50%);
   animation: scene-shield-pulse 2.6s ease-in-out infinite;
   pointer-events: none;
+}
+
+// Cactus thorn crown: a bespoke ring of 14 long, sharp, slightly uneven thorns (hollow centre so the sprite reads
+// through) — see `public/frenzy/fx/cactus-thorns.svg`. Bigger than the bubble auras: the thorns must clear the
+// sprite and radiate beyond it, so the box is ~2.1× the sprite (vs 1.5× for the encasing bubbles). Centred on the
+// VISIBLE sprite and BREATHING (a smooth grow/shrink pulse, no spin — the thorns just bristle in and out).
+.scene__cactus {
+  position: absolute;
+  top: calc(var(--scene-sprite-height, 96px) / 2 + var(--scene-sprite-offset-y, 0px));
+  left: 50%;
+  width: calc(var(--scene-sprite-height, 96px) * 2.1);
+  height: calc(var(--scene-sprite-height, 96px) * 2.1);
+  transform: translate(-50%, -50%);
+  animation: scene-cactus-pulse 2.3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+// The thorn ring itself: the static SVG, sized to the box. Baked green matches `--aura-cactus-tint` (the cactus is
+// always green, so the shared tint var stays the single source for the grounding-shadow only).
+.scene__cactus::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('/frenzy/fx/cactus-thorns.svg') center / contain no-repeat;
 }
 
 // Crown marker for the hp-leader: a golden crown bobbing just above the head, so the whole table can spot (and
@@ -307,9 +332,13 @@
 
 // Horizontal flip wrapper: kept separate from `.scene__sprite` so the flip doesn't fight the sprite's
 // own transform (evolve pulse / hover). Flip is instant — a transition would squash through 0 width.
+// Direction comes from the inherited `--scene-facing` custom property (1 = left/default, -1 = right), set
+// imperatively on the host by the scene's per-frame position writer — off change detection, no `[class]`
+// binding re-running this component every frame. See ADR 0001.
 .scene__sprite-flip {
   display: inline-block;
   line-height: 0;
+  transform: scaleX(var(--scene-facing, 1));
 }
 
 // Body-centring offset: translates the full art so its hitbox/body lands on the actor point (the art overhangs
@@ -319,10 +348,6 @@
   display: inline-block;
   line-height: 0;
   transform: translate(var(--scene-sprite-offset-x, 0), var(--scene-sprite-offset-y, 0));
-}
-
-.scene__sprite-flip--right {
-  transform: scaleX(-1);
 }
 
 .scene__sprite--sad {
@@ -373,13 +398,35 @@
 // Horizontal hp nameplate above the head for EVERY player (own + others + NPC): sits just above the sprite top,
 // beneath the bobbing crown (same vertical basis as `.scene__crown`/the badges). Centred on the actor point; width
 // scales with the sprite so it spans roughly the body width without overrunning neighbours. The name still rides
-// below the sprite (`.scene__label`), so the unit reads name-below / bar-above like an MMO nameplate.
-.scene__hp-bar {
+// below the sprite (`.scene__label`), so the unit reads name-below / bar-above like an MMO nameplate. A column so
+// the live hp value stacks at the TOP-LEFT above the bar (echoing the status card's corner hp badge).
+.scene__hp {
   position: absolute;
   bottom: calc(100% - var(--scene-sprite-offset-y, 0px) + 1px);
   left: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
   width: clamp(44px, calc(var(--scene-sprite-width, 96px) * 0.9), 104px);
   transform: translateX(-50%);
+}
+
+// Live hp readout, left-aligned just above the bar: small + bold + white with a hard dark shadow so it stays legible
+// over the aquarium at any fill tone. Decorative duplicate of the bar value (the bar itself still carries it for AT).
+.scene__hp-value {
+  font-size: 0.6rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.9),
+    0 0 3px rgba(0, 0, 0, 0.7);
+}
+
+.scene__hp-bar {
+  display: block;
+  width: 100%;
 }
 
 @keyframes scene-shield-pulse {
@@ -392,6 +439,21 @@
   50% {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1.03);
+  }
+}
+
+// Cactus thorn crown breathing pulse: a wide grow/shrink so the ring of thorns clearly bristles in and out (no
+// spin). Keeps the translate so the centred ring doesn't drift as it scales.
+@keyframes scene-cactus-pulse {
+  0%,
+  100% {
+    opacity: 0.72;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.17);
   }
 }
 
@@ -488,7 +550,8 @@
   .scene__shield,
   .scene__laying,
   .scene__laying::before,
-  .scene__poop {
+  .scene__poop,
+  .scene__cactus {
     animation: none;
   }
 

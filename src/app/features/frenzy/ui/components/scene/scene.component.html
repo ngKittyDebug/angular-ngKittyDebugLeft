@@ -16,8 +16,8 @@
 
     @for (item of renderedItemsByDepth(); track item.id) {
       <left-paw-scene-item
-        [leftPawScenePosition]="{ x: item.x, y: item.y }"
-        [scenePositionTransform]="true"
+        leftPawActorHost="item"
+        [actorId]="item.id"
         [item]="item"
         (clicked)="onItemClick(item, $event)"
       />
@@ -54,8 +54,8 @@
         @if (floats.length) {
           <div
             class="scene__owned-floats"
-            [leftPawScenePosition]="{ x: player.x, y: player.y }"
-            [scenePositionTransform]="true"
+            leftPawActorHost="float"
+            [actorId]="player.id"
             [style.--scene-sprite-height]="player.spriteHeight"
             [style.--scene-sprite-offset-y]="-player.spriteOffsetY + 'px'"
           >
@@ -77,8 +77,8 @@
 
     @for (player of renderedPlayers(); track player.id) {
       <left-paw-scene-player
-        [leftPawScenePosition]="{ x: player.x, y: player.y }"
-        [scenePositionTransform]="true"
+        leftPawActorHost="player"
+        [actorId]="player.id"
         [player]="player"
         [sparks]="sparksByOwner().get(player.id) ?? []"
         [shieldBlocks]="shieldBlocksByOwner().get(player.id) ?? []"
@@ -149,4 +149,14 @@
        a screen-space sibling of the world (NOT inside it — the world is camera-transformed). Driven imperatively by
        the scene's rAF loop via its `frame()`; aria-hidden as a real-time visual-only aid. -->
   <left-paw-offscreen-indicators [players]="players()" aria-hidden="true" />
+
+  <!-- ?debug=perf readout: FPS / own-sprite prediction-gap / authoritative-snapshot staleness. A screen-space
+       sibling of the world (NOT inside it — the world is camera-transformed), so the panel stays pinned. Self-
+       contained in `debug/` like the other ?debug panels; it samples in its own rAF loop, gated on `enabled`. -->
+  <left-paw-perf-readout
+    [enabled]="debug.perf"
+    [players]="players()"
+    [renderedPlayers]="perfPlayers()"
+    [myId]="myId()"
+  />
 </section>

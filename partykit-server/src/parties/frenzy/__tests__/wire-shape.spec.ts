@@ -129,7 +129,7 @@ const EXEMPLARS: { [Type in ServerMessage['type']]: Extract<ServerMessage, { typ
     y: 0.222222222,
     via: 'collision',
   },
-  bumped: { type: 'bumped', playerId: 'player-1', priority: 3 },
+  bumped: { type: 'bumped', playerId: 'player-1', amount: -12, priority: 3 },
   steered: {
     type: 'steered',
     playerId: 'player-1',

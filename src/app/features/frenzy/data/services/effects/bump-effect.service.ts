@@ -30,7 +30,9 @@ export class BumpEffect implements FrenzyEffect {
       textKey: `floatingText.bump.${index}`,
       durationMs: BUMP_FLOAT_TTL_MS,
       icon: '@tui.zap',
-      // No number: the bump amount isn't carried (it reconciles via the snapshot, like a bomb hit) — the quip reads it.
+      // The hit shows its number next to the quip (like an eat float): a hard ram and a cactus scratch read their
+      // actual damage (−5 / −15), while the snapshot still reconciles the HP bar.
+      delta: message.amount,
       priority: message.priority ?? FRENZY.floatPriority.bumped,
     };
 

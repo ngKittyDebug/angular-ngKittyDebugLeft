@@ -8,47 +8,47 @@ exports[`golden master — deterministic 600-tick engine scenario > freezes peri
   ],
   [
     100,
-    494262394,
+    1166320766,
   ],
   [
     150,
-    1797194339,
+    211249049,
   ],
   [
     200,
-    1670321286,
+    277169166,
   ],
   [
     250,
-    339120931,
+    1758358839,
   ],
   [
     300,
-    1329633289,
+    3831278141,
   ],
   [
     350,
-    1072723564,
+    1736022450,
   ],
   [
     400,
-    1374143489,
+    2896645369,
   ],
   [
     450,
-    297291202,
+    3951074516,
   ],
   [
     500,
-    570192897,
+    2182323370,
   ],
   [
     550,
-    1759484784,
+    2528019897,
   ],
   [
     600,
-    4046849639,
+    1678417981,
   ],
 ]
 `;
@@ -297,9 +297,9 @@ exports[`golden master — deterministic 600-tick engine scenario > freezes the 
       "item": {
         "id": "gm-item-17",
         "ownerId": "gm-hunter",
-        "type": "rock",
-        "vx": -0.060467422503206955,
-        "vy": 0.21527584819440074,
+        "type": "brick",
+        "vx": -0.05669378237568748,
+        "vy": 0.23491661295008107,
         "x": 0.46003574876198355,
         "y": 0.5533928743809936,
       },
@@ -566,9 +566,9 @@ exports[`golden master — deterministic 600-tick engine scenario > freezes the 
       "item": {
         "id": "gm-item-35",
         "ownerId": "gm-hunter",
-        "type": "bomb",
-        "vx": -0.018787112979504788,
-        "vy": 0.008428783179992391,
+        "type": "cactus",
+        "vx": -0.11327847111304387,
+        "vy": 0.1508906490883093,
         "x": 0.5977775361759725,
         "y": 0.6222637680879853,
       },
@@ -581,9 +581,9 @@ exports[`golden master — deterministic 600-tick engine scenario > freezes the 
       "item": {
         "id": "gm-item-36",
         "ownerId": "gm-hunter",
-        "type": "bomb",
-        "vx": -0.019312070058068162,
-        "vy": 0.00714450488643315,
+        "type": "cactus",
+        "vx": -0.12318247408239963,
+        "vy": 0.14291983095056807,
         "x": 0.6228214975239705,
         "y": 0.6347857487619838,
       },
@@ -611,9 +611,9 @@ exports[`golden master — deterministic 600-tick engine scenario > freezes the 
       "item": {
         "id": "gm-item-38",
         "ownerId": "gm-hunter",
-        "type": "bomb",
-        "vx": -0.020136196922809546,
-        "vy": 0.004305063702877749,
+        "type": "cactus",
+        "vx": -0.1423810136229771,
+        "vy": 0.12380487453930727,
         "x": 0.6729094202199666,
         "y": 0.6598297101099807,
       },
@@ -686,9 +686,9 @@ exports[`golden master — deterministic 600-tick engine scenario > freezes the 
       "item": {
         "id": "gm-item-56",
         "ownerId": "gm-hunter",
-        "type": "bomb",
-        "vx": -0.016645641110209178,
-        "vy": 0.012121164631755239,
+        "type": "cactus",
+        "vx": -0.07973441100710227,
+        "vy": 0.1710041628187761,
         "x": 0.7981292269599567,
         "y": 0.722439613479973,
       },
@@ -732,6 +732,7 @@ exports[`golden master — deterministic 600-tick engine scenario > freezes the 
   [
     350,
     {
+      "amount": -5,
       "playerId": "gm-hunter",
       "type": "bumped",
     },
@@ -739,6 +740,7 @@ exports[`golden master — deterministic 600-tick engine scenario > freezes the 
   [
     350,
     {
+      "amount": -5,
       "playerId": "gm-rival",
       "type": "bumped",
     },
@@ -752,17 +754,6 @@ exports[`golden master — deterministic 600-tick engine scenario > freezes the 
       "type": "detonated",
       "x": 0.47589427815673213,
       "y": 0.88968,
-    },
-  ],
-  [
-    368,
-    {
-      "hits": [],
-      "itemId": "gm-item-56",
-      "radius": 0.18,
-      "type": "detonated",
-      "x": 0.5650902514170315,
-      "y": 0.89192,
     },
   ],
   [
@@ -842,17 +833,6 @@ exports[`golden master — deterministic 600-tick engine scenario > freezes the 
     },
   ],
   [
-    463,
-    {
-      "hits": [],
-      "itemId": "gm-item-35",
-      "radius": 0.18,
-      "type": "detonated",
-      "x": 0.01729071380977372,
-      "y": 0.88751,
-    },
-  ],
-  [
     475,
     {
       "item": {
@@ -887,9 +867,9 @@ exports[`golden master — deterministic 600-tick engine scenario > freezes the 
       "item": {
         "id": "gm-item-60",
         "ownerId": "gm-hunter",
-        "type": "brick",
-        "vx": 0.12252578505974103,
-        "vy": 0.2082965001998213,
+        "type": "bomb",
+        "vx": 0.018949670904630737,
+        "vy": 0.00805667255175431,
         "x": 0.5600449539000407,
         "y": 0.8853427431498323,
       },
@@ -899,26 +879,17 @@ exports[`golden master — deterministic 600-tick engine scenario > freezes the 
   [
     511,
     {
-      "delta": -30,
+      "hits": [
+        {
+          "delta": -18,
+          "playerId": "gm-rival",
+        },
+      ],
       "itemId": "gm-item-60",
-      "itemType": "brick",
-      "newHp": 61,
-      "playerId": "gm-rival",
-      "type": "eaten",
-      "via": "collision",
-      "x": 0.5649432775971845,
-      "y": 0.89367,
-    },
-  ],
-  [
-    512,
-    {
-      "hits": [],
-      "itemId": "gm-item-36",
       "radius": 0.18,
       "type": "detonated",
-      "x": 0.07323646033262436,
-      "y": 0.88758,
+      "x": 0.5619399209905038,
+      "y": 0.8861484104050077,
     },
   ],
   [
@@ -930,24 +901,10 @@ exports[`golden master — deterministic 600-tick engine scenario > freezes the 
         "type": "brick",
         "vx": 0.11132882266154207,
         "vy": 0.2144898441530389,
-        "x": 0.5384059006456032,
+        "x": 0.5374735801028137,
         "y": 0.8853427431498323,
       },
       "type": "spawned",
-    },
-  ],
-  [
-    521,
-    {
-      "delta": -30,
-      "itemId": "gm-item-61",
-      "itemType": "brick",
-      "newHp": 31,
-      "playerId": "gm-rival",
-      "type": "eaten",
-      "via": "collision",
-      "x": 0.5427644133873474,
-      "y": 0.89374,
     },
   ],
   [
@@ -956,29 +913,13 @@ exports[`golden master — deterministic 600-tick engine scenario > freezes the 
       "item": {
         "id": "gm-item-62",
         "ownerId": "gm-hunter",
-        "type": "bomb",
-        "vx": 0.01547295996588336,
-        "vy": 0.013586298609046202,
-        "x": 0.5167668473911653,
+        "type": "cactus",
+        "vx": 0.0638344870259353,
+        "vy": 0.17755325473258918,
+        "x": 0.5147981886982245,
         "y": 0.8853427431498323,
       },
       "type": "spawned",
-    },
-  ],
-  [
-    531,
-    {
-      "hits": [
-        {
-          "delta": -18,
-          "playerId": "gm-rival",
-        },
-      ],
-      "itemId": "gm-item-62",
-      "radius": 0.18,
-      "type": "detonated",
-      "x": 0.5183141433877536,
-      "y": 0.8867013730107369,
     },
   ],
   [
@@ -990,14 +931,14 @@ exports[`golden master — deterministic 600-tick engine scenario > freezes the 
         "type": "rock",
         "vx": 0.12688424428884015,
         "vy": 0.18412058155255195,
-        "x": 0.4942842655661063,
+        "x": 0.4921229988735498,
         "y": 0.8853427431498323,
       },
       "type": "spawned",
     },
   ],
   [
-    557,
+    556,
     {
       "hits": [
         {
@@ -1005,27 +946,15 @@ exports[`golden master — deterministic 600-tick engine scenario > freezes the 
           "playerId": "gm-hunter",
         },
         {
-          "delta": -15,
+          "delta": -6,
           "playerId": "gm-rival",
         },
       ],
       "itemId": "gm-item-19",
       "radius": 0.18,
       "type": "detonated",
-      "x": 0.39078073490842935,
-      "y": 0.7405187050483198,
-    },
-  ],
-  [
-    557,
-    {
-      "cause": {
-        "by": "item",
-        "itemType": "bomb",
-        "killerId": "gm-hunter",
-      },
-      "playerId": "gm-rival",
-      "type": "fainted",
+      "x": 0.38906127702248194,
+      "y": 0.740134115070361,
     },
   ],
 ]

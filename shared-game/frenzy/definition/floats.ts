@@ -15,6 +15,7 @@ export const FLOATS = {
     wellFed: 60,
     laying: 60,
     pooping: 60,
+    cactus: 60,
     bumped: 50,
     eaten: 40,
     happy: 30,

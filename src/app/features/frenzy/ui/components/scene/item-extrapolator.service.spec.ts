@@ -17,7 +17,9 @@ describe('ItemExtrapolatorService', () => {
     expect(service.rendered()[0].y).toBeCloseTo(0);
 
     service.tick([falling], 2000); // +1s at 0.2 units/s
-    expect(service.rendered()[0].y).toBeCloseTo(0.2);
+    // Plain falling motion advances the live `frame`, not the structure signal (which republishes only on a
+    // snapshot or a `landed` rising edge) — so the mid-fall position is read from `frame`. See ADR 0001.
+    expect(service.frame()[0].y).toBeCloseTo(0.2);
   });
 
   it('clamps an item off the wall so the sprite stays on-scene', () => {
@@ -55,12 +57,13 @@ describe('ItemExtrapolatorService', () => {
     service.ingest([item({ id: 'b1', type: 'bomb', x: 0.5, vx: 0.1, vy: 0.02 })], 0);
 
     service.tick([item({ id: 'b1', type: 'bomb', x: 0.5, vx: 0.1, vy: 0.02 })], 1000);
-    expect(service.rendered()[0].x).toBeCloseTo(0.6, 5); // +1s at 0.1 u/s, still mid-scene
+    // Mid-drift position lives in the live `frame` (no `landed` edge → the structure signal is not republished).
+    expect(service.frame()[0].x).toBeCloseTo(0.6, 5); // +1s at 0.1 u/s, still mid-scene
 
     // +100s would run far past the right wall on a straight line; reflect keeps it inside [halfW, 1-halfW].
     service.tick([item({ id: 'b1', type: 'bomb', x: 0.5, vx: 0.1, vy: 0.02 })], 100_000);
-    expect(service.rendered()[0].x).toBeLessThan(1);
-    expect(service.rendered()[0].x).toBeGreaterThan(0);
+    expect(service.frame()[0].x).toBeLessThan(1);
+    expect(service.frame()[0].x).toBeGreaterThan(0);
   });
 
   it('glides a bomb to a divergent snapshot instead of snapping (reconciliation offset)', () => {
@@ -78,7 +81,8 @@ describe('ItemExtrapolatorService', () => {
     // Given enough time the offset decays to ~0 and the render converges onto the authoritative track
     // (0.5 + 0.08·1 = 0.58 at +1s).
     service.tick([item({ id: 'b1', type: 'bomb', x: 0.5, y: 0.5, vx: 0, vy: 0.08 })], 2000);
-    expect(service.rendered()[0].y).toBeCloseTo(0.58, 2);
+    // Converged position lives in the live `frame` (still falling → no `landed` edge → no structure republish).
+    expect(service.frame()[0].y).toBeCloseTo(0.58, 2);
   });
 
   it('flips a bomb to landed once its drift sinks it to the seabed line', () => {

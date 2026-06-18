@@ -231,7 +231,7 @@
   }
 }
 
-// Soft shadow a RESTING item casts on the sand (shown only while `landed`). A blurred theme-aware ellipse drawn
+// Soft shadow a RESTING item casts on the sand (shown only while `landed`). A soft-gradient theme-aware ellipse drawn
 // BEHIND the sprite (z-index: -1) at the item's foot, peeking out around its base. Theme colour comes from
 // `--aq-item-shadow` (warm on the tan shallows, deep on the violet silt). Static aside from a short fade-in; it
 // lives and dies with the item (no timers) and rides the world/camera like the item. Reduced-motion skips the fade.
@@ -240,23 +240,22 @@
   // Peeks out just under the buried foot: the item sinks (translateY) AND clips its lower part, so its visible base
   // sits ~12px up from the host bottom. The shadow (z-index -1, behind the sprite) must sit low enough to show
   // BELOW that cut line — too high and the sprite hides it, too low and it detaches into a blob. Size is driven by
-  // the item SPRITE size (`--scene-item-size`), not weight — a flat, softly-blurred ellipse.
+  // the item SPRITE size (`--scene-item-size`), not weight — a flat, soft-edged ellipse.
   bottom: 2px;
   left: 50%;
   z-index: -1;
   width: calc(var(--scene-item-size, 60px) * 1.5);
   height: calc(var(--scene-item-size, 60px) * 0.24);
   transform: translateX(-50%);
-  // Soft contact shadow: full theme colour at the core fading out at 70% (no hard rim), with a moderate blur. Kept
-  // dense enough to actually read against the tan sand — over-blurring + lightening it earlier made it vanish — but
-  // the blur + gradient falloff still soften the edge so it's diffuse sand shade, not a sharp dark disc.
+  // Soft contact shadow: full theme colour at the core fading out over a wide band to 80% (no hard rim). Kept dense
+  // enough to actually read against the tan sand, with the gradient falloff softening the edge so it's diffuse sand
+  // shade, not a sharp dark disc — no `filter: blur()` (a per-item blur pass was a real fill-rate cost on weak GPUs).
   background: radial-gradient(
     50% 50% at 50% 50%,
     var(--aq-item-shadow, rgba(0, 0, 0, 0.35)) 0%,
-    transparent 70%
+    transparent 80%
   );
   border-radius: 50%;
-  filter: blur(3.5px);
   pointer-events: none;
   animation: scene-item-shadow-in 150ms ease-out;
 }

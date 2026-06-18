@@ -19,6 +19,7 @@ type StatusKind =
   | 'wellFed'
   | 'laying'
   | 'pooping'
+  | 'cactus'
   | 'npcAppeared'
   | 'npcPoke'
   | 'npcDied';
@@ -54,6 +55,7 @@ const STATUS_CONFIG: Record<StatusKind, StatusConfig> = {
   wellFed: { ...EFFECT_BADGE.wellFed, durationMs: 2500, phraseCount: 4 },
   laying: { ...EFFECT_BADGE.laying, durationMs: 2500, phraseCount: 4 },
   pooping: { ...EFFECT_BADGE.pooping, durationMs: 2500, phraseCount: 4 },
+  cactus: { ...EFFECT_BADGE.cactus, durationMs: 2500, phraseCount: 4 },
   npcAppeared: { tone: 'warning', icon: '@tui.bomb', durationMs: 2500, phraseCount: 4 },
   npcPoke: { tone: 'negative', icon: '@tui.flame', durationMs: 1400, phraseCount: 10 },
   npcDied: { tone: 'negative', icon: '@tui.bomb', durationMs: 5500, phraseCount: 4 },

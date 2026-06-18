@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { decayedOffset, OFFSET_DECAY_TAU_MS, reflect } from './drift-math';
+import {
+  decayedOffset,
+  frameAwareTau,
+  MAX_OFFSET_COLLAPSE_PER_FRAME,
+  OFFSET_DECAY_TAU_MS,
+  reflect,
+} from './drift-math';
 
 describe('reflect', () => {
   it('returns the start position at elapsed 0', () => {
@@ -55,5 +61,30 @@ describe('decayedOffset', () => {
 
     expect(Math.abs(withFreshOffset - authoritative)).toBeGreaterThan(0.01);
     expect(withAgedOffset).toBeCloseTo(authoritative, 4);
+  });
+});
+
+describe('frameAwareTau', () => {
+  it('leaves the base τ untouched at 60fps (fast-client behaviour unchanged)', () => {
+    // At ~16.7ms/frame the base τ=90 already keeps the per-frame collapse under the cap, so the floor is below it.
+    expect(frameAwareTau(OFFSET_DECAY_TAU_MS, 1000 / 60)).toBe(OFFSET_DECAY_TAU_MS);
+  });
+
+  it('raises τ on a slow client so the glide spans more frames', () => {
+    expect(frameAwareTau(OFFSET_DECAY_TAU_MS, 60)).toBeGreaterThan(OFFSET_DECAY_TAU_MS);
+  });
+
+  it('caps the single-frame offset collapse on a slow client', () => {
+    const slowFrameMs = 60; // ~17fps
+    const tau = frameAwareTau(OFFSET_DECAY_TAU_MS, slowFrameMs);
+    // After one slow frame at the raised τ, at most MAX_OFFSET_COLLAPSE_PER_FRAME of the offset has decayed away.
+    const collapsed = 1 - decayedOffset(1, slowFrameMs, tau);
+
+    expect(collapsed).toBeLessThanOrEqual(MAX_OFFSET_COLLAPSE_PER_FRAME + 1e-9);
+  });
+
+  it('never drops below the base τ and ignores a non-positive interval', () => {
+    expect(frameAwareTau(OFFSET_DECAY_TAU_MS, 0)).toBe(OFFSET_DECAY_TAU_MS);
+    expect(frameAwareTau(OFFSET_DECAY_TAU_MS, -10)).toBe(OFFSET_DECAY_TAU_MS);
   });
 });

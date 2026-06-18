@@ -18,4 +18,5 @@ export const EFFECT_BADGE: Record<PlayerEffectKind, EffectBadge> = {
   wellFed: { icon: '@tui.heart', tone: 'positive' },
   laying: { icon: '@tui.egg', tone: 'positive' },
   pooping: { icon: '@tui.wind', tone: 'warning' },
+  cactus: { icon: '@tui.swords', tone: 'positive' },
 };
