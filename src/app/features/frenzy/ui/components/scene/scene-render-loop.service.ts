@@ -6,6 +6,7 @@ import type { CameraSnapshot } from './scene-camera.service';
 import { SceneFacade } from './scene.facade';
 import type { RenderedPlayer } from './scene-view-models';
 import type { DebugFlags } from '../../../debug/debug-options';
+import type { RenderMode } from '../../../debug/debug-settings.store';
 
 // The offscreen-indicators overlay reduced to the single method the loop drives. Declared structurally (not the
 // component type) so this service never imports the component that imports the scene that provides it — which would
@@ -29,6 +30,8 @@ export interface SceneFrameContext {
   players(): readonly Player[];
   myId(): string | null;
   evolving(): ReadonlyMap<string, number>;
+  // The live item render backend ('dom' | 'canvas') — read each frame so the toggle takes effect without a reload.
+  renderMode(): RenderMode;
   readonly debug: DebugFlags;
   readonly debugBoxesActive: boolean;
   world(): HTMLElement | undefined;
@@ -60,7 +63,7 @@ export class SceneRenderLoopService {
 
       const now = performance.now();
 
-      this.facade.tickItems(context.items(), now);
+      this.facade.tickItems(context.items(), now, context.renderMode() === 'canvas');
       this.facade.tickPlayers(context.players(), context.myId(), context.evolving(), now);
 
       // The box overlay (a dev tool) republishes structure so its boxes track the imperatively-moved sprites.

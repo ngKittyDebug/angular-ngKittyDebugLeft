@@ -19,6 +19,19 @@
     will-change: transform;
   }
 
+  // The hybrid-canvas item layer (?debug render-mode = canvas): a world-sized child of `.scene__world` overlaying it
+  // exactly (its px size is set imperatively by SceneItemCanvasService). `will-change: transform` puts it on its OWN
+  // compositor layer, so the per-frame canvas redraw uploads just this texture and never repaints the seabed/kelp
+  // backdrop behind it — the point of the canvas backend. Non-interactive: taps go to the scene handler (which
+  // hit-tests the drawn items) and to the bomb DOM node painted above it.
+  &__item-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    will-change: transform;
+  }
+
   // Owned-float overlay (each live player's quips) lives in its own `left-paw-owned-floats` component now.
 
   // Debug outline boxes (?debug only) live in their own `left-paw-debug-box` component now.

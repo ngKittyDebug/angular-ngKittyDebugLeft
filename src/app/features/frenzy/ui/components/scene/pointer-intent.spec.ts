@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolveNudge, resolveSceneTap } from './pointer-intent';
+import { hitTestItem, resolveNudge, resolveSceneTap } from './pointer-intent';
 
 // A world rect offset from the viewport origin, so the tests exercise the rect-relative normalization (not raw
 // client coords). Centre is at client (500, 250).
@@ -72,5 +72,35 @@ describe('resolveNudge', () => {
     const nudge = resolveNudge(BUTTON, 100, 100);
 
     expect(Math.hypot(nudge.x, nudge.y)).toBeCloseTo(1);
+  });
+});
+
+describe('hitTestItem', () => {
+  // Item centred at the normalized world point (0.5, 0.5); a 0.05 × 0.04 normalized half tap box (the world is
+  // taller than wide, so the per-axis extents differ).
+  const CENTRE = { id: 'a', x: 0.5, y: 0.5 };
+  const HALF_X = 0.05;
+  const HALF_Y = 0.04;
+
+  it('returns the item whose tap box contains the press', () => {
+    expect(hitTestItem([CENTRE], 0.5, 0.5, HALF_X, HALF_Y)).toBe('a');
+    expect(hitTestItem([CENTRE], 0.54, 0.46, HALF_X, HALF_Y)).toBe('a');
+  });
+
+  it('returns null for a press in open water, past every tap box', () => {
+    expect(hitTestItem([CENTRE], 0.6, 0.5, HALF_X, HALF_Y)).toBeNull();
+    expect(hitTestItem([], 0.5, 0.5, HALF_X, HALF_Y)).toBeNull();
+  });
+
+  it('returns the topmost item (last in draw order) when boxes overlap', () => {
+    const under = { id: 'under', x: 0.5, y: 0.5 };
+    const over = { id: 'over', x: 0.5, y: 0.5 };
+
+    expect(hitTestItem([under, over], 0.5, 0.5, HALF_X, HALF_Y)).toBe('over');
+  });
+
+  it('uses the per-axis half-extent (the tighter y box rejects a vertically-far press x accepts)', () => {
+    expect(hitTestItem([CENTRE], 0.5, 0.55, HALF_X, HALF_Y)).toBeNull();
+    expect(hitTestItem([CENTRE], 0.5, 0.53, HALF_X, HALF_Y)).toBe('a');
   });
 });

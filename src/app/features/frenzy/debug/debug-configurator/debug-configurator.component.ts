@@ -1,7 +1,13 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 
 import { METRIC_LABELS } from '../perf-metrics';
-import { DebugSettingsStore, PERF_METRIC_KEYS } from '../debug-settings.store';
+import {
+  CANVAS_DPR_CAPS,
+  DebugSettingsStore,
+  PERF_METRIC_KEYS,
+  RENDER_MODES,
+} from '../debug-settings.store';
+import type { CanvasDprCap } from '../debug-settings.store';
 
 /**
  * `?debug=perf` configurator: the single runtime control surface for the perf subsystem — one checkbox per metric,
@@ -19,4 +25,11 @@ export class DebugConfiguratorComponent {
   protected readonly store = inject(DebugSettingsStore);
   protected readonly keys = PERF_METRIC_KEYS;
   protected readonly labels = METRIC_LABELS;
+  protected readonly renderModes = RENDER_MODES;
+  protected readonly dprCaps = CANVAS_DPR_CAPS;
+
+  // DPR-cap button label: 0 means the native device ratio, otherwise the cap multiplier.
+  protected dprLabel(cap: CanvasDprCap): string {
+    return cap === 0 ? 'native' : `${cap}×`;
+  }
 }

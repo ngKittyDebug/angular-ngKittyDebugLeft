@@ -103,7 +103,7 @@
         [class.scene__sprite--npc]="player().isNpc"
         [class.scene__sprite--evolving]="player().isEvolving"
         [class.scene__sprite--sad]="player().isSad"
-        [src]="player().appearance | pokemonSprite: player().stage"
+        [src]="spriteSrc()"
         [alt]="player().isNpc ? '' : player().label"
         draggable="false"
       />

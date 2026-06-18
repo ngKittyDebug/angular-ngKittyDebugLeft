@@ -50,6 +50,7 @@ function makeContext(overrides: Partial<SceneFrameContext> = {}): SceneFrameCont
     players: () => [],
     myId: () => null,
     evolving: () => new Map(),
+    renderMode: () => 'dom',
     debug: flags(),
     debugBoxesActive: false,
     world: () => ({}) as HTMLElement,

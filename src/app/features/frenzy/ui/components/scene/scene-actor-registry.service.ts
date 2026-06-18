@@ -44,6 +44,13 @@ export class SceneActorRegistryService {
   private readonly items = new Map<string, HTMLElement>();
   private readonly players = new Map<string, HTMLElement>();
   private readonly floats = new Map<string, HTMLElement>();
+  // Last inline value actually written per element, so a per-frame write that wouldn't change anything is skipped —
+  // the bulk of the savings, since landed items and settled sprites hold one position/facing for many frames (the
+  // on-screen clusters that set the FPS floor). WeakMap: an unregistered element's entry is collected with the
+  // element, no manual cleanup. The browser's own same-value early-out isn't guaranteed for inline writes, and the
+  // style/compositor work they trigger happens AFTER our rAF callback (invisible to the `loop` metric), so we gate here.
+  private readonly lastTranslate = new WeakMap<HTMLElement, string>();
+  private readonly lastFacing = new WeakMap<HTMLElement, string>();
   private lastItemFrame: readonly RenderedItem[] = [];
   private lastPlayerFrame: readonly RenderedPlayer[] = [];
   // Per-frame item write accounting, updated every `writeItems` (two int increments per item, no allocation — read
@@ -157,10 +164,29 @@ export class SceneActorRegistryService {
   private writeTranslate(element: HTMLElement, x: number, y: number): void {
     // The `translate` CSS property (NOT `transform`) — composes with the element's static centring `transform`
     // anchor and updates on the compositor with no layout/reflow, exactly as the directive it replaces did.
-    element.style.translate = `${x * WORLD_WIDTH}px ${y * WORLD_HEIGHT}px`;
+    const value = `${x * WORLD_WIDTH}px ${y * WORLD_HEIGHT}px`;
+
+    // Skip when unchanged: a landed item or a settled sprite holds one position for many frames, so re-setting the
+    // same value is a pure-waste compositor commit on exactly the clusters that pin the FPS floor.
+    if (this.lastTranslate.get(element) === value) {
+      return;
+    }
+
+    this.lastTranslate.set(element, value);
+    element.style.translate = value;
   }
 
   private writeFacing(element: HTMLElement, facingRight: boolean): void {
-    element.style.setProperty(FACING_PROPERTY, facingRight ? FACING_RIGHT : FACING_LEFT);
+    const value = facingRight ? FACING_RIGHT : FACING_LEFT;
+
+    // Skip when unchanged: a custom-property inline write invalidates style for the inheriting sprite subtree (it
+    // feeds `scaleX(var(--scene-facing))`), forcing a per-player style recalc. Facing only flips on a direction
+    // change, so writing every frame recalc'd every sprite for nothing.
+    if (this.lastFacing.get(element) === value) {
+      return;
+    }
+
+    this.lastFacing.set(element, value);
+    element.style.setProperty(FACING_PROPERTY, value);
   }
 }

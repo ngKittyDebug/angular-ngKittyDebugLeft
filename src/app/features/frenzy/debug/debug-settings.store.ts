@@ -25,6 +25,15 @@ export type PerfExportFormat = 'json-compact' | 'json-pretty' | 'csv';
 // Where an exported perf log is delivered on the tablet.
 export type PerfExportDestination = 'clipboard' | 'textarea' | 'download';
 
+// Item render backend (hybrid-canvas A/B). `dom` is the per-element renderer (today's default and the safe
+// fallback); `canvas` draws the falling items on one `<canvas>`. A persisted runtime toggle so the two can be A/B'd
+// on the tablet across reloads/rebuilds — same rationale as the perf-log config.
+export type RenderMode = 'dom' | 'canvas';
+
+// Canvas backing-store resolution cap (canvas mode only): `0` renders at the native device pixel ratio; `1` / `1.5`
+// cap it lower, trading sharpness for far less rasterisation — the fill-rate lever a weak tablet GPU actually feels.
+export type CanvasDprCap = 0 | 1 | 1.5;
+
 // Runtime config for the persistent perf-log (consumed by slice 09). Held here so the capture cadence and the export
 // channel survive reloads/rebuilds — the point of on-device A/B across builds.
 export interface PerfLogConfig {
@@ -36,10 +45,16 @@ export interface PerfLogConfig {
   label: string;
 }
 
-// The full persisted debug-perf settings: a visibility toggle per metric plus the perf-log config.
+// The full persisted debug-perf settings: a visibility toggle per metric, the perf-log config, the item render
+// backend + its DPR cap (hybrid-canvas A/B), and the sprite-freeze toggle.
 export interface DebugSettings {
   metrics: Record<PerfMetricKey, boolean>;
   perfLog: PerfLogConfig;
+  renderMode: RenderMode;
+  canvasDprCap: CanvasDprCap;
+  // Render players as a static first frame instead of the animated GIF — kills the per-frame sprite decode/re-raster
+  // that pins the FPS floor on a weak tablet. A persisted `?debug=perf` toggle (A/B'd on the device); default off.
+  freezeSprites: boolean;
 }
 
 const STORAGE_KEY = 'frenzy:debug-settings';
@@ -47,6 +62,10 @@ const STORAGE_KEY = 'frenzy:debug-settings';
 const CAPTURE_MODES: readonly CaptureMode[] = ['manual', 'auto'];
 const EXPORT_FORMATS: readonly PerfExportFormat[] = ['json-compact', 'json-pretty', 'csv'];
 const EXPORT_DESTINATIONS: readonly PerfExportDestination[] = ['clipboard', 'textarea', 'download'];
+
+// Exported for the debug-configurator UI to render the toggle/segmented choices.
+export const RENDER_MODES: readonly RenderMode[] = ['dom', 'canvas'];
+export const CANVAS_DPR_CAPS: readonly CanvasDprCap[] = [0, 1, 1.5];
 
 function defaultMetrics(): Record<PerfMetricKey, boolean> {
   // Every metric on by default — a reasonable starting readout; the user toggles off the noise.
@@ -68,7 +87,13 @@ function defaultPerfLog(): PerfLogConfig {
 }
 
 function defaultSettings(): DebugSettings {
-  return { metrics: defaultMetrics(), perfLog: defaultPerfLog() };
+  return {
+    metrics: defaultMetrics(),
+    perfLog: defaultPerfLog(),
+    renderMode: 'dom',
+    canvasDprCap: 0,
+    freezeSprites: false,
+  };
 }
 
 function oneOf<T>(value: unknown, allowed: readonly T[], fallback: T): T {
@@ -140,6 +165,12 @@ function coerceSettings(raw: unknown): DebugSettings {
   return {
     metrics: coerceMetrics(source['metrics'], defaults.metrics),
     perfLog: coercePerfLog(source['perfLog'], defaults.perfLog),
+    renderMode: oneOf(source['renderMode'], RENDER_MODES, defaults.renderMode),
+    canvasDprCap: oneOf(source['canvasDprCap'], CANVAS_DPR_CAPS, defaults.canvasDprCap),
+    freezeSprites:
+      typeof source['freezeSprites'] === 'boolean'
+        ? source['freezeSprites']
+        : defaults.freezeSprites,
   };
 }
 
@@ -174,15 +205,24 @@ function readStored(): DebugSettings {
 export class DebugSettingsStore {
   private readonly _metrics = signal<Record<PerfMetricKey, boolean>>(defaultMetrics());
   private readonly _perfLog = signal<PerfLogConfig>(defaultPerfLog());
+  private readonly _renderMode = signal<RenderMode>('dom');
+  private readonly _canvasDprCap = signal<CanvasDprCap>(0);
+  private readonly _freezeSprites = signal(false);
 
   public readonly metrics = this._metrics.asReadonly();
   public readonly perfLog = this._perfLog.asReadonly();
+  public readonly renderMode = this._renderMode.asReadonly();
+  public readonly canvasDprCap = this._canvasDprCap.asReadonly();
+  public readonly freezeSprites = this._freezeSprites.asReadonly();
 
   public constructor() {
     const stored = readStored();
 
     this._metrics.set(stored.metrics);
     this._perfLog.set(stored.perfLog);
+    this._renderMode.set(stored.renderMode);
+    this._canvasDprCap.set(stored.canvasDprCap);
+    this._freezeSprites.set(stored.freezeSprites);
   }
 
   public setMetric(key: PerfMetricKey, value: boolean): void {
@@ -199,12 +239,33 @@ export class DebugSettingsStore {
     this.persist();
   }
 
+  public setRenderMode(mode: RenderMode): void {
+    this._renderMode.set(mode);
+    this.persist();
+  }
+
+  public setCanvasDprCap(cap: CanvasDprCap): void {
+    this._canvasDprCap.set(cap);
+    this.persist();
+  }
+
+  public setFreezeSprites(value: boolean): void {
+    this._freezeSprites.set(value);
+    this.persist();
+  }
+
   private persist(): void {
     if (typeof localStorage === 'undefined') {
       return;
     }
 
-    const settings: DebugSettings = { metrics: this._metrics(), perfLog: this._perfLog() };
+    const settings: DebugSettings = {
+      metrics: this._metrics(),
+      perfLog: this._perfLog(),
+      renderMode: this._renderMode(),
+      canvasDprCap: this._canvasDprCap(),
+      freezeSprites: this._freezeSprites(),
+    };
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
   }

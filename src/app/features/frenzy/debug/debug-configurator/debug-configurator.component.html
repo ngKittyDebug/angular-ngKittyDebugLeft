@@ -8,4 +8,47 @@
       {{ labels[key] }}
     </label>
   }
+
+  <!-- Item render backend toggle (DOM vs hybrid canvas) + the canvas DPR cap, for the on-device A/B. -->
+  <p class="debug-configurator__title">render</p>
+  <div class="debug-configurator__chips">
+    @for (mode of renderModes; track mode) {
+      <button
+        type="button"
+        class="debug-configurator__chip"
+        [class.debug-configurator__chip--active]="store.renderMode() === mode"
+        (click)="store.setRenderMode(mode)"
+      >
+        {{ mode }}
+      </button>
+    }
+  </div>
+
+  @if (store.renderMode() === 'canvas') {
+    <p class="debug-configurator__title">canvas dpr</p>
+    <div class="debug-configurator__chips">
+      @for (cap of dprCaps; track cap) {
+        <button
+          type="button"
+          class="debug-configurator__chip"
+          [class.debug-configurator__chip--active]="store.canvasDprCap() === cap"
+          (click)="store.setCanvasDprCap(cap)"
+        >
+          {{ dprLabel(cap) }}
+        </button>
+      }
+    </div>
+  }
+
+  <!-- Freeze player sprites: render a static first frame instead of the animated GIF (kills per-frame sprite decode
+       — the FPS lever for weak tablets). On-device A/B; persisted via DebugSettingsStore. -->
+  <p class="debug-configurator__title">sprites</p>
+  <label class="debug-configurator__row">
+    <input
+      type="checkbox"
+      [checked]="store.freezeSprites()"
+      (change)="store.setFreezeSprites(!store.freezeSprites())"
+    />
+    freeze (static)
+  </label>
 </div>

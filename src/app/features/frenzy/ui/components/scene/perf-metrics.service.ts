@@ -11,7 +11,9 @@ import {
   pushCapped,
 } from '../../../debug/perf-metrics';
 import type { PerfMetricsSnapshot } from '../../../debug/perf-metrics';
+import { DebugSettingsStore } from '../../../debug/debug-settings.store';
 import { SceneActorRegistryService } from './scene-actor-registry.service';
+import { SceneItemCanvasService } from './scene-item-canvas.service';
 import { SceneFacade } from './scene.facade';
 
 const WORLD_WIDTH = FRENZY.world.width;
@@ -34,6 +36,10 @@ const RESTRUCTURE_WINDOW_MS = 1000;
 export class PerfMetricsService {
   private readonly facade = inject(SceneFacade);
   private readonly registry = inject(SceneActorRegistryService);
+  // The item canvas owns the per-frame draw tally in canvas mode (the registry only positions the bomb then); the
+  // settings store says which mode is live, so the census reports the active renderer's accounting, not a stale 1/0.
+  private readonly itemCanvas = inject(SceneItemCanvasService);
+  private readonly debugSettings = inject(DebugSettingsStore);
   private readonly _snapshot = signal<PerfMetricsSnapshot | null>(null);
   // Frame-timing accumulation.
   private intervals: readonly number[] = [];
@@ -132,7 +138,11 @@ export class PerfMetricsService {
     myId: string | null,
   ): PerfMetricsSnapshot {
     const timing = frameTimingStats(this.intervals);
-    const tally = this.registry.writeTally();
+    // Canvas mode: the registry only wrote the bomb, so read the canvas's own draw tally; DOM mode: the registry's.
+    const tally =
+      this.debugSettings.renderMode() === 'canvas'
+        ? this.itemCanvas.drawTally()
+        : this.registry.writeTally();
     const { gapPx, stalenessMs } = this.gapAndStaleness(now, players, myId);
 
     return {

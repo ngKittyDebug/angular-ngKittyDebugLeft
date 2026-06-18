@@ -66,6 +66,40 @@ export function resolveNudge(
   return { x: deltaX / magnitude, y: deltaY / magnitude };
 }
 
+// A canvas-drawn item the hit-test can pick: its id and normalized world centre (0..1). Items are sized uniformly,
+// so the caller passes one normalized half-extent per axis.
+export interface CanvasHitItem {
+  id: string;
+  x: number;
+  y: number;
+}
+
+/**
+ * Topmost canvas item under a press, or null for open water. In canvas render mode items are no longer DOM nodes, so
+ * `event.target` can't name them — but the canvas rides the same camera-transformed world as the players, so the
+ * press already normalizes to the world point (`resolveSceneTap`). This tests that normalized point against each
+ * item's normalized centre ± a half tap box (the item half-size plus a finger-friendly padding, expressed per axis
+ * because the world is taller than it is wide). `items` are passed in draw order (ascending depth); the LAST drawn
+ * sits on top, so the scan runs back-to-front and returns the first box the point falls inside.
+ */
+export function hitTestItem(
+  items: readonly CanvasHitItem[],
+  normX: number,
+  normY: number,
+  halfExtentX: number,
+  halfExtentY: number,
+): string | null {
+  for (let index = items.length - 1; index >= 0; index--) {
+    const item = items[index];
+
+    if (Math.abs(normX - item.x) <= halfExtentX && Math.abs(normY - item.y) <= halfExtentY) {
+      return item.id;
+    }
+  }
+
+  return null;
+}
+
 function clamp01(value: number): number {
   return Math.min(1, Math.max(0, value));
 }

@@ -8,7 +8,8 @@ import { SceneActorRegistryService } from './scene-actor-registry.service';
 import { SceneBurstsService } from './scene-bursts.service';
 import { SceneCameraService } from './scene-camera.service';
 import type { CameraSnapshot } from './scene-camera.service';
-import type { RenderedPlayer } from './scene-view-models';
+import { SceneItemCanvasService } from './scene-item-canvas.service';
+import type { RenderedItem, RenderedPlayer } from './scene-view-models';
 import { SceneSandPuffsService } from './scene-sand-puffs.service';
 
 /**
@@ -24,6 +25,7 @@ export class SceneFacade {
   private readonly camera = inject(SceneCameraService);
   private readonly burstsService = inject(SceneBurstsService);
   private readonly sandPuffsService = inject(SceneSandPuffsService);
+  private readonly itemCanvas = inject(SceneItemCanvasService);
 
   public readonly renderedItems = this.items.rendered;
   public readonly renderedPlayers = this.players.rendered;
@@ -47,14 +49,31 @@ export class SceneFacade {
     this.registry.writePlayers(this.players.frame());
   }
 
-  public tickItems(items: readonly Item[], now: number): void {
+  public tickItems(items: readonly Item[], now: number, drawCanvas: boolean): void {
     this.items.tick(items, now);
-    // Write the freshly extrapolated positions straight to the DOM (off change detection). Pass the camera's
-    // visible bounds so off-screen items skip the write (soft cull) — one frame stale here (tickItems runs before
-    // updateCamera in the rAF loop), which the cull margin absorbs.
-    this.registry.writeItems(this.items.frame(), this.camera.visibleBounds());
+
+    const frame = this.items.frame();
+    // Pass the camera's visible bounds so off-screen items skip the write/draw (soft cull) — one frame stale here
+    // (tickItems runs before updateCamera in the rAF loop), which the cull margin absorbs.
+    const bounds = this.camera.visibleBounds();
+
+    // Always write DOM item hosts: in DOM mode that's every item, in canvas mode only the bomb has a host (the rest
+    // have no DOM node, so they're skipped) — so the bomb stays positioned even when the canvas draws the rest.
+    this.registry.writeItems(frame, bounds);
+
+    // Canvas backend: draw the non-bomb items on the single canvas (it filters the bomb out itself).
+    if (drawCanvas) {
+      this.itemCanvas.draw(frame, bounds, now);
+    }
+
     // Rising-edge sand puffs are driven off the freshly extrapolated items (touchdowns), so detect right after.
-    this.sandPuffsService.observe(this.items.frame());
+    this.sandPuffsService.observe(frame);
+  }
+
+  // The live per-frame item view models — for the canvas hit-test, which needs the current drawn positions (not the
+  // throttled `renderedItems` structure signal, which lags a falling item between snapshots).
+  public itemFrame(): readonly RenderedItem[] {
+    return this.items.frame();
   }
 
   public tickPlayers(

@@ -4,11 +4,13 @@
   display: contents;
 }
 
-// ?debug=perf configurator panel. Sits top-right (the perf readout is bottom-left), scrolls if the metric list
-// outgrows the viewport. Near-opaque + monospace to match the sibling debug panels. Dev-only.
+// ?debug=perf configurator panel. Sits on the right BELOW the top-right HUD controls (sound/legend/leaderboard at
+// `top: 1rem`, ~5rem tall on mobile / ~8rem with the desktop leaderboard) so it never covers them; the perf readout
+// is bottom-left. Scrolls if the metric list outgrows the viewport. Near-opaque + monospace to match the sibling
+// debug panels. Dev-only.
 .debug-configurator {
   position: absolute;
-  top: 0.5rem;
+  top: 8rem;
   right: 0.5rem;
   z-index: 11;
   display: flex;
@@ -40,4 +42,27 @@
 
 .debug-configurator__row input {
   margin: 0;
+}
+
+// Render-mode / DPR-cap segmented chips — a row of small monospace buttons, the active one filled.
+.debug-configurator__chips {
+  display: flex;
+  gap: 4px;
+}
+
+.debug-configurator__chip {
+  flex: 1;
+  padding: 2px 4px;
+  border: 1px solid #6cf;
+  border-radius: 4px;
+  background: transparent;
+  color: #6cf;
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+}
+
+.debug-configurator__chip--active {
+  background: #6cf;
+  color: #000;
 }

@@ -103,4 +103,40 @@ describe('DebugSettingsStore', () => {
     expect(store.perfLog().captureMode).toBe('manual');
     expect(store.perfLog().label).toBe('');
   });
+
+  it('defaults to the DOM renderer at native DPR with animated sprites when storage is empty', () => {
+    const store = new DebugSettingsStore();
+
+    expect(store.renderMode()).toBe('dom');
+    expect(store.canvasDprCap()).toBe(0);
+    expect(store.freezeSprites()).toBe(false);
+  });
+
+  it('persists the render mode, DPR cap and sprite-freeze so they survive a reload', () => {
+    const store = new DebugSettingsStore();
+
+    store.setRenderMode('canvas');
+    store.setCanvasDprCap(1.5);
+    store.setFreezeSprites(true);
+
+    expect(store.renderMode()).toBe('canvas');
+    expect(store.canvasDprCap()).toBe(1.5);
+    expect(store.freezeSprites()).toBe(true);
+    expect(reload().renderMode()).toBe('canvas');
+    expect(reload().canvasDprCap()).toBe(1.5);
+    expect(reload().freezeSprites()).toBe(true);
+  });
+
+  it('rejects an unknown render mode / DPR cap and a non-boolean sprite-freeze, keeping the defaults', () => {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ renderMode: 'webgl', canvasDprCap: 3, freezeSprites: 'yes' }),
+    );
+
+    const store = reload();
+
+    expect(store.renderMode()).toBe('dom');
+    expect(store.canvasDprCap()).toBe(0);
+    expect(store.freezeSprites()).toBe(false);
+  });
 });

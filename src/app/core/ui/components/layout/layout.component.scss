@@ -1,7 +1,12 @@
 :host {
   display: flex;
   flex-direction: column;
+  // `dvh` tracks the *visible* viewport (mobile browser chrome shows/hides). Plain `100vh` is the LARGE viewport
+  // that counts the strip behind the chrome, so on mobile/tablet it overshoots the screen and forces a small
+  // vertical scroll — most visible on the full-bleed immersive game, which is meant to never scroll. `100vh`
+  // stays first as the fallback for engines without `dvh`.
   min-height: 100vh;
+  min-height: 100dvh;
   height: 100%;
 }
 
