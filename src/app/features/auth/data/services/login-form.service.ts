@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { PASSWORD_PATTERN } from '@shared/constants/patterns-constants';
-import type { LoginFormGroup } from '../models/login-form.model';
+import type { LoginFormGroup } from '../models/login/login-form.model';
 import { emailValidator } from '../helpers/email-validator';
 import { userNameValidator } from '../helpers/username-validator';
 
