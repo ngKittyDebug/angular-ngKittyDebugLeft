@@ -10,6 +10,11 @@
   z-index: 1;
   display: block;
   transform: translate(-50%, -50%);
+  // Promote each item onto its own compositor layer: items drift every frame (the registry writes the `translate`
+  // CSS property), and without a layer that per-frame move repaints the seabed/kelp backdrop underneath — the
+  // weak-tablet paint bottleneck (measured: ~15fps → 120fps under a 4x CPU throttle once promoted). Items vastly
+  // outnumber players, so they dominated it. `will-change: transform` is the promotion that was profiled to fix it.
+  will-change: transform;
   // Fixed-content absolute box whose insides never affect outside layout — containment lets the engine skip the
   // ancestors when the sprite's tumble/breathe animate. NOT `paint`: the hover glow draws past the box.
   contain: layout style;
