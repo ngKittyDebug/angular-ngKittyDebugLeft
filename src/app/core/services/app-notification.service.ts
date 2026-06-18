@@ -6,7 +6,7 @@ const DEFAULT_ALERT_CLOSE_TIME = 4000;
 export enum NotificationLabels {
   Error = 'error',
   Warning = 'warning',
-  Positive = 'meow',
+  Positive = 'success',
 }
 
 export enum NotificationAppearances {
