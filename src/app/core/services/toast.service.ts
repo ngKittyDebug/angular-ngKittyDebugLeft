@@ -24,9 +24,7 @@ export class AppNotificationService {
     label: string = NotificationLabels.Error,
     closeTime = DEFAULT_ALERT_CLOSE_TIME,
   ): void {
-    this.alerts
-      .open(message, { label, appearance: NotificationAppearances.Error, autoClose: closeTime })
-      .subscribe();
+    this.showNotification(NotificationAppearances.Error, message, label, closeTime);
   }
 
   public showWarningNotification(
@@ -34,9 +32,7 @@ export class AppNotificationService {
     label: string = NotificationLabels.Warning,
     closeTime = DEFAULT_ALERT_CLOSE_TIME,
   ): void {
-    this.alerts
-      .open(message, { label, appearance: NotificationAppearances.Warning, autoClose: closeTime })
-      .subscribe();
+    this.showNotification(NotificationAppearances.Warning, message, label, closeTime);
   }
 
   public showPositiveNotification(
@@ -44,8 +40,15 @@ export class AppNotificationService {
     label: string = NotificationLabels.Positive,
     closeTime = DEFAULT_ALERT_CLOSE_TIME,
   ): void {
-    this.alerts
-      .open(message, { label, appearance: NotificationAppearances.Positive, autoClose: closeTime })
-      .subscribe();
+    this.showNotification(NotificationAppearances.Positive, message, label, closeTime);
+  }
+
+  private showNotification(
+    appearance: NotificationAppearances,
+    message: string,
+    label: string,
+    closeTime: number,
+  ): void {
+    this.alerts.open(message, { label, appearance, autoClose: closeTime }).subscribe();
   }
 }
