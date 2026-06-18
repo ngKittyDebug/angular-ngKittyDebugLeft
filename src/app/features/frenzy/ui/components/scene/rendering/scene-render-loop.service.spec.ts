@@ -51,6 +51,7 @@ function makeContext(overrides: Partial<SceneFrameContext> = {}): SceneFrameCont
     myId: () => null,
     evolving: () => new Map(),
     renderMode: () => 'dom',
+    frameCapFps: () => 0,
     debug: flags(),
     debugBoxesActive: false,
     world: () => ({}) as HTMLElement,

@@ -140,6 +140,23 @@ describe('DebugSettingsStore', () => {
     expect(store.freezeSprites()).toBe(false);
   });
 
+  it('defaults the frame cap to off and persists a chosen cap across a reload', () => {
+    const store = new DebugSettingsStore();
+
+    expect(store.frameCapFps()).toBe(0);
+
+    store.setFrameCapFps(24);
+
+    expect(store.frameCapFps()).toBe(24);
+    expect(reload().frameCapFps()).toBe(24);
+  });
+
+  it('rejects an unknown frame cap, keeping it off', () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ frameCapFps: 45 }));
+
+    expect(reload().frameCapFps()).toBe(0);
+  });
+
   it('starts with every scene layer visible when storage is empty', () => {
     const store = new DebugSettingsStore();
 

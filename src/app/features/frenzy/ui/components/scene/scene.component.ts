@@ -170,6 +170,9 @@ export class SceneComponent {
   // Whether to render players as a static first frame (the `?debug=perf` "freeze sprites" toggle), passed down to
   // each scene-player. Reads the debug store only when it exists; a real player is always animated (false).
   protected readonly freezeSprites = computed(() => this.debugSettings?.freezeSprites() ?? false);
+  // The frame-pacing cap target in fps (the `?debug=perf` "frame cap" toggle), read each frame by the render loop.
+  // Reads the debug store only when it exists; a real player is always uncapped (0).
+  protected readonly frameCapFps = computed(() => this.debugSettings?.frameCapFps() ?? 0);
   // Per-layer render switches (the `?debug=perf` "scene layers" toggles), to bisect the FPS culprit on the device.
   // Undefined in normal play (no debug store) — the template reads `?.<layer> !== false`, so everything renders.
   protected readonly sceneLayers = computed(() => this.debugSettings?.sceneLayers());
@@ -257,6 +260,7 @@ export class SceneComponent {
         myId: () => this.myId(),
         evolving: () => this.evolvingPlayers(),
         renderMode: () => this.renderMode(),
+        frameCapFps: () => this.frameCapFps(),
         debug: this.debug,
         debugBoxesActive: this.debugBoxesActive,
         world: () => this.worldRef()?.nativeElement,

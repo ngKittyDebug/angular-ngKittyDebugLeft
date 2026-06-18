@@ -2,6 +2,7 @@ import { DestroyRef, inject, Injectable } from '@angular/core';
 
 import type { Item, Player } from '@game/frenzy/types';
 
+import { frameIntervalMs, paceFrame } from './frame-pacing';
 import type { CameraSnapshot } from '../camera/scene-camera.service';
 import { SceneFacade } from '../scene.facade';
 import type { RenderedPlayer } from '../scene-view-models';
@@ -32,6 +33,8 @@ export interface SceneFrameContext {
   evolving(): ReadonlyMap<string, number>;
   // The live item render backend ('dom' | 'canvas') — read each frame so the toggle takes effect without a reload.
   renderMode(): RenderMode;
+  // Frame-pacing cap target in fps (0 = uncapped) — read each frame so the toggle takes effect without a reload.
+  frameCapFps(): number;
   readonly debug: DebugFlags;
   readonly debugBoxesActive: boolean;
   world(): HTMLElement | undefined;
@@ -56,12 +59,28 @@ export class SceneRenderLoopService {
 
   public start(context: SceneFrameContext): void {
     let rafId = 0;
+    // Frame-pacing accumulator (slice 13): banked elapsed time + the previous tick's timestamp, carried across frames.
+    let lastNow = performance.now();
+    let accumulatedMs = 0;
 
     const loop = (): void => {
       // Schedule the next frame first, so a throw anywhere below can never kill the animation loop.
       rafId = requestAnimationFrame(loop);
 
       const now = performance.now();
+
+      // Bank the elapsed time and let the pure pacer decide whether this tick renders or is held back by the cap.
+      // Cap off (0) → renders every tick, so normal play and capable devices are unchanged.
+      accumulatedMs += now - lastNow;
+      lastNow = now;
+
+      const pacing = paceFrame(accumulatedMs, frameIntervalMs(context.frameCapFps()));
+
+      accumulatedMs = pacing.carryMs;
+
+      if (!pacing.render) {
+        return;
+      }
 
       this.facade.tickItems(context.items(), now, context.renderMode() === 'canvas');
       this.facade.tickPlayers(context.players(), context.myId(), context.evolving(), now);

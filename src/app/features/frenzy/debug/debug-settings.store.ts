@@ -34,6 +34,10 @@ export type RenderMode = 'dom' | 'canvas';
 // cap it lower, trading sharpness for far less rasterisation — the fill-rate lever a weak tablet GPU actually feels.
 export type CanvasDprCap = 0 | 1 | 1.5;
 
+// Frame-pacing cap (slice 13): `0` disables it (render every frame — the desktop-safe default); otherwise the render
+// loop holds a steady FPS at this target, trading peak rate for even pacing on a weak tablet that lurches 17↔30.
+export type FrameCapFps = 0 | 20 | 24 | 30;
+
 // Scene render layers the `?debug=perf` panel can hide independently, to bisect which one costs the most fill-rate on
 // a weak device (the actor toggles confirm if it's NOT the sprites/items, the background ones if it IS the decor).
 // Order is the display order. `decor` = seabed/light-rays/bubbles; `kelp` = mid + foreground fronds; `parallax` =
@@ -65,6 +69,8 @@ export interface DebugSettings {
   freezeSprites: boolean;
   // Per-layer render switches — each true = that layer renders (default), false = hidden, to bisect the FPS culprit.
   sceneLayers: Record<SceneLayerKey, boolean>;
+  // Frame-pacing cap target in fps (0 = uncapped). Persisted `?debug=perf` toggle, A/B'd on the device.
+  frameCapFps: FrameCapFps;
 }
 
 const STORAGE_KEY = 'frenzy:debug-settings';
@@ -76,6 +82,7 @@ const EXPORT_DESTINATIONS: readonly PerfExportDestination[] = ['clipboard', 'tex
 // Exported for the debug-configurator UI to render the toggle/segmented choices.
 export const RENDER_MODES: readonly RenderMode[] = ['dom', 'canvas'];
 export const CANVAS_DPR_CAPS: readonly CanvasDprCap[] = [0, 1, 1.5];
+export const FRAME_CAP_FPS: readonly FrameCapFps[] = [0, 20, 24, 30];
 
 function defaultMetrics(): Record<PerfMetricKey, boolean> {
   // Every metric on by default — a reasonable starting readout; the user toggles off the noise.
@@ -112,6 +119,7 @@ function defaultSettings(): DebugSettings {
     canvasDprCap: 0,
     freezeSprites: false,
     sceneLayers: defaultSceneLayers(),
+    frameCapFps: 0,
   };
 }
 
@@ -213,6 +221,7 @@ function coerceSettings(raw: unknown): DebugSettings {
         ? source['freezeSprites']
         : defaults.freezeSprites,
     sceneLayers: coerceSceneLayers(source['sceneLayers'], defaults.sceneLayers),
+    frameCapFps: oneOf(source['frameCapFps'], FRAME_CAP_FPS, defaults.frameCapFps),
   };
 }
 
@@ -251,6 +260,7 @@ export class DebugSettingsStore {
   private readonly _canvasDprCap = signal<CanvasDprCap>(0);
   private readonly _freezeSprites = signal(false);
   private readonly _sceneLayers = signal<Record<SceneLayerKey, boolean>>(defaultSceneLayers());
+  private readonly _frameCapFps = signal<FrameCapFps>(0);
 
   public readonly metrics = this._metrics.asReadonly();
   public readonly perfLog = this._perfLog.asReadonly();
@@ -258,6 +268,7 @@ export class DebugSettingsStore {
   public readonly canvasDprCap = this._canvasDprCap.asReadonly();
   public readonly freezeSprites = this._freezeSprites.asReadonly();
   public readonly sceneLayers = this._sceneLayers.asReadonly();
+  public readonly frameCapFps = this._frameCapFps.asReadonly();
 
   public constructor() {
     const stored = readStored();
@@ -268,6 +279,7 @@ export class DebugSettingsStore {
     this._canvasDprCap.set(stored.canvasDprCap);
     this._freezeSprites.set(stored.freezeSprites);
     this._sceneLayers.set(stored.sceneLayers);
+    this._frameCapFps.set(stored.frameCapFps);
   }
 
   public setMetric(key: PerfMetricKey, value: boolean): void {
@@ -308,6 +320,11 @@ export class DebugSettingsStore {
     this.setSceneLayer(key, !this._sceneLayers()[key]);
   }
 
+  public setFrameCapFps(cap: FrameCapFps): void {
+    this._frameCapFps.set(cap);
+    this.persist();
+  }
+
   private persist(): void {
     if (typeof localStorage === 'undefined') {
       return;
@@ -320,6 +337,7 @@ export class DebugSettingsStore {
       canvasDprCap: this._canvasDprCap(),
       freezeSprites: this._freezeSprites(),
       sceneLayers: this._sceneLayers(),
+      frameCapFps: this._frameCapFps(),
     };
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
