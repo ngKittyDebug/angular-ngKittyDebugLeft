@@ -29,7 +29,7 @@ export class LoginFacade {
       .subscribe({
         next: (data) => {
           //TODO тут будем сетапить в отдельный AuthService вместо локал стораджа
-          localStorage.setItem('loginFormData', JSON.stringify(data));
+          localStorage.setItem('accessToken', JSON.stringify(data));
           this.router.navigateByUrl(returnUrl);
         },
         //TODO далее ошибки будем обрабатывать в отдельном сервисе, на консоль лог не обращайте внимание
