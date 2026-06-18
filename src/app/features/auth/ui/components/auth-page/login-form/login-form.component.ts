@@ -2,12 +2,12 @@ import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core
 import { ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthApiService } from '@features/auth/api/auth-api.service';
-import { AUTH_SERVER_URL } from '@core/constants/pokemon-constants';
 import { AUTH_SERVER_URL_TOKEN } from '@core/tokens/auth-server-url.token';
 import { LoginFacade } from '@features/auth/data/facades/login.facade';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { TuiButton, TuiError, TuiInput, TuiLabel, TuiTextfieldComponent } from '@taiga-ui/core';
 import { TuiForm } from '@taiga-ui/layout';
+import { AUTH_SERVER_URL } from '@core/constants/auth-constants';
 
 @Component({
   selector: 'left-paw-login-form',

@@ -6,10 +6,10 @@ import { TuiButton, TuiError, TuiInput, TuiLabel, TuiTextfieldComponent } from '
 import { TuiForm } from '@taiga-ui/layout';
 import type { Field } from '@angular/forms/signals';
 import { FormField } from '@angular/forms/signals';
-import { AUTH_SERVER_URL } from '@core/constants/pokemon-constants';
 import { AUTH_SERVER_URL_TOKEN } from '@core/tokens/auth-server-url.token';
 import { AuthApiService } from '@features/auth/api/auth-api.service';
 import { SignUpFacade } from '@features/auth/data/facades/signup.facade';
+import { AUTH_SERVER_URL } from '@core/constants/auth-constants';
 
 @Component({
   selector: 'left-paw-signup-form',
