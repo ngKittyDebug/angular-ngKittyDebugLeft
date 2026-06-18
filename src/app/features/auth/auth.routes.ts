@@ -3,19 +3,18 @@ import { provideTranslocoScope } from '@jsverse/transloco';
 import { guestGuard } from '@shared/guards/guest.guard';
 import { LoginFormService } from './data/services/login-form.service';
 import { SignupFormService } from './data/services/signup-form.service';
-import {
-  provideHttpClient,
-  withInterceptors,
-  withRequestsMadeViaParent,
-} from '@angular/common/http';
-import { httpErrorsInterceptor } from '@core/interceptors/http-errors.interceptor';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { httpErrorsInterceptor } from '@features/auth/interceptors/http-errors.interceptor';
 
 export const authRoutes: Routes = [
   {
     path: 'auth',
     loadComponent: () =>
       import('./ui/components/auth-page/auth-page.component').then((m) => m.AuthPageComponent),
-    providers: [provideTranslocoScope('auth')],
+    providers: [
+      provideTranslocoScope('auth'),
+      provideHttpClient(withInterceptors([httpErrorsInterceptor])),
+    ],
     canActivate: [guestGuard],
     children: [
       {
@@ -29,11 +28,7 @@ export const authRoutes: Routes = [
           import('./ui/components/auth-page/login-form/login-form.component').then(
             (m) => m.LoginFormComponent,
           ),
-        providers: [
-          provideTranslocoScope('auth'),
-          LoginFormService,
-          provideHttpClient(withInterceptors([httpErrorsInterceptor]), withRequestsMadeViaParent()),
-        ],
+        providers: [provideTranslocoScope('auth'), LoginFormService],
       },
       {
         path: 'signup',
@@ -41,11 +36,7 @@ export const authRoutes: Routes = [
           import('./ui/components/auth-page/signup-form/signup-form.component').then(
             (m) => m.SignupFormComponent,
           ),
-        providers: [
-          provideTranslocoScope('auth'),
-          SignupFormService,
-          provideHttpClient(withInterceptors([httpErrorsInterceptor]), withRequestsMadeViaParent()),
-        ],
+        providers: [provideTranslocoScope('auth'), SignupFormService],
       },
     ],
   },
