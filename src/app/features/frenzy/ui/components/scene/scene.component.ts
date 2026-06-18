@@ -170,6 +170,9 @@ export class SceneComponent {
   // Whether to render players as a static first frame (the `?debug=perf` "freeze sprites" toggle), passed down to
   // each scene-player. Reads the debug store only when it exists; a real player is always animated (false).
   protected readonly freezeSprites = computed(() => this.debugSettings?.freezeSprites() ?? false);
+  // Per-layer render switches (the `?debug=perf` "scene layers" toggles), to bisect the FPS culprit on the device.
+  // Undefined in normal play (no debug store) — the template reads `?.<layer> !== false`, so everything renders.
+  protected readonly sceneLayers = computed(() => this.debugSettings?.sceneLayers());
   // The bomb is the one item kept in the DOM in canvas mode (its sensor lights are animated CSS inside its SVG), so
   // the canvas-mode @for renders just it; every other item is drawn on the canvas.
   protected readonly bombItemsByDepth = computed(() =>

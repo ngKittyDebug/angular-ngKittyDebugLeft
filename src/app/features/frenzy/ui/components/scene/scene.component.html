@@ -2,6 +2,11 @@
   *transloco="let t; prefix: 'frenzy.scene'"
   class="scene"
   [class.scene--shaking]="blasts().length > 0"
+  [class.scene--hide-decor]="sceneLayers()?.decor === false"
+  [class.scene--hide-kelp]="sceneLayers()?.kelp === false"
+  [class.scene--hide-parallax]="sceneLayers()?.parallax === false"
+  [class.scene--hide-items]="sceneLayers()?.items === false"
+  [class.scene--hide-players]="sceneLayers()?.players === false"
   aria-label="Feeding frenzy scene"
   (pointerdown)="onScenePointerDown($event)"
   (pointermove)="onScenePointerMove($event)"
@@ -14,6 +19,9 @@
     [style.height.px]="worldHeight"
     [style.--scene-item-size]="itemSize"
   >
+    <!-- decor / items / kelp / parallax / players layers are gated via CSS `display:none` (the `scene--hide-*` host
+         classes below), NOT @if — so the perf-panel scene-layer toggles isolate each layer's paint/composite cost
+         without DOM churn (or template-cyclomatic-complexity), and `items` hides BOTH render backends at once. -->
     <left-paw-aquarium-decor />
 
     @if (renderMode() === 'canvas') {

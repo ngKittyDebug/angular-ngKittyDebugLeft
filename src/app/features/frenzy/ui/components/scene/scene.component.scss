@@ -242,6 +242,19 @@
   }
 }
 
+// ?debug=perf scene-layer toggles: hide a whole layer via a host class so its paint/composite cost drops out, to
+// bisect the FPS culprit on a weak device. `display:none` (not @if) keeps the DOM and the camera's element refs
+// stable and adds no template branching; `items` covers BOTH the canvas backend and the DOM item nodes.
+.scene--hide-decor left-paw-aquarium-decor,
+.scene--hide-items .scene__item-canvas,
+.scene--hide-items left-paw-scene-item,
+.scene--hide-kelp left-paw-midground-kelp,
+.scene--hide-kelp left-paw-foreground-kelp,
+.scene--hide-parallax .scene__parallax,
+.scene--hide-players left-paw-scene-player {
+  display: none;
+}
+
 // Border width stays constant (set on the selector) — only transform/opacity animate, so the ring rides the
 // compositor with no per-frame layout from an animated `border-width`. The growth+fade carries the shockwave read.
 @keyframes scene-blast-ring {

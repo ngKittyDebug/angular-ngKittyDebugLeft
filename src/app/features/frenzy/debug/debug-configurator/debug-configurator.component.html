@@ -51,4 +51,18 @@
     />
     freeze (static)
   </label>
+
+  <!-- Scene render layers: uncheck one to HIDE that layer (in both DOM and canvas mode) and watch the FPS — bisects
+       which layer costs the most fill-rate on a weak device. Persisted via DebugSettingsStore. -->
+  <p class="debug-configurator__title">scene layers</p>
+  @for (layer of layerKeys; track layer) {
+    <label class="debug-configurator__row">
+      <input
+        type="checkbox"
+        [checked]="store.sceneLayers()[layer]"
+        (change)="store.toggleSceneLayer(layer)"
+      />
+      {{ layer }}
+    </label>
+  }
 </div>

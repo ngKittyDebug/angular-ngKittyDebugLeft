@@ -6,6 +6,7 @@ import {
   DebugSettingsStore,
   PERF_METRIC_KEYS,
   RENDER_MODES,
+  SCENE_LAYER_KEYS,
 } from '../debug-settings.store';
 import type { CanvasDprCap } from '../debug-settings.store';
 
@@ -27,6 +28,7 @@ export class DebugConfiguratorComponent {
   protected readonly labels = METRIC_LABELS;
   protected readonly renderModes = RENDER_MODES;
   protected readonly dprCaps = CANVAS_DPR_CAPS;
+  protected readonly layerKeys = SCENE_LAYER_KEYS;
 
   // DPR-cap button label: 0 means the native device ratio, otherwise the cap multiplier.
   protected dprLabel(cap: CanvasDprCap): string {

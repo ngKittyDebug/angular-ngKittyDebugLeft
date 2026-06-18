@@ -34,6 +34,14 @@ export type RenderMode = 'dom' | 'canvas';
 // cap it lower, trading sharpness for far less rasterisation — the fill-rate lever a weak tablet GPU actually feels.
 export type CanvasDprCap = 0 | 1 | 1.5;
 
+// Scene render layers the `?debug=perf` panel can hide independently, to bisect which one costs the most fill-rate on
+// a weak device (the actor toggles confirm if it's NOT the sprites/items, the background ones if it IS the decor).
+// Order is the display order. `decor` = seabed/light-rays/bubbles; `kelp` = mid + foreground fronds; `parallax` =
+// the drifting speck layers; `items` = falling items (DOM or canvas); `players` = the Pokémon sprites.
+export const SCENE_LAYER_KEYS = ['decor', 'kelp', 'parallax', 'items', 'players'] as const;
+
+export type SceneLayerKey = (typeof SCENE_LAYER_KEYS)[number];
+
 // Runtime config for the persistent perf-log (consumed by slice 09). Held here so the capture cadence and the export
 // channel survive reloads/rebuilds — the point of on-device A/B across builds.
 export interface PerfLogConfig {
@@ -55,6 +63,8 @@ export interface DebugSettings {
   // Render players as a static first frame instead of the animated GIF — kills the per-frame sprite decode/re-raster
   // that pins the FPS floor on a weak tablet. A persisted `?debug=perf` toggle (A/B'd on the device); default off.
   freezeSprites: boolean;
+  // Per-layer render switches — each true = that layer renders (default), false = hidden, to bisect the FPS culprit.
+  sceneLayers: Record<SceneLayerKey, boolean>;
 }
 
 const STORAGE_KEY = 'frenzy:debug-settings';
@@ -71,6 +81,14 @@ function defaultMetrics(): Record<PerfMetricKey, boolean> {
   // Every metric on by default — a reasonable starting readout; the user toggles off the noise.
   return Object.fromEntries(PERF_METRIC_KEYS.map((key) => [key, true])) as Record<
     PerfMetricKey,
+    boolean
+  >;
+}
+
+function defaultSceneLayers(): Record<SceneLayerKey, boolean> {
+  // Every layer on by default — the toggles only ever HIDE a layer to isolate its cost.
+  return Object.fromEntries(SCENE_LAYER_KEYS.map((key) => [key, true])) as Record<
+    SceneLayerKey,
     boolean
   >;
 }
@@ -93,6 +111,7 @@ function defaultSettings(): DebugSettings {
     renderMode: 'dom',
     canvasDprCap: 0,
     freezeSprites: false,
+    sceneLayers: defaultSceneLayers(),
   };
 }
 
@@ -124,6 +143,28 @@ function coerceMetrics(
   }
 
   return metrics;
+}
+
+function coerceSceneLayers(
+  raw: unknown,
+  fallback: Record<SceneLayerKey, boolean>,
+): Record<SceneLayerKey, boolean> {
+  if (typeof raw !== 'object' || raw === null) {
+    return fallback;
+  }
+
+  const source = raw as Record<string, unknown>;
+  const layers = { ...fallback };
+
+  for (const key of SCENE_LAYER_KEYS) {
+    const value = source[key];
+
+    if (typeof value === 'boolean') {
+      layers[key] = value;
+    }
+  }
+
+  return layers;
 }
 
 function coercePerfLog(raw: unknown, fallback: PerfLogConfig): PerfLogConfig {
@@ -171,6 +212,7 @@ function coerceSettings(raw: unknown): DebugSettings {
       typeof source['freezeSprites'] === 'boolean'
         ? source['freezeSprites']
         : defaults.freezeSprites,
+    sceneLayers: coerceSceneLayers(source['sceneLayers'], defaults.sceneLayers),
   };
 }
 
@@ -208,12 +250,14 @@ export class DebugSettingsStore {
   private readonly _renderMode = signal<RenderMode>('dom');
   private readonly _canvasDprCap = signal<CanvasDprCap>(0);
   private readonly _freezeSprites = signal(false);
+  private readonly _sceneLayers = signal<Record<SceneLayerKey, boolean>>(defaultSceneLayers());
 
   public readonly metrics = this._metrics.asReadonly();
   public readonly perfLog = this._perfLog.asReadonly();
   public readonly renderMode = this._renderMode.asReadonly();
   public readonly canvasDprCap = this._canvasDprCap.asReadonly();
   public readonly freezeSprites = this._freezeSprites.asReadonly();
+  public readonly sceneLayers = this._sceneLayers.asReadonly();
 
   public constructor() {
     const stored = readStored();
@@ -223,6 +267,7 @@ export class DebugSettingsStore {
     this._renderMode.set(stored.renderMode);
     this._canvasDprCap.set(stored.canvasDprCap);
     this._freezeSprites.set(stored.freezeSprites);
+    this._sceneLayers.set(stored.sceneLayers);
   }
 
   public setMetric(key: PerfMetricKey, value: boolean): void {
@@ -254,6 +299,15 @@ export class DebugSettingsStore {
     this.persist();
   }
 
+  public setSceneLayer(key: SceneLayerKey, value: boolean): void {
+    this._sceneLayers.update((layers) => ({ ...layers, [key]: value }));
+    this.persist();
+  }
+
+  public toggleSceneLayer(key: SceneLayerKey): void {
+    this.setSceneLayer(key, !this._sceneLayers()[key]);
+  }
+
   private persist(): void {
     if (typeof localStorage === 'undefined') {
       return;
@@ -265,6 +319,7 @@ export class DebugSettingsStore {
       renderMode: this._renderMode(),
       canvasDprCap: this._canvasDprCap(),
       freezeSprites: this._freezeSprites(),
+      sceneLayers: this._sceneLayers(),
     };
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));

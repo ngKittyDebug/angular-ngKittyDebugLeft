@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { DebugSettingsStore, PERF_METRIC_KEYS } from './debug-settings.store';
+import { DebugSettingsStore, PERF_METRIC_KEYS, SCENE_LAYER_KEYS } from './debug-settings.store';
 import type { PerfLogConfig } from './debug-settings.store';
 
 const STORAGE_KEY = 'frenzy:debug-settings';
@@ -138,5 +138,35 @@ describe('DebugSettingsStore', () => {
     expect(store.renderMode()).toBe('dom');
     expect(store.canvasDprCap()).toBe(0);
     expect(store.freezeSprites()).toBe(false);
+  });
+
+  it('starts with every scene layer visible when storage is empty', () => {
+    const store = new DebugSettingsStore();
+
+    for (const key of SCENE_LAYER_KEYS) {
+      expect(store.sceneLayers()[key]).toBe(true);
+    }
+  });
+
+  it('persists a hidden scene layer and ignores unknown layer keys', () => {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ sceneLayers: { kelp: false, bogus: true } }),
+    );
+
+    const store = reload();
+
+    expect(store.sceneLayers()['kelp']).toBe(false);
+    expect(store.sceneLayers()['decor']).toBe(true);
+    expect((store.sceneLayers() as Record<string, boolean>)['bogus']).toBeUndefined();
+  });
+
+  it('toggles a scene layer and persists the flip', () => {
+    const store = new DebugSettingsStore();
+
+    store.toggleSceneLayer('parallax');
+
+    expect(store.sceneLayers()['parallax']).toBe(false);
+    expect(reload().sceneLayers()['parallax']).toBe(false);
   });
 });

@@ -64,7 +64,24 @@
 }
 
 .perf-log__table {
+  display: block;
   border-collapse: collapse;
+}
+
+// Keep the header fixed and scroll only the sample rows, capped to ~6 rows, so the table stops growing as captures
+// accumulate. `display: table` + fixed layout on the header row and each body row keeps the columns aligned with the
+// independently-scrolled body.
+.perf-log__table thead,
+.perf-log__table tbody tr {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.perf-log__table tbody {
+  display: block;
+  max-height: 5.5rem;
+  overflow-y: auto;
 }
 
 .perf-log__table th,
