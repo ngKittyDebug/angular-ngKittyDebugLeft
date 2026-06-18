@@ -1,14 +1,11 @@
-import type { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
+import type { AbstractControl, ValidationErrors } from '@angular/forms';
 import { EMAIL_PATTERN } from '@shared/constants/patterns-constants';
 
-export function emailValidator(): ValidatorFn;
-export function emailValidator(email: string): boolean;
+export function isValidEmail(email: string): boolean {
+  return EMAIL_PATTERN.test(email);
+}
 
-export function emailValidator(email?: string) {
-  if (email) {
-    return EMAIL_PATTERN.test(email);
-  }
-
+export function emailValidator() {
   return (control: AbstractControl<string>): ValidationErrors | null => {
     const value = control.value;
 
