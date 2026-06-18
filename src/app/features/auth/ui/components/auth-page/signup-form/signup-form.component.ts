@@ -50,6 +50,6 @@ export class SignupFormComponent {
 
   protected onSubmit(event: Event): void {
     event.preventDefault();
-    this.signupFacade.onSignUpSubmit(this.returnUrl);
+    this.signupFacade.onSignUpSubmit(this.returnUrl());
   }
 }

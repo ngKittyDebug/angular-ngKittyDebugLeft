@@ -1,4 +1,3 @@
-import type { InputSignal } from '@angular/core';
 import { DestroyRef, inject, Service, signal } from '@angular/core';
 import { LoginFormService } from '../services/login-form.service';
 import { AuthApiService } from '@features/auth/api/auth-api.service';
@@ -18,7 +17,7 @@ export class LoginFacade {
 
   public readonly loginForm = this.loginFormService.loginForm;
 
-  public onLoginSubmit(loginFormGroup: LoginFormGroup, returnUrl: InputSignal<string>) {
+  public onLoginSubmit(loginFormGroup: LoginFormGroup, returnUrl: string) {
     this.isLoading.set(true);
 
     this.authApiService
@@ -31,7 +30,7 @@ export class LoginFacade {
         next: (data) => {
           //TODO тут будем сетапить в отдельный AuthService вместо локал стораджа
           localStorage.setItem('loginFormData', JSON.stringify(data));
-          this.router.navigateByUrl(returnUrl());
+          this.router.navigateByUrl(returnUrl);
         },
         //TODO далее ошибки будем обрабатывать в отдельном сервисе, на консоль лог не обращайте внимание
         error: (error) => console.log(error),

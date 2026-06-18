@@ -42,6 +42,6 @@ export class LoginFormComponent {
     if (this.loginForm.invalid) {
       return;
     }
-    this.loginFacade.onLoginSubmit(this.loginForm.controls, this.returnUrl);
+    this.loginFacade.onLoginSubmit(this.loginForm.controls, this.returnUrl());
   }
 }
