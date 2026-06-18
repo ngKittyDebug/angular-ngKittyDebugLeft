@@ -7,13 +7,13 @@ import {
 } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideSignalFormsConfig } from '@angular/forms/signals';
-
 import { routes } from './app.routes';
 import { provideStore } from '@ngrx/store';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { TranslocoHttpLoader } from './transloco-loader';
 import { provideTransloco } from '@jsverse/transloco';
 import { provideTranslocoPersistLang } from '@jsverse/transloco-persist-lang';
+import { httpErrorsInterceptor } from '@core/interceptors/http-errors.interceptor';
 
 export const appConfig = {
   providers: [
@@ -21,7 +21,7 @@ export const appConfig = {
     provideZoneChangeDetection(),
     provideRouter(routes, withComponentInputBinding()),
     provideStore(),
-    provideHttpClient(),
+    provideHttpClient(withInterceptors([httpErrorsInterceptor])),
     provideTaiga(),
     provideTransloco({
       config: {

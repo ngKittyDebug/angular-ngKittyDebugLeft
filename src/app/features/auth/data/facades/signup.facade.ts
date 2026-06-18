@@ -32,8 +32,6 @@ export class SignUpFacade {
           localStorage.setItem('accessToken', JSON.stringify(data));
           this.router.navigateByUrl(returnUrl);
         },
-        //TODO далее ошибки будем обрабатывать в отдельном сервисе, на консоль лог не обращайте внимание
-        error: (error) => console.log(error),
       });
   }
 }
