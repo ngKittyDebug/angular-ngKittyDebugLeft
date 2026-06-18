@@ -11,7 +11,7 @@ export class AuthApiService {
   private readonly authURLToken = inject<string>(AUTH_SERVER_URL_TOKEN);
   private readonly httpClient = inject(HttpClient);
 
-  public onLoginSubmit(loginFormGroup: LoginFormGroup) {
+  public login(loginFormGroup: LoginFormGroup) {
     const convertedLoginModel = convertLoginFormModelToCredentialsApiData(loginFormGroup);
 
     return this.httpClient.post(`${this.authURLToken}auth/login`, convertedLoginModel, {
@@ -19,7 +19,7 @@ export class AuthApiService {
     });
   }
 
-  public onRegistrationSubmit(signupModel: SignupModel) {
+  public registration(signupModel: SignupModel) {
     const convertedSignUpModel = convertSignUpModelToCredentialsApiData(signupModel);
 
     return this.httpClient.post(`${this.authURLToken}auth/register`, convertedSignUpModel, {

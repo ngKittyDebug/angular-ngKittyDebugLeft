@@ -23,7 +23,7 @@ export class SignUpFacade {
 
     submit(this.signupForm, async () => {
       this.authApiService
-        .onRegistrationSubmit(this.signupFormModel())
+        .registration(this.signupFormModel())
         .pipe(
           finalize(() => this.isLoading.set(false)),
           takeUntilDestroyed(this.destroyRef),

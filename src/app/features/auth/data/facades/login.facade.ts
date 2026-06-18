@@ -21,7 +21,7 @@ export class LoginFacade {
     this.isLoading.set(true);
 
     this.authApiService
-      .onLoginSubmit(loginFormGroup)
+      .login(loginFormGroup)
       .pipe(
         finalize(() => this.isLoading.set(false)),
         takeUntilDestroyed(this.destroyRef),
