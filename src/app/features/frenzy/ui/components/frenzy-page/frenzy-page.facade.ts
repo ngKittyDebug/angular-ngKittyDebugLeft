@@ -90,6 +90,11 @@ export class FrenzyPageFacade {
   public readonly crownId = this.store.crownId;
   public readonly players = computed(() => this.store.state()?.players ?? []);
   public readonly presenceCount = this.store.presenceCount;
+  // The player's last saved identity (read once at load) — seeds the picker so a returning player keeps their name
+  // and Pokémon. The picker takes these as inputs instead of injecting persistence itself (ADR 0004 §2/§3); the
+  // facade is the single in-feature reader of persisted identity (the store owns the write, on join).
+  public readonly savedName = this.persistence.getName();
+  public readonly savedAppearance = this.persistence.getAppearance();
   public readonly respawnReady = computed(() => this.cooldownLeftMs() === 0);
   // A self-healing inbound stall (see FrenzySocketService): shown as a non-blocking banner over the live scene
   // rather than tearing down to the disconnected modal, since it recovers in well under a second.

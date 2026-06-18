@@ -2,17 +2,15 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  inject,
   input,
+  linkedSignal,
   output,
-  signal,
 } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { TuiIcon } from '@taiga-ui/core';
 
 import type { ItemType, JoinRejectReason } from '@game/frenzy/types';
 
-import { PlayerPersistenceService } from '../../../data/services/player-persistence.service';
 import type { Line } from '../../constants/pokemon-registry';
 import { knownLine, POKEMON_LINES } from '../../constants/pokemon-registry';
 import { ItemSpritePipe } from '../../pipes/item-sprite.pipe';
@@ -31,10 +29,13 @@ export interface PickerSubmission {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PokemonPickerComponent {
-  private readonly persistence = inject(PlayerPersistenceService);
   // Server's reason for refusing the last join (null = none); shown localized so the player sees why submit
   // didn't take. Cleared store-side on the next attempt.
   public readonly error = input<JoinRejectReason | null>(null);
+  // The player's last saved identity, supplied by the page facade (the picker no longer reads persistence itself —
+  // ADR 0004 §2). They seed the editable fields below; a returning player sees their name/Pokémon pre-filled.
+  public readonly initialName = input<string>('');
+  public readonly initialAppearance = input<string>('');
   public readonly submitPicker = output<PickerSubmission>();
   protected readonly canSubmit = computed(
     () => this.name().trim().length > 0 && this.selectedLine() !== null,
@@ -44,9 +45,11 @@ export class PokemonPickerComponent {
   // knows the basics before diving in. A curated subset — the full classification lives in the in-game HUD legend.
   protected readonly safeItems: readonly ItemType[] = ['food', 'rareCandy'];
   protected readonly dangerItems: readonly ItemType[] = ['bomb', 'rock'];
-  protected readonly name = signal(this.persistence.getName());
-  protected readonly selectedLine = signal<Line | null>(
-    knownLine(this.persistence.getAppearance()),
+  // Seed the editable fields from the supplied identity. `linkedSignal` so the seed lands once the inputs resolve
+  // (they bind after construction); a user edit thereafter sticks (the inputs are read-once and never change again).
+  protected readonly name = linkedSignal<string>(() => this.initialName());
+  protected readonly selectedLine = linkedSignal<Line | null>(() =>
+    knownLine(this.initialAppearance()),
   );
 
   protected onNameInput(event: Event): void {

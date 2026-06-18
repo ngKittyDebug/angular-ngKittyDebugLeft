@@ -5,7 +5,6 @@ import {
   ElementRef,
   inject,
   input,
-  linkedSignal,
 } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { TuiHintDirective, TuiIcon } from '@taiga-ui/core';
@@ -13,7 +12,7 @@ import { TuiAvatar } from '@taiga-ui/kit';
 
 import type { Player, Stage } from '@game/frenzy/types';
 
-import { PlayerPersistenceService } from '../../../data/services/player-persistence.service';
+import { COLLAPSE_KEY, persistedCollapse } from '../../persisted-collapse';
 import { PokemonSpritePipe } from '../../pipes/pokemon-sprite.pipe';
 import { StageRomanPipe } from '../../pipes/stage-roman.pipe';
 
@@ -49,7 +48,6 @@ interface LeaderboardRow {
   },
 })
 export class LeaderboardComponent {
-  private readonly persistence = inject(PlayerPersistenceService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   public readonly entries = input.required<readonly Player[]>();
@@ -78,17 +76,14 @@ export class LeaderboardComponent {
   protected readonly leader = computed<LeaderboardRow | null>(() => this.rows()[0] ?? null);
 
   // Restore the saved open/closed state; with none saved, default to expanded (desktop-only widget). A manual
-  // toggle persists and thereafter wins over the default.
-  protected readonly collapsed = linkedSignal<boolean>(
-    () => this.persistence.getLeaderboardCollapsed() ?? false,
-  );
+  // toggle persists (via the signal's write-through) and thereafter wins over the default.
+  protected readonly collapsed = persistedCollapse(COLLAPSE_KEY.leaderboard, () => false);
 
   protected toggle(event: Event): void {
     // Keep the button's click from bubbling to the host `collapseIfOpen` — otherwise opening from the pill would
     // immediately bubble up and close again.
     event.stopPropagation();
     this.collapsed.update((value) => !value);
-    this.persistence.saveLeaderboardCollapsed(this.collapsed());
   }
 
   protected collapseIfOpen(): void {
@@ -97,7 +92,6 @@ export class LeaderboardComponent {
     }
 
     this.collapsed.set(true);
-    this.persistence.saveLeaderboardCollapsed(true);
   }
 
   protected collapseOnOutsideClick(event: Event): void {
@@ -106,6 +100,5 @@ export class LeaderboardComponent {
     }
 
     this.collapsed.set(true);
-    this.persistence.saveLeaderboardCollapsed(true);
   }
 }

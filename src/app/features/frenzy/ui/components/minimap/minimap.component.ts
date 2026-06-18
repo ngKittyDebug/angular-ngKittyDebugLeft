@@ -1,11 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  input,
-  linkedSignal,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { TuiIcon } from '@taiga-ui/core';
 
@@ -13,7 +6,7 @@ import { FRENZY } from '@game/frenzy/config';
 import type { Item, Player } from '@game/frenzy/types';
 import { isNPC } from '@game/frenzy/types';
 
-import { PlayerPersistenceService } from '../../../data/services/player-persistence.service';
+import { COLLAPSE_KEY, persistedCollapse } from '../../persisted-collapse';
 import { ITEM_DOT_COLOR } from '../../constants/pokemon-registry';
 import { ScenePositionDirective } from '../../directives/scene-position.directive';
 import { OfflineParticipantsComponent } from '../offline-participants/offline-participants.component';
@@ -113,8 +106,6 @@ const KELP_VIEW_BOX = `0 0 ${KELP_VIEW_WIDTH} ${KELP_VIEW_HEIGHT}`;
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MinimapComponent {
-  private readonly persistence = inject(PlayerPersistenceService);
-
   public readonly compact = input<boolean>(false);
   public readonly disconnected = input<number>(0);
   public readonly items = input.required<readonly Item[]>();
@@ -148,11 +139,9 @@ export class MinimapComponent {
   );
 
   // Restore the saved open/closed state; with none saved, default to expanded map on desktop and collapsed
-  // pill on mobile (re-derives from `compact` on breakpoint change via linkedSignal). A manual toggle persists
+  // pill on mobile (re-derives from `compact` on breakpoint change). A manual toggle persists (write-through)
   // and thereafter wins over the responsive default.
-  protected readonly collapsed = linkedSignal<boolean>(
-    () => this.persistence.getMinimapCollapsed() ?? this.compact(),
-  );
+  protected readonly collapsed = persistedCollapse(COLLAPSE_KEY.minimap, () => this.compact());
 
   protected readonly playerDots = computed<PlayerDot[]>(() => {
     const myId = this.myId();
@@ -179,6 +168,5 @@ export class MinimapComponent {
 
   protected toggle(): void {
     this.collapsed.update((value) => !value);
-    this.persistence.saveMinimapCollapsed(this.collapsed());
   }
 }

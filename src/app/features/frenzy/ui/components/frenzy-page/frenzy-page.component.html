@@ -89,6 +89,8 @@
       @case ('picking') {
         <left-paw-pokemon-picker
           [error]="joinError()"
+          [initialName]="savedName"
+          [initialAppearance]="savedAppearance"
           (submitPicker)="handlePickerSubmit($event)"
         />
       }

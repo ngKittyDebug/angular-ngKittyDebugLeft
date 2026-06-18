@@ -1,34 +1,20 @@
 import { Injectable } from '@angular/core';
 
-// Single key for all frenzy values. Persistent prefs (name/appearance/minimap state) live as a JSON blob in
+// Single key for all frenzy values. The player's persistent identity (name/appearance) lives as a JSON blob in
 // localStorage; the per-tab session token lives under the same key in sessionStorage — a different storage
 // namespace on purpose, so each tab keeps its own player identity (the server uses the token as the player id).
+// (HUD-panel collapse state is NOT here — each panel owns its own key via `persistedCollapse`, see CONTEXT.md.)
 const SESSION_KEY = 'frenzy-session';
 
 interface FrenzySession {
   name?: string;
   appearance?: string;
-  minimapCollapsed?: boolean;
-  legendCollapsed?: boolean;
-  leaderboardCollapsed?: boolean;
 }
 
 @Injectable()
 export class PlayerPersistenceService {
   public getAppearance(): string {
     return this.read().appearance ?? '';
-  }
-
-  public getLeaderboardCollapsed(): boolean | null {
-    return this.read().leaderboardCollapsed ?? null;
-  }
-
-  public getLegendCollapsed(): boolean | null {
-    return this.read().legendCollapsed ?? null;
-  }
-
-  public getMinimapCollapsed(): boolean | null {
-    return this.read().minimapCollapsed ?? null;
   }
 
   public getName(): string {
@@ -63,18 +49,6 @@ export class PlayerPersistenceService {
 
   public saveAppearance(appearance: string): void {
     this.merge({ appearance });
-  }
-
-  public saveLeaderboardCollapsed(leaderboardCollapsed: boolean): void {
-    this.merge({ leaderboardCollapsed });
-  }
-
-  public saveLegendCollapsed(legendCollapsed: boolean): void {
-    this.merge({ legendCollapsed });
-  }
-
-  public saveMinimapCollapsed(minimapCollapsed: boolean): void {
-    this.merge({ minimapCollapsed });
   }
 
   public saveName(name: string): void {

@@ -1,0 +1,76 @@
+<!-- ?debug=perf perf-log: capture (manual/auto) + export (format × destination) + sample table for on-device A/B.
+     Dev-only, gated behind the master ?debug=perf flag. -->
+<div class="perf-log">
+  <div class="perf-log__controls">
+    <label class="perf-log__field">
+      label
+      <input type="text" [value]="settings.perfLog().label" (input)="onLabel($event)" />
+    </label>
+    <label class="perf-log__field">
+      mode
+      <select [value]="settings.perfLog().captureMode" (change)="onMode($event)">
+        <option value="manual">manual</option>
+        <option value="auto">auto</option>
+      </select>
+    </label>
+    <label class="perf-log__field">
+      every (s)
+      <input
+        type="number"
+        min="1"
+        [value]="settings.perfLog().captureIntervalSeconds"
+        (input)="onIntervalSeconds($event)"
+      />
+    </label>
+    <label class="perf-log__field">
+      format
+      <select [value]="settings.perfLog().exportFormat" (change)="onFormat($event)">
+        <option value="json-compact">json</option>
+        <option value="json-pretty">json+</option>
+        <option value="csv">csv</option>
+      </select>
+    </label>
+    <label class="perf-log__field">
+      to
+      <select [value]="settings.perfLog().exportDestination" (change)="onDestination($event)">
+        <option value="clipboard">clipboard</option>
+        <option value="textarea">textarea</option>
+        <option value="download">download</option>
+      </select>
+    </label>
+    <div class="perf-log__buttons">
+      <button type="button" (click)="capture()">capture</button>
+      <button type="button" (click)="exportLog()">export</button>
+      <button type="button" (click)="clear()">clear ({{ sampleStore.samples().length }})</button>
+    </div>
+  </div>
+
+  @if (exportedText(); as text) {
+    <textarea class="perf-log__textarea" readonly rows="4">{{ text }}</textarea>
+  }
+
+  @if (sampleStore.samples().length > 0) {
+    <table class="perf-log__table">
+      <thead>
+        <tr>
+          <th>label</th>
+          <th>fps</th>
+          <th>p1</th>
+          <th>jank</th>
+          <th>loop</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (sample of sampleStore.samples(); track $index) {
+          <tr>
+            <td>{{ sample.label }}</td>
+            <td>{{ sample.metrics['fps'] }}</td>
+            <td>{{ sample.metrics['p1Fps'] }}</td>
+            <td>{{ sample.metrics['jankPercent'] }}</td>
+            <td>{{ sample.metrics['sceneLoopMs'] }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

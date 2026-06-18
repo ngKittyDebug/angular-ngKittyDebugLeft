@@ -12,7 +12,6 @@ import {
 import { FRENZY } from '@game/frenzy/config';
 import type { Player } from '@game/frenzy/types';
 
-import { PlayerExtrapolatorService } from '../scene/player-extrapolator.service';
 import type { CameraSnapshot } from '../scene/scene-camera.service';
 import type { RenderedPlayer } from '../scene/scene-view-models';
 import {
@@ -48,12 +47,13 @@ interface ArrowVm {
  * - POSITION (the edge slide) is written EVERY frame by `frame()` via Renderer2, off the live camera snapshot, so
  *   it tracks the smoothly-eased pan 1:1 with no CSS transition (which would rubber-band) and no CD.
  *
- * Positions come from the same `PlayerExtrapolatorService.rendered()` the sprites use — dead-reckoned every frame
- * and glided through reconciliation — NOT the raw server snapshot (which steps at the tick rate and made the arrows
- * jump). Player names are read from the raw `players` input (the rendered VM carries only the species label), keyed
- * by id. `frame()` runs from the scene's single rAF loop right after the camera and the player tick, so both read
- * the same frame. Decorative real-time aid → `aria-hidden`: the authoritative roster/leaderboard already exposes
- * presence to AT, and arrows mutating ~8×/s would be screen-reader noise.
+ * Positions are passed into `frame()` by the scene's render loop — the same rendered player VMs the sprites use,
+ * glided through reconciliation — NOT injected from the scene's extrapolator (no sibling-into-guts, ADR 0004 §5)
+ * and NOT the raw server snapshot (which steps at the tick rate and made the arrows jump). Player names are read
+ * from the raw `players` input (the rendered VM carries only the species label), keyed by id. `frame()` runs from
+ * the scene's single rAF loop right after the camera and the player tick, so both read the same frame. Decorative
+ * real-time aid → `aria-hidden`: the authoritative roster/leaderboard already exposes presence to AT, and arrows
+ * mutating ~8×/s would be screen-reader noise.
  */
 @Component({
   selector: 'left-paw-offscreen-indicators',
@@ -63,20 +63,19 @@ interface ArrowVm {
 })
 export class OffscreenIndicatorsComponent {
   private readonly renderer = inject(Renderer2);
-  private readonly extrapolator = inject(PlayerExtrapolatorService);
   private readonly arrowElements = viewChildren('arrow', { read: ElementRef });
   // Last structural recompute (performance.now ms); throttled to `structureHz`.
   private lastStructureAt = 0;
 
   // Raw roster — used only for id→name (the rendered VM carries the species label, not the player's chosen name).
-  // Smooth positions come from the injected extrapolator, not from here.
+  // Smooth positions come from the rendered VMs the loop passes into `frame()`, not from here.
   public readonly players = input.required<readonly Player[]>();
 
   protected readonly indicators = signal<readonly ArrowVm[]>([]);
 
-  // Called once per frame by the scene rAF loop after the camera writes its transform. Repositions every existing
-  // arrow off the live snapshot, then re-derives membership at the throttled structural rate.
-  public frame(camera: CameraSnapshot, now: number): void {
+  // Called once per frame by the scene rAF loop after the camera writes its transform, with the loop's current
+  // rendered player VMs. Repositions every existing arrow off them, then re-derives membership at the throttled rate.
+  public frame(camera: CameraSnapshot, now: number, rendered: readonly RenderedPlayer[]): void {
     if (!camera.ready || camera.viewportWidth === 0 || camera.viewportHeight === 0) {
       if (this.indicators().length > 0) {
         this.indicators.set([]);
@@ -85,21 +84,21 @@ export class OffscreenIndicatorsComponent {
       return;
     }
 
-    this.position(camera);
+    this.position(camera, rendered);
 
     if (now - this.lastStructureAt >= 1000 / OFFSCREEN_INDICATORS.structureHz) {
       this.lastStructureAt = now;
-      this.restructure(camera);
+      this.restructure(camera, rendered);
     }
   }
 
   // Re-derive which arrows exist and their clustering from the current (extrapolated) positions. Sets the signal
   // only when the membership keys actually change — names/counts are fully determined by membership.
-  private restructure(camera: CameraSnapshot): void {
+  private restructure(camera: CameraSnapshot, rendered: readonly RenderedPlayer[]): void {
     const nameById = new Map(this.players().map((player) => [player.id, player.name]));
     const inputs: EdgeArrowInput[] = [];
 
-    for (const player of this.extrapolator.rendered()) {
+    for (const player of rendered) {
       if (player.isMe || player.isNpc || player.isDisconnected) {
         continue;
       }
@@ -141,14 +140,14 @@ export class OffscreenIndicatorsComponent {
   // Per-frame DOM write: slide each arrow to its members' (averaged) edge point and rotate the glyph to their mean
   // bearing. Sub-pixel, no rounding (like the camera/position directive). A just-added node may not be in the DOM
   // yet (the structural `signal.set` renders after this synchronous frame) — skip it; next frame catches it.
-  private position(camera: CameraSnapshot): void {
+  private position(camera: CameraSnapshot, rendered: readonly RenderedPlayer[]): void {
     const elements = this.elementsByKey();
 
     if (elements.size === 0) {
       return;
     }
 
-    const renderedById = new Map(this.extrapolator.rendered().map((player) => [player.id, player]));
+    const renderedById = new Map(rendered.map((player) => [player.id, player]));
 
     for (const vm of this.indicators()) {
       const element = elements.get(vm.key);

@@ -3,13 +3,11 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  DestroyRef,
   effect,
   ElementRef,
   inject,
   input,
   output,
-  signal,
   viewChild,
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
@@ -26,50 +24,38 @@ import { ActorHostDirective } from '../../directives/actor-host.directive';
 import { ScenePositionDirective } from '../../directives/scene-position.directive';
 import { AquariumDecorComponent } from '../aquarium-decor/aquarium-decor.component';
 import { BubbleBurstComponent } from '../bubble-burst/bubble-burst.component';
+import { DebugConfiguratorComponent } from '../../../debug/debug-configurator/debug-configurator.component';
 import { DebugOverlayComponent } from '../../../debug/debug-overlay/debug-overlay.component';
 import { parseDebugFlags } from '../../../debug/debug-options';
+import { DebugSettingsStore } from '../../../debug/debug-settings.store';
+import type { PerfMetricsSnapshot } from '../../../debug/perf-metrics';
+import { PerfLogPanelComponent } from '../../../debug/perf-log-panel/perf-log-panel.component';
 import { PerfReadoutComponent } from '../../../debug/perf-readout/perf-readout.component';
+import { PerfSampleStore } from '../../../debug/perf-sample.store';
 import { FloatingTextComponent } from '../floating-text/floating-text.component';
 import { ForegroundKelpComponent } from '../foreground-kelp/foreground-kelp.component';
 import { MidgroundKelpComponent } from '../midground-kelp/midground-kelp.component';
 import { OffscreenIndicatorsComponent } from '../offscreen-indicators/offscreen-indicators.component';
+import { OwnedFloatsComponent } from '../owned-floats/owned-floats.component';
 import { SandPuffComponent } from '../sand-puff/sand-puff.component';
 import { SceneItemComponent } from '../scene-item/scene-item.component';
 import { ScenePlayerComponent } from '../scene-player/scene-player.component';
 import { ItemExtrapolatorService } from './item-extrapolator.service';
+import { PerfMetricsService } from './perf-metrics.service';
 import { PlayerExtrapolatorService } from './player-extrapolator.service';
 import { SceneActorRegistryService } from './scene-actor-registry.service';
 import { SceneBurstsService } from './scene-bursts.service';
 import { SceneCameraService } from './scene-camera.service';
 import { SceneSandPuffsService } from './scene-sand-puffs.service';
+import { resolveNudge, resolveSceneTap } from './pointer-intent';
 import { SceneFacade } from './scene.facade';
-import type { ItemClick, RenderedItem, RenderedPlayer } from './scene-view-models';
+import { SceneRenderLoopService } from './scene-render-loop.service';
+import { groupByOwner, sortByDepth } from './scene-view-models';
+import type { ItemClick, RenderedItem } from './scene-view-models';
 
 // Other players' HP bars use a single absolute scale — the hard ceiling — so a bar's fill reads the same for
 // everyone regardless of stage (the OWN widget instead scales to its next evolution threshold).
 const MAX_VISUAL_HP = FRENZY.maxHp;
-
-function clamp01(value: number): number {
-  return Math.min(1, Math.max(0, value));
-}
-
-// Bucket owner-scoped scene items (floats, sparks) by their `ownerId`. Sparks render inside each `.scene__player`;
-// floats render in the scene's owned-float overlay keyed by the same id. Preserves source order within each bucket.
-function groupByOwner<T extends { ownerId: string }>(items: readonly T[]): Map<string, T[]> {
-  const grouped = new Map<string, T[]>();
-
-  for (const item of items) {
-    const existing = grouped.get(item.ownerId);
-
-    if (existing === undefined) {
-      grouped.set(item.ownerId, [item]);
-    } else {
-      existing.push(item);
-    }
-  }
-
-  return grouped;
-}
 
 @Component({
   selector: 'left-paw-scene',
@@ -77,11 +63,14 @@ function groupByOwner<T extends { ownerId: string }>(items: readonly T[]): Map<s
     ActorHostDirective,
     AquariumDecorComponent,
     BubbleBurstComponent,
+    DebugConfiguratorComponent,
     DebugOverlayComponent,
     FloatingTextComponent,
     ForegroundKelpComponent,
     MidgroundKelpComponent,
     OffscreenIndicatorsComponent,
+    OwnedFloatsComponent,
+    PerfLogPanelComponent,
     PerfReadoutComponent,
     SandPuffComponent,
     SceneItemComponent,
@@ -91,20 +80,29 @@ function groupByOwner<T extends { ownerId: string }>(items: readonly T[]): Map<s
   ],
   providers: [
     SceneFacade,
+    SceneRenderLoopService,
     ItemExtrapolatorService,
     PlayerExtrapolatorService,
     SceneActorRegistryService,
     SceneCameraService,
     SceneBurstsService,
     SceneSandPuffsService,
+    // Perf subsystem — provided here but injected only under `?debug=perf` (the metric accumulator by this component
+    // below, the settings store + sample log by the gated panels), so none of them instantiate in normal play.
+    PerfMetricsService,
+    DebugSettingsStore,
+    PerfSampleStore,
   ],
   templateUrl: './scene.component.html',
   styleUrl: './scene.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SceneComponent {
-  private readonly destroyRef = inject(DestroyRef);
   private readonly facade = inject(SceneFacade);
+  private readonly loop = inject(SceneRenderLoopService);
+  // The `?debug=perf` metric accumulator — injected (and thus instantiated) only under the master gate, in the
+  // constructor; undefined in normal play. Fed by the render loop; its snapshot drives the readout.
+  private perfMetrics: PerfMetricsService | undefined;
   // Optional (not `.required`): the template root sits under `*transloco`, which renders asynchronously, so the
   // ref is absent for the first few frames. Reading it before then must not throw and kill the rAF loop.
   private readonly worldRef = viewChild<ElementRef<HTMLElement>>('world');
@@ -141,13 +139,9 @@ export class SceneComponent {
   public readonly steer = output<{ x: number; y: number }>();
 
   protected readonly renderedItems = this.facade.renderedItems;
-  // Paint items far→near for seabed perspective: sort by y ascending so an item lower on screen (nearer the camera,
-  // higher y) renders LATER and overlaps the ones behind it. DOM order is the depth cue at the shared item z-index
-  // (the bomb keeps its own lift; players paint after all items, so they stay above). track-by-id means a reorder
-  // just moves the existing nodes — no re-create, no animation reset.
-  protected readonly renderedItemsByDepth = computed(() =>
-    [...this.renderedItems()].sort((first, second) => first.y - second.y),
-  );
+  // Depth order for the seabed perspective (see `sortByDepth`). track-by-id in the template means a reorder just
+  // moves the existing nodes — no re-create, no animation reset.
+  protected readonly renderedItemsByDepth = computed(() => sortByDepth(this.renderedItems()));
 
   protected readonly renderedPlayers = this.facade.renderedPlayers;
   protected readonly bursts = this.facade.bursts;
@@ -168,9 +162,12 @@ export class SceneComponent {
   // path, so it never reintroduces per-frame change detection on the actors.
   protected readonly debugBoxesActive =
     this.debug.pokemonBorders || this.debug.itemBorders || this.debug.speed;
-  // Live per-frame player VMs fed to the `?debug=perf` panel only (set each frame solely under `?debug=perf`), so the
-  // panel reads the true rendered position for its gap without forcing the actors through change detection.
-  protected readonly perfPlayers = signal<readonly RenderedPlayer[]>([]);
+  // The metric snapshot fed to the `?debug=perf` readout — the accumulator's signal when the gate is on, else a
+  // constant null (the readout that reads it isn't rendered then anyway). The closure reads `perfMetrics` lazily,
+  // after the constructor has set it.
+  protected readonly perfMetricsSnapshot = computed<PerfMetricsSnapshot | null>(
+    () => this.perfMetrics?.snapshot() ?? null,
+  );
   // Owned floats grouped by their player, so the owned-float overlay renders each sprite's quips on its body point.
   protected readonly floatsByOwner = computed(() => groupByOwner(this.ownedFloats()));
   // Rock/brick impact sparks grouped by the struck player, so each `.scene__player` renders (and carries) its own.
@@ -194,50 +191,39 @@ export class SceneComponent {
       );
     });
 
+    // Instantiate the perf accumulator only under the master gate (conditional `inject` in the constructor's
+    // injection context), so a real player never creates it or the settings store the readout/configurator inject.
+    if (this.debug.perf) {
+      this.perfMetrics = inject(PerfMetricsService);
+    }
+
+    // Start the rAF render loop once the view exists. The loop service owns the frame lifecycle and the per-frame
+    // facade sequence; this shell only supplies the live inputs and DOM refs it reads each frame (see ADR 0004 §4).
     afterNextRender(() => {
-      let rafId = 0;
-      const loop = (): void => {
-        // Schedule the next frame first, so a throw anywhere below can never kill the animation loop.
-        rafId = requestAnimationFrame(loop);
-
-        const now = performance.now();
-
-        this.facade.tickItems(this.items(), now);
-        this.facade.tickPlayers(this.players(), this.myId(), this.evolvingPlayers(), now);
-
-        // Feed the perf panel the live rendered positions (only under `?debug=perf`), so its gap reflects the
-        // optimized path. The box overlay (a dev tool) instead republishes structure so its boxes track the sprites.
-        if (this.debug.perf) {
-          this.perfPlayers.set(this.facade.playerFrame());
-        }
-
-        if (this.debugBoxesActive) {
-          this.facade.publishDebugFrame();
-        }
-
-        const world = this.worldRef()?.nativeElement;
-
-        if (world !== undefined) {
-          this.facade.updateCamera(
-            world,
-            this.parallaxNearRef()?.nativeElement,
-            this.parallaxMidRef()?.nativeElement,
-            this.foregroundKelpRef()?.nativeElement,
-          );
-          // Right after the camera writes this frame's transform, reposition the off-screen indicators off the
-          // matching snapshot (zero phase skew); the overlay throttles its own structural recompute internally.
-          this.offscreenIndicators()?.frame(this.facade.cameraSnapshot(), now);
-        }
-      };
-
-      rafId = requestAnimationFrame(loop);
-      this.destroyRef.onDestroy(() => cancelAnimationFrame(rafId));
+      this.loop.start({
+        items: () => this.items(),
+        players: () => this.players(),
+        myId: () => this.myId(),
+        evolving: () => this.evolvingPlayers(),
+        debug: this.debug,
+        debugBoxesActive: this.debugBoxesActive,
+        world: () => this.worldRef()?.nativeElement,
+        parallaxNear: () => this.parallaxNearRef()?.nativeElement,
+        parallaxMid: () => this.parallaxMidRef()?.nativeElement,
+        foregroundKelp: () => this.foregroundKelpRef()?.nativeElement,
+        offscreenIndicators: () => this.offscreenIndicators(),
+        perfMetrics: () => this.perfMetrics,
+      });
     });
   }
 
   protected onItemClick(item: RenderedItem, event: MouseEvent): void {
     // Bomb is shoved away from wherever it was tapped: tap a side and it drifts off in the opposite direction.
-    const shove = item.type === 'bomb' ? this.batNudge(event) : undefined;
+    const button = event.currentTarget as HTMLElement;
+    const shove =
+      item.type === 'bomb'
+        ? resolveNudge(button.getBoundingClientRect(), event.clientX, event.clientY)
+        : undefined;
 
     this.itemClick.emit({ itemId: item.id, nudgeX: shove?.x, nudgeY: shove?.y });
   }
@@ -269,38 +255,23 @@ export class SceneComponent {
       return;
     }
 
-    const x = clamp01((event.clientX - bounds.left) / bounds.width);
-    const y = clamp01((event.clientY - bounds.top) / bounds.height);
-    const target = event.target as HTMLElement;
+    const intent = resolveSceneTap(
+      bounds,
+      event.clientX,
+      event.clientY,
+      event.target as Element | null,
+    );
 
     // Bubbles are the miss cue — suppressed on an item hit (the converging success burst comes from `eaten`).
-    if (target.closest('.scene__item') === null) {
-      this.facade.spawnBurst(x, y);
+    if (intent.spawnBurst) {
+      this.facade.spawnBurst(intent.x, intent.y);
     }
 
-    if (target.closest('.scene__item, .scene__poke, .scene__poke-npc') === null) {
+    if (intent.steer) {
       // Optimistically steer my own sprite this frame, then send the authoritative request. The server confirms
       // via the next snapshot, which reconciles only a sub-pixel gap (same steer math both sides).
-      this.facade.predictSteer(this.myId(), x, y, performance.now());
-      this.steer.emit({ x, y });
+      this.facade.predictSteer(this.myId(), intent.x, intent.y, performance.now());
+      this.steer.emit({ x: intent.x, y: intent.y });
     }
-  }
-
-  // Shove direction (unit vector) pointing from the tapped point toward the bomb's centre — i.e. AWAY from the side
-  // that was hit, so tapping the right edge pushes it left, the top pushes it down, a corner pushes diagonally. The
-  // server scales this by a fixed `bomb.clickImpulse`, so only the direction matters here. A dead-centre tap falls
-  // back to a straight-up nudge.
-  private batNudge(event: MouseEvent): { x: number; y: number } {
-    const button = event.currentTarget as HTMLElement;
-    const bounds = button.getBoundingClientRect();
-    const deltaX = bounds.left + bounds.width / 2 - event.clientX;
-    const deltaY = bounds.top + bounds.height / 2 - event.clientY;
-    const magnitude = Math.hypot(deltaX, deltaY);
-
-    if (magnitude === 0) {
-      return { x: 0, y: -1 };
-    }
-
-    return { x: deltaX / magnitude, y: deltaY / magnitude };
   }
 }

@@ -1,9 +1,36 @@
 // View models the scene renders each frame, derived from the authoritative server state by the extrapolator
-// services. Plain data — kept framework-free so the extrapolators and their specs share one source of truth.
+// services. Plain data + the framework-free presentation helpers that shape it for the template (grouping by
+// owner, depth ordering) — one tested source of truth, no Angular/signals so the specs stay trivial.
 
 import type { Item, PlayerEffectKind, Stage } from '@game/frenzy/types';
 
 import type { EffectBadge } from '../../../data/models/effect-badge';
+
+// Bucket owner-scoped scene items (floats, sparks) by their `ownerId`, preserving source order within each bucket.
+// A key is present only when it has at least one item, so a present bucket is always non-empty (the template relies
+// on this: it renders a bucket without re-checking its length).
+export function groupByOwner<T extends { ownerId: string }>(items: readonly T[]): Map<string, T[]> {
+  const grouped = new Map<string, T[]>();
+
+  for (const item of items) {
+    const existing = grouped.get(item.ownerId);
+
+    if (existing === undefined) {
+      grouped.set(item.ownerId, [item]);
+    } else {
+      existing.push(item);
+    }
+  }
+
+  return grouped;
+}
+
+// Order scene items far→near for seabed perspective: ascending y, so an item lower on screen (nearer the camera,
+// higher y) sorts LATER and overlaps the ones behind it at the shared item z-index. Returns a new array — the
+// source frame is never mutated.
+export function sortByDepth<T extends { y: number }>(items: readonly T[]): T[] {
+  return [...items].sort((first, second) => first.y - second.y);
+}
 
 // One overhead buff/debuff badge shown over a sprite: the registry icon + tone plus the effect `kind`, which the
 // scene resolves to an aria-label (`frenzy.effects.<kind>`).

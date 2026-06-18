@@ -12,7 +12,7 @@
   bottom: 0.5rem;
   left: 0.5rem;
   z-index: 10;
-  display: none;
+  display: flex;
   flex-direction: column;
   gap: 2px;
   padding: 0.25rem 0.4rem;
@@ -24,10 +24,6 @@
   font-size: 0.7rem;
   line-height: 1.2;
   pointer-events: none;
-}
-
-.perf-readout--on {
-  display: flex;
 }
 
 // One metric line. Inherits the panel's blue while healthy; a tone modifier overrides the colour (and weight) once

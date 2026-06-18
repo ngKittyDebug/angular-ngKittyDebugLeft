@@ -1,17 +1,10 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  ElementRef,
-  inject,
-  input,
-  linkedSignal,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, inject, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { TuiIcon } from '@taiga-ui/core';
 
 import type { ItemType } from '@game/frenzy/types';
 
-import { PlayerPersistenceService } from '../../../data/services/player-persistence.service';
+import { COLLAPSE_KEY, persistedCollapse } from '../../persisted-collapse';
 import { ITEM_DOT_COLOR } from '../../constants/pokemon-registry';
 import { ItemSpritePipe } from '../../pipes/item-sprite.pipe';
 
@@ -74,7 +67,6 @@ const LEGEND_GROUPS: readonly LegendGroup[] = GROUP_ORDER.map((key) => ({
   },
 })
 export class ItemLegendComponent {
-  private readonly persistence = inject(PlayerPersistenceService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   public readonly compact = input<boolean>(false);
@@ -82,17 +74,14 @@ export class ItemLegendComponent {
   protected readonly groups = LEGEND_GROUPS;
 
   // Restore the saved open/closed state; with none saved, default to collapsed on mobile and expanded on
-  // desktop (mirrors the minimap). A manual toggle persists and thereafter wins over the responsive default.
-  protected readonly collapsed = linkedSignal<boolean>(
-    () => this.persistence.getLegendCollapsed() ?? this.compact(),
-  );
+  // desktop (mirrors the minimap). A manual toggle persists (write-through) and thereafter wins over the default.
+  protected readonly collapsed = persistedCollapse(COLLAPSE_KEY.legend, () => this.compact());
 
   protected toggle(event: Event): void {
     // Keep the button's click from bubbling to the host `collapseIfOpen` — otherwise opening from the pill would
     // immediately bubble up and close again.
     event.stopPropagation();
     this.collapsed.update((value) => !value);
-    this.persistence.saveLegendCollapsed(this.collapsed());
   }
 
   protected collapseIfOpen(): void {
@@ -101,7 +90,6 @@ export class ItemLegendComponent {
     }
 
     this.collapsed.set(true);
-    this.persistence.saveLegendCollapsed(true);
   }
 
   protected collapseOnOutsideClick(event: Event): void {
@@ -110,6 +98,5 @@ export class ItemLegendComponent {
     }
 
     this.collapsed.set(true);
-    this.persistence.saveLegendCollapsed(true);
   }
 }

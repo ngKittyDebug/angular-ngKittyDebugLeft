@@ -19,6 +19,14 @@ const FACING_PROPERTY = '--scene-facing';
 const FACING_LEFT = '1';
 const FACING_RIGHT = '-1';
 
+// Last frame's item write accounting (the soft-cull split), for the `?debug=perf` census. `written` is on-screen
+// (got a translate), `skipped` is culled off-screen, `total` is every item in the frame (some may lack a DOM host yet).
+export interface ItemWriteTally {
+  total: number;
+  written: number;
+  skipped: number;
+}
+
 /**
  * Imperative position/flag writer for the scene's drifting actors (falling items, players and each player's
  * owned-float column). The hot path: every animation frame the scene feeds the freshly extrapolated frame here and
@@ -38,6 +46,11 @@ export class SceneActorRegistryService {
   private readonly floats = new Map<string, HTMLElement>();
   private lastItemFrame: readonly RenderedItem[] = [];
   private lastPlayerFrame: readonly RenderedPlayer[] = [];
+  // Per-frame item write accounting, updated every `writeItems` (two int increments per item, no allocation — read
+  // only under the `?debug=perf` gate). See `writeTally`.
+  private itemFrameSize = 0;
+  private writtenItems = 0;
+  private skippedItems = 0;
 
   public registerItem(id: string, element: HTMLElement): void {
     this.items.set(id, element);
@@ -92,16 +105,32 @@ export class SceneActorRegistryService {
   ): void {
     this.lastItemFrame = frame;
 
+    let written = 0;
+    let skipped = 0;
+
     for (const item of frame) {
       const element = this.items.get(item.id);
 
-      if (
-        element !== undefined &&
-        (visible === null || withinNormBounds(item.x, item.y, visible))
-      ) {
+      if (element === undefined) {
+        continue;
+      }
+
+      if (visible === null || withinNormBounds(item.x, item.y, visible)) {
         this.writeTranslate(element, item.x, item.y);
+        written += 1;
+      } else {
+        skipped += 1;
       }
     }
+
+    this.itemFrameSize = frame.length;
+    this.writtenItems = written;
+    this.skippedItems = skipped;
+  }
+
+  // The last frame's item write accounting — for the `?debug=perf` census only.
+  public writeTally(): ItemWriteTally {
+    return { total: this.itemFrameSize, written: this.writtenItems, skipped: this.skippedItems };
   }
 
   // Per-frame write for players: position + the facing flip (a pure visual flag, kept off change detection), plus

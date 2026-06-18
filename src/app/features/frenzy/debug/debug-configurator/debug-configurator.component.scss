@@ -1,0 +1,43 @@
+// Host adds no box (`display: contents`), so the panel positions against the scene like a screen-space sibling of
+// `.scene__world`, never riding the camera transform.
+:host {
+  display: contents;
+}
+
+// ?debug=perf configurator panel. Sits top-right (the perf readout is bottom-left), scrolls if the metric list
+// outgrows the viewport. Near-opaque + monospace to match the sibling debug panels. Dev-only.
+.debug-configurator {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 11;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 80%;
+  overflow-y: auto;
+  padding: 0.3rem 0.45rem;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.82);
+  color: #6cf;
+  font-family: ui-monospace, monospace;
+  font-size: 0.7rem;
+  line-height: 1.3;
+}
+
+.debug-configurator__title {
+  margin: 0 0 2px;
+  font-weight: 700;
+}
+
+.debug-configurator__row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.debug-configurator__row input {
+  margin: 0;
+}

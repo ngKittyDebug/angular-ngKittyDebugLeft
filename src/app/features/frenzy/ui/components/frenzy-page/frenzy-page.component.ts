@@ -58,6 +58,8 @@ export class FrenzyPageComponent implements OnInit {
   protected readonly myId = this.facade.myId;
   protected readonly players = this.facade.players;
   protected readonly presenceCount = this.facade.presenceCount;
+  protected readonly savedName = this.facade.savedName;
+  protected readonly savedAppearance = this.facade.savedAppearance;
   protected readonly reactionFace = this.facade.reactionFace;
   protected readonly respawnReady = this.facade.respawnReady;
   protected readonly isReconnecting = this.facade.isReconnecting;

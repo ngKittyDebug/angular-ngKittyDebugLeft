@@ -1,0 +1,24 @@
+// Layout-transparent host: each per-player column renders as a direct child of the world (preserving the
+// floating-text z-index over the kelp), exactly as when this overlay lived inline in the scene template.
+:host {
+  display: contents;
+}
+
+// One zero-size box per live player, parked on the body point by the actor registry's compositor `translate`
+// (top-left lands on the point — no static centring transform, so the box origin IS the body point). It carries
+// the player's sprite vars so the quips anchor to the head; rendered as a direct world child (not nested in the
+// player) so the floats clear the kelp layers. Non-interactive.
+.scene__owned-floats {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+// A quip anchored above the visible sprite's head: lift its (translate-centred) box up from the body point by the
+// full sprite height, nudged by the art's vertical centring offset so winged/offset sprites still sit right.
+.scene__owned-float {
+  left: 50%;
+  bottom: calc(var(--scene-sprite-height, 96px) - var(--scene-sprite-offset-y, 0px));
+}

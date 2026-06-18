@@ -1,0 +1,73 @@
+import { signal } from '@angular/core';
+import { beforeEach, describe, expect, it } from 'vitest';
+
+import { persistedCollapse } from './persisted-collapse';
+
+const KEY = 'frenzy-test-collapsed';
+
+describe('persistedCollapse', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('seeds from the fallback when nothing is stored', () => {
+    const collapsed = persistedCollapse(KEY, () => true);
+
+    expect(collapsed()).toBe(true);
+  });
+
+  it('seeds from the stored value, ignoring the fallback', () => {
+    localStorage.setItem(KEY, 'false');
+
+    const collapsed = persistedCollapse(KEY, () => true);
+
+    expect(collapsed()).toBe(false);
+  });
+
+  it('falls back when the stored value is not a boolean string', () => {
+    localStorage.setItem(KEY, 'garbage');
+
+    const collapsed = persistedCollapse(KEY, () => true);
+
+    expect(collapsed()).toBe(true);
+  });
+
+  it('writes through to storage on an explicit set', () => {
+    const collapsed = persistedCollapse(KEY, () => false);
+
+    collapsed.set(true);
+
+    expect(collapsed()).toBe(true);
+    expect(localStorage.getItem(KEY)).toBe('true');
+  });
+
+  it('writes through to storage on an explicit update', () => {
+    const collapsed = persistedCollapse(KEY, () => false);
+
+    collapsed.update((value) => !value);
+
+    expect(collapsed()).toBe(true);
+    expect(localStorage.getItem(KEY)).toBe('true');
+  });
+
+  it('keeps following the reactive fallback while nothing has been stored', () => {
+    const compact = signal(false);
+    const collapsed = persistedCollapse(KEY, () => compact());
+
+    expect(collapsed()).toBe(false);
+
+    compact.set(true);
+
+    expect(collapsed()).toBe(true);
+  });
+
+  it('lets an explicit choice win over the fallback thereafter', () => {
+    const compact = signal(true);
+    const collapsed = persistedCollapse(KEY, () => compact());
+
+    collapsed.set(false);
+    compact.set(true);
+
+    expect(collapsed()).toBe(false);
+  });
+});

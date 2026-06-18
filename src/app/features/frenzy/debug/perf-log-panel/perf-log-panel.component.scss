@@ -1,0 +1,79 @@
+// Host adds no box (`display: contents`), so the panel positions as a screen-space sibling of `.scene__world`,
+// never riding the camera transform.
+:host {
+  display: contents;
+}
+
+// ?debug=perf perf-log panel. Bottom-right (readout is bottom-left, metric configurator top-right); scrolls if the
+// sample table grows. Near-opaque + monospace to match the sibling debug panels. Dev-only.
+.perf-log {
+  position: absolute;
+  right: 0.5rem;
+  bottom: 0.5rem;
+  z-index: 11;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 60vw;
+  max-height: 45%;
+  overflow: auto;
+  padding: 0.35rem 0.5rem;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.85);
+  color: #6cf;
+  font-family: ui-monospace, monospace;
+  font-size: 0.7rem;
+  line-height: 1.3;
+}
+
+.perf-log__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.perf-log__field {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.perf-log__field input,
+.perf-log__field select {
+  font: inherit;
+}
+
+.perf-log__field input[type='text'] {
+  width: 5rem;
+}
+
+.perf-log__field input[type='number'] {
+  width: 3rem;
+}
+
+.perf-log__buttons {
+  display: flex;
+  gap: 4px;
+}
+
+.perf-log__textarea {
+  width: 100%;
+  font-family: ui-monospace, monospace;
+  font-size: 0.65rem;
+}
+
+.perf-log__table {
+  border-collapse: collapse;
+}
+
+.perf-log__table th,
+.perf-log__table td {
+  padding: 0 4px;
+  text-align: right;
+}
+
+.perf-log__table th:first-child,
+.perf-log__table td:first-child {
+  text-align: left;
+}

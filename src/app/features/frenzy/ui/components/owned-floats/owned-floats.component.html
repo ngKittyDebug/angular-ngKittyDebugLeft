@@ -1,0 +1,25 @@
+<ng-container *transloco="let t; prefix: 'frenzy.scene'">
+  @for (player of players(); track player.id) {
+    @if (floatsByOwner().get(player.id); as floats) {
+      <div
+        class="scene__owned-floats"
+        leftPawActorHost="float"
+        [actorId]="player.id"
+        [style.--scene-sprite-height]="player.spriteHeight"
+        [style.--scene-sprite-offset-y]="-player.spriteOffsetY + 'px'"
+      >
+        @for (float of floats; track float.id) {
+          <left-paw-floating-text
+            class="scene__owned-float"
+            [icon]="float.icon"
+            [who]="float.who"
+            [text]="t(float.textKey)"
+            [delta]="float.delta"
+            [tone]="float.tone"
+            [durationMs]="float.durationMs"
+          />
+        }
+      </div>
+    }
+  }
+</ng-container>
