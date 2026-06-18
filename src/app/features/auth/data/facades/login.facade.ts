@@ -18,7 +18,7 @@ export class LoginFacade {
 
   public readonly loginForm = this.loginFormService.loginForm;
 
-  public onLoginSubmit = (loginFormGroup: LoginFormGroup, returnUrl: InputSignal<string>) => {
+  public onLoginSubmit(loginFormGroup: LoginFormGroup, returnUrl: InputSignal<string>) {
     this.isLoading.set(true);
 
     this.authApiService
@@ -36,5 +36,5 @@ export class LoginFacade {
         //TODO далее ошибки будем обрабатывать в отдельном сервисе, на консоль лог не обращайте внимание
         error: (error) => console.log(error),
       });
-  };
+  }
 }
