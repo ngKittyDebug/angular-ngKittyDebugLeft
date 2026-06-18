@@ -1,11 +1,11 @@
-import type { LoginApiModel } from '../models/login/login-api-model';
+import type { CredentialsApiData } from '../models/credentials-api-data';
 import type { LoginFormGroup } from '../models/login/login-form.model';
 import { emailValidator } from './email-validator';
 import { userNameValidator } from './username-validator';
 
-export const convertLoginFormModelToLoginApiModel = (
+export const convertLoginFormModelToCredentialsApiData = (
   loginFormGroup: LoginFormGroup,
-): LoginApiModel => {
+): CredentialsApiData => {
   return {
     email: emailValidator(loginFormGroup.nameOrEmail.value) ? loginFormGroup.nameOrEmail.value : '',
     username: userNameValidator(loginFormGroup.nameOrEmail.value)

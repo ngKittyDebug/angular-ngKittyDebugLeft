@@ -1,7 +1,9 @@
-import type { SignUpApiModel } from '../models/signup/signup-api-model';
+import type { CredentialsApiData } from '../models/credentials-api-data';
 import type { SignupModel } from '../models/signup/signup-form.model';
 
-export const convertSignUpModelToSignUpApiModel = (signupModel: SignupModel): SignUpApiModel => {
+export const convertSignUpModelToCredentialsApiData = (
+  signupModel: SignupModel,
+): CredentialsApiData => {
   return {
     email: signupModel.email,
     username: signupModel.userName,
