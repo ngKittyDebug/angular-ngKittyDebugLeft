@@ -29,6 +29,14 @@ export const KELP_BLADES: readonly KelpBlade[] = [
 // so a given silhouette always wears the same colour in both the scene and the minimap.
 export const KELP_COLORS = ['var(--aq-plant-a)', 'var(--aq-plant-b)', 'var(--aq-plant-c)'];
 
+// Bake a depth-dimming factor (0..1) straight into a blade's tint instead of a per-element `filter: brightness()`.
+// Mixing a colour with black by `factor%` is the exact equivalent of `brightness(factor)` on a flat fill, but it
+// resolves to ONE static colour — so the swaying blades no longer each carry an isolated filter render-surface that
+// gets re-rasterised every frame (a real fill-rate cost on weak GPUs, multiplied by the hundreds of backdrop blades).
+export function kelpTint(shape: number, factor: number): string {
+  return `color-mix(in srgb, ${KELP_COLORS[shape]} ${Math.round(factor * 100)}%, #000)`;
+}
+
 // Slim-blade width (px) from its height: a fixed base plus a small fraction of the height, so taller fronds are
 // a touch broader without becoming ribbons. Shared by the in-world midground and backdrop layers (the foreground
 // uses a wider ~0.34 ratio of its own). Retune the blade silhouette proportions here once for both.

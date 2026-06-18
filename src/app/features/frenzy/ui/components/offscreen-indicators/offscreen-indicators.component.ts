@@ -12,7 +12,7 @@ import {
 import { FRENZY } from '@game/frenzy/config';
 import type { Player } from '@game/frenzy/types';
 
-import type { CameraSnapshot } from '../scene/scene-camera.service';
+import type { CameraSnapshot } from '../scene/camera/scene-camera.service';
 import type { RenderedPlayer } from '../scene/scene-view-models';
 import {
   clusterEdgeArrows,

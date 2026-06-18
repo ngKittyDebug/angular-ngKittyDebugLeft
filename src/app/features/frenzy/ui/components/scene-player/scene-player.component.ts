@@ -10,7 +10,7 @@ import { spritePathFor } from '../../constants/pokemon-registry';
 import { BubbleSkinDirective } from '../../directives/bubble-skin.directive';
 import { HpToneColorPipe } from '../../pipes/hp-tone-color.pipe';
 import type { RenderedPlayer } from '../scene/scene-view-models';
-import { SpriteFreezeService } from '../scene/sprite-freeze.service';
+import { SpriteFreezeService } from '../scene/rendering/sprite-freeze.service';
 import { SparkBurstComponent } from '../spark-burst/spark-burst.component';
 
 /**

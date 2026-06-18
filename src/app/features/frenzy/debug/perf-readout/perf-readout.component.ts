@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 
 import { DebugSettingsStore } from '../debug-settings.store';
 import { perfReadoutRows } from '../perf-metrics';
@@ -27,4 +27,11 @@ export class PerfReadoutComponent {
 
   // One line per enabled metric, in canonical order — recomputes when the snapshot or any toggle changes.
   protected readonly rows = computed(() => perfReadoutRows(this.snapshot(), this.store.metrics()));
+  // Collapsed by default, like the sibling perf-log: a compact header bar that expands to the metric list on click,
+  // so the panel stops covering the scene corner until the developer wants the readings. Local UI state.
+  protected readonly collapsed = signal(true);
+
+  protected toggleCollapsed(): void {
+    this.collapsed.update((value) => !value);
+  }
 }

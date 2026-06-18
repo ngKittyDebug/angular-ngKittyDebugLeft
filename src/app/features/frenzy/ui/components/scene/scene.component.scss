@@ -255,6 +255,22 @@
   display: none;
 }
 
+// ?debug=perf bottom-left panel stack: the readout and perf-log both anchor to the bottom edge, so they share one
+// flex column here instead of overlapping (the wide one-line perf-log used to ride over the readout on a narrow
+// tablet). Readout on top, perf-log below — both left-aligned. Click-through so the empty column gaps don't eat scene
+// clicks; each panel re-enables its own pointer events (the perf-log already caps its own height + scrolls).
+.scene__perf-panels {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 0.5rem;
+  z-index: 11;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+
 // Border width stays constant (set on the selector) — only transform/opacity animate, so the ring rides the
 // compositor with no per-frame layout from an animated `border-width`. The growth+fade carries the shockwave read.
 @keyframes scene-blast-ring {

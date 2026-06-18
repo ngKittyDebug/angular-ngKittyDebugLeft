@@ -5,9 +5,9 @@ import { steerVelocity } from '@game/frenzy/steer-velocity';
 import { isNPC } from '@game/frenzy/types';
 import type { Player, PlayerEffectKind } from '@game/frenzy/types';
 
-import { isSad } from '../../../data/logic/is-sad';
-import { EFFECT_BADGE } from '../../../data/models/effect-badge';
-import { spriteRenderFor } from '../../constants/pokemon-registry';
+import { isSad } from '../../../../data/logic/is-sad';
+import { EFFECT_BADGE } from '../../../../data/models/effect-badge';
+import { spriteRenderFor } from '../../../constants/pokemon-registry';
 import {
   clamp,
   decayedOffset,
@@ -16,7 +16,7 @@ import {
   reflect,
   reflectDirection,
 } from './drift-math';
-import type { RenderedAura, RenderedPlayer } from './scene-view-models';
+import type { RenderedAura, RenderedPlayer } from '../scene-view-models';
 
 // Aura descriptor per active effect kind: the CSS class plus the render mode the template branches on (so the
 // template carries no magic class strings and needs no shield-class plumbing). `null` = no aura — wellFed reads

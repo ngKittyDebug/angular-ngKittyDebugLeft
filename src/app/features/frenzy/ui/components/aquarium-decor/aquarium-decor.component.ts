@@ -8,8 +8,8 @@ import {
   signal,
 } from '@angular/core';
 
-import { KELP_BLADES, KELP_COLORS, kelpBladeWidth } from '../../constants/kelp-blades';
-import type { KelpBlade } from '../../constants/kelp-blades';
+import { KELP_BLADES, kelpBladeWidth, kelpTint } from '../../utils/kelp-blades';
+import type { KelpBlade } from '../../utils/kelp-blades';
 
 /**
  * Purely decorative aquarium backdrop for the Frenzy scene.
@@ -33,7 +33,6 @@ interface Plant {
   width: number;
   root: number;
   rotation: number;
-  brightness: number;
   zIndex: number;
   color: string;
   art: KelpBlade;
@@ -63,6 +62,9 @@ function buildPlants(count: number): Plant[] {
     // Near end (depth→1) is pulled a bit closer than before — taller (×1.3 vs the old ×1.15) — so the backdrop's
     // front reaches up toward the (now slightly pushed-back) foreground layer, closing the depth gap from both ends.
     const height = Math.round(baseHeight * (0.7 + depth * 0.6));
+    // Depth-dimming (0.55 far .. 0.85 near) baked into the tint via `kelpTint` instead of a per-blade
+    // `filter: brightness()` — see kelpTint's note on the per-element filter-surface cost on weak GPUs.
+    const brightness = 0.55 + depth * 0.5;
 
     return {
       // Cell-centered across the full width (so the first/last blades hug the edges) plus a small
@@ -74,9 +76,8 @@ function buildPlants(count: number): Plant[] {
       // far (depth→0) roots HIGH (~17%, up at the dune crest) → a receding ground plane, not one flat row.
       root: 6 + (1 - depth) * 11,
       rotation: -3 - (i % 4),
-      brightness: 0.55 + depth * 0.5,
       zIndex: Math.round(depth * 6),
-      color: KELP_COLORS[shape],
+      color: kelpTint(shape, brightness),
       art: KELP_BLADES[shape],
       duration: 4.5 + (i % 4),
       delay: -(i * 0.6),

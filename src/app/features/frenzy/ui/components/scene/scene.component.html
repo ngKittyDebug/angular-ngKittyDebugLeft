@@ -155,8 +155,14 @@
     <!-- ?debug=perf panels: the metric readout (consumes the PerfMetricsService snapshot) + the runtime metric
          configurator. Both inject the DebugSettingsStore / PerfMetricsService, so this @if keeps the whole perf
          subsystem uninstantiated in normal play. Screen-space siblings of the world (NOT camera-transformed). -->
-    <left-paw-perf-readout [snapshot]="perfMetricsSnapshot()" />
     <left-paw-debug-configurator />
-    <left-paw-perf-log-panel [snapshot]="perfMetricsSnapshot()" />
+    <!-- Readout (small, always-on glance) + perf-log (wide one-line capture tool) share the bottom edge, so they
+         stack in one bottom-left flex column instead of fighting for it — on a narrow tablet the wide perf-log used
+         to reach across and cover the readout. The column is click-through (children re-enable), so empty gaps don't
+         block scene interaction. -->
+    <div class="scene__perf-panels">
+      <left-paw-perf-readout [snapshot]="perfMetricsSnapshot()" />
+      <left-paw-perf-log-panel [snapshot]="perfMetricsSnapshot()" />
+    </div>
   }
 </section>

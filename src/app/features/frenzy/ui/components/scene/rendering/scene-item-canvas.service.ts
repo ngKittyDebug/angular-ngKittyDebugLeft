@@ -3,13 +3,13 @@ import { Injectable } from '@angular/core';
 import { FRENZY } from '@game/frenzy/config';
 import type { ItemType } from '@game/frenzy/types';
 
-import { itemSpritePathFor } from '../../constants/pokemon-registry';
-import { buriedClipPoints } from '../scene-item/buried-clip';
-import { withinNormBounds } from './camera-math';
-import type { VisibleNormBounds } from './camera-math';
+import { itemSpritePathFor } from '../../../constants/pokemon-registry';
+import { buriedClipPoints } from '../../scene-item/buried-clip';
+import { withinNormBounds } from '../camera/camera-math';
+import type { VisibleNormBounds } from '../camera/camera-math';
 import { BREATHE_MS, breatheScaleAt, swayDegAt, tumbleDegAt } from './item-canvas-animation';
 import type { ItemWriteTally } from './scene-actor-registry.service';
-import type { RenderedItem } from './scene-view-models';
+import type { RenderedItem } from '../scene-view-models';
 
 // The hybrid-canvas backend (DebugSettingsStore.renderMode === 'canvas'): draws the falling items on ONE canvas
 // instead of one DOM node each, so their per-frame drift updates a single composited texture instead of repainting

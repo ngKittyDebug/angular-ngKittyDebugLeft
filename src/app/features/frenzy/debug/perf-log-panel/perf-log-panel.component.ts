@@ -26,6 +26,9 @@ export class PerfLogPanelComponent {
   protected readonly settings = inject(DebugSettingsStore);
   // Exported text for the `textarea` destination (manual copy on a tablet); empty when another destination is used.
   protected readonly exportedText = signal('');
+  // Collapsed by default: the panel sits over the scene and is only needed while A/B-ing, so it starts as a compact
+  // header bar (like the HUD summary widgets) and expands on click. Local UI state — not worth persisting.
+  protected readonly collapsed = signal(true);
 
   public constructor() {
     // Auto-capture: while the mode is `auto`, sample on the configured interval. The effect re-runs (clearing the old
@@ -47,6 +50,10 @@ export class PerfLogPanelComponent {
     if (snapshot !== null) {
       this.sampleStore.capture(snapshot, Date.now());
     }
+  }
+
+  protected toggleCollapsed(): void {
+    this.collapsed.update((value) => !value);
   }
 
   protected clear(): void {

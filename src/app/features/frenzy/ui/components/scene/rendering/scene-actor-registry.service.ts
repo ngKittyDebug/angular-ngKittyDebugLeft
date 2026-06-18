@@ -2,9 +2,9 @@ import { Injectable } from '@angular/core';
 
 import { FRENZY } from '@game/frenzy/config';
 
-import { withinNormBounds } from './camera-math';
-import type { VisibleNormBounds } from './camera-math';
-import type { RenderedItem, RenderedPlayer } from './scene-view-models';
+import { withinNormBounds } from '../camera/camera-math';
+import type { VisibleNormBounds } from '../camera/camera-math';
+import type { RenderedItem, RenderedPlayer } from '../scene-view-models';
 
 // World px size — the actors' offsetParent (`.scene__world`) is set to exactly this many px, so a normalized
 // (0..1) position maps to px by a constant multiply, with no per-frame layout read (the directive this replaces

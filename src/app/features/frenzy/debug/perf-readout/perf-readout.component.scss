@@ -4,14 +4,10 @@
   display: contents;
 }
 
-// `?debug=perf` readout: a small screen-space corner panel (FPS / own-sprite prediction-gap / authoritative
-// staleness) for diagnosing framerate and the steering rubber-band on low-end devices. The top-left corner is taken
-// by the HUD status card + minimap, so the panel lives bottom-left out of their way. Hidden until enabled.
+// `?debug=perf` readout: a small screen-space panel (FPS / own-sprite prediction-gap / authoritative staleness) for
+// diagnosing framerate and the steering rubber-band on low-end devices. Positioned by the parent `.scene__perf-panels`
+// flex stack (bottom-left, above the perf-log) — it no longer anchors a corner itself. Hidden until enabled.
 .perf-readout {
-  position: absolute;
-  bottom: 0.5rem;
-  left: 0.5rem;
-  z-index: 10;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -24,6 +20,30 @@
   font-size: 0.7rem;
   line-height: 1.2;
   pointer-events: none;
+}
+
+// The whole header bar is the collapse toggle — flush, borderless, inheriting the panel's mono/cyan look. The panel
+// is `pointer-events: none` (a visual-only aid), so the header re-enables clicks just for itself.
+.perf-readout__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+// Metric list wrapper (shown only when expanded); keeps the column layout the rows had as direct panel children.
+.perf-readout__metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 // One metric line. Inherits the panel's blue while healthy; a tone modifier overrides the colour (and weight) once

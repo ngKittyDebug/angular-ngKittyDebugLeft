@@ -31,6 +31,14 @@ function metricTexts(fixture: ComponentFixture<PerfReadoutComponent>): string[] 
   );
 }
 
+// The panel starts collapsed (header only); the metric list lives behind the header toggle.
+function expand(fixture: ComponentFixture<PerfReadoutComponent>): void {
+  (fixture.nativeElement as HTMLElement)
+    .querySelector<HTMLButtonElement>('.perf-readout__header')
+    ?.click();
+  fixture.detectChanges();
+}
+
 describe('PerfReadoutComponent', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -46,14 +54,29 @@ describe('PerfReadoutComponent', () => {
     return fixture;
   }
 
+  it('starts collapsed with no metric lines until the header is clicked', () => {
+    const fixture = render();
+
+    expect(metricTexts(fixture)).toHaveLength(0);
+
+    expand(fixture);
+
+    expect(metricTexts(fixture)).toHaveLength(PERF_METRIC_KEYS.length);
+  });
+
   it('renders one line per enabled metric (all on by default)', () => {
-    expect(metricTexts(render())).toHaveLength(PERF_METRIC_KEYS.length);
+    const fixture = render();
+
+    expand(fixture);
+
+    expect(metricTexts(fixture)).toHaveLength(PERF_METRIC_KEYS.length);
   });
 
   it('drops a metric line when its toggle is turned off', () => {
     const store = TestBed.inject(DebugSettingsStore);
     const fixture = render();
 
+    expand(fixture);
     expect(metricTexts(fixture).some((text) => text.startsWith('gap'))).toBe(true);
 
     store.setMetric('gap', false);

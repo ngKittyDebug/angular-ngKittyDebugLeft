@@ -1,68 +1,86 @@
 <!-- ?debug=perf configurator: toggle each perf metric on/off at runtime (choices persisted via DebugSettingsStore).
      Dev-only, gated behind the master ?debug=perf flag. -->
-<div class="debug-configurator">
-  <p class="debug-configurator__title">perf metrics</p>
-  @for (key of keys; track key) {
-    <label class="debug-configurator__row">
-      <input type="checkbox" [checked]="store.metrics()[key]" (change)="store.toggleMetric(key)" />
-      {{ labels[key] }}
-    </label>
-  }
+<div class="debug-configurator" [class.debug-configurator--collapsed]="collapsed()">
+  <!-- Header doubles as the collapse toggle (collapsed by default): when closed, only this bar shows, so the
+       configurator stops covering the scene. -->
+  <button
+    type="button"
+    class="debug-configurator__header"
+    [attr.aria-expanded]="!collapsed()"
+    (click)="toggleCollapsed()"
+  >
+    <span class="debug-configurator__chevron">{{ collapsed() ? '▸' : '▾' }}</span>
+    <span>config</span>
+  </button>
 
-  <!-- Item render backend toggle (DOM vs hybrid canvas) + the canvas DPR cap, for the on-device A/B. -->
-  <p class="debug-configurator__title">render</p>
-  <div class="debug-configurator__chips">
-    @for (mode of renderModes; track mode) {
-      <button
-        type="button"
-        class="debug-configurator__chip"
-        [class.debug-configurator__chip--active]="store.renderMode() === mode"
-        (click)="store.setRenderMode(mode)"
-      >
-        {{ mode }}
-      </button>
+  @if (!collapsed()) {
+    <p class="debug-configurator__title">perf metrics</p>
+    @for (key of keys; track key) {
+      <label class="debug-configurator__row">
+        <input
+          type="checkbox"
+          [checked]="store.metrics()[key]"
+          (change)="store.toggleMetric(key)"
+        />
+        {{ labels[key] }}
+      </label>
     }
-  </div>
 
-  @if (store.renderMode() === 'canvas') {
-    <p class="debug-configurator__title">canvas dpr</p>
+    <!-- Item render backend toggle (DOM vs hybrid canvas) + the canvas DPR cap, for the on-device A/B. -->
+    <p class="debug-configurator__title">render</p>
     <div class="debug-configurator__chips">
-      @for (cap of dprCaps; track cap) {
+      @for (mode of renderModes; track mode) {
         <button
           type="button"
           class="debug-configurator__chip"
-          [class.debug-configurator__chip--active]="store.canvasDprCap() === cap"
-          (click)="store.setCanvasDprCap(cap)"
+          [class.debug-configurator__chip--active]="store.renderMode() === mode"
+          (click)="store.setRenderMode(mode)"
         >
-          {{ dprLabel(cap) }}
+          {{ mode }}
         </button>
       }
     </div>
-  }
 
-  <!-- Freeze player sprites: render a static first frame instead of the animated GIF (kills per-frame sprite decode
-       — the FPS lever for weak tablets). On-device A/B; persisted via DebugSettingsStore. -->
-  <p class="debug-configurator__title">sprites</p>
-  <label class="debug-configurator__row">
-    <input
-      type="checkbox"
-      [checked]="store.freezeSprites()"
-      (change)="store.setFreezeSprites(!store.freezeSprites())"
-    />
-    freeze (static)
-  </label>
+    @if (store.renderMode() === 'canvas') {
+      <p class="debug-configurator__title">canvas dpr</p>
+      <div class="debug-configurator__chips">
+        @for (cap of dprCaps; track cap) {
+          <button
+            type="button"
+            class="debug-configurator__chip"
+            [class.debug-configurator__chip--active]="store.canvasDprCap() === cap"
+            (click)="store.setCanvasDprCap(cap)"
+          >
+            {{ dprLabel(cap) }}
+          </button>
+        }
+      </div>
+    }
 
-  <!-- Scene render layers: uncheck one to HIDE that layer (in both DOM and canvas mode) and watch the FPS — bisects
-       which layer costs the most fill-rate on a weak device. Persisted via DebugSettingsStore. -->
-  <p class="debug-configurator__title">scene layers</p>
-  @for (layer of layerKeys; track layer) {
+    <!-- Freeze player sprites: render a static first frame instead of the animated GIF (kills per-frame sprite decode
+         — the FPS lever for weak tablets). On-device A/B; persisted via DebugSettingsStore. -->
+    <p class="debug-configurator__title">sprites</p>
     <label class="debug-configurator__row">
       <input
         type="checkbox"
-        [checked]="store.sceneLayers()[layer]"
-        (change)="store.toggleSceneLayer(layer)"
+        [checked]="store.freezeSprites()"
+        (change)="store.setFreezeSprites(!store.freezeSprites())"
       />
-      {{ layer }}
+      freeze (static)
     </label>
+
+    <!-- Scene render layers: uncheck one to HIDE that layer (in both DOM and canvas mode) and watch the FPS — bisects
+         which layer costs the most fill-rate on a weak device. Persisted via DebugSettingsStore. -->
+    <p class="debug-configurator__title">scene layers</p>
+    @for (layer of layerKeys; track layer) {
+      <label class="debug-configurator__row">
+        <input
+          type="checkbox"
+          [checked]="store.sceneLayers()[layer]"
+          (change)="store.toggleSceneLayer(layer)"
+        />
+        {{ layer }}
+      </label>
+    }
   }
 </div>

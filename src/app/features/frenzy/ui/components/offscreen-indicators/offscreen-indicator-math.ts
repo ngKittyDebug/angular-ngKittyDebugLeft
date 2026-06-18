@@ -3,7 +3,7 @@
 // the bearing to rotate the glyph, and the 1D edge-clustering. Free of Angular and the DOM so it unit-tests
 // directly (a sibling of `camera-math.ts`); the component owns the per-frame DOM writes.
 
-import type { CameraSnapshot } from '../scene/scene-camera.service';
+import type { CameraSnapshot } from '../scene/camera/scene-camera.service';
 
 export type Side = 'top' | 'bottom' | 'left' | 'right';
 

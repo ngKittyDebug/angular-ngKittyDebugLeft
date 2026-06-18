@@ -21,7 +21,7 @@ import {
   wrapParallaxPhase,
 } from './camera-math';
 import type { VisibleNormBounds } from './camera-math';
-import { PlayerExtrapolatorService } from './player-extrapolator.service';
+import { PlayerExtrapolatorService } from '../prediction/player-extrapolator.service';
 
 /**
  * A frozen, synchronous read of the camera's current frame state, in `.scene` screen px. Consumed by overlays

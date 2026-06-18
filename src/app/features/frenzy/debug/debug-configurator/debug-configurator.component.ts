@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 
 import { METRIC_LABELS } from '../perf-metrics';
 import {
@@ -29,6 +29,13 @@ export class DebugConfiguratorComponent {
   protected readonly renderModes = RENDER_MODES;
   protected readonly dprCaps = CANVAS_DPR_CAPS;
   protected readonly layerKeys = SCENE_LAYER_KEYS;
+  // Collapsed by default, like the sibling perf panels: a compact header bar that expands to the controls on click,
+  // so the configurator stops covering the scene until the developer opens it. Local UI state.
+  protected readonly collapsed = signal(true);
+
+  protected toggleCollapsed(): void {
+    this.collapsed.update((value) => !value);
+  }
 
   // DPR-cap button label: 0 means the native device ratio, otherwise the cap multiplier.
   protected dprLabel(cap: CanvasDprCap): string {

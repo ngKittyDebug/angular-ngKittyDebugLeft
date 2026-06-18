@@ -5,7 +5,7 @@ import type { Item } from '@game/frenzy/types';
 
 import { clamp, decayedOffset, OFFSET_DECAY_TAU_MS, reflect } from './drift-math';
 import { spinFor } from './item-spin';
-import type { RenderedItem } from './scene-view-models';
+import type { RenderedItem } from '../scene-view-models';
 
 // Items extrapolate on two independent timelines so a launched (easter-egg) item can fly sideways while
 // falling, yet a bomb nudge (horizontal only) never disturbs the vertical fall. Vertical is set once at spawn

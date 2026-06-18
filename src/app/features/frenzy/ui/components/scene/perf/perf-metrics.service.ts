@@ -9,12 +9,12 @@ import {
   PERF_WINDOW_SIZE,
   predictionGapPx,
   pushCapped,
-} from '../../../debug/perf-metrics';
-import type { PerfMetricsSnapshot } from '../../../debug/perf-metrics';
-import { DebugSettingsStore } from '../../../debug/debug-settings.store';
-import { SceneActorRegistryService } from './scene-actor-registry.service';
-import { SceneItemCanvasService } from './scene-item-canvas.service';
-import { SceneFacade } from './scene.facade';
+} from '../../../../debug/perf-metrics';
+import type { PerfMetricsSnapshot } from '../../../../debug/perf-metrics';
+import { DebugSettingsStore } from '../../../../debug/debug-settings.store';
+import { SceneActorRegistryService } from '../rendering/scene-actor-registry.service';
+import { SceneItemCanvasService } from '../rendering/scene-item-canvas.service';
+import { SceneFacade } from '../scene.facade';
 
 const WORLD_WIDTH = FRENZY.world.width;
 const WORLD_HEIGHT = FRENZY.world.height;

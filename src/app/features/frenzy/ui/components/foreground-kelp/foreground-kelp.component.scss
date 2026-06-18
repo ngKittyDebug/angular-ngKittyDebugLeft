@@ -22,8 +22,8 @@
     bottom: 0;
     transform-origin: 50% 100%;
     // Slightly deeper than the backdrop so the near layer reads as in-front, but not so dark it becomes a black
-    // spike — keep the kelp colour legible.
-    filter: brightness(0.82);
+    // spike — keep the kelp colour legible. The dimming is baked into the blade tint (see `kelpTint`), NOT a
+    // `filter: brightness()`, so the swaying wrapper carries no per-element filter render-surface.
     animation: fg-kelp-sway 6s ease-in-out infinite alternate;
   }
 

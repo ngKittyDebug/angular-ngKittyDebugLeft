@@ -2,8 +2,8 @@ import { DestroyRef, inject, Injectable, signal } from '@angular/core';
 
 import { FRENZY } from '@game/frenzy/config';
 
-import { sandPuffWeightFor } from '../../constants/pokemon-registry';
-import type { RenderedItem, SandPuff } from './scene-view-models';
+import { sandPuffWeightFor } from '../../../constants/pokemon-registry';
+import type { RenderedItem, SandPuff } from '../scene-view-models';
 
 // How long a sand puff lives before removal (ms). Matches the CSS settle/fade animation (longest grain
 // animation + its max launch delay).

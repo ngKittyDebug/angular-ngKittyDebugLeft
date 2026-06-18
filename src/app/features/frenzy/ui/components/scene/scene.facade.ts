@@ -2,15 +2,15 @@ import { inject, Injectable } from '@angular/core';
 
 import type { Item, Player } from '@game/frenzy/types';
 
-import { ItemExtrapolatorService } from './item-extrapolator.service';
-import { PlayerExtrapolatorService } from './player-extrapolator.service';
-import { SceneActorRegistryService } from './scene-actor-registry.service';
-import { SceneBurstsService } from './scene-bursts.service';
-import { SceneCameraService } from './scene-camera.service';
-import type { CameraSnapshot } from './scene-camera.service';
-import { SceneItemCanvasService } from './scene-item-canvas.service';
+import { ItemExtrapolatorService } from './prediction/item-extrapolator.service';
+import { PlayerExtrapolatorService } from './prediction/player-extrapolator.service';
+import { SceneActorRegistryService } from './rendering/scene-actor-registry.service';
+import { SceneBurstsService } from './effects/scene-bursts.service';
+import { SceneCameraService } from './camera/scene-camera.service';
+import type { CameraSnapshot } from './camera/scene-camera.service';
+import { SceneItemCanvasService } from './rendering/scene-item-canvas.service';
 import type { RenderedItem, RenderedPlayer } from './scene-view-models';
-import { SceneSandPuffsService } from './scene-sand-puffs.service';
+import { SceneSandPuffsService } from './effects/scene-sand-puffs.service';
 
 /**
  * Single entry point for the scene's render-loop logic, grouping the extrapolation, camera and burst services so

@@ -1,6 +1,6 @@
 import { DestroyRef, inject, Injectable, signal } from '@angular/core';
 
-import type { BubbleBurst } from './scene-view-models';
+import type { BubbleBurst } from '../scene-view-models';
 
 // How long a click bubble-burst lives before it is removed (ms). Matches the CSS animation.
 const BURST_LIFETIME_MS = 1000;

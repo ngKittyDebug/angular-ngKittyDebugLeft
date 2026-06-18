@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 
-import { KELP_BLADES, KELP_COLORS } from '../../constants/kelp-blades';
-import type { KelpBlade } from '../../constants/kelp-blades';
+import { KELP_BLADES, kelpTint } from '../../utils/kelp-blades';
+import type { KelpBlade } from '../../utils/kelp-blades';
 
 /**
  * Screen-space FOREGROUND kelp: a sparse row of large blades rendered in FRONT of the actors, so the Pokémon
@@ -44,7 +44,9 @@ function buildBlades(): ForegroundBlade[] {
       height,
       width: Math.round(height * 0.34),
       rotation: -4 - (i % 5),
-      color: KELP_COLORS[shape],
+      // Deeper than the backdrop (×0.82) baked into the tint instead of a `filter: brightness()` on the swaying
+      // wrapper — see kelpTint's note on the per-element filter-surface cost on weak GPUs.
+      color: kelpTint(shape, 0.82),
       art: KELP_BLADES[shape],
       duration: 5 + (i % 4),
       delay: -(i * 0.8),

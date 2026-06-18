@@ -38,6 +38,16 @@ function rowCount(fixture: ComponentFixture<PerfLogPanelComponent>): number {
     .length;
 }
 
+function controlsVisible(fixture: ComponentFixture<PerfLogPanelComponent>): boolean {
+  return (fixture.nativeElement as HTMLElement).querySelector('.perf-log__controls') !== null;
+}
+
+// The panel starts collapsed (header only); the capture/clear controls live behind the header toggle.
+function expand(fixture: ComponentFixture<PerfLogPanelComponent>): void {
+  clickButton(fixture, 'perf-log');
+  fixture.detectChanges();
+}
+
 describe('PerfLogPanelComponent', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -53,9 +63,23 @@ describe('PerfLogPanelComponent', () => {
     return fixture;
   }
 
+  it('starts collapsed and toggles the controls on the header click', () => {
+    const fixture = render();
+
+    expect(controlsVisible(fixture)).toBe(false);
+
+    expand(fixture);
+    expect(controlsVisible(fixture)).toBe(true);
+
+    clickButton(fixture, 'perf-log');
+    fixture.detectChanges();
+    expect(controlsVisible(fixture)).toBe(false);
+  });
+
   it('captures a sample into the table on the capture button', () => {
     const fixture = render();
 
+    expand(fixture);
     expect(rowCount(fixture)).toBe(0);
 
     clickButton(fixture, 'capture');
@@ -67,6 +91,7 @@ describe('PerfLogPanelComponent', () => {
   it('empties the table on the clear button', () => {
     const fixture = render();
 
+    expand(fixture);
     clickButton(fixture, 'capture');
     fixture.detectChanges();
     clickButton(fixture, 'clear');

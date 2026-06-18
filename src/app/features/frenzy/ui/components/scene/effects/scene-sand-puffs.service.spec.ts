@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { SceneSandPuffsService } from './scene-sand-puffs.service';
-import type { RenderedItem } from './scene-view-models';
+import type { RenderedItem } from '../scene-view-models';
 
 function item(overrides: Partial<RenderedItem> = {}): RenderedItem {
   return {

@@ -1,12 +1,27 @@
-<!-- Screen-space corner panel of the enabled perf metrics. Non-interactive, aria-hidden — a real-time visual-only
-     aid (the authoritative readout for AT is the HUD/leaderboard). Rendered only under ?debug=perf. -->
-<div class="perf-readout" aria-hidden="true">
-  @for (row of rows(); track row.key) {
-    <span
-      class="perf-readout__metric"
-      [class.perf-readout__metric--warn]="row.tone === 'warn'"
-      [class.perf-readout__metric--bad]="row.tone === 'bad'"
-      >{{ row.label }} {{ row.text }}</span
-    >
+<!-- Screen-space corner panel of the enabled perf metrics. The header is the collapse toggle (collapsed by default);
+     the metric list below it is non-interactive, aria-hidden — a real-time visual-only aid (the authoritative readout
+     for AT is the HUD/leaderboard). Rendered only under ?debug=perf. -->
+<div class="perf-readout" [class.perf-readout--collapsed]="collapsed()">
+  <button
+    type="button"
+    class="perf-readout__header"
+    [attr.aria-expanded]="!collapsed()"
+    (click)="toggleCollapsed()"
+  >
+    <span class="perf-readout__chevron">{{ collapsed() ? '▸' : '▾' }}</span>
+    <span>readout</span>
+  </button>
+
+  @if (!collapsed()) {
+    <div class="perf-readout__metrics" aria-hidden="true">
+      @for (row of rows(); track row.key) {
+        <span
+          class="perf-readout__metric"
+          [class.perf-readout__metric--warn]="row.tone === 'warn'"
+          [class.perf-readout__metric--bad]="row.tone === 'bad'"
+          >{{ row.label }} {{ row.text }}</span
+        >
+      }
+    </div>
   }
 </div>
