@@ -19,6 +19,18 @@
     will-change: transform;
   }
 
+  // The hybrid-canvas decor layer (?debug decor-mode = canvas, ADR 0007): a world-sized child of `.scene__world`,
+  // stacked UNDER the item canvas (DOM order → the item canvas paints over it), sized imperatively by
+  // SceneDecorCanvasService. Its OWN compositor layer (will-change) keeps the per-frame kelp redraw off the residual
+  // DOM backdrop behind it. Non-interactive — decor takes no taps.
+  &__decor-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    will-change: transform;
+  }
+
   // The hybrid-canvas item layer (?debug render-mode = canvas): a world-sized child of `.scene__world` overlaying it
   // exactly (its px size is set imperatively by SceneItemCanvasService). `will-change: transform` puts it on its OWN
   // compositor layer, so the per-frame canvas redraw uploads just this texture and never repaints the seabed/kelp

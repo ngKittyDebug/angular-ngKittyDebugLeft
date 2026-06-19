@@ -76,6 +76,9 @@ export interface DebugSettings {
   metrics: Record<PerfMetricKey, boolean>;
   perfLog: PerfLogConfig;
   renderMode: RenderMode;
+  // Decor backdrop render backend (ADR 0007): `dom` is today's swaying-SVG kelp; `canvas` draws the kelp on one
+  // canvas. A persisted toggle, A/B'd independently of `renderMode` (the item backend) on the device.
+  decorMode: RenderMode;
   canvasDprCap: CanvasDprCap;
   // Render players as a static first frame instead of the animated GIF — kills the per-frame sprite decode/re-raster
   // that pins the FPS floor on a weak tablet. A persisted `?debug=perf` toggle (A/B'd on the device); default off.
@@ -139,6 +142,7 @@ function defaultSettings(): DebugSettings {
     metrics: defaultMetrics(),
     perfLog: defaultPerfLog(),
     renderMode: 'dom',
+    decorMode: 'dom',
     canvasDprCap: 0,
     freezeSprites: false,
     sceneLayers: defaultSceneLayers(),
@@ -261,6 +265,7 @@ function coerceSettings(raw: unknown): DebugSettings {
     metrics: coerceMetrics(source['metrics'], defaults.metrics),
     perfLog: coercePerfLog(source['perfLog'], defaults.perfLog),
     renderMode: oneOf(source['renderMode'], RENDER_MODES, defaults.renderMode),
+    decorMode: oneOf(source['decorMode'], RENDER_MODES, defaults.decorMode),
     canvasDprCap: oneOf(source['canvasDprCap'], CANVAS_DPR_CAPS, defaults.canvasDprCap),
     freezeSprites:
       typeof source['freezeSprites'] === 'boolean'
@@ -292,6 +297,7 @@ export class DebugSettingsStore {
   private readonly _metrics = signal<Record<PerfMetricKey, boolean>>(defaultMetrics());
   private readonly _perfLog = signal<PerfLogConfig>(defaultPerfLog());
   private readonly _renderMode = signal<RenderMode>('dom');
+  private readonly _decorMode = signal<RenderMode>('dom');
   private readonly _canvasDprCap = signal<CanvasDprCap>(0);
   private readonly _freezeSprites = signal(false);
   private readonly _sceneLayers = signal<Record<SceneLayerKey, boolean>>(defaultSceneLayers());
@@ -301,6 +307,7 @@ export class DebugSettingsStore {
   public readonly metrics = this._metrics.asReadonly();
   public readonly perfLog = this._perfLog.asReadonly();
   public readonly renderMode = this._renderMode.asReadonly();
+  public readonly decorMode = this._decorMode.asReadonly();
   public readonly canvasDprCap = this._canvasDprCap.asReadonly();
   public readonly freezeSprites = this._freezeSprites.asReadonly();
   public readonly sceneLayers = this._sceneLayers.asReadonly();
@@ -313,6 +320,7 @@ export class DebugSettingsStore {
     this._metrics.set(stored.metrics);
     this._perfLog.set(stored.perfLog);
     this._renderMode.set(stored.renderMode);
+    this._decorMode.set(stored.decorMode);
     this._canvasDprCap.set(stored.canvasDprCap);
     this._freezeSprites.set(stored.freezeSprites);
     this._sceneLayers.set(stored.sceneLayers);
@@ -336,6 +344,11 @@ export class DebugSettingsStore {
 
   public setRenderMode(mode: RenderMode): void {
     this._renderMode.set(mode);
+    this.persist();
+  }
+
+  public setDecorMode(mode: RenderMode): void {
+    this._decorMode.set(mode);
     this.persist();
   }
 
@@ -377,6 +390,7 @@ export class DebugSettingsStore {
       metrics: this._metrics(),
       perfLog: this._perfLog(),
       renderMode: this._renderMode(),
+      decorMode: this._decorMode(),
       canvasDprCap: this._canvasDprCap(),
       freezeSprites: this._freezeSprites(),
       sceneLayers: this._sceneLayers(),

@@ -17,6 +17,7 @@ const SNAPSHOT = { ready: true } as unknown as CameraSnapshot;
 function createFakeFacade(): {
   calls: string[];
   tickItems: ReturnType<typeof vi.fn>;
+  tickDecor: ReturnType<typeof vi.fn>;
   tickPlayers: ReturnType<typeof vi.fn>;
   publishDebugFrame: ReturnType<typeof vi.fn>;
   updateCamera: ReturnType<typeof vi.fn>;
@@ -28,6 +29,7 @@ function createFakeFacade(): {
   return {
     calls,
     tickItems: vi.fn(() => calls.push('tickItems')),
+    tickDecor: vi.fn(() => calls.push('tickDecor')),
     tickPlayers: vi.fn(() => calls.push('tickPlayers')),
     publishDebugFrame: vi.fn(() => calls.push('publishDebugFrame')),
     updateCamera: vi.fn(() => calls.push('updateCamera')),
@@ -51,6 +53,7 @@ function makeContext(overrides: Partial<SceneFrameContext> = {}): SceneFrameCont
     myId: () => null,
     evolving: () => new Map(),
     renderMode: () => 'dom',
+    decorMode: () => 'dom',
     frameCapFps: () => 0,
     debug: flags(),
     debugBoxesActive: false,
@@ -116,6 +119,24 @@ describe('SceneRenderLoopService', () => {
 
     expect(facade.calls).toEqual(['tickItems', 'tickPlayers', 'updateCamera', 'cameraSnapshot']);
     expect(offscreen.frame).toHaveBeenCalledWith(SNAPSHOT, expect.any(Number), RENDERED);
+  });
+
+  it('ticks the decor canvas only when the decor mode is canvas', () => {
+    const domFacade = createFakeFacade();
+    const { service: domService } = createService(domFacade);
+
+    domService.start(makeContext());
+    runOneFrame();
+
+    expect(domFacade.tickDecor).not.toHaveBeenCalled();
+
+    const canvasFacade = createFakeFacade();
+    const { service: canvasService } = createService(canvasFacade);
+
+    canvasService.start(makeContext({ decorMode: () => 'canvas' }));
+    runOneFrame();
+
+    expect(canvasFacade.tickDecor).toHaveBeenCalledTimes(1);
   });
 
   it('records perf metrics, with this frame timestamp + a scene-loop ms, only when ?debug=perf is on', () => {

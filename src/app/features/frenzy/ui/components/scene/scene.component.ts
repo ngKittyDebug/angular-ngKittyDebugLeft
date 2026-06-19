@@ -47,6 +47,7 @@ import { PlayerExtrapolatorService } from './prediction/player-extrapolator.serv
 import { SceneActorRegistryService } from './rendering/scene-actor-registry.service';
 import { SceneBurstsService } from './effects/scene-bursts.service';
 import { SceneCameraService } from './camera/scene-camera.service';
+import { SceneDecorCanvasService } from './rendering/scene-decor-canvas.service';
 import { SceneItemCanvasService } from './rendering/scene-item-canvas.service';
 import { SceneSandPuffsService } from './effects/scene-sand-puffs.service';
 import { SpriteFreezeService } from './rendering/sprite-freeze.service';
@@ -100,6 +101,7 @@ const ITEM_HIT_HALF_Y =
     SceneBurstsService,
     SceneSandPuffsService,
     SceneItemCanvasService,
+    SceneDecorCanvasService,
     SpriteFreezeService,
     // Perf subsystem — provided here but injected only under `?debug=perf` (the metric accumulator by this component
     // below, the settings store + sample log by the gated panels), so none of them instantiate in normal play.
@@ -115,6 +117,7 @@ export class SceneComponent {
   private readonly facade = inject(SceneFacade);
   private readonly loop = inject(SceneRenderLoopService);
   private readonly itemCanvas = inject(SceneItemCanvasService);
+  private readonly decorCanvas = inject(SceneDecorCanvasService);
   // The `?debug=perf` metric accumulator — injected (and thus instantiated) only under the master gate, in the
   // constructor; undefined in normal play. Fed by the render loop; its snapshot drives the readout.
   private perfMetrics: PerfMetricsService | undefined;
@@ -139,6 +142,8 @@ export class SceneComponent {
   private readonly offscreenIndicators = viewChild(OffscreenIndicatorsComponent);
   // The hybrid-canvas item layer's element — present only while the render mode is 'canvas' (the template @if).
   private readonly itemCanvasRef = viewChild<ElementRef<HTMLCanvasElement>>('itemCanvas');
+  // The hybrid-canvas decor layer's element — present only while the decor mode is 'canvas' (the template @if).
+  private readonly decorCanvasRef = viewChild<ElementRef<HTMLCanvasElement>>('decorCanvas');
 
   public readonly blasts = input<readonly Blast[]>([]);
   public readonly hitBursts = input<readonly HitBurst[]>([]);
@@ -166,6 +171,11 @@ export class SceneComponent {
   // flips. Reads the debug store only when it exists (under `?debug=perf`); a real player is always 'dom'.
   protected readonly renderMode = computed<RenderMode>(
     () => this.debugSettings?.renderMode() ?? 'dom',
+  );
+  // The decor render backend, reactive so the template @if (and the render loop) pick it up the instant the toggle
+  // flips. Reads the debug store only when it exists (under `?debug=perf`); a real player is always 'dom'.
+  protected readonly decorMode = computed<RenderMode>(
+    () => this.debugSettings?.decorMode() ?? 'dom',
   );
   // Whether to render players as a static first frame (the `?debug=perf` "freeze sprites" toggle), passed down to
   // each scene-player. Reads the debug store only when it exists; a real player is always animated (false).
@@ -255,6 +265,20 @@ export class SceneComponent {
       this.itemCanvas.resize(this.debugSettings?.canvasDprCap() ?? 0);
     });
 
+    // Canvas decor backend lifecycle (ADR 0007): bind + size the decor canvas whenever it's present (decor canvas
+    // mode), re-sizing on the DPR-cap change. Mirrors the item-canvas effect above; inert in normal play (the @if
+    // removes the element, and the decor mode is always 'dom' without the debug store).
+    effect(() => {
+      const canvas = this.decorCanvasRef()?.nativeElement;
+
+      if (canvas === undefined) {
+        return;
+      }
+
+      this.decorCanvas.attach(canvas);
+      this.decorCanvas.resize(this.debugSettings?.canvasDprCap() ?? 0);
+    });
+
     // Start the rAF render loop once the view exists. The loop service owns the frame lifecycle and the per-frame
     // facade sequence; this shell only supplies the live inputs and DOM refs it reads each frame (see ADR 0004 §4).
     afterNextRender(() => {
@@ -264,6 +288,7 @@ export class SceneComponent {
         myId: () => this.myId(),
         evolving: () => this.evolvingPlayers(),
         renderMode: () => this.renderMode(),
+        decorMode: () => this.decorMode(),
         frameCapFps: () => this.frameCapFps(),
         debug: this.debug,
         debugBoxesActive: this.debugBoxesActive,

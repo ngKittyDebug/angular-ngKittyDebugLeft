@@ -354,3 +354,11 @@
     );
   }
 }
+
+/* ---------- Canvas decor backend (DebugSettingsStore.decorMode === 'canvas', ADR 0007) ----------
+   When the kelp is drawn on the decor canvas, hide the DOM blades so they don't double-paint. The rest of the
+   backdrop (floor, rays, motes, bubbles, vignette) stays DOM in this slice — only the proven-costly kelp moves.
+   Same `:host-context` reach as the decor probes above (scene.component.scss can't reach these internals). */
+:host-context(.scene--canvas-kelp) .aq__plants {
+  display: none;
+}

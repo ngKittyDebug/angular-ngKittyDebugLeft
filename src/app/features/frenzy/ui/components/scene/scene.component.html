@@ -11,6 +11,7 @@
   [class.scene--decor-no-plants]="decorProbe()?.noPlants === true"
   [class.scene--decor-no-rays]="decorProbe()?.noRays === true"
   [class.scene--decor-flat-rays]="decorProbe()?.flatRays === true"
+  [class.scene--canvas-kelp]="decorMode() === 'canvas'"
   aria-label="Feeding frenzy scene"
   (pointerdown)="onScenePointerDown($event)"
   (pointermove)="onScenePointerMove($event)"
@@ -27,6 +28,14 @@
          classes below), NOT @if — so the perf-panel scene-layer toggles isolate each layer's paint/composite cost
          without DOM churn (or template-cyclomatic-complexity), and `items` hides BOTH render backends at once. -->
     <left-paw-aquarium-decor />
+
+    @if (decorMode() === 'canvas') {
+      <!-- Hybrid-canvas decor layer (?debug=perf decor-mode toggle, ADR 0007): the backdrop kelp drawn on ONE canvas
+           (world-sized child of the world, panned by the parent camera) instead of ~218 swaying SVG blades — the
+           scene's proven dominant cost. Stacked UNDER the item canvas; its own compositor layer (SCSS) keeps the
+           redraw off the residual DOM backdrop. Sized imperatively by SceneDecorCanvasService. -->
+      <canvas class="scene__decor-canvas" #decorCanvas aria-hidden="true"></canvas>
+    }
 
     @if (renderMode() === 'canvas') {
       <!-- Hybrid-canvas item layer (?debug=perf render-mode toggle): every falling item drawn on ONE canvas, a

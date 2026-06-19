@@ -8,8 +8,9 @@ import {
   signal,
 } from '@angular/core';
 
-import { KELP_BLADES, kelpBladeWidth, kelpTint } from '../../utils/kelp-blades';
+import { KELP_BLADES, kelpTint } from '../../utils/kelp-blades';
 import type { KelpBlade } from '../../utils/kelp-blades';
+import { buildKelpField, kelpFieldCount } from '../../utils/kelp-field';
 
 /**
  * Purely decorative aquarium backdrop for the Frenzy scene.
@@ -40,49 +41,21 @@ interface Plant {
   delay: number;
 }
 
-// Roughly one kelp blade per this many CSS px of scene width (blades are wider than this, so they
-// overlap into a dense forest). Lower = denser. The blade count is derived from the measured width.
-const KELP_SPACING_PX = 11;
-const MIN_PLANTS = 16;
-
+// Map the shared numeric blade field (one source of truth with the canvas backend, see `kelp-field.ts`) to the CSS
+// shape the template binds: the tint factor → a resolved colour, the shape index → its blade art, the rest 1:1.
 function buildPlants(count: number): Plant[] {
-  // 1-based index, mirroring the original `@for $i from 1 through N` formulas.
-  return Array.from({ length: count }, (_, index) => {
-    const i = index + 1;
-    const shape = (i - 1) % 3;
-    // Continuous depth 0 (far) .. ~0.6 (mid), pseudo-random per blade: size, brightness and z-index all
-    // interpolate along it, so the back forest reads as a smooth far→mid gradient. Capped below the NEAR range
-    // on purpose — the near tier lives in `MidgroundKelpComponent` IN FRONT of the actors, so the Pokémon nestles
-    // between this background and that near layer (deeper in the weeds). This layer stays below the actors (z 0).
-    const depth = ((i * 47) % 61) / 100;
-    // Quadratic spread for the base height (long tail of tall ones), then scaled by depth — near blades taller,
-    // far ones shorter, but the far floor is kept high enough that they still cover the sand (less bare seabed).
-    const spread = ((i * 53) % 100) / 100;
-    const baseHeight = 110 + spread * spread * 260;
-    // Near end (depth→1) is pulled a bit closer than before — taller (×1.3 vs the old ×1.15) — so the backdrop's
-    // front reaches up toward the (now slightly pushed-back) foreground layer, closing the depth gap from both ends.
-    const height = Math.round(baseHeight * (0.7 + depth * 0.6));
-    // Depth-dimming (0.55 far .. 0.85 near) baked into the tint via `kelpTint` instead of a per-blade
-    // `filter: brightness()` — see kelpTint's note on the per-element filter-surface cost on weak GPUs.
-    const brightness = 0.55 + depth * 0.5;
-
-    return {
-      // Cell-centered across the full width (so the first/last blades hug the edges) plus a small
-      // deterministic wobble so the row doesn't read like a comb.
-      left: ((i - 0.5) / count) * 100 + (((i * 37) % 7) - 3),
-      height,
-      width: kelpBladeWidth(height),
-      // Root line by depth (% from world bottom): near (depth→1) roots LOW (~6%, just above the resting items),
-      // far (depth→0) roots HIGH (~17%, up at the dune crest) → a receding ground plane, not one flat row.
-      root: 6 + (1 - depth) * 11,
-      rotation: -3 - (i % 4),
-      zIndex: Math.round(depth * 6),
-      color: kelpTint(shape, brightness),
-      art: KELP_BLADES[shape],
-      duration: 4.5 + (i % 4),
-      delay: -(i * 0.6),
-    };
-  });
+  return buildKelpField(count).map((blade) => ({
+    left: blade.left,
+    height: blade.height,
+    width: blade.width,
+    root: blade.root,
+    rotation: blade.rotation,
+    zIndex: blade.zIndex,
+    color: kelpTint(blade.shape, blade.brightness),
+    art: KELP_BLADES[blade.shape],
+    duration: blade.durationSeconds,
+    delay: blade.delaySeconds,
+  }));
 }
 
 @Component({
@@ -116,7 +89,7 @@ export class AquariumDecorComponent {
 
   // Rebuild only when the blade count actually changes, so a resize drag doesn't churn the DOM.
   private syncPlants(width: number): void {
-    const count = Math.max(MIN_PLANTS, Math.round(width / KELP_SPACING_PX));
+    const count = kelpFieldCount(width);
 
     if (count === this.plantCount) {
       return;

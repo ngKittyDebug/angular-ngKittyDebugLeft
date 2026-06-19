@@ -8,6 +8,7 @@ import { SceneActorRegistryService } from './rendering/scene-actor-registry.serv
 import { SceneBurstsService } from './effects/scene-bursts.service';
 import { SceneCameraService } from './camera/scene-camera.service';
 import type { CameraSnapshot } from './camera/scene-camera.service';
+import { SceneDecorCanvasService } from './rendering/scene-decor-canvas.service';
 import { SceneItemCanvasService } from './rendering/scene-item-canvas.service';
 import type { RenderedItem, RenderedPlayer } from './scene-view-models';
 import { SceneSandPuffsService } from './effects/scene-sand-puffs.service';
@@ -26,6 +27,7 @@ export class SceneFacade {
   private readonly burstsService = inject(SceneBurstsService);
   private readonly sandPuffsService = inject(SceneSandPuffsService);
   private readonly itemCanvas = inject(SceneItemCanvasService);
+  private readonly decorCanvas = inject(SceneDecorCanvasService);
 
   public readonly renderedItems = this.items.rendered;
   public readonly renderedPlayers = this.players.rendered;
@@ -68,6 +70,12 @@ export class SceneFacade {
 
     // Rising-edge sand puffs are driven off the freshly extrapolated items (touchdowns), so detect right after.
     this.sandPuffsService.observe(frame);
+  }
+
+  // Canvas decor backend (ADR 0007): draw the backdrop kelp on its canvas. Uses the camera's visible bounds to skip
+  // off-screen blade columns — one frame stale here (runs before updateCamera in the loop), absorbed by the cull margin.
+  public tickDecor(now: number): void {
+    this.decorCanvas.draw(this.camera.visibleBounds(), now);
   }
 
   // The live per-frame item view models — for the canvas hit-test, which needs the current drawn positions (not the

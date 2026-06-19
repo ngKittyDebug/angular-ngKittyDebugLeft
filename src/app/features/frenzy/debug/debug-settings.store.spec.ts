@@ -122,34 +122,53 @@ describe('DebugSettingsStore', () => {
     const store = makeStore();
 
     expect(store.renderMode()).toBe('dom');
+    expect(store.decorMode()).toBe('dom');
     expect(store.canvasDprCap()).toBe(0);
     expect(store.freezeSprites()).toBe(false);
   });
 
-  it('persists the render mode, DPR cap and sprite-freeze so they survive a reload', () => {
+  it('persists the render mode, decor mode, DPR cap and sprite-freeze so they survive a reload', () => {
     const store = makeStore();
 
     store.setRenderMode('canvas');
+    store.setDecorMode('canvas');
     store.setCanvasDprCap(1.5);
     store.setFreezeSprites(true);
 
     expect(store.renderMode()).toBe('canvas');
+    expect(store.decorMode()).toBe('canvas');
     expect(store.canvasDprCap()).toBe(1.5);
     expect(store.freezeSprites()).toBe(true);
     expect(reload().renderMode()).toBe('canvas');
+    expect(reload().decorMode()).toBe('canvas');
     expect(reload().canvasDprCap()).toBe(1.5);
     expect(reload().freezeSprites()).toBe(true);
   });
 
-  it('rejects an unknown render mode / DPR cap and a non-boolean sprite-freeze, keeping the defaults', () => {
+  it('keeps the decor mode independent of the item render mode', () => {
+    const store = makeStore();
+
+    store.setDecorMode('canvas');
+
+    expect(store.decorMode()).toBe('canvas');
+    expect(store.renderMode()).toBe('dom');
+  });
+
+  it('rejects an unknown render mode / decor mode / DPR cap and a non-boolean sprite-freeze, keeping the defaults', () => {
     localStorage.setItem(
       STORAGE_KEY,
-      JSON.stringify({ renderMode: 'webgl', canvasDprCap: 3, freezeSprites: 'yes' }),
+      JSON.stringify({
+        renderMode: 'webgl',
+        decorMode: 'webgl',
+        canvasDprCap: 3,
+        freezeSprites: 'yes',
+      }),
     );
 
     const store = reload();
 
     expect(store.renderMode()).toBe('dom');
+    expect(store.decorMode()).toBe('dom');
     expect(store.canvasDprCap()).toBe(0);
     expect(store.freezeSprites()).toBe(false);
   });

@@ -33,6 +33,8 @@ export interface SceneFrameContext {
   evolving(): ReadonlyMap<string, number>;
   // The live item render backend ('dom' | 'canvas') — read each frame so the toggle takes effect without a reload.
   renderMode(): RenderMode;
+  // The live decor render backend ('dom' | 'canvas') — read each frame so the toggle takes effect without a reload.
+  decorMode(): RenderMode;
   // Frame-pacing cap target in fps (0 = uncapped) — read each frame so the toggle takes effect without a reload.
   frameCapFps(): number;
   readonly debug: DebugFlags;
@@ -83,6 +85,13 @@ export class SceneRenderLoopService {
       }
 
       this.facade.tickItems(context.items(), now, context.renderMode() === 'canvas');
+
+      // Canvas decor backend (ADR 0007): redraw the backdrop kelp each frame. In DOM mode the kelp is pure CSS and
+      // there is nothing to tick here.
+      if (context.decorMode() === 'canvas') {
+        this.facade.tickDecor(now);
+      }
+
       this.facade.tickPlayers(context.players(), context.myId(), context.evolving(), now);
 
       // The box overlay (a dev tool) republishes structure so its boxes track the imperatively-moved sprites.
