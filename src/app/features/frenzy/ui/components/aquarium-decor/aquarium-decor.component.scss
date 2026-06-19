@@ -176,7 +176,20 @@
     position: absolute;
     bottom: var(--root, 13%);
     transform-origin: 50% 100%;
-    animation: aq-plant-sway 6s ease-in-out infinite alternate;
+    // PERF (CPU-4×/6× bisection): the per-frame repaint of 218 independently rotating SVG blades is the scene's
+    // dominant cost — BUT only when the main thread is saturated (the weak-tablet dense-cluster regime; on a light
+    // scene there is headroom and it costs nothing). The compositor won't promote that many layers, and forcing
+    // promotion (`will-change`) measured NET NEGATIVE (layer overhead > saved repaint — the ADR-0006 risk made
+    // real). So keep full forest density (every blade still painted) but only sway a sparse 1-in-3; the rest hold a
+    // gentle per-blade lean. Cuts the sway repaint to a third — a deliberate near-neutral trade (NOT pixel-neutral:
+    // 2/3 of blades go still). Validated on the weak tablet: a small but real fps gain, look accepted — so the
+    // ADR-0006 revisit resolved in favour of this trade rather than a quality tier.
+    transform: rotate(calc(var(--rot, -4deg) * 0.5));
+
+    &:nth-child(3n) {
+      transform: none;
+      animation: aq-plant-sway 6s ease-in-out infinite alternate;
+    }
   }
 
   &__blade {
