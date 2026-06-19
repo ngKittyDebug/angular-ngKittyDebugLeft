@@ -140,6 +140,7 @@ export default defineConfig(
           facade: 'off',
           guard: 'off',
           store: 'off',
+          interceptor: 'off'
         },
       ],
       'import/no-extraneous-dependencies': ['error', { devDependencies: true }],

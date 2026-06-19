@@ -148,11 +148,11 @@ describe('separatePlayers', () => {
     const b = makePlayer({ id: 'b', x: 0.5 + gapX(50), y: 0.5, vx: -0.04 });
     const { bumps, impulses } = separatePlayers(FRENZY_DEFINITION, [a, b]);
 
-    // Each victim's killer is the other player — the attribution the obituary reuses.
+    // Each victim's killer is the other player — the attribution the obituary reuses. A hard ram, so neither is a scratch.
     expect(bumps).toEqual(
       expect.arrayContaining([
-        { playerId: 'a', killerId: 'b' },
-        { playerId: 'b', killerId: 'a' },
+        { playerId: 'a', killerId: 'b', scratch: false },
+        { playerId: 'b', killerId: 'a', scratch: false },
       ]),
     );
     expect(bumps).toHaveLength(2);
@@ -184,9 +184,66 @@ describe('separatePlayers', () => {
     const [movedShielded] = players;
 
     // Only the rammer is bumped; the shielded one takes no ram knockback — but still separates (it's a solid body).
-    expect(bumps).toEqual([{ playerId: 'rammer', killerId: 'shielded' }]);
+    expect(bumps).toEqual([{ playerId: 'rammer', killerId: 'shielded', scratch: false }]);
     expect(impulseMagnitude(impulses, 'rammer')).toBeGreaterThan(0);
     expect(movedShielded.x).toBeLessThan(shielded.x);
+  });
+
+  it('lets a cactus holder scratch a gentle toucher one-directionally', () => {
+    // Closing speed 0.02 — below the 0.05 ram threshold but above the 0.01 scratch threshold. The cactus holder
+    // is a contact hazard, so its spikes prick the toucher even on this lazy contact; the toucher is a normal
+    // body, so its (sub-threshold) ram doesn't hurt the holder back.
+    const cactus = makePlayer({
+      id: 'cactus',
+      x: 0.5,
+      y: 0.5,
+      vx: 0.01,
+      effects: [{ kind: 'cactus', expiresAt: 10_000 }],
+    });
+    const other = makePlayer({ id: 'other', x: 0.5 + gapX(50), y: 0.5, vx: -0.01 });
+    const { bumps } = separatePlayers(FRENZY_DEFINITION, [cactus, other]);
+
+    // Below the ram threshold → flagged a scratch (drives the lighter `scratchDamage` downstream).
+    expect(bumps).toEqual([{ playerId: 'other', killerId: 'cactus', scratch: true }]);
+  });
+
+  it('stays silent on a sub-scratch-threshold cactus contact (a resting overlap never tick-drains hp)', () => {
+    // Closing speed 0.005 — below even the scratch threshold (0.01), so a barely-moving cactus contact deals
+    // nothing. This is the property that keeps a damped resting overlap from pricking every tick.
+    const cactus = makePlayer({
+      id: 'cactus',
+      x: 0.5,
+      y: 0.5,
+      vx: 0.0025,
+      effects: [{ kind: 'cactus', expiresAt: 10_000 }],
+    });
+    const other = makePlayer({ id: 'other', x: 0.5 + gapX(50), y: 0.5, vx: -0.0025 });
+    const { bumps } = separatePlayers(FRENZY_DEFINITION, [cactus, other]);
+
+    expect(bumps).toEqual([]);
+  });
+
+  it('still bumps both ways on a hard ram even when one holds a cactus', () => {
+    // A real ram clears the normal threshold for both, so the cactus changes only the downstream damage scaling
+    // (in applyBumpDamage), not who gets bumped in this pass.
+    const cactus = makePlayer({
+      id: 'cactus',
+      x: 0.5,
+      y: 0.5,
+      vx: 0.04,
+      effects: [{ kind: 'cactus', expiresAt: 10_000 }],
+    });
+    const other = makePlayer({ id: 'other', x: 0.5 + gapX(50), y: 0.5, vx: -0.04 });
+    const { bumps } = separatePlayers(FRENZY_DEFINITION, [cactus, other]);
+
+    // A hard ram clears the normal threshold both ways → neither side is a scratch (cactus deals its ramDamage).
+    expect(bumps).toEqual(
+      expect.arrayContaining([
+        { playerId: 'cactus', killerId: 'other', scratch: false },
+        { playerId: 'other', killerId: 'cactus', scratch: false },
+      ]),
+    );
+    expect(bumps).toHaveLength(2);
   });
 
   it('removes the approaching normal velocity while preserving tangential drift', () => {

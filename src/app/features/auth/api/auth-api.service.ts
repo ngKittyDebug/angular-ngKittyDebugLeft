@@ -1,71 +1,38 @@
-import { Injectable } from '@angular/core';
-import type { Observable } from 'rxjs';
-import { delay, of, throwError } from 'rxjs';
-import type { LoginFormGroup } from '@features/auth/data/models/login-form.model';
-import type { SignupModel } from '../data/models/signup-form.model';
+import { HttpClient } from '@angular/common/http';
+import { inject, Service } from '@angular/core';
+import { AUTH_SERVER_URL_TOKEN } from '@core/tokens/auth-server-url.token';
+import type { LoginFormGroup } from '@features/auth/data/models/login/login-form.model';
+import { convertLoginFormModelToCredentialsApiData } from '../data/helpers/login-convert';
+import type { SignupModel } from '../data/models/signup/signup-form.model';
+import { convertSignUpModelToCredentialsApiData } from '../data/helpers/signup-convert';
+import type { AuthApiResponse } from '@shared/models/auth-api-response.model';
 
-// Объявляем строгие интерфейсы ответов сервера, которые ожидает ваше приложение
-export interface AuthSuccessResponse {
-  accessToken: string;
-  user: {
-    id: number;
-    name: string;
-  };
-}
-
-export interface RefreshSuccessResponse {
-  accessToken: string;
-}
-
-@Injectable({
-  providedIn: 'root',
-})
+@Service({ autoProvided: false })
 export class AuthApiService {
-  // TODO на этапе мержа перепроверить и в случае необходимости убрать. Разработка велась одновременно с сервисом.
-  public onAuthSubmit(loginFormGroup: LoginFormGroup): Observable<AuthSuccessResponse> {
-    console.log('[Mock API] Метод onAuthSubmit вызван с данными:', loginFormGroup);
+  private readonly authURLToken = inject<string>(AUTH_SERVER_URL_TOKEN);
+  private readonly httpClient = inject(HttpClient);
 
-    const formValues = loginFormGroup as unknown as Record<string, string>;
+  public login(loginFormGroup: LoginFormGroup) {
+    const convertedLoginModel = convertLoginFormModelToCredentialsApiData(loginFormGroup);
 
-    if (formValues && formValues['login'] === 'error') {
-      return throwError(() => new Error('Unauthorized')).pipe(delay(1000));
-    }
-
-    const mockResponse: AuthSuccessResponse = {
-      accessToken: 'fake-jwt-access-token-12345-success',
-      user: { id: 1, name: 'Тестовый Пользователь' },
-    };
-
-    return of(mockResponse).pipe(delay(1000));
+    return this.httpClient.post<AuthApiResponse>(
+      `${this.authURLToken}auth/login`,
+      convertedLoginModel,
+      {
+        withCredentials: true,
+      },
+    );
   }
 
-  // TODO на этапе мержа перепроверить и в случае необходимости убрать. Разработка велась одновременно с сервисом.
-  public onRegistrationSubmit(registerFormGroup: SignupModel): Observable<AuthSuccessResponse> {
-    console.log('[Mock API] Метод onRegisterSubmit вызван с данными:', registerFormGroup);
+  public registration(signupModel: SignupModel) {
+    const convertedSignUpModel = convertSignUpModelToCredentialsApiData(signupModel);
 
-    const mockResponse: AuthSuccessResponse = {
-      accessToken: 'fake-jwt-access-token-after-registration',
-      user: { id: 2, name: 'Новый Пользователь' },
-    };
-
-    return of(mockResponse).pipe(delay(1000));
-  }
-
-  // TODO на этапе мержа перепроверить и в случае необходимости убрать. Разработка велась одновременно с сервисом.
-  public onRefresh(): Observable<RefreshSuccessResponse> {
-    console.log('[Mock API] Сеть: запрос на обновление токена /auth/refresh');
-
-    const mockResponse: RefreshSuccessResponse = {
-      accessToken: 'updated-fake-jwt-access-token-67890',
-    };
-
-    return of(mockResponse).pipe(delay(800));
-  }
-
-  // TODO на этапе мержа перепроверить и в случае необходимости убрать. Разработка велась одновременно с сервисом.
-  public onLogout(): Observable<void> {
-    console.log('[Mock API] Сеть: запрос на инвалидацию сессии /auth/logout');
-
-    return of(void 0).pipe(delay(500));
+    return this.httpClient.post<AuthApiResponse>(
+      `${this.authURLToken}auth/register`,
+      convertedSignUpModel,
+      {
+        withCredentials: true,
+      },
+    );
   }
 }

@@ -101,6 +101,55 @@ export function wrapParallaxPhase(offset: number, tile: number): number {
   return ((offset % tile) - tile) % tile;
 }
 
+// The normalized (0..1) world rectangle currently inside the camera viewport (+ margin), used to soft-cull
+// off-screen actors' per-frame position writes.
+export interface VisibleNormBounds {
+  minX: number;
+  maxX: number;
+  minY: number;
+  maxY: number;
+}
+
+// Screen-px margin band added around the visible viewport before culling: an actor inside the margin (but past
+// the true edge) is still position-updated, so it's already current by the time the camera scrolls it into view —
+// no pop-in. Generous, since the only cost of keeping an actor is one style write.
+export const CULL_MARGIN_PX = 160;
+
+// Inverse camera projection: the normalized world rect visible this frame (+ margin). A world point `f` maps to
+// screen px `f * worldPx * scale + cam`; invert against the [0, viewport] visible span. Returns null when the
+// projection is degenerate (pre-first-frame), signalling callers to cull nothing.
+export function visibleNormBounds(
+  camX: number,
+  camY: number,
+  scale: number,
+  viewportWidth: number,
+  viewportHeight: number,
+  worldWidth: number,
+  worldHeight: number,
+): VisibleNormBounds | null {
+  const screenWorldWidth = worldWidth * scale;
+  const screenWorldHeight = worldHeight * scale;
+
+  if (screenWorldWidth <= 0 || screenWorldHeight <= 0) {
+    return null;
+  }
+
+  const marginX = CULL_MARGIN_PX / screenWorldWidth;
+  const marginY = CULL_MARGIN_PX / screenWorldHeight;
+
+  return {
+    minX: -camX / screenWorldWidth - marginX,
+    maxX: (viewportWidth - camX) / screenWorldWidth + marginX,
+    minY: -camY / screenWorldHeight - marginY,
+    maxY: (viewportHeight - camY) / screenWorldHeight + marginY,
+  };
+}
+
+// Whether a normalized actor position falls within the visible (+ margin) world rect.
+export function withinNormBounds(x: number, y: number, bounds: VisibleNormBounds): boolean {
+  return x >= bounds.minX && x <= bounds.maxX && y >= bounds.minY && y <= bounds.maxY;
+}
+
 // One-axis dead-zone target (px): keep the current offset while the focus stays inside the band [lowFraction,
 // highFraction] (fractions of the viewport); once it crosses a band edge, return the offset that pins it back to
 // that edge. Always clamped to the world bounds. The band is passed in so each axis can use its own width.

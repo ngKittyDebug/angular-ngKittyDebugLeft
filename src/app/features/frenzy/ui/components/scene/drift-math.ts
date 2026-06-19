@@ -68,3 +68,21 @@ export function decayedOffset(offset0: number, dtMs: number, tauMs: number): num
 
   return offset0 * Math.exp(-Math.max(0, dtMs) / tauMs);
 }
+
+// Largest fraction of the remaining reconciliation offset that may decay away in a SINGLE frame. Wall-clock decay
+// (`decayedOffset`) is frame-rate-independent in WALL time, but the eye sees FRAMES: at 60fps a 270ms glide is
+// ~16 smooth steps, at 17fps it's ~1-2 frames — most of the gap vanishes in one frame, the "rubber-band snap".
+// Capping the per-frame collapse keeps the glide smooth on slow devices.
+export const MAX_OFFSET_COLLAPSE_PER_FRAME = 0.2;
+
+// τ ≥ frameMs / -ln(1 - collapse) makes the per-frame decay factor exp(-frameMs/τ) ≥ 1 - collapse. Precomputed
+// reciprocal so `frameAwareTau` is a single multiply + max.
+const FRAME_TAU_FACTOR = 1 / -Math.log(1 - MAX_OFFSET_COLLAPSE_PER_FRAME);
+
+// Frame-aware floor for the reconciliation τ: raise it on a slow client so no single frame decays the offset by
+// more than `MAX_OFFSET_COLLAPSE_PER_FRAME` (the glide always spans enough frames to read as smooth). On a fast
+// client the base τ already clears the floor, so it's returned unchanged — 60fps behaviour is untouched. Pure:
+// the caller supplies the (smoothed) frame interval. See ADR 0003.
+export function frameAwareTau(baseTauMs: number, frameIntervalMs: number): number {
+  return Math.max(baseTauMs, FRAME_TAU_FACTOR * Math.max(0, frameIntervalMs));
+}

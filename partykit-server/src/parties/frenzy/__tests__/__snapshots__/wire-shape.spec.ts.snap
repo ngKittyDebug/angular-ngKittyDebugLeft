@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`wire shape — serialized form of every ServerMessage type > freezes the "bumped" frame 1`] = `"{"type":"bumped","playerId":"player-1","priority":3}"`;
+exports[`wire shape — serialized form of every ServerMessage type > freezes the "bumped" frame 1`] = `"{"type":"bumped","playerId":"player-1","amount":-12,"priority":3}"`;
 
 exports[`wire shape — serialized form of every ServerMessage type > freezes the "detonated" frame 1`] = `"{"type":"detonated","itemId":"item-2","x":0.4568,"y":0.5,"radius":0.1833,"hits":[{"playerId":"player-1","delta":-34.5679},{"playerId":"player-2","delta":-12.3}],"priority":0}"`;
 

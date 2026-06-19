@@ -27,7 +27,8 @@
     "shield": "Shielded",
     "wellFed": "Well fed",
     "laying": "Laying eggs",
-    "pooping": "Upset stomach"
+    "pooping": "Upset stomach",
+    "cactus": "Spiky"
   },
   "joinError": {
     "invalidName": "Please enter a name.",
@@ -176,7 +177,8 @@
       "rock": "Rock",
       "brick": "Brick",
       "bomb": "Sea mine",
-      "poop": "Poop"
+      "poop": "Poop",
+      "cactus": "Cactus"
     }
   },
   "leaderboard": {
@@ -359,6 +361,12 @@
         "1": "Spewing poop!",
         "2": "Stinky!",
         "3": "Number two!"
+      },
+      "cactus": {
+        "0": "Spiky!",
+        "1": "Don't touch!",
+        "2": "Prickly armor!",
+        "3": "Thorns out!"
       },
       "npcAppeared": {
         "0": "Tick… tick…",

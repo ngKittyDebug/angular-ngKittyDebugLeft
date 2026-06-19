@@ -1,4 +1,4 @@
-import type { DamageSource, EffectDefinition } from '@game/engine/definition';
+import type { ContactRamSpec, DamageSource, EffectDefinition } from '@game/engine/definition';
 import type { PlayerEffect } from '@game/engine/types';
 
 /**
@@ -38,6 +38,32 @@ export function damageDealtMultiplier<TEffectId extends string>(
     (product, effect) => product * (definitions[effect.kind].modifiers?.damageDealt?.[source] ?? 1),
     1,
   );
+}
+
+/** The holder's contact-hazard spec (`modifiers.contactRam`) if any active effect carries one, else undefined: it
+ * lowers the ram gate to `scratchSpeedThreshold` and supplies the holder's own split ram/scratch damage. First
+ * active match wins (a holder realistically carries at most one such aura). */
+export function contactRamSpec<TEffectId extends string>(
+  definitions: Record<TEffectId, EffectDefinition>,
+  effects: readonly PlayerEffect<TEffectId>[],
+): ContactRamSpec | undefined {
+  for (const effect of effects) {
+    const spec = definitions[effect.kind].modifiers?.contactRam;
+
+    if (spec !== undefined) {
+      return spec;
+    }
+  }
+
+  return undefined;
+}
+
+/** Whether the holder is a contact hazard at all (has a `contactRam` aura) — the gate the separation pass reads. */
+export function isContactRammer<TEffectId extends string>(
+  definitions: Record<TEffectId, EffectDefinition>,
+  effects: readonly PlayerEffect<TEffectId>[],
+): boolean {
+  return contactRamSpec(definitions, effects) !== undefined;
 }
 
 /**
