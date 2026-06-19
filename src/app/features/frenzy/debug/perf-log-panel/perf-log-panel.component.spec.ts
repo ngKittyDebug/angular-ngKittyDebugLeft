@@ -6,6 +6,7 @@ import { PerfLogPanelComponent } from './perf-log-panel.component';
 import { DebugSettingsStore } from '../debug-settings.store';
 import type { PerfMetricsSnapshot } from '../perf-metrics';
 import { PerfSampleStore } from '../perf-sample.store';
+import { FrenzyStorageService } from '../../data/services/frenzy-storage.service';
 
 function snapshot(): PerfMetricsSnapshot {
   return {
@@ -51,7 +52,9 @@ function expand(fixture: ComponentFixture<PerfLogPanelComponent>): void {
 describe('PerfLogPanelComponent', () => {
   beforeEach(() => {
     localStorage.clear();
-    TestBed.configureTestingModule({ providers: [DebugSettingsStore, PerfSampleStore] });
+    TestBed.configureTestingModule({
+      providers: [FrenzyStorageService, DebugSettingsStore, PerfSampleStore],
+    });
   });
 
   function render(): ComponentFixture<PerfLogPanelComponent> {

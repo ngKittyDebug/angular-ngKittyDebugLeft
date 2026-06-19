@@ -301,3 +301,43 @@
     animation: none;
   }
 }
+
+/* ---------- ?debug=perf decor sub-probes (DebugSettingsStore.decorProbe) ----------
+   The scene host carries a `.scene--decor-*` class per active probe; we read it via `:host-context` because
+   scene.component.scss can't reach into this component's encapsulated internals. Each isolates ONE decor cost so a
+   weak device can bisect the FPS culprit WITHIN the decor layer (finer than the whole-layer `decor` toggle):
+     · frozen    — stop every decor animation but keep it PAINTED → splits per-frame animation cost from static paint.
+     · no-plants / no-rays — hide one sub-element to attribute the cost.
+     · flat-rays — the speculative neutral fix (ADR 0006): drop the `mix-blend-mode: screen` pass and approximate the
+       light shafts with a flat translucent gradient. Kept behind this A/B toggle until the eye confirms it on the
+       tablet; the flat colour is a starting point to tune per theme before any promotion to always-on. */
+:host-context(.scene--decor-frozen) {
+  .aq__ray,
+  .aq__mote,
+  .aq__plant,
+  .aq__bubble {
+    animation: none;
+  }
+}
+
+:host-context(.scene--decor-no-plants) .aq__plants {
+  display: none;
+}
+
+:host-context(.scene--decor-no-rays) .aq__rays {
+  display: none;
+}
+
+:host-context(.scene--decor-flat-rays) {
+  .aq__rays {
+    mix-blend-mode: normal;
+  }
+
+  .aq__ray {
+    background: linear-gradient(
+      to bottom,
+      var(--aq-ray-flat, rgba(255, 255, 255, 0.16)) 0%,
+      rgba(255, 255, 255, 0) 78%
+    );
+  }
+}

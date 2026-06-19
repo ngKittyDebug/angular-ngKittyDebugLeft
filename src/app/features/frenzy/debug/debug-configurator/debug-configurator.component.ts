@@ -4,6 +4,7 @@ import { METRIC_LABELS } from '../perf-metrics';
 import {
   CANVAS_DPR_CAPS,
   DebugSettingsStore,
+  DECOR_PROBE_KEYS,
   FRAME_CAP_FPS,
   PERF_METRIC_KEYS,
   RENDER_MODES,
@@ -31,6 +32,7 @@ export class DebugConfiguratorComponent {
   protected readonly dprCaps = CANVAS_DPR_CAPS;
   protected readonly frameCaps = FRAME_CAP_FPS;
   protected readonly layerKeys = SCENE_LAYER_KEYS;
+  protected readonly decorProbeKeys = DECOR_PROBE_KEYS;
   // Collapsed by default, like the sibling perf panels: a compact header bar that expands to the controls on click,
   // so the configurator stops covering the scene until the developer opens it. Local UI state.
   protected readonly collapsed = signal(true);

@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { PerfReadoutComponent } from './perf-readout.component';
 import { DebugSettingsStore, PERF_METRIC_KEYS } from '../debug-settings.store';
 import type { PerfMetricsSnapshot } from '../perf-metrics';
+import { FrenzyStorageService } from '../../data/services/frenzy-storage.service';
 
 function sampleSnapshot(): PerfMetricsSnapshot {
   return {
@@ -42,7 +43,7 @@ function expand(fixture: ComponentFixture<PerfReadoutComponent>): void {
 describe('PerfReadoutComponent', () => {
   beforeEach(() => {
     localStorage.clear();
-    TestBed.configureTestingModule({ providers: [DebugSettingsStore] });
+    TestBed.configureTestingModule({ providers: [FrenzyStorageService, DebugSettingsStore] });
   });
 
   function render(): ComponentFixture<PerfReadoutComponent> {

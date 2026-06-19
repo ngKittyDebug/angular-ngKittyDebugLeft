@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { DebugSettingsStore } from './debug-settings.store';
 import { PerfSampleStore } from './perf-sample.store';
 import type { PerfMetricsSnapshot } from './perf-metrics';
+import { FrenzyStorageService } from '../data/services/frenzy-storage.service';
 
 function snapshot(overrides: Partial<PerfMetricsSnapshot> = {}): PerfMetricsSnapshot {
   return {
@@ -26,7 +27,9 @@ function snapshot(overrides: Partial<PerfMetricsSnapshot> = {}): PerfMetricsSnap
 // Fresh DI scope each call — a re-injected PerfSampleStore re-reads localStorage, simulating a reload.
 function stores(): { settings: DebugSettingsStore; store: PerfSampleStore } {
   TestBed.resetTestingModule();
-  TestBed.configureTestingModule({ providers: [DebugSettingsStore, PerfSampleStore] });
+  TestBed.configureTestingModule({
+    providers: [FrenzyStorageService, DebugSettingsStore, PerfSampleStore],
+  });
 
   return { settings: TestBed.inject(DebugSettingsStore), store: TestBed.inject(PerfSampleStore) };
 }

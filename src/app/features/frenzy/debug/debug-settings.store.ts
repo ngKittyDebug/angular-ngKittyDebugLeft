@@ -1,4 +1,6 @@
-import { Injectable, signal } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
+
+import { FrenzyStorageService } from '../data/services/frenzy-storage.service';
 
 // Every perf metric the readout can show; the store toggles each independently. This list is the single source of
 // truth for the metric set — a future metric is added here and keyed off everywhere. Order is the display order.
@@ -46,6 +48,17 @@ export const SCENE_LAYER_KEYS = ['decor', 'kelp', 'parallax', 'items', 'players'
 
 export type SceneLayerKey = (typeof SCENE_LAYER_KEYS)[number];
 
+// Within-decor diagnostic probes (?debug=perf) — finer than the whole-layer `decor` hide, to bisect WHICH part of the
+// decor layer costs the most once `decor` is fingered. Each is OFF by default (false = normal decor); flipping one
+// applies a `.scene--decor-*` host class that aquarium-decor reads via `:host-context` (scene.scss can't reach into the
+// child's encapsulated internals). `freeze` stops every decor animation but keeps it PAINTED (splits per-frame
+// animation cost from static paint/composite); `noPlants`/`noRays` hide one sub-element to attribute the cost;
+// `flatRays` is the speculative neutral fix — rays without the `mix-blend-mode: screen` pass — shipped behind this A/B
+// toggle until the eye confirms it on the tablet (ADR 0006). Order is the display order.
+export const DECOR_PROBE_KEYS = ['freeze', 'noPlants', 'noRays', 'flatRays'] as const;
+
+export type DecorProbeKey = (typeof DECOR_PROBE_KEYS)[number];
+
 // Runtime config for the persistent perf-log (consumed by slice 09). Held here so the capture cadence and the export
 // channel survive reloads/rebuilds — the point of on-device A/B across builds.
 export interface PerfLogConfig {
@@ -71,6 +84,8 @@ export interface DebugSettings {
   sceneLayers: Record<SceneLayerKey, boolean>;
   // Frame-pacing cap target in fps (0 = uncapped). Persisted `?debug=perf` toggle, A/B'd on the device.
   frameCapFps: FrameCapFps;
+  // Within-decor diagnostic probes — each false by default (normal decor). See DECOR_PROBE_KEYS.
+  decorProbe: Record<DecorProbeKey, boolean>;
 }
 
 const STORAGE_KEY = 'frenzy:debug-settings';
@@ -100,6 +115,14 @@ function defaultSceneLayers(): Record<SceneLayerKey, boolean> {
   >;
 }
 
+function defaultDecorProbe(): Record<DecorProbeKey, boolean> {
+  // Every probe OFF by default — flipping one only ever ADDS a diagnostic override on top of normal decor.
+  return Object.fromEntries(DECOR_PROBE_KEYS.map((key) => [key, false])) as Record<
+    DecorProbeKey,
+    boolean
+  >;
+}
+
 function defaultPerfLog(): PerfLogConfig {
   return {
     captureMode: 'manual',
@@ -120,6 +143,7 @@ function defaultSettings(): DebugSettings {
     freezeSprites: false,
     sceneLayers: defaultSceneLayers(),
     frameCapFps: 0,
+    decorProbe: defaultDecorProbe(),
   };
 }
 
@@ -175,6 +199,28 @@ function coerceSceneLayers(
   return layers;
 }
 
+function coerceDecorProbe(
+  raw: unknown,
+  fallback: Record<DecorProbeKey, boolean>,
+): Record<DecorProbeKey, boolean> {
+  if (typeof raw !== 'object' || raw === null) {
+    return fallback;
+  }
+
+  const source = raw as Record<string, unknown>;
+  const probe = { ...fallback };
+
+  for (const key of DECOR_PROBE_KEYS) {
+    const value = source[key];
+
+    if (typeof value === 'boolean') {
+      probe[key] = value;
+    }
+  }
+
+  return probe;
+}
+
 function coercePerfLog(raw: unknown, fallback: PerfLogConfig): PerfLogConfig {
   if (typeof raw !== 'object' || raw === null) {
     return fallback;
@@ -222,25 +268,13 @@ function coerceSettings(raw: unknown): DebugSettings {
         : defaults.freezeSprites,
     sceneLayers: coerceSceneLayers(source['sceneLayers'], defaults.sceneLayers),
     frameCapFps: oneOf(source['frameCapFps'], FRAME_CAP_FPS, defaults.frameCapFps),
+    decorProbe: coerceDecorProbe(source['decorProbe'], defaults.decorProbe),
   };
 }
 
-function readStored(): DebugSettings {
-  if (typeof localStorage === 'undefined') {
-    return defaultSettings();
-  }
-
-  const raw = localStorage.getItem(STORAGE_KEY);
-
-  if (raw === null) {
-    return defaultSettings();
-  }
-
-  try {
-    return coerceSettings(JSON.parse(raw));
-  } catch {
-    return defaultSettings();
-  }
+function readStored(storage: FrenzyStorageService): DebugSettings {
+  // getJson degrades to null on a missing key, an SSR/no-storage env, or a corrupt blob; coerceSettings(null) → defaults.
+  return coerceSettings(storage.getJson(STORAGE_KEY));
 }
 
 /**
@@ -254,6 +288,7 @@ function readStored(): DebugSettings {
  */
 @Injectable()
 export class DebugSettingsStore {
+  private readonly storage = inject(FrenzyStorageService);
   private readonly _metrics = signal<Record<PerfMetricKey, boolean>>(defaultMetrics());
   private readonly _perfLog = signal<PerfLogConfig>(defaultPerfLog());
   private readonly _renderMode = signal<RenderMode>('dom');
@@ -261,6 +296,7 @@ export class DebugSettingsStore {
   private readonly _freezeSprites = signal(false);
   private readonly _sceneLayers = signal<Record<SceneLayerKey, boolean>>(defaultSceneLayers());
   private readonly _frameCapFps = signal<FrameCapFps>(0);
+  private readonly _decorProbe = signal<Record<DecorProbeKey, boolean>>(defaultDecorProbe());
 
   public readonly metrics = this._metrics.asReadonly();
   public readonly perfLog = this._perfLog.asReadonly();
@@ -269,9 +305,10 @@ export class DebugSettingsStore {
   public readonly freezeSprites = this._freezeSprites.asReadonly();
   public readonly sceneLayers = this._sceneLayers.asReadonly();
   public readonly frameCapFps = this._frameCapFps.asReadonly();
+  public readonly decorProbe = this._decorProbe.asReadonly();
 
   public constructor() {
-    const stored = readStored();
+    const stored = readStored(this.storage);
 
     this._metrics.set(stored.metrics);
     this._perfLog.set(stored.perfLog);
@@ -280,6 +317,7 @@ export class DebugSettingsStore {
     this._freezeSprites.set(stored.freezeSprites);
     this._sceneLayers.set(stored.sceneLayers);
     this._frameCapFps.set(stored.frameCapFps);
+    this._decorProbe.set(stored.decorProbe);
   }
 
   public setMetric(key: PerfMetricKey, value: boolean): void {
@@ -325,11 +363,16 @@ export class DebugSettingsStore {
     this.persist();
   }
 
-  private persist(): void {
-    if (typeof localStorage === 'undefined') {
-      return;
-    }
+  public setDecorProbe(key: DecorProbeKey, value: boolean): void {
+    this._decorProbe.update((probe) => ({ ...probe, [key]: value }));
+    this.persist();
+  }
 
+  public toggleDecorProbe(key: DecorProbeKey): void {
+    this.setDecorProbe(key, !this._decorProbe()[key]);
+  }
+
+  private persist(): void {
     const settings: DebugSettings = {
       metrics: this._metrics(),
       perfLog: this._perfLog(),
@@ -338,8 +381,9 @@ export class DebugSettingsStore {
       freezeSprites: this._freezeSprites(),
       sceneLayers: this._sceneLayers(),
       frameCapFps: this._frameCapFps(),
+      decorProbe: this._decorProbe(),
     };
 
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    this.storage.setJson(STORAGE_KEY, settings);
   }
 }

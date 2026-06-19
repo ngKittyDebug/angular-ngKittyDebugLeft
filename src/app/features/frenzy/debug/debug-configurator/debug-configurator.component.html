@@ -98,5 +98,21 @@
         {{ layer }}
       </label>
     }
+
+    <!-- Decor sub-probes: finer than the whole `decor` layer toggle — to bisect WHICH part of decor costs the most.
+         `freeze` stops decor animations (keeps it painted) → splits per-frame vs static cost; `noPlants`/`noRays` hide
+         one sub-element; `flatRays` is the speculative neutral fix (rays without the screen blend). Each CHECKED =
+         probe active (default off). Persisted via DebugSettingsStore. -->
+    <p class="debug-configurator__title">decor probe</p>
+    @for (probe of decorProbeKeys; track probe) {
+      <label class="debug-configurator__row">
+        <input
+          type="checkbox"
+          [checked]="store.decorProbe()[probe]"
+          (change)="store.toggleDecorProbe(probe)"
+        />
+        {{ probe }}
+      </label>
+    }
   }
 </div>

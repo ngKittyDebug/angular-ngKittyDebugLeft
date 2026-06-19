@@ -176,6 +176,10 @@ export class SceneComponent {
   // Per-layer render switches (the `?debug=perf` "scene layers" toggles), to bisect the FPS culprit on the device.
   // Undefined in normal play (no debug store) — the template reads `?.<layer> !== false`, so everything renders.
   protected readonly sceneLayers = computed(() => this.debugSettings?.sceneLayers());
+  // Within-decor diagnostic probes (the `?debug=perf` "decor probe" toggles) — each drives a `.scene--decor-*` host
+  // class that aquarium-decor reads via :host-context, to bisect WHICH part of decor costs the most. Undefined in
+  // normal play (no debug store) — the template reads `?.<probe> === true`, so every probe stays inactive.
+  protected readonly decorProbe = computed(() => this.debugSettings?.decorProbe());
   // The bomb is the one item kept in the DOM in canvas mode (its sensor lights are animated CSS inside its SVG), so
   // the canvas-mode @for renders just it; every other item is drawn on the canvas.
   protected readonly bombItemsByDepth = computed(() =>

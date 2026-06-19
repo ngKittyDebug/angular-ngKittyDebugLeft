@@ -16,6 +16,7 @@ import { SelfMoodEffect } from './data/services/effects/self-mood-effect.service
 import { ShieldBlockEffect } from './data/services/effects/shield-block-effect.service';
 import { FrenzyEffectsService } from './data/services/frenzy-effects.service';
 import { FrenzySocketService } from './data/services/frenzy-socket.service';
+import { FrenzyStorageService } from './data/services/frenzy-storage.service';
 import { PlayerPersistenceService } from './data/services/player-persistence.service';
 import { AudioEngineService } from './data/services/sound/audio-engine.service';
 import { BadEatSoundService } from './data/services/sound/bad-eat-sound.service';
@@ -60,6 +61,7 @@ export const FRENZY_PROVIDERS: Provider[] = [
   FrenzyEffectsService,
   FrenzyPageFacade,
   DeathEpitaphService,
+  FrenzyStorageService,
   PlayerPersistenceService,
   AudioEngineService,
   BadEatSoundService,
