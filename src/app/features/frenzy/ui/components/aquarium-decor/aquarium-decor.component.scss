@@ -356,9 +356,16 @@
 }
 
 /* ---------- Canvas decor backend (DebugSettingsStore.decorMode === 'canvas', ADR 0007) ----------
-   When the kelp is drawn on the decor canvas, hide the DOM blades so they don't double-paint. The rest of the
-   backdrop (floor, rays, motes, bubbles, vignette) stays DOM in this slice — only the proven-costly kelp moves.
-   Same `:host-context` reach as the decor probes above (scene.component.scss can't reach these internals). */
-:host-context(.scene--canvas-kelp) .aq__plants {
-  display: none;
+   When the ANIMATED backdrop layers are drawn on the decor canvas, hide their DOM originals so they don't double-
+   paint: the kelp blades, the plankton motes, the bubbles and the edge vignette. The sandy floor and the screen-
+   blended light rays deliberately STAY in the DOM (a static near-free texture / a blend that has no clean canvas
+   port) — see ADR 0007. Same `:host-context` reach as the decor probes above (scene.component.scss can't reach
+   these internals). */
+:host-context(.scene--canvas-decor) {
+  .aq__plants,
+  .aq__plankton,
+  .aq__bubbles,
+  .aq__vignette {
+    display: none;
+  }
 }

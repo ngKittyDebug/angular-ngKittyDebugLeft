@@ -4,15 +4,7 @@
 // smoothstep as the ease-in-out — visually indistinguishable from CSS's default cubic-bezier on this small rock,
 // and cheap per frame (the same approximation the item canvas uses).
 
-// Fractional part (0..1) of a phase, so callers can pass an unbounded `now / cycleMs`.
-function fractional(phase: number): number {
-  return phase - Math.floor(phase);
-}
-
-// Smoothstep ease-in-out (≈ CSS default ease-in-out) for `u` in 0..1.
-function easeInOut(u: number): number {
-  return u * u * (3 - 2 * u);
-}
+import { easeInOut, fractional } from './keyframe-easing';
 
 // Eased there-and-back over a cycle: 0 at phase 0 and 1, 1 at phase 0.5 — the shape the `alternate` sway keyframe
 // traces (rot at 0% → -rot at 100%, ping-ponged by `animation-direction: alternate`).
