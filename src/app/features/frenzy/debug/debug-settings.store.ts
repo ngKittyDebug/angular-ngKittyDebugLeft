@@ -76,8 +76,10 @@ export interface DebugSettings {
   metrics: Record<PerfMetricKey, boolean>;
   perfLog: PerfLogConfig;
   renderMode: RenderMode;
-  // Decor backdrop render backend (ADR 0007): `dom` is today's swaying-SVG kelp; `canvas` draws the kelp on one
-  // canvas. A persisted toggle, A/B'd independently of `renderMode` (the item backend) on the device.
+  // Decor backdrop render backend (ADR 0007). `canvas` (the DEFAULT, after the tablet A/B went green) draws the
+  // animated backdrop — kelp, motes, bubbles, vignette — on one canvas; `dom` is the retained fallback (the swaying-
+  // SVG/CSS backdrop). The static floor + screen-blended rays stay DOM either way. Persisted, A/B'd independently of
+  // `renderMode` (the item backend) on the device.
   decorMode: RenderMode;
   canvasDprCap: CanvasDprCap;
   // Render players as a static first frame instead of the animated GIF — kills the per-frame sprite decode/re-raster
@@ -142,7 +144,7 @@ function defaultSettings(): DebugSettings {
     metrics: defaultMetrics(),
     perfLog: defaultPerfLog(),
     renderMode: 'dom',
-    decorMode: 'dom',
+    decorMode: 'canvas',
     canvasDprCap: 0,
     freezeSprites: false,
     sceneLayers: defaultSceneLayers(),
@@ -297,7 +299,7 @@ export class DebugSettingsStore {
   private readonly _metrics = signal<Record<PerfMetricKey, boolean>>(defaultMetrics());
   private readonly _perfLog = signal<PerfLogConfig>(defaultPerfLog());
   private readonly _renderMode = signal<RenderMode>('dom');
-  private readonly _decorMode = signal<RenderMode>('dom');
+  private readonly _decorMode = signal<RenderMode>('canvas');
   private readonly _canvasDprCap = signal<CanvasDprCap>(0);
   private readonly _freezeSprites = signal(false);
   private readonly _sceneLayers = signal<Record<SceneLayerKey, boolean>>(defaultSceneLayers());

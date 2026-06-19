@@ -173,9 +173,10 @@ export class SceneComponent {
     () => this.debugSettings?.renderMode() ?? 'dom',
   );
   // The decor render backend, reactive so the template @if (and the render loop) pick it up the instant the toggle
-  // flips. Reads the debug store only when it exists (under `?debug=perf`); a real player is always 'dom'.
+  // flips. Reads the debug store only when it exists (under `?debug=perf`); a real player gets the default `canvas`
+  // backdrop (ADR 0007 — after the tablet A/B went green), with `dom` kept as the `?debug=perf` fallback.
   protected readonly decorMode = computed<RenderMode>(
-    () => this.debugSettings?.decorMode() ?? 'dom',
+    () => this.debugSettings?.decorMode() ?? 'canvas',
   );
   // Whether to render players as a static first frame (the `?debug=perf` "freeze sprites" toggle), passed down to
   // each scene-player. Reads the debug store only when it exists; a real player is always animated (false).
@@ -266,8 +267,8 @@ export class SceneComponent {
     });
 
     // Canvas decor backend lifecycle (ADR 0007): bind + size the decor canvas whenever it's present (decor canvas
-    // mode), re-sizing on the DPR-cap change. Mirrors the item-canvas effect above; inert in normal play (the @if
-    // removes the element, and the decor mode is always 'dom' without the debug store).
+    // mode — the default now, so this runs in normal play too), re-sizing on the DPR-cap change. Mirrors the item-
+    // canvas effect above; only inert when the `?debug=perf` decor toggle is flipped back to the DOM fallback.
     effect(() => {
       const canvas = this.decorCanvasRef()?.nativeElement;
 
