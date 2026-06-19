@@ -7,7 +7,6 @@ import {
 } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideSignalFormsConfig } from '@angular/forms/signals';
-
 import { routes } from './app.routes';
 import { provideStore } from '@ngrx/store';
 import { provideHttpClient } from '@angular/common/http';
