@@ -34,7 +34,6 @@ export class LoginFacade {
           localStorage.setItem('accessToken', JSON.stringify(data));
           this.tokenService.saveToken(data.accessToken);
           this.router.navigateByUrl(returnUrl);
-          console.log(this.tokenService.token());
         },
       });
   }
