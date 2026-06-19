@@ -88,6 +88,11 @@ export class SceneItemCanvasService {
       return;
     }
 
+    // Read the theme shadow colour BEFORE the backing-store / CSS-size writes below: reading computed style AFTER
+    // them forced a synchronous reflow at load (Performance trace, 2026-06-19 — `get scrollbars`/`readThemeVars`).
+    // The colour is size-independent, so reading first is equivalent and keeps the resize a theme-flip pickup point.
+    this.readThemeVars(canvas);
+
     const deviceRatio = Math.max(1, window.devicePixelRatio || 1);
 
     this.pixelRatio = dprCap === 0 ? deviceRatio : Math.min(deviceRatio, dprCap);
@@ -95,7 +100,6 @@ export class SceneItemCanvasService {
     canvas.height = Math.round(this.worldHeight * this.pixelRatio);
     canvas.style.width = `${this.worldWidth}px`;
     canvas.style.height = `${this.worldHeight}px`;
-    this.readThemeVars(canvas);
   }
 
   // The item under the pointer (desktop hover) — set by the scene on pointermove, drawn with the highlight.

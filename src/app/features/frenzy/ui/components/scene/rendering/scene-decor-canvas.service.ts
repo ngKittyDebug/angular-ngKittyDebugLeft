@@ -147,6 +147,11 @@ export class SceneDecorCanvasService {
       return;
     }
 
+    // Resolve the theme colours BEFORE the backing-store / CSS-size writes below: reading computed style (via the
+    // probe spans) AFTER them forced a synchronous reflow at load (Performance trace, 2026-06-19). Colours are
+    // size-independent, so reading first is equivalent and keeps the resize a theme-flip pickup point.
+    this.resolveColors(canvas);
+
     const deviceRatio = Math.max(1, window.devicePixelRatio || 1);
 
     this.pixelRatio = dprCap === 0 ? deviceRatio : Math.min(deviceRatio, dprCap);
@@ -154,7 +159,6 @@ export class SceneDecorCanvasService {
     canvas.height = Math.round(this.worldHeight * this.pixelRatio);
     canvas.style.width = `${this.worldWidth}px`;
     canvas.style.height = `${this.worldHeight}px`;
-    this.resolveColors(canvas);
   }
 
   // Draw one frame, back→front, matching the DOM decor order: plankton motes, kelp blades, bubbles, then the static
