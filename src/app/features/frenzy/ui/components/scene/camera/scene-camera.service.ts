@@ -1,4 +1,4 @@
-import { inject, Injectable, Renderer2 } from '@angular/core';
+import { DestroyRef, inject, Injectable, Renderer2 } from '@angular/core';
 
 import { FRENZY } from '@game/frenzy/config';
 
@@ -50,6 +50,7 @@ export interface CameraSnapshot {
 export class SceneCameraService {
   private readonly renderer = inject(Renderer2);
   private readonly players = inject(PlayerExtrapolatorService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly worldWidth = FRENZY.world.width;
   private readonly worldHeight = FRENZY.world.height;
   // Camera offset (px) applied to the world layer, eased toward its dead-zone target each frame (sub-pixel, no
@@ -58,11 +59,15 @@ export class SceneCameraService {
   private camX = 0;
   private camY = 0;
   private cameraReady = false;
-  // Last frame's scale and viewport size, cached so overlays can read the exact projection this frame produced
-  // (the camera math derives them locally in `update`; nothing else stored them). Exposed via `snapshot()`.
+  // Scale and viewport size — derived only from the viewport/world dimensions, so they change only on resize, not
+  // per frame. Cached here (refreshed by a ResizeObserver, see `observeViewport`) and read by the per-frame math +
+  // overlays' `snapshot()`, instead of reading `clientWidth` every frame (a forced reflow after the actor writes).
   private scale = 1;
   private viewportWidth = 0;
   private viewportHeight = 0;
+  // The viewport currently observed for resize, and its observer (disconnected on the scene's teardown).
+  private observedViewport: HTMLElement | null = null;
+  private resizeObserver: ResizeObserver | null = null;
   // Last width written to the foreground kelp layer — it only changes on resize/zoom, so the per-frame
   // same-value style write is skipped.
   private lastKelpWidth = '';
@@ -81,6 +86,13 @@ export class SceneCameraService {
       return;
     }
 
+    // Viewport size + the scale derived from it change only on resize, not per frame. Observe the viewport once and
+    // cache them (see `measureViewport`); the per-frame math below reads the fields. Reading `clientWidth` here every
+    // frame — right after the actor transform writes invalidated layout — forced a synchronous reflow each frame.
+    if (viewport !== this.observedViewport) {
+      this.observeViewport(viewport);
+    }
+
     // Read the LIVE per-frame "me" (`frame()`), not the `rendered` signal: since ADR 0001 throttled `rendered` to
     // snapshot cadence (~every 300ms), following it made the camera chase a target that stepped a few times a
     // second while the sprite drifted smoothly every frame — a rhythmic scroll lurch. `frame()` updates each tick,
@@ -90,19 +102,9 @@ export class SceneCameraService {
     const focusY = me?.y ?? 0.5;
     // The camera math works in on-screen world px = world px × scale (the world layer has transform-origin 0 0,
     // so `translate(cam) scale(s)` puts a child at `f·worldPx·s + cam`). Feed the scaled extents to every axis.
-    const scale = cameraScale(
-      viewport.clientWidth,
-      viewport.clientHeight,
-      this.worldWidth,
-      this.worldHeight,
-    );
+    const scale = this.scale;
     const screenWorldWidth = this.worldWidth * scale;
     const screenWorldHeight = this.worldHeight * scale;
-
-    // Cache the projection inputs for `snapshot()` (overlays read them THIS frame, after `update`).
-    this.scale = scale;
-    this.viewportWidth = viewport.clientWidth;
-    this.viewportHeight = viewport.clientHeight;
 
     if (this.cameraReady) {
       // Ease toward the dead-zone target: zero motion while the Pokémon stays in the central band, a gentle
@@ -110,7 +112,7 @@ export class SceneCameraService {
       const targetX = deadZoneCameraAxis(
         this.camX,
         focusX,
-        viewport.clientWidth,
+        this.viewportWidth,
         screenWorldWidth,
         CAMERA_DEAD_ZONE_X_LOW,
         CAMERA_DEAD_ZONE_X_HIGH,
@@ -118,7 +120,7 @@ export class SceneCameraService {
       const targetY = deadZoneCameraAxis(
         this.camY,
         focusY,
-        viewport.clientHeight,
+        this.viewportHeight,
         screenWorldHeight,
         CAMERA_DEAD_ZONE_Y_LOW,
         CAMERA_DEAD_ZONE_Y_HIGH,
@@ -128,8 +130,8 @@ export class SceneCameraService {
       this.camY += (targetY - this.camY) * CAMERA_LERP;
     } else {
       // Open centred on the focus (not the dead-zone, which would leave the world's corner showing).
-      this.camX = centerCameraAxis(focusX, viewport.clientWidth, screenWorldWidth);
-      this.camY = centerCameraAxis(focusY, viewport.clientHeight, screenWorldHeight);
+      this.camX = centerCameraAxis(focusX, this.viewportWidth, screenWorldWidth);
+      this.camY = centerCameraAxis(focusY, this.viewportHeight, screenWorldHeight);
       this.cameraReady = true;
     }
 
@@ -174,6 +176,29 @@ export class SceneCameraService {
       this.camX,
       this.camY,
       this.scale,
+      this.viewportWidth,
+      this.viewportHeight,
+      this.worldWidth,
+      this.worldHeight,
+    );
+  }
+
+  // Cache the viewport size + the scale derived from it, and keep them fresh on resize. `cameraScale` depends only
+  // on the viewport/world dimensions, so it is recomputed here (on resize) instead of every frame. ResizeObserver
+  // fires an initial callback on observe; we also measure synchronously so the very first frame has valid dims.
+  private observeViewport(viewport: HTMLElement): void {
+    this.resizeObserver?.disconnect();
+    this.observedViewport = viewport;
+    this.measureViewport(viewport);
+    this.resizeObserver = new ResizeObserver(() => this.measureViewport(viewport));
+    this.resizeObserver.observe(viewport);
+    this.destroyRef.onDestroy(() => this.resizeObserver?.disconnect());
+  }
+
+  private measureViewport(viewport: HTMLElement): void {
+    this.viewportWidth = viewport.clientWidth;
+    this.viewportHeight = viewport.clientHeight;
+    this.scale = cameraScale(
       this.viewportWidth,
       this.viewportHeight,
       this.worldWidth,
