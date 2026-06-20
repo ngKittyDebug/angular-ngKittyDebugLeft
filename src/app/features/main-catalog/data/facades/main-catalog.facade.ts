@@ -21,11 +21,21 @@ export class MainCatalogFacade {
 
   public readonly pokemonPaginationData = this.pokemonPaginationService.pokemonPaginationData;
 
-  public readonly filteredPokemonList = computed(() =>
-    this.pokemonPaginationData()?.results.filter((pokemon) =>
+  public readonly filteredPokemonList = computed(() => {
+    const unionResult = this.pokemonFilterStorageService.unionResult;
+
+    if (this.filterByTypes().length || this.filterByGenerations().length) {
+      const namesSet = new Set(unionResult().map((n) => n.toLowerCase()));
+
+      return this.pokemonPaginationData()
+        ?.results.filter((p) => namesSet.has(p.name.toLowerCase()))
+        .filter((pokemon) => pokemon.name.includes(this.filterByName().toLowerCase()));
+    }
+
+    return this.pokemonPaginationData()?.results.filter((pokemon) =>
       pokemon.name.includes(this.filterByName().toLowerCase()),
-    ),
-  );
+    );
+  });
 
   public readonly paginatedPokemonList = computed(() =>
     this.filteredPokemonList()?.slice(

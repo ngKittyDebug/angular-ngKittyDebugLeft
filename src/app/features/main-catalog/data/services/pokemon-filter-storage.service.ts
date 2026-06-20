@@ -1,10 +1,10 @@
-import { computed, effect, inject, Service, signal } from '@angular/core';
+import { computed, inject, Service, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { PokemonApiService } from '@core/api/pokemon-api.service';
 import type { PokemonListApiData } from '@shared/models/pokemon-list-api-data-interface';
 import { forkJoin, map, of } from 'rxjs';
-import { filterCommonPokemons } from '../helpers/filter-pokemons';
-import type { PokemonTypes } from '../models/pokemons-api-reference';
+import { filterCommonPokemons, intersectNonEmpty } from '../helpers/filter-pokemons';
+import type { PokemonGeneration, PokemonTypes } from '../models/pokemons-api-reference';
 
 @Service({ autoProvided: false })
 export class PokemonFilterStorageService {
@@ -39,20 +39,39 @@ export class PokemonFilterStorageService {
       }
 
       const requests = params.map((type) =>
-        this.pokemonApiService.getTypeList<PokemonTypes>(type).pipe(map((data) => data.pokemon)),
+        this.pokemonApiService
+          .getTypeList<PokemonTypes>(type)
+          .pipe(map((data) => data.pokemon.map((data) => data.pokemon))),
       );
 
       return forkJoin(requests).pipe(
         map((arrayOfArraysOfPokemon) => filterCommonPokemons(arrayOfArraysOfPokemon)),
       );
     },
+    defaultValue: [],
   });
 
-  public readonly bla = computed(() => this.foundByType.value());
+  public readonly foundByGeneration = rxResource({
+    params: () => this.filterByGenerations(),
+    stream: ({ params }) => {
+      if (params.length === 0) {
+        return of([]);
+      }
 
-  constructor() {
-    effect(() => {
-      console.log(this.bla());
-    });
-  }
+      const requests = params.map((type) =>
+        this.pokemonApiService
+          .getGenerationList<PokemonGeneration>(type)
+          .pipe(map((data) => data.pokemon_species)),
+      );
+
+      return forkJoin(requests).pipe(
+        map((arrayOfArraysOfPokemon) => filterCommonPokemons(arrayOfArraysOfPokemon)),
+      );
+    },
+    defaultValue: [],
+  });
+
+  public readonly unionResult = computed(() =>
+    intersectNonEmpty([this.foundByType.value(), this.foundByGeneration.value()]),
+  );
 }
