@@ -4,7 +4,6 @@ export interface UserProfile {
   email: string;
   avatarUrl?: string;
   favoritePokemons: string[];
-  caughtPokemons: string[];
 }
 
 export interface UpdateUserDto {
@@ -21,8 +20,11 @@ export interface ChangePasswordDto {
 export interface UserState {
   profile: UserProfile | null;
   favoritePokemons: string[];
-  caughtPokemons: string[];
   isLoading: boolean;
   error: string | null;
   isPasswordChangedSuccess: boolean;
+}
+
+export interface UpdateAvatar {
+  avatar: string;
 }
