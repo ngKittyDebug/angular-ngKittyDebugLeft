@@ -1,18 +1,10 @@
 import { computed, effect, inject, Service, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { PokemonApiService } from '@core/api/pokemon-api.service';
-import type {
-  PokemonListApiData,
-  PokemonListItemApiData,
-} from '@shared/models/pokemon-list-api-data-interface';
+import type { PokemonListApiData } from '@shared/models/pokemon-list-api-data-interface';
 import { forkJoin, map, of } from 'rxjs';
-
-interface PokemonTypes {
-  id: string;
-  pokemon: {
-    pokemon: PokemonListItemApiData;
-  };
-}
+import { filterCommonPokemons } from '../helpers/filter-pokemons';
+import type { PokemonTypes } from '../models/pokemons-api-reference';
 
 @Service({ autoProvided: false })
 export class PokemonFilterStorageService {
@@ -51,14 +43,7 @@ export class PokemonFilterStorageService {
       );
 
       return forkJoin(requests).pipe(
-        map((arrayOfArrays) => {
-          const flatList = arrayOfArrays.flat();
-
-          return flatList.filter(
-            (item, index, self) =>
-              self.findIndex((object) => object.pokemon.name === item.pokemon.name) === index,
-          );
-        }),
+        map((arrayOfArraysOfPokemon) => filterCommonPokemons(arrayOfArraysOfPokemon)),
       );
     },
   });
