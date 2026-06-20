@@ -1,11 +1,13 @@
 import type { PokemonListItemApiData } from '@shared/models/pokemon-list-api-data-interface';
 
-export function filterCommonPokemons(arrayOfArraysOfPokemon: PokemonListItemApiData[][]): string[] {
+export function filterCommonPokemons(
+  arrayOfArraysOfPokemon: PokemonListItemApiData[][],
+): PokemonListItemApiData[] {
   if (!arrayOfArraysOfPokemon || arrayOfArraysOfPokemon.length === 0) {
     return [];
   }
   if (arrayOfArraysOfPokemon.length === 1) {
-    return arrayOfArraysOfPokemon[0].map((item) => item.name);
+    return arrayOfArraysOfPokemon[0].map((item) => item);
   }
   const firstArray = arrayOfArraysOfPokemon[0];
 
@@ -15,7 +17,7 @@ export function filterCommonPokemons(arrayOfArraysOfPokemon: PokemonListItemApiD
 
   return firstArray
     .filter((item) => otherArraysSets.every((nameSet) => nameSet.has(item.name)))
-    .map((item) => item.name);
+    .map((item) => item);
 }
 
 export function findCommonNamesOfPokemons(array1: string[], array2: string[]) {
@@ -28,7 +30,7 @@ export function findCommonNamesOfPokemons(array1: string[], array2: string[]) {
   return array1.filter((name) => set2.has(name));
 }
 
-export function intersectNonEmpty(arrays: string[][]): string[] {
+export function intersectNonEmpty(arrays: PokemonListItemApiData[][]): PokemonListItemApiData[] {
   const active = arrays.filter((array) => array.length > 0);
 
   if (active.length === 0) {

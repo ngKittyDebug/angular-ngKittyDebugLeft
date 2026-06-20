@@ -25,7 +25,7 @@ export class MainCatalogFacade {
     const unionResult = this.pokemonFilterStorageService.unionResult;
 
     if (this.filterByTypes().length || this.filterByGenerations().length) {
-      const namesSet = new Set(unionResult().map((n) => n.toLowerCase()));
+      const namesSet = new Set(unionResult().map((n) => n.name.toLowerCase()));
 
       return this.pokemonPaginationData()
         ?.results.filter((p) => namesSet.has(p.name.toLowerCase()))
