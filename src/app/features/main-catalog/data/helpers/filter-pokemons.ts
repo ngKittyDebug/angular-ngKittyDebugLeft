@@ -20,16 +20,6 @@ export function filterCommonPokemons(
     .map((item) => item);
 }
 
-export function findCommonNamesOfPokemons(array1: string[], array2: string[]) {
-  const set2 = new Set(array2);
-
-  if (!Array.isArray(array1) || !Array.isArray(array2)) {
-    return [];
-  }
-
-  return array1.filter((name) => set2.has(name));
-}
-
 export function intersectNonEmpty(arrays: PokemonListItemApiData[][]): PokemonListItemApiData[] {
   const active = arrays.filter((array) => array.length > 0);
 
