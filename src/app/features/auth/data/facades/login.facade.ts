@@ -30,8 +30,6 @@ export class LoginFacade {
       )
       .subscribe({
         next: (data) => {
-          //TODO тут будем сетапить в отдельный AuthService вместо локал стораджа
-          localStorage.setItem('accessToken', JSON.stringify(data));
           this.tokenService.saveToken(data.accessToken);
           this.router.navigateByUrl(returnUrl);
         },

@@ -5,7 +5,7 @@ import type { AuthApiResponse } from '@shared/models/auth-api-response.model';
 
 @Service()
 export class AuthService {
-  private http = inject(HttpClient);
+  private readonly http = inject(HttpClient);
 
   private readonly _token = signal<string | null>(null);
 
