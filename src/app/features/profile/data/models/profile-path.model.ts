@@ -2,8 +2,7 @@ export const UserPath = {
   BASE: '/user',
   PROFILE: '/profile',
   PASSWORD: '/password',
-  STATS_UPDATE: '/stats/update',
-  STATS_GET_GAME: '/stats/id',
-  STATS_GET_ALL: '/stats/all',
+  POKEMON_FAVORITE: '/pokemon',
+  POKEMON_FAVORITE_DELETE: '/pokemon/delete',
   AVATAR: '/avatar',
 } as const;

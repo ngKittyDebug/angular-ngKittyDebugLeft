@@ -7,7 +7,7 @@ import type {
 } from '../models/profile.model';
 import { patchState, signalStore, withMethods, withState } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
-import { catchError, of, pipe, switchMap, tap } from 'rxjs';
+import { catchError, concatMap, of, pipe, switchMap, tap } from 'rxjs';
 import { ProfileService } from '../services/profile.service';
 
 const initialState: UserState = {
@@ -112,6 +112,72 @@ export const UserProfileStore = signalStore(
                   isLoading: false,
                 });
               }
+            }),
+            catchError((error: unknown) => {
+              const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+              patchState(store, { isLoading: false, error: errorMessage });
+
+              return of(null);
+            }),
+          ),
+        ),
+      ),
+    ),
+    loadFavorites: rxMethod<void>(
+      pipe(
+        tap(() => patchState(store, { isLoading: true, error: null })),
+        switchMap(() =>
+          api.getFavorites().pipe(
+            tap((favorites) =>
+              patchState(store, { favoritePokemons: favorites, isLoading: false }),
+            ),
+            catchError((error: unknown) => {
+              const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+              patchState(store, { isLoading: false, error: errorMessage });
+
+              return of(null);
+            }),
+          ),
+        ),
+      ),
+    ),
+
+    addToFavorites: rxMethod<string>(
+      pipe(
+        concatMap((pokemonName) =>
+          api.addFavorite(pokemonName).pipe(
+            tap(() => {
+              const current = store.favoritePokemons();
+
+              patchState(store, {
+                favoritePokemons: [...current, pokemonName],
+                isLoading: false,
+              });
+            }),
+            catchError((error: unknown) => {
+              const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+              patchState(store, { isLoading: false, error: errorMessage });
+
+              return of(null);
+            }),
+          ),
+        ),
+      ),
+    ),
+
+    removeFromFavorites: rxMethod<string>(
+      pipe(
+        tap(() => patchState(store, { isLoading: true, error: null })),
+        concatMap((pokemonName) =>
+          api.removeFavorite(pokemonName).pipe(
+            tap(() => {
+              const current = store.favoritePokemons();
+              const updated = current.filter((name) => name !== pokemonName);
+
+              patchState(store, { favoritePokemons: updated, isLoading: false });
             }),
             catchError((error: unknown) => {
               const errorMessage = error instanceof Error ? error.message : 'Unknown error';

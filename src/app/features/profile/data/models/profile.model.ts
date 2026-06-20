@@ -28,3 +28,7 @@ export interface UserState {
 export interface UpdateAvatar {
   avatar: string;
 }
+
+export interface PokemonFavoriteResponse {
+  pokemonNameFavorite: string[];
+}

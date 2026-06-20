@@ -1,9 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Service } from '@angular/core';
 import { AUTH_SERVER_URL } from '@core/constants/auth-constants';
-import type { Observable } from 'rxjs';
+import { map, type Observable } from 'rxjs';
 import type {
   ChangePasswordDto,
+  PokemonFavoriteResponse,
   UpdateAvatar,
   UpdateUserDto,
   UserProfile,
@@ -43,5 +44,21 @@ export class ProfileService {
       getFullUrl(this.baseUrl, `${UserPath.BASE}${UserPath.AVATAR}`),
       data,
     );
+  }
+
+  public getFavorites(): Observable<string[]> {
+    return this.http
+      .get<PokemonFavoriteResponse>(
+        getFullUrl(this.baseUrl, `${UserPath.BASE}${UserPath.POKEMON_FAVORITE}`),
+      )
+      .pipe(map((response) => response.pokemonNameFavorite));
+  }
+
+  public addFavorite(pokemonName: string): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/user/favorites/${pokemonName}`, {});
+  }
+
+  public removeFavorite(pokemonName: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/user/favorites/${pokemonName}`);
   }
 }
