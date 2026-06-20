@@ -17,9 +17,6 @@ export class CatalogFilterComponent {
 
   protected readonly expanded = signal(false);
 
-  protected readonly typeListResource = this.facade.typeList;
-  protected readonly generationListResource = this.facade.generationList;
-
   protected readonly selectedTypeList = signal<string[]>([]);
   protected readonly selectedGenerationList = signal<string[]>([]);
   protected readonly name = signal('');
