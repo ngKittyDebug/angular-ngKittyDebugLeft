@@ -4,11 +4,11 @@ import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 
 import { MainCatalogPageComponent } from './main-catalog-page.component';
-// import { MainCatalogFacade } from '@features/main-catalog/data/facades/main-catalog.facade';
-// import { mainCatalogFacadeMock } from '@features/main-catalog/data/facades/main-catalog.facade.mock';
+import { MainCatalogFacade } from '@features/main-catalog/data/facades/main-catalog.facade';
+import { mainCatalogFacadeMock } from '@features/main-catalog/data/facades/main-catalog.facade.mock';
 import { TranslocoTestingModule } from '@jsverse/transloco';
 
-describe.skip('MainCatalogPageComponent', () => {
+describe('MainCatalogPageComponent', () => {
   let component: MainCatalogPageComponent;
   let fixture: ComponentFixture<MainCatalogPageComponent>;
 
@@ -27,7 +27,7 @@ describe.skip('MainCatalogPageComponent', () => {
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
-        // { provide: MainCatalogFacade, useValue: mainCatalogFacadeMock },
+        { provide: MainCatalogFacade, useValue: mainCatalogFacadeMock },
       ],
     }).compileComponents();
 
