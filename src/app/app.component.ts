@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { TUI_DARK_MODE } from '@taiga-ui/core';
 import { LoaderComponent } from '@shared/ui/components/loader/loader.component';
-import { LoaderService } from '@shared/services/loader.service';
+import { LoaderService } from '@core/services/loader.service';
 
 @Component({
   selector: 'left-paw-app-root',
