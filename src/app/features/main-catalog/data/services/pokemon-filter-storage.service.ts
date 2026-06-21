@@ -1,13 +1,8 @@
 import { computed, inject, Service, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { PokemonApiService } from '@core/api/pokemon-api.service';
-import type { PokemonListApiData } from '@shared/models/pokemon-list-api-data-interface';
 import { forkJoin, map, of } from 'rxjs';
 import { filterCommonPokemons, intersectNonEmpty } from '../helpers/filter-pokemons';
-import type {
-  PokemonGenerationApiData,
-  PokemonTypeApiData,
-} from '../models/pokemons-api-reference';
 
 @Service({ autoProvided: false })
 export class PokemonFilterStorageService {
@@ -19,15 +14,13 @@ export class PokemonFilterStorageService {
 
   public readonly typeListResource = rxResource({
     stream: () =>
-      this.pokemonApiService
-        .getTypeList<PokemonListApiData>()
-        .pipe(map((data) => data.results.map((t) => t.name))),
+      this.pokemonApiService.getTypeList().pipe(map((data) => data.results.map((t) => t.name))),
   });
 
   public readonly generationListResource = rxResource({
     stream: () =>
       this.pokemonApiService
-        .getGenerationList<PokemonListApiData>()
+        .getGenerationList()
         .pipe(map((data) => data.results.map((t) => t.name))),
   });
 
@@ -43,7 +36,7 @@ export class PokemonFilterStorageService {
 
       const requests = params.map((type) =>
         this.pokemonApiService
-          .getTypeList<PokemonTypeApiData>(type)
+          .getType(type)
           .pipe(map((data) => data.pokemon.map((data) => data.pokemon))),
       );
 
@@ -61,9 +54,7 @@ export class PokemonFilterStorageService {
         return of([]);
       }
 
-      return this.pokemonApiService
-        .getGenerationList<PokemonGenerationApiData>(params)
-        .pipe(map((data) => data.pokemon_species));
+      return this.pokemonApiService.getGeneration(params).pipe(map((data) => data.pokemon_species));
     },
     defaultValue: [],
   });
