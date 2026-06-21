@@ -1,7 +1,14 @@
 <ng-container *transloco="let t; prefix: 'frenzy.scene'">
   <!-- Grounding contact shadow under EVERY sprite (own/others/NPC), behind it (z-index -1), riding the drift.
-       Neutral theme-flipped base; the dominant-effect modifier class (null = none) recolours + breathes it. -->
-  <span class="scene__shadow" [class]="player().shadowEffectClass" aria-hidden="true"></span>
+       Neutral theme-flipped base; the dominant-effect modifier class (null = none) recolours + breathes it.
+       Hidden in player-sprites canvas mode: the sprite then lives on the actors-canvas BELOW this chrome, so the
+       shadow can no longer sit behind it (see scss + issue 04). -->
+  <span
+    class="scene__shadow"
+    [class]="player().shadowEffectClass"
+    [class.scene__shadow--hidden]="spritesMode() === 'canvas'"
+    aria-hidden="true"
+  ></span>
 
   @for (aura of player().effectAuras; track aura.className) {
     @switch (aura.render) {
