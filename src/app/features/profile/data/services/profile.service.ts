@@ -54,11 +54,17 @@ export class ProfileService {
       .pipe(map((response) => response.pokemonNameFavorite));
   }
 
-  public addFavorite(pokemonName: string): Observable<void> {
-    return this.http.post<void>(`${this.baseUrl}/user/favorites/${pokemonName}`, {});
+  public addFavorite(pokemonName: string): Observable<PokemonFavoriteResponse> {
+    return this.http.post<PokemonFavoriteResponse>(
+      getFullUrl(this.baseUrl, `${UserPath.BASE}${UserPath.POKEMON_FAVORITE}`),
+      { pokemonName: pokemonName },
+    );
   }
 
-  public removeFavorite(pokemonName: string): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/user/favorites/${pokemonName}`);
+  public removeFavorite(pokemonName: string): Observable<PokemonFavoriteResponse> {
+    return this.http.post<PokemonFavoriteResponse>(
+      getFullUrl(this.baseUrl, `${UserPath.BASE}${UserPath.POKEMON_FAVORITE_DELETE}`),
+      { pokemonName: pokemonName },
+    );
   }
 }
