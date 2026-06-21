@@ -74,8 +74,9 @@ export class SceneFacade {
 
   // Canvas decor backend (ADR 0007): draw the backdrop kelp on its canvas. Uses the camera's visible bounds to skip
   // off-screen blade columns — one frame stale here (runs before updateCamera in the loop), absorbed by the cull margin.
-  public tickDecor(now: number): void {
-    this.decorCanvas.draw(this.camera.visibleBounds(), now);
+  // `skipPlants` forwards the canvas-mode `noPlants` decor probe so the device A/B can attribute the blade fill cost.
+  public tickDecor(now: number, skipPlants: boolean): void {
+    this.decorCanvas.draw(this.camera.visibleBounds(), now, skipPlants);
   }
 
   // The live per-frame item view models — for the canvas hit-test, which needs the current drawn positions (not the
@@ -89,9 +90,22 @@ export class SceneFacade {
     myId: string | null,
     evolving: ReadonlyMap<string, number>,
     now: number,
+    drawPlayersCanvas: boolean,
+    itemsDrewCanvas: boolean,
   ): void {
     this.players.tick(players, myId, evolving, now);
-    this.registry.writePlayers(this.players.frame());
+
+    const frame = this.players.frame();
+
+    // Always write the DOM chrome positions (hp/crown/name/auras/shadow ride the registry in lockstep with the
+    // canvas sprite, in both modes).
+    this.registry.writePlayers(frame);
+
+    // Canvas backend: draw the player sprites on the shared actors-canvas, on top of the items. Clear it first only
+    // when the items pass didn't (items in DOM mode) — so items and players share ONE clear per frame, items first.
+    if (drawPlayersCanvas) {
+      this.itemCanvas.drawPlayers(frame, this.camera.visibleBounds(), now, !itemsDrewCanvas);
+    }
   }
 
   // The live per-frame player view models — for the `?debug=perf` panel, which must measure the optimized render

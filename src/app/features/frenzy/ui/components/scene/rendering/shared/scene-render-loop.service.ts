@@ -33,8 +33,14 @@ export interface SceneFrameContext {
   evolving(): ReadonlyMap<string, number>;
   // The live item render backend ('dom' | 'canvas') — read each frame so the toggle takes effect without a reload.
   renderMode(): RenderMode;
+  // The live player-sprite render backend ('dom' | 'canvas') — read each frame so the toggle takes effect without a
+  // reload; 'canvas' draws the sprites on the shared actors-canvas instead of the per-player DOM `<img>`.
+  playerSpritesMode(): RenderMode;
   // The live decor render backend ('dom' | 'canvas') — read each frame so the toggle takes effect without a reload.
   decorMode(): RenderMode;
+  // The canvas-mode `noPlants` decor probe — read each frame; true drops the canvas blade fill loop so an on-device
+  // A/B can attribute the blade cost (the DOM `noPlants` probe can't — the DOM backdrop is display:none in canvas mode).
+  decorNoPlants(): boolean;
   // Frame-pacing cap target in fps (0 = uncapped) — read each frame so the toggle takes effect without a reload.
   frameCapFps(): number;
   readonly debug: DebugFlags;
@@ -89,10 +95,17 @@ export class SceneRenderLoopService {
       // Canvas decor backend (ADR 0007): redraw the backdrop kelp each frame. In DOM mode the kelp is pure CSS and
       // there is nothing to tick here.
       if (context.decorMode() === 'canvas') {
-        this.facade.tickDecor(now);
+        this.facade.tickDecor(now, context.decorNoPlants());
       }
 
-      this.facade.tickPlayers(context.players(), context.myId(), context.evolving(), now);
+      this.facade.tickPlayers(
+        context.players(),
+        context.myId(),
+        context.evolving(),
+        now,
+        context.playerSpritesMode() === 'canvas',
+        context.renderMode() === 'canvas',
+      );
 
       // The box overlay (a dev tool) republishes structure so its boxes track the imperatively-moved sprites.
       if (context.debugBoxesActive) {

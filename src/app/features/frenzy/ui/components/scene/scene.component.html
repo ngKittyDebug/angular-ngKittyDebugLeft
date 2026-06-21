@@ -38,20 +38,23 @@
       <canvas class="scene__decor-canvas" #decorCanvas aria-hidden="true"></canvas>
     }
 
-    @if (renderMode() === 'canvas') {
-      <!-- Hybrid-canvas item layer (?debug=perf render-mode toggle): every falling item — the bomb included — drawn
-           on ONE canvas, a world-sized child of the world so the parent camera transform pans/zooms it. Its own
-           compositor layer (will-change, see SCSS) keeps the per-frame redraw off the seabed/kelp raster. -->
+    @if (actorsCanvasActive()) {
+      <!-- Shared hybrid-canvas actors layer (?debug=perf render-mode / players toggles): the falling items (bomb
+           included) and/or the player sprites drawn on ONE canvas, a world-sized child of the world so the parent
+           camera transform pans/zooms it. Its own compositor layer (will-change, see SCSS) keeps the per-frame redraw
+           off the seabed/kelp raster. Present whenever EITHER backend is on canvas; items paint first, players on top. -->
       <canvas class="scene__item-canvas" #itemCanvas aria-hidden="true"></canvas>
-    } @else {
-      @for (item of renderedItemsByDepth(); track item.id) {
-        <left-paw-scene-item
-          leftPawActorHost="item"
-          [actorId]="item.id"
-          [item]="item"
-          (clicked)="onItemClick(item, $event)"
-        />
-      }
+    }
+
+    <!-- DOM item layer (renderMode 'dom'): `renderedItemsByDepth()` is empty in canvas mode, so this `@for` renders
+         nothing then without a guarding `@if` (keeps the template's cyclomatic complexity down). -->
+    @for (item of renderedItemsByDepth(); track item.id) {
+      <left-paw-scene-item
+        leftPawActorHost="item"
+        [actorId]="item.id"
+        [item]="item"
+        (clicked)="onItemClick(item, $event)"
+      />
     }
 
     @for (puff of sandPuffs(); track puff.id) {

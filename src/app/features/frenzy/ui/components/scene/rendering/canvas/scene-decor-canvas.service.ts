@@ -164,7 +164,10 @@ export class SceneDecorCanvasService {
   // Draw one frame, back→front, matching the DOM decor order: plankton motes, kelp blades, bubbles, then the static
   // edge vignette on top. Positions are plain world px; the parent camera transform places them on screen. `bounds`
   // soft-culls particles/blades whose column is off-screen (skips their draw); the vignette always covers the world.
-  public draw(bounds: VisibleNormBounds | null, now: number): void {
+  // `skipPlants` is the canvas-mode counterpart of the DOM `noPlants` decor probe: it drops the ~218-blade fill loop
+  // so an on-device A/B can attribute how much of the canvas draw cost is the blades (the DOM probe only gates the DOM
+  // backdrop, which is display:none in canvas mode — so without this the canvas blade cost cannot be isolated).
+  public draw(bounds: VisibleNormBounds | null, now: number, skipPlants = false): void {
     const context = this.context;
 
     if (context === null) {
@@ -184,17 +187,19 @@ export class SceneDecorCanvasService {
       this.drawMote(context, mote, state);
     }
 
-    for (const blade of this.blades) {
-      // Cull on the X column only (a tall blade rooted off the bottom can still poke into view, so never Y-cull it).
-      if (this.culled(blade.normX, bounds)) {
-        continue;
+    if (!skipPlants) {
+      for (const blade of this.blades) {
+        // Cull on the X column only (a tall blade rooted off the bottom can still poke into view, so never Y-cull it).
+        if (this.culled(blade.normX, bounds)) {
+          continue;
+        }
+
+        const rotationDeg = blade.animated
+          ? plantSwayDegAt((now + blade.delayMs) / blade.cycleMs, blade.rotationDeg)
+          : blade.rotationDeg * STILL_LEAN_FACTOR;
+
+        this.drawBlade(context, blade, rotationDeg);
       }
-
-      const rotationDeg = blade.animated
-        ? plantSwayDegAt((now + blade.delayMs) / blade.cycleMs, blade.rotationDeg)
-        : blade.rotationDeg * STILL_LEAN_FACTOR;
-
-      this.drawBlade(context, blade, rotationDeg);
     }
 
     for (const bubble of this.bubbles) {

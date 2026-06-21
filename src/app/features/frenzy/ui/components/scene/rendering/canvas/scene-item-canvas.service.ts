@@ -1,15 +1,22 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 
 import { FRENZY } from '@game/frenzy/config';
 import type { ItemType } from '@game/frenzy/types';
 
-import { itemSpritePathFor } from '../../../../constants/pokemon-registry';
+import {
+  itemSpritePathFor,
+  spritePathFor,
+  spriteRenderFor,
+} from '../../../../constants/pokemon-registry';
 import { buriedClipPoints } from '../../../scene-item/buried-clip';
 import { withinNormBounds } from '../../camera/camera-math';
 import type { VisibleNormBounds } from '../../camera/camera-math';
 import { BREATHE_MS, breatheScaleAt, swayDegAt, tumbleDegAt } from './item-canvas-animation';
+import { evolvePulseAt, facingScaleX, npcAngerFilter, SAD_FILTER } from './player-canvas-animation';
+import type { EvolvePulse } from './player-canvas-animation';
+import { PlayerSpriteSource } from './player-sprite-source';
 import type { ItemWriteTally } from '../shared/actor-write-tally';
-import type { RenderedItem } from '../../scene-view-models';
+import type { RenderedItem, RenderedPlayer } from '../../scene-view-models';
 
 // The hybrid-canvas backend (DebugSettingsStore.renderMode === 'canvas'): draws the falling items on ONE canvas
 // instead of one DOM node each, so their per-frame drift updates a single composited texture instead of repainting
@@ -49,6 +56,9 @@ interface FrozenSpin {
 
 @Injectable()
 export class SceneItemCanvasService {
+  // Live texture-source for the player sprites drawn here (the shared actors-canvas also paints players, behind the
+  // rename — see drawPlayers). Hands the canvas the current animated GIF frame to blit.
+  private readonly spriteSource = inject(PlayerSpriteSource);
   private canvas: HTMLCanvasElement | null = null;
   private context: CanvasRenderingContext2D | null = null;
   // Effective backing-store pixel ratio (device ratio, optionally capped lower to cut rasterisation on weak GPUs).
@@ -62,6 +72,9 @@ export class SceneItemCanvasService {
   private readonly requested = new Set<ItemType>();
   // Frozen tumble frame per landed item id; entries pruned when the item leaves the scene.
   private readonly frozen = new Map<string, FrozenSpin>();
+  // Evolve-pulse start time (draw clock) per player id, stamped on the rising edge of `isEvolving` so the one-shot
+  // 1.5s flash plays once per evolution; pruned when the effect ends or the player leaves (mirrors `frozen`).
+  private readonly evolveStart = new Map<string, number>();
   // Last frame's draw accounting (the canvas-mode soft-cull split) for the `?debug=perf` census — the canvas
   // counterpart of the DOM registry's `writeTally`: in canvas mode the registry no longer positions any item (all
   // items, the bomb included, are drawn here), so the census reads this instead to show what the canvas drew vs culled.
@@ -120,6 +133,7 @@ export class SceneItemCanvasService {
     }
 
     this.frozen.clear();
+    this.evolveStart.clear();
   }
 
   // Draw one frame: clear, scale to the backing-store pixel ratio, then draw each visible item in depth
@@ -175,6 +189,132 @@ export class SceneItemCanvasService {
   // item in the frame (the bomb is drawn here too now, as a static sprite).
   public drawTally(): ItemWriteTally {
     return { total: this.drawableTotal, written: this.drawnItems, skipped: this.culledItems };
+  }
+
+  // Players-pass on the shared actors-canvas (DebugSettingsStore.playerSpritesMode === 'canvas'): draw each visible
+  // player's sprite ON TOP of the items, in depth order, replacing the per-player DOM `<img>` (its chrome — hp/crown/
+  // name/auras/grounding-shadow/poke — stays DOM and is positioned in lockstep by the registry). The canvas is shared
+  // with the items pass, so `clearFirst` is true only when the items renderer is in DOM mode and left it untouched
+  // this frame (in canvas mode the items pass already cleared it, and players must paint over, not wipe, the items).
+  public drawPlayers(
+    players: readonly RenderedPlayer[],
+    bounds: VisibleNormBounds | null,
+    now: number,
+    clearFirst: boolean,
+  ): void {
+    const context = this.context;
+
+    if (context === null) {
+      return;
+    }
+
+    context.setTransform(this.pixelRatio, 0, 0, this.pixelRatio, 0, 0);
+
+    if (clearFirst) {
+      context.clearRect(0, 0, this.worldWidth, this.worldHeight);
+    }
+
+    const live = new Set<string>();
+    // Depth order (ascending y) so a lower sprite paints over a higher one, matching the DOM player z-stacking.
+    const drawable = [...players].sort((first, second) => first.y - second.y);
+
+    for (const player of drawable) {
+      live.add(player.id);
+
+      if (bounds !== null && !withinNormBounds(player.x, player.y, bounds)) {
+        continue; // soft-culled off-screen, like the items pass
+      }
+
+      this.drawPlayer(context, player, now);
+    }
+
+    // Drop evolve-pulse stamps for players that left the scene (mirrors the frozen-spin pruning).
+    for (const id of this.evolveStart.keys()) {
+      if (!live.has(id)) {
+        this.evolveStart.delete(id);
+      }
+    }
+  }
+
+  private drawPlayer(context: CanvasRenderingContext2D, player: RenderedPlayer, now: number): void {
+    const sprite = this.spriteSource.getDrawable(spritePathFor(player.appearance, player.stage));
+
+    if (sprite === null) {
+      return; // sprite still loading — the DOM chrome already shows; it appears within a frame or two
+    }
+
+    const render = spriteRenderFor(player.appearance, player.stage);
+    const centerX = player.x * this.worldWidth;
+    const centerY = player.y * this.worldHeight;
+    const evolve = this.evolvePulseFor(player, now);
+    const filter = this.spriteFilterFor(player, evolve);
+
+    context.save();
+
+    if (player.isDisconnected) {
+      context.globalAlpha = 0.5; // mirrors :host(.scene__player--disconnected) { opacity: 0.5 }
+    }
+
+    if (filter !== null) {
+      context.filter = filter;
+    }
+
+    // Transform chain mirrors the DOM stack — host centring → facing flip → centring offset → evolve scale on the
+    // img — so the body lands on the actor point and the offset mirrors with the flip exactly as in the SCSS.
+    context.translate(centerX, centerY);
+    context.scale(facingScaleX(player.facingRight), 1);
+    context.translate(player.spriteOffsetX, player.spriteOffsetY);
+
+    if (evolve !== null) {
+      context.scale(evolve.scale, evolve.scale);
+    }
+
+    context.drawImage(sprite, -render.width / 2, -render.height / 2, render.width, render.height);
+    context.restore();
+  }
+
+  // The evolve pulse for a player this frame, or null. Stamped on the rising edge of `isEvolving` and driven off the
+  // draw clock, so the 1.5s flash plays once per evolution without threading the evolve timestamp through. The stamp
+  // is deliberately kept until `isEvolving` flips false (NOT cleared at the 1.5s mark): `evolvePulseAt` already
+  // returns null past the window so the sprite goes static — exactly like the DOM's one-shot `1.5s ease-out`, which
+  // also plays once while the class stays on. Clearing at 1.5s while still evolving would re-stamp next frame and
+  // loop the pulse forever (a divergence from the DOM). A false→true edge re-stamps for a genuine re-evolution.
+  private evolvePulseFor(player: RenderedPlayer, now: number): EvolvePulse | null {
+    if (!player.isEvolving) {
+      this.evolveStart.delete(player.id);
+
+      return null;
+    }
+
+    let start = this.evolveStart.get(player.id);
+
+    if (start === undefined) {
+      start = now;
+      this.evolveStart.set(player.id, now);
+    }
+
+    return evolvePulseAt(now - start);
+  }
+
+  // The canvas `filter` string for a player's sprite, mirroring the SCSS class precedence: the evolve animation's
+  // filter wins while it plays, else the NPC anger tint, else the sad mood; a disconnected player adds grayscale on
+  // top (its half-opacity rides globalAlpha). null = draw untinted.
+  private spriteFilterFor(player: RenderedPlayer, evolve: EvolvePulse | null): string | null {
+    let filter: string | null = null;
+
+    if (evolve !== null) {
+      filter = evolve.filter;
+    } else if (player.isNpc) {
+      filter = npcAngerFilter(player.npcAnger);
+    } else if (player.isSad) {
+      filter = SAD_FILTER;
+    }
+
+    if (player.isDisconnected) {
+      filter = filter === null ? 'grayscale(1)' : `grayscale(1) ${filter}`;
+    }
+
+    return filter;
   }
 
   private drawItem(

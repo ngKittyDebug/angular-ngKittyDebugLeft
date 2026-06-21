@@ -50,6 +50,7 @@ import { SceneCameraService } from './camera/scene-camera.service';
 import { SceneDecorCanvasService } from './rendering/canvas/scene-decor-canvas.service';
 import { SceneItemCanvasService } from './rendering/canvas/scene-item-canvas.service';
 import { SceneSandPuffsService } from './effects/scene-sand-puffs.service';
+import { PlayerSpriteSource } from './rendering/canvas/player-sprite-source';
 import { SpriteFreezeService } from './rendering/canvas/sprite-freeze.service';
 import {
   hitTestItem,
@@ -107,6 +108,7 @@ const ITEM_HIT_HALF_Y =
     SceneSandPuffsService,
     SceneItemCanvasService,
     SceneDecorCanvasService,
+    PlayerSpriteSource,
     SpriteFreezeService,
     // Perf subsystem — provided here but injected only under `?debug=perf` (the metric accumulator by this component
     // below, the settings store + sample log by the gated panels), so none of them instantiate in normal play.
@@ -171,7 +173,11 @@ export class SceneComponent {
   protected readonly renderedItems = this.facade.renderedItems;
   // Depth order for the seabed perspective (see `sortByDepth`). track-by-id in the template means a reorder just
   // moves the existing nodes — no re-create, no animation reset.
-  protected readonly renderedItemsByDepth = computed(() => sortByDepth(this.renderedItems()));
+  // Empty in canvas item mode (the items are drawn on the actors-canvas, not as DOM nodes) so the template `@for`
+  // renders nothing without needing its own `@if` guard — keeping the template's cyclomatic complexity down.
+  protected readonly renderedItemsByDepth = computed(() => {
+    return this.renderMode() === 'canvas' ? [] : sortByDepth(this.renderedItems());
+  });
   // The item render backend, reactive so the template @if (and the render loop) pick it up the instant the toggle
   // flips. Reads the debug store only when it exists (under `?debug=perf`); a real player is always 'dom'.
   protected readonly renderMode = computed<RenderMode>(
@@ -181,6 +187,12 @@ export class SceneComponent {
   // the debug store only when it exists (under `?debug=perf`); a real player is always 'dom' (animated DOM sprite).
   protected readonly playerSpritesMode = computed<RenderMode>(
     () => this.debugSettings?.playerSpritesMode() ?? 'dom',
+  );
+  // Whether the shared actors-canvas element must exist this frame — when EITHER the items or the player sprites are
+  // on canvas. The single `<canvas>` is bound to SceneItemCanvasService, which draws items and/or players onto it;
+  // the `||` lives here (not the template) to keep the template's cyclomatic complexity down.
+  protected readonly actorsCanvasActive = computed(
+    () => this.renderMode() === 'canvas' || this.playerSpritesMode() === 'canvas',
   );
   // The decor render backend, reactive so the template @if (and the render loop) pick it up the instant the toggle
   // flips. Reads the debug store only when it exists (under `?debug=perf`); a real player gets the default `canvas`
@@ -294,7 +306,9 @@ export class SceneComponent {
         myId: () => this.myId(),
         evolving: () => this.evolvingPlayers(),
         renderMode: () => this.renderMode(),
+        playerSpritesMode: () => this.playerSpritesMode(),
         decorMode: () => this.decorMode(),
+        decorNoPlants: () => this.decorProbe()?.noPlants === true,
         frameCapFps: () => this.frameCapFps(),
         debug: this.debug,
         debugBoxesActive: this.debugBoxesActive,
