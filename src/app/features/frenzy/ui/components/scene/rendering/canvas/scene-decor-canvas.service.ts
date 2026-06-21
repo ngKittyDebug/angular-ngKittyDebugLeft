@@ -75,7 +75,8 @@ interface DecorBlade {
 }
 
 // A plankton mote's fixed draw model in world px: its rested centre + halo radius, its drift vector and opacity peak,
-// and its alternate-cycle timing.
+// and its alternate-cycle timing. `gradient` is the cached halo gradient (built at the local origin, placed by a
+// per-frame translate), resolved on attach/resize like the blade colours so it is not re-created every frame.
 interface DecorMote {
   centerX: number;
   centerY: number;
@@ -86,10 +87,12 @@ interface DecorMote {
   peak: number;
   cycleMs: number;
   delayMs: number;
+  gradient: CanvasGradient | null;
 }
 
 // A bubble's fixed draw model in world px: its column centre (X) + base radius, its horizontal wobble amplitude, and
-// its linear rise timing. Its Y is derived per-frame from the risen fraction.
+// its linear rise timing. Its Y is derived per-frame from the risen fraction. `gradient` is the cached glass gradient
+// (built at the local origin and base radius, then placed + scaled per frame), resolved on attach/resize.
 interface DecorBubble {
   centerX: number;
   radius: number;
@@ -97,6 +100,7 @@ interface DecorBubble {
   drift: number;
   cycleMs: number;
   delayMs: number;
+  gradient: CanvasGradient | null;
 }
 
 // A blade silhouette as a reusable Path2D plus its source viewBox extents, so the draw can scale it to any blade box.
@@ -120,6 +124,9 @@ export class SceneDecorCanvasService {
   private bubbleColor = TRANSPARENT;
   private vignetteColor = TRANSPARENT;
   private moteScale = 1;
+  // The cached static edge-vignette gradient (rebuilt with the theme on attach/resize), so the hot draw path reuses
+  // it instead of allocating a fresh radial gradient every frame.
+  private vignetteGradient: CanvasGradient | null = null;
 
   private readonly worldWidth = FRENZY.world.width;
   private readonly worldHeight = FRENZY.world.height;
@@ -254,21 +261,18 @@ export class SceneDecorCanvasService {
     mote: DecorMote,
     state: { offsetX: number; offsetY: number; opacity: number },
   ): void {
-    const radius = mote.radius * this.moteScale;
-    const cx = mote.centerX + state.offsetX;
-    const cy = mote.centerY + state.offsetY;
-    const gradient = context.createRadialGradient(cx, cy, 0, cx, cy, radius);
+    if (mote.gradient === null) {
+      return;
+    }
 
-    gradient.addColorStop(0, this.planktonColor);
-    gradient.addColorStop(0.3, this.planktonColor);
-    gradient.addColorStop(0.6, this.glowColor);
-    gradient.addColorStop(1, TRANSPARENT);
+    context.save();
+    context.translate(mote.centerX + state.offsetX, mote.centerY + state.offsetY);
     context.globalAlpha = state.opacity;
-    context.fillStyle = gradient;
+    context.fillStyle = mote.gradient;
     context.beginPath();
-    context.arc(cx, cy, radius, 0, TAU);
+    context.arc(0, 0, mote.radius * this.moteScale, 0, TAU);
     context.fill();
-    context.globalAlpha = 1;
+    context.restore();
   }
 
   // Draw one bubble: a glass sphere with an off-centre highlight, scaled + faded per its rise state. Its centre Y is
@@ -278,47 +282,41 @@ export class SceneDecorCanvasService {
     bubble: DecorBubble,
     state: { offsetX: number; bottomFraction: number; scale: number; opacity: number },
   ): void {
-    const radius = bubble.radius * state.scale;
+    if (bubble.gradient === null) {
+      return;
+    }
+
     const cx = bubble.centerX + state.offsetX;
     const cy = this.worldHeight * (1 - state.bottomFraction) - bubble.radius;
-    // Highlight at 32%,28% of the box — offset up-left from the centre (-18%, -22% of the box = -0.36, -0.44 × radius).
-    const gradient = context.createRadialGradient(
-      cx - radius * 0.36,
-      cy - radius * 0.44,
-      0,
-      cx,
-      cy,
-      radius,
-    );
 
-    gradient.addColorStop(0, BUBBLE_HIGHLIGHT);
-    gradient.addColorStop(0.45, this.bubbleColor);
-    gradient.addColorStop(0.72, BUBBLE_RIM);
-    gradient.addColorStop(1, BUBBLE_RIM);
+    // The cached gradient + the unit circle are built at the base radius; the per-frame scale grows both together, so
+    // the highlight offset and rim stops track the rise exactly as the live build did (-0.36, -0.44 × radius).
+    context.save();
+    context.translate(cx, cy);
+    context.scale(state.scale, state.scale);
     context.globalAlpha = state.opacity;
-    context.fillStyle = gradient;
+    context.fillStyle = bubble.gradient;
     context.beginPath();
-    context.arc(cx, cy, radius, 0, TAU);
+    context.arc(0, 0, bubble.radius, 0, TAU);
     context.fill();
-    context.globalAlpha = 1;
+    context.restore();
   }
 
   // Draw the static edge vignette on top of the backdrop: an elliptical radial gradient (transparent hole → themed
   // darkening at the rim). Drawn in a Y-squashed space so the circular canvas gradient reads as the CSS ellipse.
   private drawVignette(context: CanvasRenderingContext2D): void {
+    if (this.vignetteGradient === null) {
+      return;
+    }
+
     const cx = this.worldWidth * VIGNETTE_CENTRE_X;
     const cy = this.worldHeight * VIGNETTE_CENTRE_Y;
-    const radiusX = this.worldWidth * VIGNETTE_RADIUS_X;
-    const aspect = (this.worldHeight * VIGNETTE_RADIUS_Y) / radiusX;
-    const gradient = context.createRadialGradient(0, 0, 0, 0, 0, radiusX);
+    const aspect = (this.worldHeight * VIGNETTE_RADIUS_Y) / (this.worldWidth * VIGNETTE_RADIUS_X);
 
-    gradient.addColorStop(0, TRANSPARENT);
-    gradient.addColorStop(VIGNETTE_HOLE_STOP, TRANSPARENT);
-    gradient.addColorStop(1, this.vignetteColor);
     context.save();
     context.translate(cx, cy);
     context.scale(1, aspect);
-    context.fillStyle = gradient;
+    context.fillStyle = this.vignetteGradient;
     context.fillRect(-cx, -cy / aspect, this.worldWidth, this.worldHeight / aspect);
     context.restore();
   }
@@ -372,6 +370,7 @@ export class SceneDecorCanvasService {
         // `ease-in-out alternate` → a there-and-back cycle of 2 × the per-mote duration; negative CSS delay → +offset.
         cycleMs: 2 * (10 + (i % 12)) * 1000,
         delayMs: i * 0.7 * 1000,
+        gradient: null,
       };
     });
   }
@@ -392,6 +391,7 @@ export class SceneDecorCanvasService {
         // `linear` non-alternate rise loops over the per-bubble duration; negative CSS delay → +offset.
         cycleMs: (6 + (i % 8)) * 1000,
         delayMs: i * 0.83 * 1000,
+        gradient: null,
       };
     });
   }
@@ -429,6 +429,61 @@ export class SceneDecorCanvasService {
     this.bubbleColor = readCssColor(scope, '--aq-bubble');
     this.vignetteColor = readCssColor(scope, '--aq-vignette');
     this.moteScale = readCssNumber(scope, '--aq-mote-scale', 1);
+    this.buildGradients();
+  }
+
+  // Build the particle/vignette gradients once per theme (attach/resize), at the LOCAL origin so the hot draw path
+  // can place each with a cheap translate (+ scale for bubbles) instead of allocating a fresh radial gradient every
+  // frame. Gradient coordinates are interpreted under the CTM at PAINT time, so a local-origin gradient placed by a
+  // per-frame translate is pixel-identical to one created at the particle's world position.
+  private buildGradients(): void {
+    const context = this.context;
+
+    if (context === null) {
+      return;
+    }
+
+    const vignette = context.createRadialGradient(
+      0,
+      0,
+      0,
+      0,
+      0,
+      this.worldWidth * VIGNETTE_RADIUS_X,
+    );
+
+    vignette.addColorStop(0, TRANSPARENT);
+    vignette.addColorStop(VIGNETTE_HOLE_STOP, TRANSPARENT);
+    vignette.addColorStop(1, this.vignetteColor);
+    this.vignetteGradient = vignette;
+
+    for (const mote of this.motes) {
+      const gradient = context.createRadialGradient(0, 0, 0, 0, 0, mote.radius * this.moteScale);
+
+      gradient.addColorStop(0, this.planktonColor);
+      gradient.addColorStop(0.3, this.planktonColor);
+      gradient.addColorStop(0.6, this.glowColor);
+      gradient.addColorStop(1, TRANSPARENT);
+      mote.gradient = gradient;
+    }
+
+    for (const bubble of this.bubbles) {
+      // Highlight at -36%,-44% of the radius (mirrors the live build) at the BASE radius — the per-frame scale grows it.
+      const gradient = context.createRadialGradient(
+        -bubble.radius * 0.36,
+        -bubble.radius * 0.44,
+        0,
+        0,
+        0,
+        bubble.radius,
+      );
+
+      gradient.addColorStop(0, BUBBLE_HIGHLIGHT);
+      gradient.addColorStop(0.45, this.bubbleColor);
+      gradient.addColorStop(0.72, BUBBLE_RIM);
+      gradient.addColorStop(1, BUBBLE_RIM);
+      bubble.gradient = gradient;
+    }
   }
 }
 
