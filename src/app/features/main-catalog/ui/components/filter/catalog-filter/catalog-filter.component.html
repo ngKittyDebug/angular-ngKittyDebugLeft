@@ -40,7 +40,7 @@
                 type="button"
                 class="chip"
                 [class.active]="selectedTypeList().has(type)"
-                [attr.aria-pressed]="isLimitReached() && !selectedTypeList().has(type)"
+                [attr.aria-pressed]="selectedTypeList().has(type)"
                 (click)="toggleType(type)"
               >
                 {{ type }}
