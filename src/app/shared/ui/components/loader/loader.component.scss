@@ -1,15 +1,13 @@
 :host {
   display: block;
-  position: relative;
 }
 
 .fullscreen {
   display: flex;
   align-items: center;
   justify-content: center;
-  position: absolute;
-  width: 100vw;
-  height: 100vh;
+  position: fixed;
+  inset: 0;
   background: var(--tui-background-base);
   z-index: 1000;
   .img {

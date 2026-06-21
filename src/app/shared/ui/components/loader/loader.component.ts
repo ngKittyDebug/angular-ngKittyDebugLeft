@@ -9,6 +9,5 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 })
 export class LoaderComponent {
   public readonly src = input<string>('/images/gif/loading.gif');
-  public readonly alt = input<string>('Loading...');
-  public readonly size = input<string>('fullscreen');
+  public readonly size = input<'fullscreen' | 'inline'>('fullscreen');
 }

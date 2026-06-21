@@ -1,10 +1,9 @@
 import { TuiRoot } from '@taiga-ui/core';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { NavigationStart, Router, RouterOutlet } from '@angular/router';
+import { RouterOutlet } from '@angular/router';
 import { TUI_DARK_MODE } from '@taiga-ui/core';
-import { map, of, switchMap, timer } from 'rxjs';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { LoaderComponent } from '@shared/ui/components/loader/loader.component';
+import { LoaderService } from '@shared/services/loader.service';
 
 @Component({
   selector: 'left-paw-app-root',
@@ -14,14 +13,7 @@ import { LoaderComponent } from '@shared/ui/components/loader/loader.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent {
-  private readonly router = inject(Router);
+  private readonly loaderService = inject(LoaderService);
+  protected readonly isLoading = this.loaderService.isLoading;
   protected readonly darkMode = inject(TUI_DARK_MODE);
-
-  protected readonly isNavigating = toSignal(
-    this.router.events.pipe(
-      map((event) => event instanceof NavigationStart),
-      switchMap((isStarted) => (isStarted ? timer(200).pipe(map(() => true)) : of(false))),
-    ),
-    { initialValue: false },
-  );
 }
