@@ -10,7 +10,7 @@ import { spritePathFor } from '../../constants/pokemon-registry';
 import { BubbleSkinDirective } from '../../directives/bubble-skin.directive';
 import { HpToneColorPipe } from '../../pipes/hp-tone-color.pipe';
 import type { RenderedPlayer } from '../scene/scene-view-models';
-import { SpriteFreezeService } from '../scene/rendering/sprite-freeze.service';
+import { SpriteFreezeService } from '../scene/rendering/canvas/sprite-freeze.service';
 import { SparkBurstComponent } from '../spark-burst/spark-burst.component';
 
 /**
@@ -60,6 +60,12 @@ export class ScenePlayerComponent {
    * kills the per-frame sprite decode/re-raster that pins the FPS floor on a weak tablet. Off in normal play.
    */
   public readonly freezeSprite = input(false);
+  /**
+   * Player sprite render backend (the `?debug=perf` "players" toggle): `dom` (default) renders the animated GIF
+   * sprite here; `canvas` draws it on the actors-canvas instead, so this component renders chrome only and keeps a
+   * sized transparent poke hit-area. Off (dom) in normal play.
+   */
+  public readonly spritesMode = input<'dom' | 'canvas'>('dom');
   public readonly poke = output<void>();
   /** Emitted with the NPC's id when its (clickable) sprite is poked — unlike `poke`, this reaches the server. */
   public readonly pokeNpc = output<string>();

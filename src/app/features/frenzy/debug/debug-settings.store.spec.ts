@@ -122,6 +122,8 @@ describe('DebugSettingsStore', () => {
     const store = makeStore();
 
     expect(store.renderMode()).toBe('dom');
+    // Player sprites stay DOM by default too (their own canvas A/B is pending), like the item renderer.
+    expect(store.playerSpritesMode()).toBe('dom');
     // Decor defaults to canvas (ADR 0007 — the tablet A/B went green); the item renderer stays DOM pending its own A/B.
     expect(store.decorMode()).toBe('canvas');
     expect(store.canvasDprCap()).toBe(0);
@@ -132,15 +134,18 @@ describe('DebugSettingsStore', () => {
     const store = makeStore();
 
     store.setRenderMode('canvas');
+    store.setPlayerSpritesMode('canvas');
     store.setDecorMode('canvas');
     store.setCanvasDprCap(1.5);
     store.setFreezeSprites(true);
 
     expect(store.renderMode()).toBe('canvas');
+    expect(store.playerSpritesMode()).toBe('canvas');
     expect(store.decorMode()).toBe('canvas');
     expect(store.canvasDprCap()).toBe(1.5);
     expect(store.freezeSprites()).toBe(true);
     expect(reload().renderMode()).toBe('canvas');
+    expect(reload().playerSpritesMode()).toBe('canvas');
     expect(reload().decorMode()).toBe('canvas');
     expect(reload().canvasDprCap()).toBe(1.5);
     expect(reload().freezeSprites()).toBe(true);
@@ -160,6 +165,7 @@ describe('DebugSettingsStore', () => {
       STORAGE_KEY,
       JSON.stringify({
         renderMode: 'webgl',
+        playerSpritesMode: 'webgl',
         decorMode: 'webgl',
         canvasDprCap: 3,
         freezeSprites: 'yes',
@@ -169,6 +175,7 @@ describe('DebugSettingsStore', () => {
     const store = reload();
 
     expect(store.renderMode()).toBe('dom');
+    expect(store.playerSpritesMode()).toBe('dom');
     expect(store.decorMode()).toBe('canvas');
     expect(store.canvasDprCap()).toBe(0);
     expect(store.freezeSprites()).toBe(false);

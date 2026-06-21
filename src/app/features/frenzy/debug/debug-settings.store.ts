@@ -76,6 +76,9 @@ export interface DebugSettings {
   metrics: Record<PerfMetricKey, boolean>;
   perfLog: PerfLogConfig;
   renderMode: RenderMode;
+  // Player sprite render backend (ADR 0008-pending). `canvas` draws each player/NPC sprite on the actors-canvas;
+  // `dom` (DEFAULT) keeps the animated GIF DOM sprite. Persisted, A/B'd independently of `renderMode` on the device.
+  playerSpritesMode: RenderMode;
   // Decor backdrop render backend (ADR 0007). `canvas` (the DEFAULT, after the tablet A/B went green) draws the
   // animated backdrop — kelp, motes, bubbles, vignette — on one canvas; `dom` is the retained fallback (the swaying-
   // SVG/CSS backdrop). The static floor + screen-blended rays stay DOM either way. Persisted, A/B'd independently of
@@ -144,6 +147,7 @@ function defaultSettings(): DebugSettings {
     metrics: defaultMetrics(),
     perfLog: defaultPerfLog(),
     renderMode: 'dom',
+    playerSpritesMode: 'dom',
     decorMode: 'canvas',
     canvasDprCap: 0,
     freezeSprites: false,
@@ -267,6 +271,7 @@ function coerceSettings(raw: unknown): DebugSettings {
     metrics: coerceMetrics(source['metrics'], defaults.metrics),
     perfLog: coercePerfLog(source['perfLog'], defaults.perfLog),
     renderMode: oneOf(source['renderMode'], RENDER_MODES, defaults.renderMode),
+    playerSpritesMode: oneOf(source['playerSpritesMode'], RENDER_MODES, defaults.playerSpritesMode),
     decorMode: oneOf(source['decorMode'], RENDER_MODES, defaults.decorMode),
     canvasDprCap: oneOf(source['canvasDprCap'], CANVAS_DPR_CAPS, defaults.canvasDprCap),
     freezeSprites:
@@ -299,6 +304,7 @@ export class DebugSettingsStore {
   private readonly _metrics = signal<Record<PerfMetricKey, boolean>>(defaultMetrics());
   private readonly _perfLog = signal<PerfLogConfig>(defaultPerfLog());
   private readonly _renderMode = signal<RenderMode>('dom');
+  private readonly _playerSpritesMode = signal<RenderMode>('dom');
   private readonly _decorMode = signal<RenderMode>('canvas');
   private readonly _canvasDprCap = signal<CanvasDprCap>(0);
   private readonly _freezeSprites = signal(false);
@@ -309,6 +315,7 @@ export class DebugSettingsStore {
   public readonly metrics = this._metrics.asReadonly();
   public readonly perfLog = this._perfLog.asReadonly();
   public readonly renderMode = this._renderMode.asReadonly();
+  public readonly playerSpritesMode = this._playerSpritesMode.asReadonly();
   public readonly decorMode = this._decorMode.asReadonly();
   public readonly canvasDprCap = this._canvasDprCap.asReadonly();
   public readonly freezeSprites = this._freezeSprites.asReadonly();
@@ -322,6 +329,7 @@ export class DebugSettingsStore {
     this._metrics.set(stored.metrics);
     this._perfLog.set(stored.perfLog);
     this._renderMode.set(stored.renderMode);
+    this._playerSpritesMode.set(stored.playerSpritesMode);
     this._decorMode.set(stored.decorMode);
     this._canvasDprCap.set(stored.canvasDprCap);
     this._freezeSprites.set(stored.freezeSprites);
@@ -346,6 +354,11 @@ export class DebugSettingsStore {
 
   public setRenderMode(mode: RenderMode): void {
     this._renderMode.set(mode);
+    this.persist();
+  }
+
+  public setPlayerSpritesMode(mode: RenderMode): void {
+    this._playerSpritesMode.set(mode);
     this.persist();
   }
 
@@ -392,6 +405,7 @@ export class DebugSettingsStore {
       metrics: this._metrics(),
       perfLog: this._perfLog(),
       renderMode: this._renderMode(),
+      playerSpritesMode: this._playerSpritesMode(),
       decorMode: this._decorMode(),
       canvasDprCap: this._canvasDprCap(),
       freezeSprites: this._freezeSprites(),

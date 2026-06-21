@@ -3,18 +3,18 @@ import { Injectable } from '@angular/core';
 import { FRENZY } from '@game/frenzy/config';
 import type { ItemType } from '@game/frenzy/types';
 
-import { itemSpritePathFor } from '../../../constants/pokemon-registry';
-import { buriedClipPoints } from '../../scene-item/buried-clip';
-import { withinNormBounds } from '../camera/camera-math';
-import type { VisibleNormBounds } from '../camera/camera-math';
+import { itemSpritePathFor } from '../../../../constants/pokemon-registry';
+import { buriedClipPoints } from '../../../scene-item/buried-clip';
+import { withinNormBounds } from '../../camera/camera-math';
+import type { VisibleNormBounds } from '../../camera/camera-math';
 import { BREATHE_MS, breatheScaleAt, swayDegAt, tumbleDegAt } from './item-canvas-animation';
-import type { ItemWriteTally } from './scene-actor-registry.service';
-import type { RenderedItem } from '../scene-view-models';
+import type { ItemWriteTally } from '../shared/actor-write-tally';
+import type { RenderedItem } from '../../scene-view-models';
 
 // The hybrid-canvas backend (DebugSettingsStore.renderMode === 'canvas'): draws the falling items on ONE canvas
 // instead of one DOM node each, so their per-frame drift updates a single composited texture instead of repainting
-// the backdrop / exploding the compositor-layer count. The bomb, players, NPCs and HUD stay DOM (the bomb keeps its
-// animated SVG sensor lights; players are few).
+// the backdrop / exploding the compositor-layer count. Players, NPCs and HUD stay DOM; the bomb is drawn here too,
+// but as a STATIC sprite — its DOM sensor-light chase is a sanctioned casualty of moving it onto the canvas (spec §9).
 //
 // The canvas is a child of `.scene__world`, sized to the world in CSS px, so the PARENT camera transform pans/zooms
 // it for free — items are drawn in plain world px (no camera math here) and stay in lockstep with the DOM players
@@ -37,6 +37,8 @@ const HOVER_FILTER =
 // Landed item sinks this fraction of its height into the sand before the buried clip trims the dipped part
 // (matches `.scene__item--landed { transform: translateY(16%) }`).
 const BURIED_SINK = 0.16;
+// The bomb sprite renders 1.6× the item size (mirrors `.scene__item-sprite--bomb` in scene-item.component.scss).
+const BOMB_SPRITE_SCALE = 1.6;
 
 // A frozen tumble frame captured when an item lands, so a rested item holds its last angle/scale (the DOM renderer
 // bakes the live transform on landing; here we just stop advancing the phase).
@@ -61,8 +63,8 @@ export class SceneItemCanvasService {
   // Frozen tumble frame per landed item id; entries pruned when the item leaves the scene.
   private readonly frozen = new Map<string, FrozenSpin>();
   // Last frame's draw accounting (the canvas-mode soft-cull split) for the `?debug=perf` census — the canvas
-  // counterpart of the DOM registry's `writeTally`: in canvas mode the registry only positions the bomb, so the
-  // census reads this instead to show what the canvas actually drew vs culled.
+  // counterpart of the DOM registry's `writeTally`: in canvas mode the registry no longer positions any item (all
+  // items, the bomb included, are drawn here), so the census reads this instead to show what the canvas drew vs culled.
   private drawableTotal = 0;
   private drawnItems = 0;
   private culledItems = 0;
@@ -120,7 +122,7 @@ export class SceneItemCanvasService {
     this.frozen.clear();
   }
 
-  // Draw one frame: clear, scale to the backing-store pixel ratio, then draw each visible non-bomb item in depth
+  // Draw one frame: clear, scale to the backing-store pixel ratio, then draw each visible item in depth
   // order (ascending y → lower items paint on top, matching the DOM sort). Positions are plain world px; the parent
   // camera transform places them on screen. `bounds` soft-culls off-screen items (skips their draw), like the DOM
   // writer; null means draw all (pre-first-frame).
@@ -135,9 +137,7 @@ export class SceneItemCanvasService {
     context.setTransform(this.pixelRatio, 0, 0, this.pixelRatio, 0, 0);
     context.clearRect(0, 0, this.worldWidth, this.worldHeight);
 
-    const drawable = frame
-      .filter((item) => item.type !== 'bomb')
-      .sort((first, second) => first.y - second.y);
+    const drawable = [...frame].sort((first, second) => first.y - second.y);
     const live = new Set<string>();
     let drawn = 0;
     let culled = 0;
@@ -172,7 +172,7 @@ export class SceneItemCanvasService {
 
   // The last frame's canvas item draw accounting — read by the `?debug=perf` census in canvas mode. Same shape as
   // the registry's `ItemWriteTally`: `written` = on-screen (drawn), `skipped` = culled off-screen, `total` = every
-  // non-bomb item in the frame (the bomb stays a DOM node counted by the registry; one instance, negligible).
+  // item in the frame (the bomb is drawn here too now, as a static sprite).
   public drawTally(): ItemWriteTally {
     return { total: this.drawableTotal, written: this.drawnItems, skipped: this.culledItems };
   }
@@ -185,7 +185,7 @@ export class SceneItemCanvasService {
   ): void {
     const centerX = item.x * this.worldWidth;
     const centerY = item.y * this.worldHeight;
-    const size = this.itemSize;
+    const size = item.type === 'bomb' ? this.itemSize * BOMB_SPRITE_SCALE : this.itemSize;
     const half = size / 2;
     const spin = item.landed ? this.freezeFor(item, now) : this.liveSpin(item, now);
 
@@ -217,6 +217,11 @@ export class SceneItemCanvasService {
 
   // Live tumble/sway + breathe for a still-falling item. Shield rocks (sway, no breathe); everything else tumbles.
   private liveSpin(item: RenderedItem, now: number): FrozenSpin {
+    if (item.type === 'bomb') {
+      // Static sea mine — only its DOM sensor lights animated (dropped on canvas), the body never tumbles/breathes.
+      return { angleDeg: 0, scale: 1 };
+    }
+
     if (item.type === 'shield') {
       return { angleDeg: swayDegAt(now / item.spinDurationMs), scale: 1 };
     }

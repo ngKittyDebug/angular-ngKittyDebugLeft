@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { hitTestItem, resolveNudge, resolveSceneTap } from './pointer-intent';
+import {
+  hitTestItem,
+  resolveNudge,
+  resolveNudgeFromCenter,
+  resolveSceneTap,
+} from './pointer-intent';
 
 // A world rect offset from the viewport origin, so the tests exercise the rect-relative normalization (not raw
 // client coords). Centre is at client (500, 250).
@@ -70,6 +75,29 @@ describe('resolveNudge', () => {
 
   it('returns a unit vector for an off-centre press', () => {
     const nudge = resolveNudge(BUTTON, 100, 100);
+
+    expect(Math.hypot(nudge.x, nudge.y)).toBeCloseTo(1);
+  });
+});
+
+describe('resolveNudgeFromCenter', () => {
+  // Canvas bomb at the world centre. The tap point is itself normalized (0..1), so — with no DOM rect to measure —
+  // the shove points FROM the tap toward the item's world centre, i.e. away from the tapped side, like resolveNudge.
+  const BOMB = { x: 0.5, y: 0.5 };
+
+  it('points away from the tapped side: a press left of centre shoves right', () => {
+    const nudge = resolveNudgeFromCenter(BOMB, 0.45, 0.5);
+
+    expect(nudge.x).toBeGreaterThan(0);
+    expect(nudge.y).toBeCloseTo(0);
+  });
+
+  it('falls back to a straight-up shove for a dead-centre press', () => {
+    expect(resolveNudgeFromCenter(BOMB, 0.5, 0.5)).toEqual({ x: 0, y: -1 });
+  });
+
+  it('returns a unit vector for an off-centre press', () => {
+    const nudge = resolveNudgeFromCenter(BOMB, 0.45, 0.45);
 
     expect(Math.hypot(nudge.x, nudge.y)).toBeCloseTo(1);
   });

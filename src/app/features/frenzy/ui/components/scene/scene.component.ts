@@ -44,16 +44,21 @@ import { ScenePlayerComponent } from '../scene-player/scene-player.component';
 import { ItemExtrapolatorService } from './prediction/item-extrapolator.service';
 import { PerfMetricsService } from './perf/perf-metrics.service';
 import { PlayerExtrapolatorService } from './prediction/player-extrapolator.service';
-import { SceneActorRegistryService } from './rendering/scene-actor-registry.service';
+import { SceneActorRegistryService } from './rendering/dom/scene-actor-registry.service';
 import { SceneBurstsService } from './effects/scene-bursts.service';
 import { SceneCameraService } from './camera/scene-camera.service';
-import { SceneDecorCanvasService } from './rendering/scene-decor-canvas.service';
-import { SceneItemCanvasService } from './rendering/scene-item-canvas.service';
+import { SceneDecorCanvasService } from './rendering/canvas/scene-decor-canvas.service';
+import { SceneItemCanvasService } from './rendering/canvas/scene-item-canvas.service';
 import { SceneSandPuffsService } from './effects/scene-sand-puffs.service';
-import { SpriteFreezeService } from './rendering/sprite-freeze.service';
-import { hitTestItem, resolveNudge, resolveSceneTap } from './input/pointer-intent';
+import { SpriteFreezeService } from './rendering/canvas/sprite-freeze.service';
+import {
+  hitTestItem,
+  resolveNudge,
+  resolveNudgeFromCenter,
+  resolveSceneTap,
+} from './input/pointer-intent';
 import { SceneFacade } from './scene.facade';
-import { SceneRenderLoopService } from './rendering/scene-render-loop.service';
+import { SceneRenderLoopService } from './rendering/shared/scene-render-loop.service';
 import { groupByOwner, sortByDepth } from './scene-view-models';
 import type { ItemClick, RenderedItem } from './scene-view-models';
 
@@ -172,6 +177,11 @@ export class SceneComponent {
   protected readonly renderMode = computed<RenderMode>(
     () => this.debugSettings?.renderMode() ?? 'dom',
   );
+  // The player-sprite render backend, reactive so each scene-player picks it up the instant the toggle flips. Reads
+  // the debug store only when it exists (under `?debug=perf`); a real player is always 'dom' (animated DOM sprite).
+  protected readonly playerSpritesMode = computed<RenderMode>(
+    () => this.debugSettings?.playerSpritesMode() ?? 'dom',
+  );
   // The decor render backend, reactive so the template @if (and the render loop) pick it up the instant the toggle
   // flips. Reads the debug store only when it exists (under `?debug=perf`); a real player gets the default `canvas`
   // backdrop (ADR 0007 — after the tablet A/B went green), with `dom` kept as the `?debug=perf` fallback.
@@ -191,11 +201,6 @@ export class SceneComponent {
   // class that aquarium-decor reads via :host-context, to bisect WHICH part of decor costs the most. Undefined in
   // normal play (no debug store) — the template reads `?.<probe> === true`, so every probe stays inactive.
   protected readonly decorProbe = computed(() => this.debugSettings?.decorProbe());
-  // The bomb is the one item kept in the DOM in canvas mode (its sensor lights are animated CSS inside its SVG), so
-  // the canvas-mode @for renders just it; every other item is drawn on the canvas.
-  protected readonly bombItemsByDepth = computed(() =>
-    this.renderedItemsByDepth().filter((item) => item.type === 'bomb'),
-  );
 
   protected readonly renderedPlayers = this.facade.renderedPlayers;
   protected readonly bursts = this.facade.bursts;
@@ -349,19 +354,19 @@ export class SceneComponent {
     );
 
     // Canvas mode: items aren't DOM nodes, so a tap on one arrives as open water (steer=true). Hit-test the drawn
-    // items first; a hit eats that item and suppresses the miss-bubble + steer, exactly like a DOM item tap. A press
-    // on the DOM bomb/poke sets steer=false, so it's left to their own handlers (no double-eat near the bomb).
+    // items first; a hit eats that item (or shoves the bomb) and suppresses the miss-bubble + steer, exactly like a
+    // DOM item tap. A press on a poke button (still DOM) sets steer=false, so it is left to its own handler.
     if (this.renderMode() === 'canvas' && intent.steer) {
-      const hitId = hitTestItem(
-        this.canvasHitItems(),
-        intent.x,
-        intent.y,
-        ITEM_HIT_HALF_X,
-        ITEM_HIT_HALF_Y,
-      );
+      const items = this.canvasHitItems();
+      const hitId = hitTestItem(items, intent.x, intent.y, ITEM_HIT_HALF_X, ITEM_HIT_HALF_Y);
 
       if (hitId !== null) {
-        this.itemClick.emit({ itemId: hitId });
+        // The bomb has no DOM rect on canvas, so its shove is measured from the tap to its world centre.
+        const hit = items.find((item) => item.id === hitId);
+        const shove =
+          hit?.type === 'bomb' ? resolveNudgeFromCenter(hit, intent.x, intent.y) : undefined;
+
+        this.itemClick.emit({ itemId: hitId, nudgeX: shove?.x, nudgeY: shove?.y });
 
         return;
       }
@@ -411,13 +416,10 @@ export class SceneComponent {
     this.itemCanvas.setHovered(null);
   }
 
-  // Live non-bomb items in draw order (ascending depth) for the canvas hit-test — the topmost (last) wins, matching
-  // the canvas draw order. Uses the live frame (not the throttled structure signal) so a fast faller is hit where
-  // it's actually drawn.
+  // Live items in draw order (ascending depth) for the canvas hit-test — the topmost (last) wins, matching the
+  // canvas draw order. Uses the live frame (not the throttled structure signal) so a fast faller is hit where it's
+  // actually drawn. The bomb is included now (drawn on canvas), so a tap on it shoves it instead of steering past.
   private canvasHitItems(): readonly RenderedItem[] {
-    return this.facade
-      .itemFrame()
-      .filter((item) => item.type !== 'bomb')
-      .sort((first, second) => first.y - second.y);
+    return [...this.facade.itemFrame()].sort((first, second) => first.y - second.y);
   }
 }

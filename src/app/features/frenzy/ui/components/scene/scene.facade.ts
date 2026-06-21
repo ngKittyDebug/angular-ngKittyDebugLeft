@@ -4,12 +4,12 @@ import type { Item, Player } from '@game/frenzy/types';
 
 import { ItemExtrapolatorService } from './prediction/item-extrapolator.service';
 import { PlayerExtrapolatorService } from './prediction/player-extrapolator.service';
-import { SceneActorRegistryService } from './rendering/scene-actor-registry.service';
+import { SceneActorRegistryService } from './rendering/dom/scene-actor-registry.service';
 import { SceneBurstsService } from './effects/scene-bursts.service';
 import { SceneCameraService } from './camera/scene-camera.service';
 import type { CameraSnapshot } from './camera/scene-camera.service';
-import { SceneDecorCanvasService } from './rendering/scene-decor-canvas.service';
-import { SceneItemCanvasService } from './rendering/scene-item-canvas.service';
+import { SceneDecorCanvasService } from './rendering/canvas/scene-decor-canvas.service';
+import { SceneItemCanvasService } from './rendering/canvas/scene-item-canvas.service';
 import type { RenderedItem, RenderedPlayer } from './scene-view-models';
 import { SceneSandPuffsService } from './effects/scene-sand-puffs.service';
 

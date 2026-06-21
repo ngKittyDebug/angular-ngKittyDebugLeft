@@ -2,7 +2,7 @@
 // drifts the particles identically to the DOM backdrop. Pure + unit-tested; the decor service feeds an unbounded
 // phase (wrapped here) plus each particle's constants, and applies the returned offset/opacity/scale per frame.
 
-import { easeInOut, fractional, lerp } from './keyframe-easing';
+import { easeInOut, fractional, lerp } from '../shared/keyframe-easing';
 
 // A mote's per-frame drift offset (px from its base position) and opacity.
 export interface MoteState {

@@ -41,6 +41,21 @@
       }
     </div>
 
+    <!-- Player sprite render backend (DOM animated GIF vs hybrid canvas) — A/B'd independently of the item backend. -->
+    <p class="debug-configurator__title">players</p>
+    <div class="debug-configurator__chips">
+      @for (mode of renderModes; track mode) {
+        <button
+          type="button"
+          class="debug-configurator__chip"
+          [class.debug-configurator__chip--active]="store.playerSpritesMode() === mode"
+          (click)="store.setPlayerSpritesMode(mode)"
+        >
+          {{ mode }}
+        </button>
+      }
+    </div>
+
     <!-- Decor backdrop render backend (DOM swaying-SVG kelp vs hybrid canvas, ADR 0007) — A/B'd independently of the
          item render backend above. -->
     <p class="debug-configurator__title">decor</p>
@@ -57,7 +72,11 @@
       }
     </div>
 
-    @if (store.renderMode() === 'canvas' || store.decorMode() === 'canvas') {
+    @if (
+      store.renderMode() === 'canvas' ||
+      store.playerSpritesMode() === 'canvas' ||
+      store.decorMode() === 'canvas'
+    ) {
       <p class="debug-configurator__title">canvas dpr</p>
       <div class="debug-configurator__chips">
         @for (cap of dprCaps; track cap) {

@@ -2,12 +2,12 @@ import { createEnvironmentInjector, EnvironmentInjector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { CameraSnapshot } from '../camera/scene-camera.service';
-import { SceneFacade } from '../scene.facade';
+import type { CameraSnapshot } from '../../camera/scene-camera.service';
+import { SceneFacade } from '../../scene.facade';
 import { SceneRenderLoopService } from './scene-render-loop.service';
 import type { SceneFrameContext } from './scene-render-loop.service';
-import type { DebugFlags } from '../../../../debug/debug-options';
-import type { RenderedPlayer } from '../scene-view-models';
+import type { DebugFlags } from '../../../../../debug/debug-options';
+import type { RenderedPlayer } from '../../scene-view-models';
 
 // Sentinels returned by the fake facade so the test can assert what the loop forwards.
 const RENDERED = [{ id: 'p1' }] as unknown as readonly RenderedPlayer[];

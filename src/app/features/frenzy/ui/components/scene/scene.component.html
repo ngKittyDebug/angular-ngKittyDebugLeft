@@ -39,20 +39,10 @@
     }
 
     @if (renderMode() === 'canvas') {
-      <!-- Hybrid-canvas item layer (?debug=perf render-mode toggle): every falling item drawn on ONE canvas, a
-           world-sized child of the world so the parent camera transform pans/zooms it. Its own compositor layer
-           (will-change, see SCSS) keeps the per-frame redraw off the seabed/kelp raster. The bomb stays a DOM
-           sibling below for its animated sensor-light SVG. -->
+      <!-- Hybrid-canvas item layer (?debug=perf render-mode toggle): every falling item — the bomb included — drawn
+           on ONE canvas, a world-sized child of the world so the parent camera transform pans/zooms it. Its own
+           compositor layer (will-change, see SCSS) keeps the per-frame redraw off the seabed/kelp raster. -->
       <canvas class="scene__item-canvas" #itemCanvas aria-hidden="true"></canvas>
-
-      @for (item of bombItemsByDepth(); track item.id) {
-        <left-paw-scene-item
-          leftPawActorHost="item"
-          [actorId]="item.id"
-          [item]="item"
-          (clicked)="onItemClick(item, $event)"
-        />
-      }
     } @else {
       @for (item of renderedItemsByDepth(); track item.id) {
         <left-paw-scene-item
@@ -99,6 +89,7 @@
         [maxHp]="maxHp"
         [isLeader]="player.id === crownId()"
         [freezeSprite]="freezeSprites()"
+        [spritesMode]="playerSpritesMode()"
         (poke)="onSelfPoke()"
         (pokeNpc)="onPokeNpc($event)"
       />

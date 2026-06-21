@@ -4,7 +4,7 @@ import { TranslocoTestingModule } from '@jsverse/transloco';
 import { describe, expect, it } from 'vitest';
 
 import type { RenderedPlayer } from '../scene/scene-view-models';
-import { SpriteFreezeService } from '../scene/rendering/sprite-freeze.service';
+import { SpriteFreezeService } from '../scene/rendering/canvas/sprite-freeze.service';
 import { ScenePlayerComponent } from './scene-player.component';
 
 function renderedPlayer(partial: Partial<RenderedPlayer> = {}): RenderedPlayer {

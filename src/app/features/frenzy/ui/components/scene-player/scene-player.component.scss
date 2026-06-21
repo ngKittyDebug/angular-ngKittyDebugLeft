@@ -316,6 +316,15 @@
   }
 }
 
+// Canvas-mode poke target: the sprite is drawn on the actors-canvas, so the poke button needs a sized transparent
+// box (the sprite's world-px footprint) to stay tappable/focusable. Background stays transparent so the canvas
+// sprite shows through; the button keeps its own focus-visible ring.
+.scene__poke-hit {
+  display: inline-block;
+  width: var(--scene-sprite-width, 96px);
+  height: var(--scene-sprite-height, 96px);
+}
+
 .scene__sprite {
   // Explicit per-stage, per-line box (world px) set via the `--scene-sprite-width`/`--scene-sprite-height` custom
   // properties on the host — sized to each sprite's real aspect, so the render matches the server's AABB hitbox.

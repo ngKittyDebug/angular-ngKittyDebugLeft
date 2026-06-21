@@ -12,8 +12,8 @@ import {
 } from '../../../../debug/perf-metrics';
 import type { PerfMetricsSnapshot } from '../../../../debug/perf-metrics';
 import { DebugSettingsStore } from '../../../../debug/debug-settings.store';
-import { SceneActorRegistryService } from '../rendering/scene-actor-registry.service';
-import { SceneItemCanvasService } from '../rendering/scene-item-canvas.service';
+import { SceneActorRegistryService } from '../rendering/dom/scene-actor-registry.service';
+import { SceneItemCanvasService } from '../rendering/canvas/scene-item-canvas.service';
 import { SceneFacade } from '../scene.facade';
 
 const WORLD_WIDTH = FRENZY.world.width;

@@ -3,11 +3,11 @@ import { DestroyRef, inject, Injectable } from '@angular/core';
 import type { Item, Player } from '@game/frenzy/types';
 
 import { frameIntervalMs, paceFrame } from './frame-pacing';
-import type { CameraSnapshot } from '../camera/scene-camera.service';
-import { SceneFacade } from '../scene.facade';
-import type { RenderedPlayer } from '../scene-view-models';
-import type { DebugFlags } from '../../../../debug/debug-options';
-import type { RenderMode } from '../../../../debug/debug-settings.store';
+import type { CameraSnapshot } from '../../camera/scene-camera.service';
+import { SceneFacade } from '../../scene.facade';
+import type { RenderedPlayer } from '../../scene-view-models';
+import type { DebugFlags } from '../../../../../debug/debug-options';
+import type { RenderMode } from '../../../../../debug/debug-settings.store';
 
 // The offscreen-indicators overlay reduced to the single method the loop drives. Declared structurally (not the
 // component type) so this service never imports the component that imports the scene that provides it — which would

@@ -2,9 +2,9 @@ import { Injectable } from '@angular/core';
 
 import { FRENZY } from '@game/frenzy/config';
 
-import { KELP_BLADES } from '../../../utils/kelp-blades';
-import { buildKelpField, kelpFieldCount } from '../../../utils/kelp-field';
-import type { VisibleNormBounds } from '../camera/camera-math';
+import { KELP_BLADES } from '../../../../utils/kelp-blades';
+import { buildKelpField, kelpFieldCount } from '../../../../utils/kelp-field';
+import type { VisibleNormBounds } from '../../camera/camera-math';
 import { bubbleRiseAt, moteDriftAt } from './decor-particle-animation';
 import { plantSwayDegAt } from './kelp-canvas-animation';
 

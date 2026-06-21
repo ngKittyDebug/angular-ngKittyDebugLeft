@@ -52,7 +52,7 @@
       [attr.aria-label]="t('pokeAriaLabel')"
       (click)="poke.emit()"
     >
-      <ng-container [ngTemplateOutlet]="sprite" />
+      <ng-container [ngTemplateOutlet]="spriteOrHit" />
     </button>
   } @else if (player().isNpc) {
     <button
@@ -61,9 +61,10 @@
       [attr.aria-label]="t('pokeNpcAriaLabel')"
       (click)="pokeNpc.emit(player().id)"
     >
-      <ng-container [ngTemplateOutlet]="sprite" />
+      <ng-container [ngTemplateOutlet]="spriteOrHit" />
     </button>
-  } @else {
+  } @else if (spritesMode() === 'dom') {
+    <!-- Other players: just the sprite (in canvas mode it is drawn on the actors-canvas, so render nothing here). -->
     <ng-container [ngTemplateOutlet]="sprite" />
   }
 
@@ -90,6 +91,16 @@
     <left-paw-spark-burst class="scene__player-spark" />
   }
 </ng-container>
+
+<!-- Sprite in DOM mode; a sized transparent poke hit-area in canvas mode (the sprite is drawn on the actors-canvas,
+     but the poke button still needs the sprite's box to stay tappable/focusable). -->
+<ng-template #spriteOrHit>
+  @if (spritesMode() === 'dom') {
+    <ng-container [ngTemplateOutlet]="sprite" />
+  } @else {
+    <span class="scene__poke-hit" aria-hidden="true"></span>
+  }
+</ng-template>
 
 <ng-template #sprite>
   <!-- Facing flip: driven by the inherited `--scene-facing` custom property, set imperatively each frame on the host

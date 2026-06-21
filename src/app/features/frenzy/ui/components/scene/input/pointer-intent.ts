@@ -66,6 +66,27 @@ export function resolveNudge(
   return { x: deltaX / magnitude, y: deltaY / magnitude };
 }
 
+/**
+ * Bomb shove direction in canvas mode, where the bomb is no longer a DOM node with a rect: the same away-from-the-tap
+ * unit vector as `resolveNudge`, but measured from the press's normalized world point to the item's normalized world
+ * centre (both 0..1). A dead-centre press falls back to a straight-up shove.
+ */
+export function resolveNudgeFromCenter(
+  item: { x: number; y: number },
+  tapNormX: number,
+  tapNormY: number,
+): { x: number; y: number } {
+  const deltaX = item.x - tapNormX;
+  const deltaY = item.y - tapNormY;
+  const magnitude = Math.hypot(deltaX, deltaY);
+
+  if (magnitude === 0) {
+    return { x: 0, y: -1 };
+  }
+
+  return { x: deltaX / magnitude, y: deltaY / magnitude };
+}
+
 // A canvas-drawn item the hit-test can pick: its id and normalized world centre (0..1). Items are sized uniformly,
 // so the caller passes one normalized half-extent per axis.
 export interface CanvasHitItem {

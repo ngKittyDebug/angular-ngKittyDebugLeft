@@ -4,7 +4,7 @@
 // smoothstep as the ease-in-out — visually indistinguishable from CSS's default cubic-bezier on this small rock,
 // and cheap per frame (the same approximation the item canvas uses).
 
-import { easeInOut, fractional } from './keyframe-easing';
+import { easeInOut, fractional } from '../shared/keyframe-easing';
 
 // Eased there-and-back over a cycle: 0 at phase 0 and 1, 1 at phase 0.5 — the shape the `alternate` sway keyframe
 // traces (rot at 0% → -rot at 100%, ping-ponged by `animation-direction: alternate`).

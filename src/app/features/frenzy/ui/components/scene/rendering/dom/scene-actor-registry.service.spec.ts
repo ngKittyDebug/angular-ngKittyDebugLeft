@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { SceneActorRegistryService } from './scene-actor-registry.service';
-import type { RenderedItem, RenderedPlayer } from '../scene-view-models';
+import type { RenderedItem, RenderedPlayer } from '../../scene-view-models';
 
 // A stand-in element that counts how often its `translate` is actually written and its facing custom property set,
 // so the tests assert the registry's per-frame write GUARD (write only on change) — the FPS lever, not a value.
