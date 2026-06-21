@@ -1,16 +1,16 @@
 import type { PokemonListItemApiData } from '@shared/models/pokemon-list-api-data-interface';
 
-export interface PokemonTypes {
+export interface PokemonTypeApiData {
   id: number;
-  pokemon: PokemonSlotElement[];
+  pokemon: PokemonSlotApiData[];
 }
 
-export interface PokemonSlotElement {
+export interface PokemonSlotApiData {
   slot: number;
   pokemon: PokemonListItemApiData;
 }
 
-export interface PokemonGeneration {
+export interface PokemonGenerationApiData {
   id: number;
   pokemon_species: PokemonListItemApiData[];
 }

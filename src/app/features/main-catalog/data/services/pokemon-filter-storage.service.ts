@@ -4,7 +4,10 @@ import { PokemonApiService } from '@core/api/pokemon-api.service';
 import type { PokemonListApiData } from '@shared/models/pokemon-list-api-data-interface';
 import { forkJoin, map, of } from 'rxjs';
 import { filterCommonPokemons, intersectNonEmpty } from '../helpers/filter-pokemons';
-import type { PokemonGeneration, PokemonTypes } from '../models/pokemons-api-reference';
+import type {
+  PokemonGenerationApiData,
+  PokemonTypeApiData,
+} from '../models/pokemons-api-reference';
 
 @Service({ autoProvided: false })
 export class PokemonFilterStorageService {
@@ -40,7 +43,7 @@ export class PokemonFilterStorageService {
 
       const requests = params.map((type) =>
         this.pokemonApiService
-          .getTypeList<PokemonTypes>(type)
+          .getTypeList<PokemonTypeApiData>(type)
           .pipe(map((data) => data.pokemon.map((data) => data.pokemon))),
       );
 
@@ -59,7 +62,7 @@ export class PokemonFilterStorageService {
       }
 
       return this.pokemonApiService
-        .getGenerationList<PokemonGeneration>(params)
+        .getGenerationList<PokemonGenerationApiData>(params)
         .pipe(map((data) => data.pokemon_species));
     },
     defaultValue: [],
