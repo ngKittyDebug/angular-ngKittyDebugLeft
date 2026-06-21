@@ -88,7 +88,10 @@
 }
 
 .chip {
-  color: var(--muted-foreground);
+  color: white;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.5),
+    0 0 4px rgba(0, 0, 0, 0.3);
   padding: 0.25rem 0.75rem;
   border: 1px solid var(--border);
   border-radius: 1rem;
@@ -108,4 +111,104 @@
   border-radius: 1rem;
   padding: 0 0.5rem;
   font-size: 1rem;
+}
+
+/* Fire */
+.fire {
+  background: linear-gradient(to right, var(--type-fire-start), var(--type-fire-end));
+}
+
+/* Water */
+.water {
+  background: linear-gradient(to right, var(--type-water-start), var(--type-water-end));
+}
+
+/* Grass */
+.grass {
+  background: linear-gradient(to right, var(--type-grass-start), var(--type-grass-end));
+}
+
+/* Electric */
+.electric {
+  background: linear-gradient(to right, var(--type-electric-start), var(--type-electric-end));
+}
+
+/* Psychic */
+.psychic {
+  background: linear-gradient(to right, var(--type-psychic-start), var(--type-psychic-end));
+}
+
+/* Ice */
+.ice {
+  background: linear-gradient(to right, var(--type-ice-start), var(--type-ice-end));
+}
+
+/* Dragon */
+.dragon {
+  background: linear-gradient(to right, var(--type-dragon-start), var(--type-dragon-end));
+}
+
+/* Dark */
+.dark {
+  background: linear-gradient(to right, var(--type-dark-start), var(--type-dark-end));
+}
+
+/* Fairy */
+.fairy {
+  background: linear-gradient(to right, var(--type-fairy-start), var(--type-fairy-end));
+}
+
+/* Normal */
+.normal {
+  background: linear-gradient(to right, var(--type-normal-start), var(--type-normal-end));
+}
+
+/* Fighting */
+.fighting {
+  background: linear-gradient(to right, var(--type-fighting-start), var(--type-fighting-end));
+}
+
+/* Flying */
+.flying {
+  background: linear-gradient(to right, var(--type-flying-start), var(--type-flying-end));
+}
+
+/* Poison */
+.poison {
+  background: linear-gradient(to right, var(--type-poison-start), var(--type-poison-end));
+}
+
+/* Ground */
+.ground {
+  background: linear-gradient(to right, var(--type-ground-start), var(--type-ground-end));
+}
+
+/* Rock */
+.rock {
+  background: linear-gradient(to right, var(--type-rock-start), var(--type-rock-end));
+}
+
+/* Bug */
+.bug {
+  background: linear-gradient(to right, var(--type-bug-start), var(--type-bug-end));
+}
+
+/* Ghost */
+.ghost {
+  background: linear-gradient(to right, var(--type-ghost-start), var(--type-ghost-end));
+}
+
+/* Steel */
+.steel {
+  background: linear-gradient(to right, var(--type-steel-start), var(--type-steel-end));
+}
+
+/* Stellar */
+.stellar {
+  background: linear-gradient(to right, var(--type-stellar-start), var(--type-stellar-end));
+}
+
+/* Unknown */
+.unknown {
+  background: linear-gradient(to right, var(--type-unknown-start), var(--type-unknown-end));
 }

@@ -37,7 +37,7 @@ export class PokemonFilterStorageService {
       const requests = params.map((type) =>
         this.pokemonApiService
           .getType(type)
-          .pipe(map((data) => data.pokemon.map((data) => data.pokemon))),
+          .pipe(map((response) => response.pokemon.map((slot) => slot.pokemon))),
       );
 
       return forkJoin(requests).pipe(
