@@ -14,7 +14,7 @@ export const mainCatalogFacadeMock = {
   paginatedPokemonList: signal<[]>([]),
   filterByName: signal<string>(''),
   filterByTypes: signal<string[]>([]),
-  filterByGenerations: signal<string[]>([]),
+  filterByGenerations: signal<string>(''),
   setPaginationCount: vi.fn(),
   typeList: signal<string[] | undefined>(undefined),
   generationList: signal<string[] | undefined>(undefined),

@@ -21,9 +21,6 @@
       <span class="accordion__title">
         <tui-icon class="icon" icon="@tui.sliders-horizontal" />
         {{ t('main.filterAdvancedSearch') }}
-        @if (selectedCount()) {
-          <span class="badge">{{ selectedCount() }}</span>
-        }
       </span>
       <span class="icon">
         @if (expanded()) {
@@ -42,8 +39,8 @@
               <button
                 type="button"
                 class="chip"
-                [class.active]="selectedTypeList().includes(type)"
-                [attr.aria-pressed]="selectedTypeList().includes(type)"
+                [class.active]="selectedTypeList().has(type)"
+                [attr.aria-pressed]="isLimitReached() && !selectedTypeList().has(type)"
                 (click)="toggleType(type)"
               >
                 {{ type }}
@@ -58,9 +55,9 @@
               <button
                 type="button"
                 class="chip"
-                [class.active]="selectedGenerationList().includes(gen)"
-                [attr.aria-pressed]="selectedGenerationList().includes(gen)"
-                (click)="toggleGeneration(gen)"
+                [class.active]="selectedGenerationList() === gen"
+                [attr.aria-pressed]="selectedGenerationList() === gen"
+                (click)="setActive(gen)"
               >
                 {{ gen }}
               </button>

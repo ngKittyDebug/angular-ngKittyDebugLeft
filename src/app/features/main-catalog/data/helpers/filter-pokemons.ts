@@ -20,20 +20,19 @@ export function filterCommonPokemons(
     .map((item) => item);
 }
 
-export function intersectNonEmpty(arrays: PokemonListItemApiData[][]): PokemonListItemApiData[] {
-  const active = arrays.filter((array) => array.length > 0);
-
-  if (active.length === 0) {
-    return [];
+export function intersectNonEmpty(
+  pokemonsTypesArray: PokemonListItemApiData[],
+  pokemonGenerationArray: PokemonListItemApiData[],
+): PokemonListItemApiData[] {
+  if (pokemonsTypesArray.length === 0) {
+    return pokemonGenerationArray;
   }
 
-  if (active.length === 1) {
-    return active[0];
+  if (pokemonGenerationArray.length === 0) {
+    return pokemonsTypesArray;
   }
 
-  return active.reduce((acc, current) => {
-    const set = new Set(current);
+  const namesSet = new Set(pokemonsTypesArray.map((p) => p.name.toLowerCase()));
 
-    return acc.filter((name) => set.has(name));
-  });
+  return pokemonGenerationArray.filter((p) => namesSet.has(p.name.toLowerCase()));
 }

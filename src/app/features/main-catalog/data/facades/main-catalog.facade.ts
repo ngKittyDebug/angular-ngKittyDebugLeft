@@ -24,7 +24,7 @@ export class MainCatalogFacade {
   public readonly filteredPokemonList = computed(() => {
     const unionResult = this.pokemonFilterStorageService.unionResult;
 
-    if (this.filterByTypes().length || this.filterByGenerations().length) {
+    if (this.filterByTypes().length || this.filterByGenerations()) {
       const namesSet = new Set(unionResult().map((n) => n.name.toLowerCase()));
 
       return this.pokemonPaginationData()

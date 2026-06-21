@@ -12,7 +12,7 @@ export class PokemonFilterStorageService {
 
   public readonly filterByName = signal<string>('');
   public readonly filterByTypes = signal<string[]>([]);
-  public readonly filterByGenerations = signal<string[]>([]);
+  public readonly filterByGenerations = signal<string>('');
 
   public readonly typeListResource = rxResource({
     stream: () =>
@@ -54,24 +54,18 @@ export class PokemonFilterStorageService {
   public readonly foundByGeneration = rxResource({
     params: () => this.filterByGenerations(),
     stream: ({ params }) => {
-      if (params.length === 0) {
+      if (!this.filterByGenerations()) {
         return of([]);
       }
 
-      const requests = params.map((type) =>
-        this.pokemonApiService
-          .getGenerationList<PokemonGeneration>(type)
-          .pipe(map((data) => data.pokemon_species)),
-      );
-
-      return forkJoin(requests).pipe(
-        map((arrayOfArraysOfPokemon) => filterCommonPokemons(arrayOfArraysOfPokemon)),
-      );
+      return this.pokemonApiService
+        .getGenerationList<PokemonGeneration>(params)
+        .pipe(map((data) => data.pokemon_species));
     },
     defaultValue: [],
   });
 
   public readonly unionResult = computed(() =>
-    intersectNonEmpty([this.foundByType.value(), this.foundByGeneration.value()]),
+    intersectNonEmpty(this.foundByType.value(), this.foundByGeneration.value()),
   );
 }

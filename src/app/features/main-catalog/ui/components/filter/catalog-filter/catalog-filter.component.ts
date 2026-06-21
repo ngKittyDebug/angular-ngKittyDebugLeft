@@ -16,14 +16,16 @@ export class CatalogFilterComponent {
   protected readonly facade = inject(MainCatalogFacade);
 
   protected readonly expanded = signal(false);
-
-  protected readonly selectedTypeList = signal<string[]>([]);
-  protected readonly selectedGenerationList = signal<string[]>([]);
   protected readonly name = signal('');
+  protected readonly selectedGenerationList = signal<string | null>(null);
 
-  protected readonly selectedCount = computed(
-    () => this.selectedTypeList().length + this.selectedGenerationList().length,
-  );
+  protected readonly selectedTypeList = signal<Set<string>>(new Set());
+
+  protected readonly isLimitReached = computed(() => this.selectedTypeList().size >= 2);
+
+  protected setActive(id: string): void {
+    this.selectedGenerationList.update((currentId) => (currentId === id ? null : id));
+  }
 
   protected onNameInput(event: Event): void {
     const target = event.target;
@@ -34,21 +36,21 @@ export class CatalogFilterComponent {
   }
 
   protected toggleType(type: string): void {
-    this.selectedTypeList.update((list) => {
-      return list.includes(type) ? list.filter((t) => t !== type) : [...list, type];
-    });
-  }
+    const currentSet = new Set(this.selectedTypeList());
 
-  protected toggleGeneration(gen: string): void {
-    this.selectedGenerationList.update((list) => {
-      return list.includes(gen) ? list.filter((g) => g !== gen) : [...list, gen];
-    });
+    if (currentSet.has(type)) {
+      currentSet.delete(type);
+    } else if (currentSet.size < 2) {
+      currentSet.add(type);
+    }
+
+    this.selectedTypeList.set(currentSet);
   }
 
   protected onSearchClick(): void {
     this.facade.currentPage.set(0);
     this.facade.filterByName.set(this.name());
-    this.facade.filterByTypes.set(this.selectedTypeList());
-    this.facade.filterByGenerations.set(this.selectedGenerationList());
+    this.facade.filterByTypes.set(Array.from(this.selectedTypeList()));
+    this.facade.filterByGenerations.set(this.selectedGenerationList() ?? '');
   }
 }
