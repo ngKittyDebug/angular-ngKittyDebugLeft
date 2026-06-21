@@ -8,20 +8,31 @@ import {
   spritePathFor,
   spriteRenderFor,
 } from '../../../../constants/pokemon-registry';
+import type { SpriteRender } from '../../../../constants/pokemon-registry';
 import { buriedClipPoints } from '../../../scene-item/buried-clip';
 import { withinNormBounds } from '../../camera/camera-math';
 import type { VisibleNormBounds } from '../../camera/camera-math';
 import { BREATHE_MS, breatheScaleAt, swayDegAt, tumbleDegAt } from './item-canvas-animation';
 import { evolvePulseAt, facingScaleX, npcAngerFilter, SAD_FILTER } from './player-canvas-animation';
 import type { EvolvePulse } from './player-canvas-animation';
+import {
+  SHADOW_CORE_STOP,
+  SHADOW_FADE_STOP,
+  SHADOW_HEIGHT_RATIO,
+  SHADOW_WIDTH_SCALE,
+  shadowBreatheAt,
+  shadowCoreFor,
+} from './player-shadow';
 import { PlayerSpriteSource } from './player-sprite-source';
 import type { ItemWriteTally } from '../shared/actor-write-tally';
 import type { RenderedItem, RenderedPlayer } from '../../scene-view-models';
 
-// The hybrid-canvas backend (DebugSettingsStore.renderMode === 'canvas'): draws the falling items on ONE canvas
-// instead of one DOM node each, so their per-frame drift updates a single composited texture instead of repainting
-// the backdrop / exploding the compositor-layer count. Players, NPCs and HUD stay DOM; the bomb is drawn here too,
-// but as a STATIC sprite — its DOM sensor-light chase is a sanctioned casualty of moving it onto the canvas (spec §9).
+// The hybrid-canvas backend for the scene ACTORS — the falling items (DebugSettingsStore.renderMode === 'canvas')
+// AND, independently, the player sprites + their grounding shadows (playerSpritesMode === 'canvas'). Both draw on ONE
+// shared canvas instead of a DOM node each, so their per-frame drift updates a single composited texture instead of
+// repainting the backdrop / exploding the compositor-layer count. The rest of the HUD/chrome stays DOM; the bomb is
+// drawn here too, but as a STATIC sprite — its DOM sensor-light chase is a sanctioned casualty of moving it onto the
+// canvas (spec §9). The DOM counterpart that positions the still-DOM chrome is SceneActorRegistryService.
 //
 // The canvas is a child of `.scene__world`, sized to the world in CSS px, so the PARENT camera transform pans/zooms
 // it for free — items are drawn in plain world px (no camera math here) and stay in lockstep with the DOM players
@@ -55,7 +66,7 @@ interface FrozenSpin {
 }
 
 @Injectable()
-export class SceneItemCanvasService {
+export class SceneActorCanvasService {
   // Live texture-source for the player sprites drawn here (the shared actors-canvas also paints players, behind the
   // rename — see drawPlayers). Hands the canvas the current animated GIF frame to blit.
   private readonly spriteSource = inject(PlayerSpriteSource);
@@ -65,6 +76,10 @@ export class SceneItemCanvasService {
   private pixelRatio = 1;
   // Theme-aware contact-shadow colour, read from the scene's `--aq-item-shadow` CSS var (refreshed on resize).
   private shadowColor = 'rgba(0, 0, 0, 0.35)';
+  // Theme-aware grounding-shadow colour for PLAYER sprites (neutral base), read from `--scene-actor-shadow` (a soft
+  // light disc on the dark abyss where the item shadow would vanish); refreshed on resize. The dominant-effect tint
+  // overrides it per draw — see drawPlayerShadow.
+  private actorShadowColor = 'rgba(0, 0, 0, 0.4)';
   // The item currently under the pointer (desktop hover), drawn with the highlight; null when none.
   private hoveredId: string | null = null;
   // Decoded (and, for the desaturated types, pre-filtered) sprites, keyed by item type; loaded on first sight.
@@ -192,8 +207,9 @@ export class SceneItemCanvasService {
   }
 
   // Players-pass on the shared actors-canvas (DebugSettingsStore.playerSpritesMode === 'canvas'): draw each visible
-  // player's sprite ON TOP of the items, in depth order, replacing the per-player DOM `<img>` (its chrome — hp/crown/
-  // name/auras/grounding-shadow/poke — stays DOM and is positioned in lockstep by the registry). The canvas is shared
+  // player's grounding shadow + sprite ON TOP of the items, in depth order, replacing the per-player DOM `<img>` (the
+  // rest of its chrome — hp/crown/name/auras/poke — stays DOM and is positioned in lockstep by the registry; only the
+  // grounding shadow moved onto the canvas, since it must sit behind the sprite). The canvas is shared
   // with the items pass, so `clearFirst` is true only when the items renderer is in DOM mode and left it untouched
   // this frame (in canvas mode the items pass already cleared it, and players must paint over, not wipe, the items).
   public drawPlayers(
@@ -237,13 +253,22 @@ export class SceneItemCanvasService {
   }
 
   private drawPlayer(context: CanvasRenderingContext2D, player: RenderedPlayer, now: number): void {
-    const sprite = this.spriteSource.getDrawable(spritePathFor(player.appearance, player.stage));
+    const render = spriteRenderFor(player.appearance, player.stage);
+
+    // Grounding contact shadow first, BEHIND the sprite — it must draw even while the sprite decodes, so the player
+    // reads as planted on the seabed from the first frame (mirrors the DOM `.scene__shadow`, which the canvas mode
+    // can no longer host as a z-index:-1 chrome layer).
+    this.drawPlayerShadow(context, player, render, now);
+
+    const sprite = this.spriteSource.getDrawable(
+      spritePathFor(player.appearance, player.stage),
+      now,
+    );
 
     if (sprite === null) {
-      return; // sprite still loading — the DOM chrome already shows; it appears within a frame or two
+      return; // sprite still decoding — the shadow + DOM chrome already show; the frame lands within a frame or two
     }
 
-    const render = spriteRenderFor(player.appearance, player.stage);
     const centerX = player.x * this.worldWidth;
     const centerY = player.y * this.worldHeight;
     const evolve = this.evolvePulseFor(player, now);
@@ -270,6 +295,49 @@ export class SceneItemCanvasService {
     }
 
     context.drawImage(sprite, -render.width / 2, -render.height / 2, render.width, render.height);
+    context.restore();
+  }
+
+  // Soft contact-shadow ellipse at a player's feet, drawn BEHIND its sprite — the canvas port of the DOM
+  // `.scene__shadow`. Neutral theme base (`actorShadowColor`), or the dominant-effect tint, which also breathes
+  // (opacity + scale). Anchored on the BODY (centred on the actor point) at its feet: `centre.y + spriteOffsetY` —
+  // the same point the sprite is drawn at — plus half the hitbox, so it can never drift from the sprite above it. The
+  // flat ellipse (scale Y by 0.28) + the core-holds-then-fades gradient mirror the SCSS, no per-actor blur pass.
+  private drawPlayerShadow(
+    context: CanvasRenderingContext2D,
+    player: RenderedPlayer,
+    render: SpriteRender,
+    now: number,
+  ): void {
+    const core = shadowCoreFor(player.shadowEffectClass);
+    const breathe = core === null ? null : shadowBreatheAt(now);
+    const fill = core ?? this.actorShadowColor;
+    const radius = (render.width * SHADOW_WIDTH_SCALE) / 2;
+    const centerX = player.x * this.worldWidth;
+    const footY =
+      player.y * this.worldHeight +
+      player.spriteOffsetY +
+      Number.parseFloat(player.hitboxHeight) / 2;
+    const scale = breathe?.scale ?? 1;
+
+    context.save();
+
+    if (breathe !== null) {
+      context.globalAlpha = breathe.opacity; // mirrors the DOM breathe animating element opacity (0.78↔1)
+    }
+
+    context.translate(centerX, footY);
+    context.scale(scale, scale * SHADOW_HEIGHT_RATIO); // flat ellipse (width : height ≈ 1 : 0.28)
+
+    const gradient = context.createRadialGradient(0, 0, 0, 0, 0, radius);
+
+    gradient.addColorStop(0, fill);
+    gradient.addColorStop(SHADOW_CORE_STOP, fill);
+    gradient.addColorStop(SHADOW_FADE_STOP, 'transparent');
+    context.fillStyle = gradient;
+    context.beginPath();
+    context.arc(0, 0, radius, 0, Math.PI * 2);
+    context.fill();
     context.restore();
   }
 
@@ -481,10 +549,17 @@ export class SceneItemCanvasService {
   }
 
   private readThemeVars(element: HTMLElement): void {
-    const shadow = getComputedStyle(element).getPropertyValue('--aq-item-shadow').trim();
+    // One getComputedStyle read for both shadow vars (a second call would force another synchronous reflow).
+    const style = getComputedStyle(element);
+    const itemShadow = style.getPropertyValue('--aq-item-shadow').trim();
+    const actorShadow = style.getPropertyValue('--scene-actor-shadow').trim();
 
-    if (shadow !== '') {
-      this.shadowColor = shadow;
+    if (itemShadow !== '') {
+      this.shadowColor = itemShadow;
+    }
+
+    if (actorShadow !== '') {
+      this.actorShadowColor = actorShadow;
     }
   }
 }

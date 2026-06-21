@@ -79,9 +79,8 @@
 
 // Player-sprites canvas mode: the sprite is drawn on the actors-canvas (a layer BELOW this DOM chrome), so this
 // grounding shadow — which must sit BEHIND the sprite (z-index -1 only works within the player's own DOM stack) —
-// would otherwise paint OVER the canvas sprite, smearing across the body. Suppressed here as an interim; the proper
-// fix (draw the grounding shadow on the canvas behind the sprite, with the effect tint + breathe) is tracked in
-// issue 04 (canvas-player polish, A/B-gated alongside the frozen-GIF decoder).
+// can't host it here. The shadow is instead painted ON the canvas behind the sprite, with the same theme base /
+// effect tint / breathe (SceneActorCanvasService.drawPlayerShadow), so this DOM copy is suppressed to avoid doubling.
 .scene__shadow--hidden {
   display: none;
 }

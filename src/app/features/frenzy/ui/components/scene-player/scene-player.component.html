@@ -1,8 +1,9 @@
 <ng-container *transloco="let t; prefix: 'frenzy.scene'">
   <!-- Grounding contact shadow under EVERY sprite (own/others/NPC), behind it (z-index -1), riding the drift.
        Neutral theme-flipped base; the dominant-effect modifier class (null = none) recolours + breathes it.
-       Hidden in player-sprites canvas mode: the sprite then lives on the actors-canvas BELOW this chrome, so the
-       shadow can no longer sit behind it (see scss + issue 04). -->
+       In player-sprites canvas mode the sprite lives on the actors-canvas, so its grounding shadow is drawn THERE
+       (behind the sprite, with the same tint + breathe — see SceneActorCanvasService.drawPlayerShadow); this DOM
+       shadow is then suppressed to avoid a double shadow. -->
   <span
     class="scene__shadow"
     [class]="player().shadowEffectClass"

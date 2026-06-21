@@ -43,7 +43,7 @@
            included) and/or the player sprites drawn on ONE canvas, a world-sized child of the world so the parent
            camera transform pans/zooms it. Its own compositor layer (will-change, see SCSS) keeps the per-frame redraw
            off the seabed/kelp raster. Present whenever EITHER backend is on canvas; items paint first, players on top. -->
-      <canvas class="scene__item-canvas" #itemCanvas aria-hidden="true"></canvas>
+      <canvas class="scene__item-canvas" #actorCanvas aria-hidden="true"></canvas>
     }
 
     <!-- DOM item layer (renderMode 'dom'): `renderedItemsByDepth()` is empty in canvas mode, so this `@for` renders

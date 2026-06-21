@@ -48,7 +48,7 @@ import { SceneActorRegistryService } from './rendering/dom/scene-actor-registry.
 import { SceneBurstsService } from './effects/scene-bursts.service';
 import { SceneCameraService } from './camera/scene-camera.service';
 import { SceneDecorCanvasService } from './rendering/canvas/scene-decor-canvas.service';
-import { SceneItemCanvasService } from './rendering/canvas/scene-item-canvas.service';
+import { SceneActorCanvasService } from './rendering/canvas/scene-actor-canvas.service';
 import { SceneSandPuffsService } from './effects/scene-sand-puffs.service';
 import { PlayerSpriteSource } from './rendering/canvas/player-sprite-source';
 import { SpriteFreezeService } from './rendering/canvas/sprite-freeze.service';
@@ -106,7 +106,7 @@ const ITEM_HIT_HALF_Y =
     SceneCameraService,
     SceneBurstsService,
     SceneSandPuffsService,
-    SceneItemCanvasService,
+    SceneActorCanvasService,
     SceneDecorCanvasService,
     PlayerSpriteSource,
     SpriteFreezeService,
@@ -123,7 +123,7 @@ const ITEM_HIT_HALF_Y =
 export class SceneComponent {
   private readonly facade = inject(SceneFacade);
   private readonly loop = inject(SceneRenderLoopService);
-  private readonly itemCanvas = inject(SceneItemCanvasService);
+  private readonly actorCanvas = inject(SceneActorCanvasService);
   private readonly decorCanvas = inject(SceneDecorCanvasService);
   // The `?debug=perf` metric accumulator — injected (and thus instantiated) only under the master gate, in the
   // constructor; undefined in normal play. Fed by the render loop; its snapshot drives the readout.
@@ -148,7 +148,7 @@ export class SceneComponent {
   // throttled) instead of via per-frame inputs, to keep the rAF work off change detection like the rest of the scene.
   private readonly offscreenIndicators = viewChild(OffscreenIndicatorsComponent);
   // The hybrid-canvas item layer's element — present only while the render mode is 'canvas' (the template @if).
-  private readonly itemCanvasRef = viewChild<ElementRef<HTMLCanvasElement>>('itemCanvas');
+  private readonly actorCanvasRef = viewChild<ElementRef<HTMLCanvasElement>>('actorCanvas');
   // The hybrid-canvas decor layer's element — present only while the decor mode is 'canvas' (the template @if).
   private readonly decorCanvasRef = viewChild<ElementRef<HTMLCanvasElement>>('decorCanvas');
 
@@ -189,7 +189,7 @@ export class SceneComponent {
     () => this.debugSettings?.playerSpritesMode() ?? 'dom',
   );
   // Whether the shared actors-canvas element must exist this frame — when EITHER the items or the player sprites are
-  // on canvas. The single `<canvas>` is bound to SceneItemCanvasService, which draws items and/or players onto it;
+  // on canvas. The single `<canvas>` is bound to SceneActorCanvasService, which draws items and/or players onto it;
   // the `||` lives here (not the template) to keep the template's cyclomatic complexity down.
   protected readonly actorsCanvasActive = computed(
     () => this.renderMode() === 'canvas' || this.playerSpritesMode() === 'canvas',
@@ -273,14 +273,14 @@ export class SceneComponent {
     // the DPR cap changes. When the mode flips back to DOM the template @if removes the element, so there's nothing
     // to bind; in normal play the canvas never renders and this effect stays inert.
     effect(() => {
-      const canvas = this.itemCanvasRef()?.nativeElement;
+      const canvas = this.actorCanvasRef()?.nativeElement;
 
       if (canvas === undefined) {
         return;
       }
 
-      this.itemCanvas.attach(canvas);
-      this.itemCanvas.resize(this.debugSettings?.canvasDprCap() ?? 0);
+      this.actorCanvas.attach(canvas);
+      this.actorCanvas.resize(this.debugSettings?.canvasDprCap() ?? 0);
     });
 
     // Canvas decor backend lifecycle (ADR 0007): bind + size the decor canvas whenever it's present (decor canvas
@@ -421,13 +421,13 @@ export class SceneComponent {
     const normX = (event.clientX - bounds.left) / bounds.width;
     const normY = (event.clientY - bounds.top) / bounds.height;
 
-    this.itemCanvas.setHovered(
+    this.actorCanvas.setHovered(
       hitTestItem(this.canvasHitItems(), normX, normY, ITEM_HIT_HALF_X, ITEM_HIT_HALF_Y),
     );
   }
 
   protected onScenePointerLeave(): void {
-    this.itemCanvas.setHovered(null);
+    this.actorCanvas.setHovered(null);
   }
 
   // Live items in draw order (ascending depth) for the canvas hit-test — the topmost (last) wins, matching the

@@ -9,7 +9,7 @@ import { SceneBurstsService } from './effects/scene-bursts.service';
 import { SceneCameraService } from './camera/scene-camera.service';
 import type { CameraSnapshot } from './camera/scene-camera.service';
 import { SceneDecorCanvasService } from './rendering/canvas/scene-decor-canvas.service';
-import { SceneItemCanvasService } from './rendering/canvas/scene-item-canvas.service';
+import { SceneActorCanvasService } from './rendering/canvas/scene-actor-canvas.service';
 import type { RenderedItem, RenderedPlayer } from './scene-view-models';
 import { SceneSandPuffsService } from './effects/scene-sand-puffs.service';
 
@@ -26,7 +26,7 @@ export class SceneFacade {
   private readonly camera = inject(SceneCameraService);
   private readonly burstsService = inject(SceneBurstsService);
   private readonly sandPuffsService = inject(SceneSandPuffsService);
-  private readonly itemCanvas = inject(SceneItemCanvasService);
+  private readonly actorCanvas = inject(SceneActorCanvasService);
   private readonly decorCanvas = inject(SceneDecorCanvasService);
 
   public readonly renderedItems = this.items.rendered;
@@ -65,7 +65,7 @@ export class SceneFacade {
 
     // Canvas backend: draw the non-bomb items on the single canvas (it filters the bomb out itself).
     if (drawCanvas) {
-      this.itemCanvas.draw(frame, bounds, now);
+      this.actorCanvas.draw(frame, bounds, now);
     }
 
     // Rising-edge sand puffs are driven off the freshly extrapolated items (touchdowns), so detect right after.
@@ -104,7 +104,7 @@ export class SceneFacade {
     // Canvas backend: draw the player sprites on the shared actors-canvas, on top of the items. Clear it first only
     // when the items pass didn't (items in DOM mode) — so items and players share ONE clear per frame, items first.
     if (drawPlayersCanvas) {
-      this.itemCanvas.drawPlayers(frame, this.camera.visibleBounds(), now, !itemsDrewCanvas);
+      this.actorCanvas.drawPlayers(frame, this.camera.visibleBounds(), now, !itemsDrewCanvas);
     }
   }
 
