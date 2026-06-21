@@ -7,8 +7,9 @@ import type {
 } from '../models/profile.model';
 import { patchState, signalStore, withMethods, withState } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
-import { catchError, concatMap, of, pipe, switchMap, tap } from 'rxjs';
+import { concatMap, pipe, switchMap, tap } from 'rxjs';
 import { ProfileService } from '../services/profile.service';
+import { handleStoreError } from '../helpers/handle-store-error';
 
 const initialState: UserState = {
   profile: null,
@@ -30,13 +31,7 @@ export const UserProfileStore = signalStore(
             tap((profile) => {
               patchState(store, { profile: profile, isLoading: false });
             }),
-            catchError((error: unknown) => {
-              const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-
-              patchState(store, { isLoading: false, error: errorMessage });
-
-              return of(null);
-            }),
+            handleStoreError(store),
           ),
         ),
       ),
@@ -49,13 +44,7 @@ export const UserProfileStore = signalStore(
             tap((updatedProfile) => {
               patchState(store, { profile: updatedProfile, isLoading: false });
             }),
-            catchError((error: unknown) => {
-              const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-
-              patchState(store, { isLoading: false, error: errorMessage });
-
-              return of(null);
-            }),
+            handleStoreError(store),
           ),
         ),
       ),
@@ -70,13 +59,7 @@ export const UserProfileStore = signalStore(
             tap(() => {
               patchState(store, { isLoading: false, isPasswordChangedSuccess: true });
             }),
-            catchError((error: unknown) => {
-              const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-
-              patchState(store, { isLoading: false, error: errorMessage });
-
-              return of(null);
-            }),
+            handleStoreError(store),
           ),
         ),
       ),
@@ -87,13 +70,7 @@ export const UserProfileStore = signalStore(
         switchMap(() =>
           api.deleteAccount().pipe(
             tap(() => patchState(store, initialState)),
-            catchError((error: unknown) => {
-              const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-
-              patchState(store, { isLoading: false, error: errorMessage });
-
-              return of(null);
-            }),
+            handleStoreError(store),
           ),
         ),
       ),
@@ -113,13 +90,7 @@ export const UserProfileStore = signalStore(
                 });
               }
             }),
-            catchError((error: unknown) => {
-              const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-
-              patchState(store, { isLoading: false, error: errorMessage });
-
-              return of(null);
-            }),
+            handleStoreError(store),
           ),
         ),
       ),
@@ -132,13 +103,7 @@ export const UserProfileStore = signalStore(
             tap((favorites) =>
               patchState(store, { favoritePokemonList: favorites, isLoading: false }),
             ),
-            catchError((error: unknown) => {
-              const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-
-              patchState(store, { isLoading: false, error: errorMessage });
-
-              return of(null);
-            }),
+            handleStoreError(store),
           ),
         ),
       ),
@@ -146,6 +111,7 @@ export const UserProfileStore = signalStore(
 
     addToFavorites: rxMethod<string>(
       pipe(
+        tap(() => patchState(store, { isLoading: true, error: null })),
         concatMap((pokemonName) =>
           api.addFavorite(pokemonName).pipe(
             tap(() => {
@@ -156,13 +122,7 @@ export const UserProfileStore = signalStore(
                 isLoading: false,
               });
             }),
-            catchError((error: unknown) => {
-              const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-
-              patchState(store, { isLoading: false, error: errorMessage });
-
-              return of(null);
-            }),
+            handleStoreError(store),
           ),
         ),
       ),
@@ -179,13 +139,7 @@ export const UserProfileStore = signalStore(
 
               patchState(store, { favoritePokemonList: updated, isLoading: false });
             }),
-            catchError((error: unknown) => {
-              const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-
-              patchState(store, { isLoading: false, error: errorMessage });
-
-              return of(null);
-            }),
+            handleStoreError(store),
           ),
         ),
       ),
