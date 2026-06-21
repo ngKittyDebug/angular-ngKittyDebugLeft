@@ -1,0 +1,28 @@
+:host {
+  display: block;
+  position: relative;
+}
+
+.fullscreen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  width: 100vw;
+  height: 100vh;
+  background: var(--tui-background-base);
+  z-index: 1000;
+  .img {
+    width: auto;
+    height: 30%;
+  }
+}
+.inline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  .img {
+    width: auto;
+    height: 1.5rem;
+  }
+}

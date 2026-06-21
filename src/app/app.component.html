@@ -1,3 +1,6 @@
 <tui-root [attr.tuiTheme]="darkMode">
+  @if (isNavigating()) {
+    <left-paw-loader />
+  }
   <router-outlet />
 </tui-root>
