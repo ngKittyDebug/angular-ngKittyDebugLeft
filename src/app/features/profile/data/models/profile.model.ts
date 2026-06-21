@@ -3,23 +3,23 @@ export interface UserProfile {
   username: string;
   email: string;
   avatarUrl?: string;
-  favoritePokemons: string[];
+  favoritePokemonList: string[];
 }
 
-export interface UpdateUserDto {
+export interface UpdateUserModel {
   username?: string;
   email?: string;
   password?: string;
 }
 
-export interface ChangePasswordDto {
+export interface ChangePasswordModel {
   currentPassword?: string;
   newPassword: string;
 }
 
 export interface UserState {
   profile: UserProfile | null;
-  favoritePokemons: string[];
+  favoritePokemonList: string[];
   isLoading: boolean;
   error: string | null;
   isPasswordChangedSuccess: boolean;

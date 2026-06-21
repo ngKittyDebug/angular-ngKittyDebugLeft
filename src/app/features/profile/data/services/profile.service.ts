@@ -3,13 +3,13 @@ import { inject, Service } from '@angular/core';
 import { AUTH_SERVER_URL } from '@core/constants/auth-constants';
 import { map, type Observable } from 'rxjs';
 import type {
-  ChangePasswordDto,
+  ChangePasswordModel,
   PokemonFavoriteResponse,
   UpdateAvatar,
-  UpdateUserDto,
+  UpdateUserModel,
   UserProfile,
 } from '../models/profile.model';
-import { UserPath } from '../models/profile-path.model';
+import { UserPath } from '../constants/user-path.model';
 import { getFullUrl } from '../helpers/full-url';
 
 @Service()
@@ -21,14 +21,14 @@ export class ProfileService {
     return this.http.get<UserProfile>(getFullUrl(this.baseUrl, UserPath.BASE));
   }
 
-  public updateUser(data: UpdateUserDto): Observable<UserProfile> {
+  public updateUser(data: UpdateUserModel): Observable<UserProfile> {
     return this.http.patch<UserProfile>(
       getFullUrl(this.baseUrl, `${UserPath.BASE}${UserPath.PROFILE}`),
       data,
     );
   }
 
-  public changePassword(data: ChangePasswordDto): Observable<void> {
+  public changePassword(data: ChangePasswordModel): Observable<void> {
     return this.http.patch<void>(
       getFullUrl(this.baseUrl, `${UserPath.BASE}${UserPath.PASSWORD}`),
       data,

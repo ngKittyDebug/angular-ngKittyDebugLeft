@@ -1,8 +1,8 @@
 import { inject } from '@angular/core';
 import type {
-  ChangePasswordDto,
+  ChangePasswordModel,
   UpdateAvatar,
-  UpdateUserDto,
+  UpdateUserModel,
   UserState,
 } from '../models/profile.model';
 import { patchState, signalStore, withMethods, withState } from '@ngrx/signals';
@@ -12,7 +12,7 @@ import { ProfileService } from '../services/profile.service';
 
 const initialState: UserState = {
   profile: null,
-  favoritePokemons: [],
+  favoritePokemonList: [],
   isLoading: false,
   error: null,
   isPasswordChangedSuccess: false,
@@ -41,7 +41,7 @@ export const UserProfileStore = signalStore(
         ),
       ),
     ),
-    updateProfile: rxMethod<UpdateUserDto>(
+    updateProfile: rxMethod<UpdateUserModel>(
       pipe(
         tap(() => patchState(store, { isLoading: true, error: null })),
         switchMap((dto) =>
@@ -60,7 +60,7 @@ export const UserProfileStore = signalStore(
         ),
       ),
     ),
-    changePassword: rxMethod<ChangePasswordDto>(
+    changePassword: rxMethod<ChangePasswordModel>(
       pipe(
         tap(() =>
           patchState(store, { isLoading: true, error: null, isPasswordChangedSuccess: false }),
@@ -130,7 +130,7 @@ export const UserProfileStore = signalStore(
         switchMap(() =>
           api.getFavorites().pipe(
             tap((favorites) =>
-              patchState(store, { favoritePokemons: favorites, isLoading: false }),
+              patchState(store, { favoritePokemonList: favorites, isLoading: false }),
             ),
             catchError((error: unknown) => {
               const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -149,10 +149,10 @@ export const UserProfileStore = signalStore(
         concatMap((pokemonName) =>
           api.addFavorite(pokemonName).pipe(
             tap(() => {
-              const current = store.favoritePokemons();
+              const current = store.favoritePokemonList();
 
               patchState(store, {
-                favoritePokemons: [...current, pokemonName],
+                favoritePokemonList: [...current, pokemonName],
                 isLoading: false,
               });
             }),
@@ -174,10 +174,10 @@ export const UserProfileStore = signalStore(
         concatMap((pokemonName) =>
           api.removeFavorite(pokemonName).pipe(
             tap(() => {
-              const current = store.favoritePokemons();
+              const current = store.favoritePokemonList();
               const updated = current.filter((name) => name !== pokemonName);
 
-              patchState(store, { favoritePokemons: updated, isLoading: false });
+              patchState(store, { favoritePokemonList: updated, isLoading: false });
             }),
             catchError((error: unknown) => {
               const errorMessage = error instanceof Error ? error.message : 'Unknown error';
