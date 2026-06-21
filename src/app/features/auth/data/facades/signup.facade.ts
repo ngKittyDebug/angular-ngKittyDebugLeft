@@ -4,6 +4,7 @@ import { SignupFormService } from '../services/signup-form.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 import { Router } from '@angular/router';
+import { AuthService } from '@core/services/auth.service';
 
 @Service({ autoProvided: false })
 export class SignUpFacade {
@@ -11,6 +12,7 @@ export class SignUpFacade {
   private readonly signupFormService = inject(SignupFormService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly router = inject(Router);
+  private readonly tokenService = inject(AuthService);
 
   private readonly signupFormModel = this.signupFormService.signupFormModel;
 
@@ -28,8 +30,7 @@ export class SignUpFacade {
       )
       .subscribe({
         next: (data) => {
-          //TODO тут будем сетапить в отдельный AuthService вместо локал стораджа
-          localStorage.setItem('accessToken', JSON.stringify(data));
+          this.tokenService.saveToken(data.accessToken);
           this.router.navigateByUrl(returnUrl);
         },
       });
