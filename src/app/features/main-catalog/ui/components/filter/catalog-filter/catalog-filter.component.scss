@@ -88,7 +88,10 @@
 }
 
 .chip {
-  color: var(--muted-foreground);
+  color: var(--accent-foreground);
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.5),
+    0 0 4px rgba(0, 0, 0, 0.3);
   padding: 0.25rem 0.75rem;
   border: 1px solid var(--border);
   border-radius: 1rem;
@@ -108,4 +111,14 @@
   border-radius: 1rem;
   padding: 0 0.5rem;
   font-size: 1rem;
+}
+
+$types:
+  normal, fighting, flying, poison, ground, rock, bug, ghost, steel, fire, water, grass, electric,
+  psychic, ice, dragon, dark, fairy, stellar, unknown;
+
+@each $type in $types {
+  .#{$type} {
+    background: linear-gradient(to right, var(--type-#{$type}-start), var(--type-#{$type}-end));
+  }
 }
