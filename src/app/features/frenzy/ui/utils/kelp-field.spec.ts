@@ -8,8 +8,8 @@ describe('kelpFieldCount', () => {
   });
 
   it('scales to roughly one blade per spacing on a wide world', () => {
-    // 2400px world ÷ 11px spacing ≈ 218 — the scene's full-width forest.
-    expect(kelpFieldCount(2400)).toBe(218);
+    // 2400px world ÷ 14px spacing ≈ 171 — the scene's full-width forest (spacing raised 11→14 for canvas fill-rate).
+    expect(kelpFieldCount(2400)).toBe(171);
   });
 });
 

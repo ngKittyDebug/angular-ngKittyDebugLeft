@@ -6,8 +6,11 @@
 import { kelpBladeWidth } from './kelp-blades';
 
 // Roughly one kelp blade per this many CSS px of scene width (blades are wider than this, so they overlap into a
-// dense forest). Lower = denser. The blade count is derived from the measured width.
-export const KELP_SPACING_PX = 11;
+// dense forest). Lower = denser. The blade count is derived from the measured width. Raised 11→14 (a ~22% blade-count
+// cut, 218→171 on the 2400px world) as the canvas backdrop's per-frame fill scales with blade count — every blade is
+// redrawn each frame, so fewer blades = less fill-rate. Blades stay wider than the spacing, so the forest still reads
+// dense (the thinning is near-imperceptible); device-eye-confirmed perf trade under ADR 0006/0007, dial here.
+export const KELP_SPACING_PX = 14;
 export const MIN_PLANTS = 16;
 
 // Blade count for a backdrop of the given px width: at least MIN_PLANTS, else one per KELP_SPACING_PX — so the
