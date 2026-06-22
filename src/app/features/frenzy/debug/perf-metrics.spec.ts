@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import {
   frameTimingStats,
   JANK_THRESHOLD_MS,
-  METRIC_LABELS,
   nextEmaFps,
   perfReadoutRows,
   predictionGapPx,
@@ -106,19 +105,20 @@ describe('perfReadoutRows', () => {
     expect(perfReadoutRows(null, allEnabled())).toEqual([]);
   });
 
-  it('emits one row per enabled metric, in the canonical metric order', () => {
+  it('emits one row per metric in canonical order, each carrying its enabled flag', () => {
     const rows = perfReadoutRows(snapshot(), allEnabled());
 
     expect(rows.map((row) => row.key)).toEqual([...PERF_METRIC_KEYS]);
-    expect(rows.every((row) => row.label.length > 0 && row.text.length > 0)).toBe(true);
+    expect(rows.every((row) => row.enabled && row.text.length > 0)).toBe(true);
   });
 
-  it('drops a metric whose toggle is off', () => {
+  it('keeps a disabled metric as a row flagged enabled:false (no longer filtered)', () => {
     const enabled = { ...allEnabled(), gap: false };
     const rows = perfReadoutRows(snapshot(), enabled);
 
-    expect(rows.some((row) => row.key === 'gap')).toBe(false);
-    expect(rows.some((row) => row.key === 'fps')).toBe(true);
+    expect(rows.map((row) => row.key)).toEqual([...PERF_METRIC_KEYS]);
+    expect(rows.find((row) => row.key === 'gap')?.enabled).toBe(false);
+    expect(rows.find((row) => row.key === 'fps')?.enabled).toBe(true);
   });
 
   it('flags a degraded reading with a bad tone and keeps a healthy one ok', () => {
@@ -128,9 +128,13 @@ describe('perfReadoutRows', () => {
     expect(rows.find((row) => row.key === 'fpsP50')?.tone).toBe('ok');
   });
 
-  it('has a label for every metric key', () => {
-    for (const key of PERF_METRIC_KEYS) {
-      expect(METRIC_LABELS[key].length).toBeGreaterThan(0);
-    }
+  it('keeps a no-data reading enabled with «—» text and a neutral tone (gap/stale < 0)', () => {
+    const gap = perfReadoutRows(snapshot({ gapPx: -1 }), allEnabled()).find(
+      (row) => row.key === 'gap',
+    );
+
+    expect(gap?.enabled).toBe(true);
+    expect(gap?.text).toBe('—');
+    expect(gap?.tone).toBe('ok');
   });
 });

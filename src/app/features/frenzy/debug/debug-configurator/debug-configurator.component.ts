@@ -1,22 +1,21 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 
-import { METRIC_LABELS } from '../perf-metrics';
 import {
   CANVAS_DPR_CAPS,
   DebugSettingsStore,
   DECOR_PROBE_KEYS,
   FRAME_CAP_FPS,
-  PERF_METRIC_KEYS,
   RENDER_MODES,
   SCENE_LAYER_KEYS,
 } from '../debug-settings.store';
 import type { CanvasDprCap, FrameCapFps } from '../debug-settings.store';
 
 /**
- * `?debug=perf` configurator: the single runtime control surface for the perf subsystem — one checkbox per metric,
- * toggling its visibility in the readout. State lives in (and persists through) `DebugSettingsStore`. Dev-only and
- * gated behind the master `?debug=perf` flag (rendered under the scene template `@if`), so it never instantiates the
- * store for a real player. Plain checkboxes + hardcoded labels, like the sibling debug panels (not product UI).
+ * `?debug=perf` configurator: the runtime render levers for the on-device A/B — render/players/decor backend, the DPR
+ * and frame-pacing caps, sprite freeze, per-layer hides and the decor probes. State lives in (and persists through)
+ * `DebugSettingsStore`. Dev-only and gated behind the master `?debug=perf` flag (rendered under the scene template
+ * `@if`), so it never instantiates the store for a real player. The per-metric toggles live on their readout rows, not
+ * here; this panel itself stays plain controls (no Taiga/i18n) by choice.
  */
 @Component({
   selector: 'left-paw-debug-configurator',
@@ -26,8 +25,6 @@ import type { CanvasDprCap, FrameCapFps } from '../debug-settings.store';
 })
 export class DebugConfiguratorComponent {
   protected readonly store = inject(DebugSettingsStore);
-  protected readonly keys = PERF_METRIC_KEYS;
-  protected readonly labels = METRIC_LABELS;
   protected readonly renderModes = RENDER_MODES;
   protected readonly dprCaps = CANVAS_DPR_CAPS;
   protected readonly frameCaps = FRAME_CAP_FPS;

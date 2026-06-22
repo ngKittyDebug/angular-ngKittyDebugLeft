@@ -10,7 +10,7 @@ import { PerfSampleStore } from '../perf-sample.store';
  * export format + destination, run label), and review the captured samples in a small table for on-device A/B —
  * the way tablet measurements come back to the developer. Reads its frame snapshot via input (no scene-guts inject,
  * ADR 0004 §5); state/persistence lives in `PerfSampleStore`/`DebugSettingsStore`. Dev-only, rendered under the
- * master gate. Plain controls, no Taiga/i18n — like the sibling debug panels.
+ * master gate. This panel stays plain controls (no Taiga/i18n) by choice — a capture tool, not product UI.
  */
 @Component({
   selector: 'left-paw-perf-log-panel',

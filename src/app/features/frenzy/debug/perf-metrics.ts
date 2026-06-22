@@ -45,28 +45,14 @@ export interface PerfMetricsSnapshot {
   stalenessMs: number;
 }
 
-// One rendered readout line: a label, a preformatted value, and its colour tone.
+// One readout line: the metric key, whether its toggle is on, a preformatted value, and its colour tone. A row is
+// emitted for every metric (enabled or not) — the view dims a disabled row and shows «—» for it rather than dropping it.
 export interface PerfReadoutRow {
   key: PerfMetricKey;
-  label: string;
+  enabled: boolean;
   text: string;
   tone: MetricTone;
 }
-
-// Short dev-tool labels (not i18n — this whole subsystem is gated behind `?debug`, like the sibling perf panels).
-export const METRIC_LABELS: Record<PerfMetricKey, string> = {
-  fps: 'FPS',
-  fpsP50: 'p50',
-  fpsP1: 'p1-low',
-  jank: 'jank',
-  jitter: 'jitter',
-  sceneLoopMs: 'loop',
-  actorCensus: 'actors',
-  writeSkip: 'w/s',
-  restructures: 'restr',
-  gap: 'gap',
-  staleness: 'stale',
-};
 
 // Higher-is-better tones (FPS family): a non-positive value is startup/no-data → neutral, not "bad".
 const FPS_WARN = 50;
@@ -198,8 +184,9 @@ const METRIC_TONE: Record<PerfMetricKey, (metrics: PerfMetricsSnapshot) => Metri
   staleness: (metrics) => toneBelow(metrics.stalenessMs, STALE_WARN_MS, STALE_BAD_MS),
 };
 
-// Project a snapshot into the readout lines for the currently-enabled metrics, in the canonical metric order. A null
-// snapshot (before the first frame, or perf off) yields no rows.
+// Project a snapshot into the readout lines — one per metric, in the canonical metric order, each flagged with its
+// toggle state (no longer filtered). A null snapshot (before the first frame, or perf off) yields no rows; the view
+// renders a disabled row dimmed with «—» rather than dropping it.
 export function perfReadoutRows(
   metrics: PerfMetricsSnapshot | null,
   enabled: Record<PerfMetricKey, boolean>,
@@ -208,20 +195,10 @@ export function perfReadoutRows(
     return [];
   }
 
-  const rows: PerfReadoutRow[] = [];
-
-  for (const key of PERF_METRIC_KEYS) {
-    if (!enabled[key]) {
-      continue;
-    }
-
-    rows.push({
-      key,
-      label: METRIC_LABELS[key],
-      text: METRIC_TEXT[key](metrics),
-      tone: METRIC_TONE[key](metrics),
-    });
-  }
-
-  return rows;
+  return PERF_METRIC_KEYS.map((key) => ({
+    key,
+    enabled: enabled[key],
+    text: METRIC_TEXT[key](metrics),
+    tone: METRIC_TONE[key](metrics),
+  }));
 }

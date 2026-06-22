@@ -1,5 +1,6 @@
-<!-- ?debug=perf configurator: toggle each perf metric on/off at runtime (choices persisted via DebugSettingsStore).
-     Dev-only, gated behind the master ?debug=perf flag. -->
+<!-- ?debug=perf configurator: the render levers for the on-device A/B (render/players/decor backend, DPR + frame-pacing
+     caps, sprite freeze, per-layer hides, decor probes). Choices persisted via DebugSettingsStore. Dev-only, gated
+     behind the master ?debug=perf flag. The per-metric toggles live on their rows in the readout, not here. -->
 <div class="debug-configurator" [class.debug-configurator--collapsed]="collapsed()">
   <!-- Header doubles as the collapse toggle (collapsed by default): when closed, only this bar shows, so the
        configurator stops covering the scene. -->
@@ -14,18 +15,6 @@
   </button>
 
   @if (!collapsed()) {
-    <p class="debug-configurator__title">perf metrics</p>
-    @for (key of keys; track key) {
-      <label class="debug-configurator__row">
-        <input
-          type="checkbox"
-          [checked]="store.metrics()[key]"
-          (change)="store.toggleMetric(key)"
-        />
-        {{ labels[key] }}
-      </label>
-    }
-
     <!-- Item render backend toggle (DOM vs hybrid canvas) + the canvas DPR cap, for the on-device A/B. -->
     <p class="debug-configurator__title">render</p>
     <div class="debug-configurator__chips">

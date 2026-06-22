@@ -1,0 +1,87 @@
+{
+  "infoAriaLabel": "Details: {{metric}}",
+  "sections": {
+    "what": "What it tracks",
+    "why": "Why it matters",
+    "interpret": "How to read it"
+  },
+  "metrics": {
+    "fps": {
+      "label": "FPS",
+      "name": "Frames per second",
+      "what": "EMA-smoothed frames per second from the render loop.",
+      "why": "The headline smoothness number — what the eye feels as fluid or choppy.",
+      "interpret": "≥50 is smooth, 30–50 dips, below 30 is visibly choppy. May read 0 at startup."
+    },
+    "fpsP50": {
+      "label": "p50",
+      "name": "Median FPS (p50)",
+      "what": "Median frames per second across the recent window (~3s).",
+      "why": "A typical frame, unskewed by the odd spike — steadier than the live FPS.",
+      "interpret": "Should sit near your target rate. A low p50 means sustained slowness, not a blip."
+    },
+    "fpsP1": {
+      "label": "p1-low",
+      "name": "1%-low FPS",
+      "what": "The 1%-low FPS — the mean of the slowest 1% of frames in the window.",
+      "why": "Captures the worst stutters the average hides; this is what makes motion feel janky.",
+      "interpret": "Want it close to p50. A big p50→p1 gap means occasional hard hitches."
+    },
+    "jank": {
+      "label": "jank",
+      "name": "Jank",
+      "what": "Share of frames slower than the 30fps floor (33.3ms).",
+      "why": "A direct count of dropped-feeling frames.",
+      "interpret": "0% is clean, a few % is occasional hitching, above 15% is constant stutter."
+    },
+    "jitter": {
+      "label": "jitter",
+      "name": "Jitter",
+      "what": "Standard deviation of frame intervals, in milliseconds.",
+      "why": "Evenly-paced frames feel smooth even at a lower rate; uneven ones feel worse.",
+      "interpret": "Low (≈0–4ms) is steady; above 8ms is an irregular, lurching cadence."
+    },
+    "sceneLoopMs": {
+      "label": "loop",
+      "name": "Scene loop time",
+      "what": "Time the scene's per-frame render loop takes, in milliseconds.",
+      "why": "The slice of the frame budget this game's own work costs — isolates app cost from the browser's.",
+      "interpret": "Keep well under the frame budget (~16ms at 60fps). Above 12ms leaves little headroom."
+    },
+    "actorCensus": {
+      "label": "actors",
+      "name": "Actor census",
+      "what": "Live actor count — drifting items and players on the scene.",
+      "why": "Render cost scales with actors; pileups are a common slowdown cause.",
+      "interpret": "Higher means more to draw. Pair with loop/FPS to see if a crowd is the bottleneck."
+    },
+    "writeSkip": {
+      "label": "w/s",
+      "name": "DOM writes / skips",
+      "what": "Per frame: item DOM writes vs writes skipped by the off-screen cull.",
+      "why": "Shows the soft-cull working — a skipped item costs nothing to position.",
+      "interpret": "More skips than writes means the cull is paying off on a busy scene."
+    },
+    "restructures": {
+      "label": "restr",
+      "name": "DOM restructures",
+      "what": "DOM node add/remove operations per second (not plain attribute writes).",
+      "why": "Restructures cost far more than moving existing nodes; churn signals thrash.",
+      "interpret": "Low and stable is good. A high rate means actors are recreated, not reused."
+    },
+    "gap": {
+      "label": "gap",
+      "name": "Prediction gap",
+      "what": "Own-sprite prediction gap: the world-pixel distance between the server position and the rendered one.",
+      "why": "Measures the steering rubber-band — how far client prediction drifts from authority.",
+      "interpret": "Tens of px is fine; hundreds is visible snapping. Shows «—» until your sprite exists."
+    },
+    "staleness": {
+      "label": "stale",
+      "name": "Snapshot staleness",
+      "what": "Age of the latest authoritative snapshot, in milliseconds.",
+      "why": "Surfaces network/throttle stalls — stale data is what prediction has to paper over.",
+      "interpret": "~300–500ms is normal cadence; above 1s means snapshots are stalling. Shows «—» until your sprite exists."
+    }
+  }
+}

@@ -7,6 +7,7 @@ export const COLLAPSE_KEY = {
   leaderboard: 'frenzy-leaderboard-collapsed',
   minimap: 'frenzy-minimap-collapsed',
   legend: 'frenzy-legend-collapsed',
+  perfReadout: 'frenzy-perf-readout-collapsed',
 } as const;
 
 /**
