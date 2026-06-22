@@ -15,6 +15,9 @@ const FLOATING_TEXT_PHRASE_COUNT = 5;
 const BLAST_TTL_MS = 1000;
 // Bomb damage floats linger a touch longer than eat floats so the "−25" hit reads amid the explosion.
 const BOMB_FLOAT_TTL_MS = 1400;
+// Cap simultaneous on-screen blasts (each is ~7 animated spans). A multi-bomb cascade detonating in one tick
+// would otherwise stack 7×N layers; drop-oldest keeps the paint/composite cost bounded (~21 spans worst case).
+const MAX_BLASTS = 3;
 
 /** A bomb exploded: boom for everyone, a shockwave ring at the blast point, and a "−25" float over each hit Pokémon. */
 @Injectable()
@@ -39,7 +42,7 @@ export class DetonationEffect implements FrenzyEffect {
       radius: message.radius,
     };
 
-    this.list.add(blast, BLAST_TTL_MS);
+    this.list.add(blast, BLAST_TTL_MS, MAX_BLASTS);
 
     // A float per hit Pokémon, anchored to that player. The scene renders it only while the sprite is
     // still around, so a Pokémon the bomb finished off simply shows the "died" quip instead.

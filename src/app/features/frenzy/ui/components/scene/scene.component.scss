@@ -10,6 +10,11 @@
   background: var(--scene-bg, var(--gradient-bg));
   touch-action: manipulation;
   user-select: none;
+  // Pre-promote the scene to its own compositor layer. The blast screen-shake (`.scene--shaking` animates this
+  // element's `transform`) then runs as a compositor-only transform with the layer already in place — no layer
+  // promotion/demotion churn at the 450ms shake's start/end, and the 2400×900 world subtree below is not
+  // re-rasterised during the jolt.
+  will-change: transform;
 
   // Fixed-size world (aquarium) layer (px size from GAME.world via inline binding) — the positioned offsetParent
   // every child anchors against. The camera applies `transform: translate + scale` per-frame; `.scene` clips it.
@@ -157,9 +162,11 @@
   // Shockwave: a bright ring that expands past the damage radius and thins to a hairline as it fades.
   &__blast-ring {
     border: 3px solid rgba(255, 224, 130, 0.95);
-    box-shadow:
-      0 0 14px rgba(255, 150, 50, 0.7),
-      inset 0 0 14px rgba(255, 120, 40, 0.4);
+    // Glow baked into a radial-gradient band hugging the rim instead of a blurred box-shadow (which spawns an
+    // offscreen-composited buffer per ring — costly when several blasts overlap in a cascade). `border-radius: 50%`
+    // clips the fill to the inscribed circle, so this reproduces the inner glow; the faint outer halo is dropped
+    // (the shadowless `--secondary` ring already sets that precedent and the flash bloom masks the region).
+    background: radial-gradient(circle, rgba(255, 120, 40, 0) 52%, rgba(255, 130, 45, 0.4) 70%);
     animation: scene-blast-ring 700ms ease-out forwards;
   }
 
@@ -172,14 +179,17 @@
 
   // Fireball: a hot core that pops with a brief scale overshoot, then settles and fades.
   &__blast-core {
+    // The orange glow that was a blurred `box-shadow: 0 0 30px` is baked into the gradient's tail (the last two
+    // stops feather an orange band out to transparent), the same blur-free approach as the flash/smoke layers —
+    // so N overlapping cores no longer each spawn an offscreen-composited shadow buffer.
     background: radial-gradient(
       circle,
       rgba(255, 255, 240, 0.98) 0%,
       rgba(255, 190, 80, 0.85) 38%,
-      rgba(255, 110, 40, 0.45) 64%,
-      rgba(255, 90, 40, 0) 80%
+      rgba(255, 110, 40, 0.55) 60%,
+      rgba(255, 150, 50, 0.5) 78%,
+      rgba(255, 150, 50, 0) 100%
     );
-    box-shadow: 0 0 30px rgba(255, 150, 50, 0.8);
     animation: scene-blast-core 700ms ease-out forwards;
   }
 
