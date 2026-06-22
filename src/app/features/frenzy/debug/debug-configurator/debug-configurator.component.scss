@@ -4,13 +4,15 @@
   display: contents;
 }
 
-// ?debug=perf configurator panel. Sits on the right BELOW the top-right HUD controls (sound/legend/leaderboard at
-// `top: 1rem`, ~5rem tall on mobile / ~8rem with the desktop leaderboard) so it never covers them; the perf readout
-// is bottom-left. Scrolls if the metric list outgrows the viewport. Near-opaque + monospace to match the sibling
+// ?debug=perf configurator panel. Sits on the right BELOW the top-right HUD controls (sound + legend pill +
+// desktop leaderboard, all stacked from `top: 1rem`). The leaderboard grows with its entries (Топ-5), so the
+// stack runs ~12rem tall with a few players — the panel clears it (and the leaderboard, which lives in a higher
+// page stacking context, would otherwise paint over the collapsed `config` toggle). The perf readout is
+// bottom-left. Scrolls if the metric list outgrows the viewport. Near-opaque + monospace to match the sibling
 // debug panels. Dev-only.
 .debug-configurator {
   position: absolute;
-  top: 8rem;
+  top: 13rem;
   right: 0.5rem;
   z-index: 11;
   display: flex;
