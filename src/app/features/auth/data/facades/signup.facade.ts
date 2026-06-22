@@ -32,7 +32,7 @@ export class SignUpFacade {
       .subscribe({
         next: (data) => {
           //TODO тут будем сетапить в отдельный AuthService вместо локал стораджа
-          localStorage.setItem(ACCESS_TOKEN_KEY, JSON.stringify(data.accessToken));
+          localStorage.setItem(ACCESS_TOKEN_KEY, data.accessToken);
           this.tokenService.saveToken(data.accessToken);
           this.router.navigateByUrl(returnUrl);
         },
