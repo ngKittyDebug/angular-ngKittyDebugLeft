@@ -126,6 +126,7 @@ export default defineConfig(
         {
           ts: 'never',
           config: 'off',
+          constants: 'off',
           routes: 'off',
           providers: 'off',
           model: 'off',

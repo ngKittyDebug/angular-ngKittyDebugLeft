@@ -9,8 +9,9 @@ import type {
   UpdateUserModel,
   UserProfile,
 } from '../models/profile.model';
-import { UserPath } from '../constants/user-path.model';
+
 import { getFullUrl } from '../helpers/full-url';
+import { USER_PATH } from '../constants/user-path.constants';
 
 @Service()
 export class ProfileService {
@@ -18,30 +19,30 @@ export class ProfileService {
   private readonly baseUrl = AUTH_SERVER_URL;
 
   public getUser(): Observable<UserProfile> {
-    return this.http.get<UserProfile>(getFullUrl(this.baseUrl, UserPath.BASE));
+    return this.http.get<UserProfile>(getFullUrl(this.baseUrl, USER_PATH.BASE));
   }
 
   public updateUser(data: UpdateUserModel): Observable<UserProfile> {
     return this.http.patch<UserProfile>(
-      getFullUrl(this.baseUrl, `${UserPath.BASE}${UserPath.PROFILE}`),
+      getFullUrl(this.baseUrl, `${USER_PATH.BASE}${USER_PATH.PROFILE}`),
       data,
     );
   }
 
   public changePassword(data: ChangePasswordModel): Observable<void> {
     return this.http.patch<void>(
-      getFullUrl(this.baseUrl, `${UserPath.BASE}${UserPath.PASSWORD}`),
+      getFullUrl(this.baseUrl, `${USER_PATH.BASE}${USER_PATH.PASSWORD}`),
       data,
     );
   }
 
   public deleteAccount(): Observable<void> {
-    return this.http.delete<void>(getFullUrl(this.baseUrl, UserPath.BASE));
+    return this.http.delete<void>(getFullUrl(this.baseUrl, USER_PATH.BASE));
   }
 
   public updateAvatar(data: UpdateAvatar): Observable<UpdateAvatar> {
     return this.http.patch<UpdateAvatar>(
-      getFullUrl(this.baseUrl, `${UserPath.BASE}${UserPath.AVATAR}`),
+      getFullUrl(this.baseUrl, `${USER_PATH.BASE}${USER_PATH.AVATAR}`),
       data,
     );
   }
@@ -49,21 +50,21 @@ export class ProfileService {
   public getFavorites(): Observable<string[]> {
     return this.http
       .get<PokemonFavoriteResponse>(
-        getFullUrl(this.baseUrl, `${UserPath.BASE}${UserPath.POKEMON_FAVORITE}`),
+        getFullUrl(this.baseUrl, `${USER_PATH.BASE}${USER_PATH.POKEMON_FAVORITE}`),
       )
-      .pipe(map((response) => response.pokemonNameFavorite));
+      .pipe(map((response) => response.pokemonNameFavoriteList));
   }
 
   public addFavorite(pokemonName: string): Observable<PokemonFavoriteResponse> {
     return this.http.post<PokemonFavoriteResponse>(
-      getFullUrl(this.baseUrl, `${UserPath.BASE}${UserPath.POKEMON_FAVORITE}`),
+      getFullUrl(this.baseUrl, `${USER_PATH.BASE}${USER_PATH.POKEMON_FAVORITE}`),
       { pokemonName: pokemonName },
     );
   }
 
   public removeFavorite(pokemonName: string): Observable<PokemonFavoriteResponse> {
     return this.http.post<PokemonFavoriteResponse>(
-      getFullUrl(this.baseUrl, `${UserPath.BASE}${UserPath.POKEMON_FAVORITE_DELETE}`),
+      getFullUrl(this.baseUrl, `${USER_PATH.BASE}${USER_PATH.POKEMON_FAVORITE_DELETE}`),
       { pokemonName: pokemonName },
     );
   }

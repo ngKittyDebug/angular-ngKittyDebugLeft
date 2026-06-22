@@ -1,4 +1,4 @@
-export const UserPath = {
+export const USER_PATH = {
   BASE: '/user',
   PROFILE: '/profile',
   PASSWORD: '/password',
