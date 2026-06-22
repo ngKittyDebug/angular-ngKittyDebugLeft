@@ -149,7 +149,10 @@ function defaultSettings(): DebugSettings {
     renderMode: 'dom',
     playerSpritesMode: 'dom',
     decorMode: 'canvas',
-    canvasDprCap: 0,
+    // Default-on canvas decor was running at native DPR (≈world×DPR backing) — the fill-rate sink the tablet A/B left
+    // on the table. Cap at 1× by default (Pixel 9a + tablet showed 1× smooth, native the outlier); the native option
+    // stays selectable under ?debug=perf. Shared by the decor- and item-canvas backends.
+    canvasDprCap: 1,
     freezeSprites: false,
     sceneLayers: defaultSceneLayers(),
     frameCapFps: 0,
@@ -306,7 +309,7 @@ export class DebugSettingsStore {
   private readonly _renderMode = signal<RenderMode>('dom');
   private readonly _playerSpritesMode = signal<RenderMode>('dom');
   private readonly _decorMode = signal<RenderMode>('canvas');
-  private readonly _canvasDprCap = signal<CanvasDprCap>(0);
+  private readonly _canvasDprCap = signal<CanvasDprCap>(1);
   private readonly _freezeSprites = signal(false);
   private readonly _sceneLayers = signal<Record<SceneLayerKey, boolean>>(defaultSceneLayers());
   private readonly _frameCapFps = signal<FrameCapFps>(0);

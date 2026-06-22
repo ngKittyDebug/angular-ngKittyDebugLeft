@@ -118,7 +118,7 @@ describe('DebugSettingsStore', () => {
     expect(store.perfLog().label).toBe('');
   });
 
-  it('defaults to the DOM item renderer + canvas decor at native DPR with animated sprites when storage is empty', () => {
+  it('defaults to the DOM item renderer + canvas decor capped at 1× DPR with animated sprites when storage is empty', () => {
     const store = makeStore();
 
     expect(store.renderMode()).toBe('dom');
@@ -126,7 +126,7 @@ describe('DebugSettingsStore', () => {
     expect(store.playerSpritesMode()).toBe('dom');
     // Decor defaults to canvas (ADR 0007 — the tablet A/B went green); the item renderer stays DOM pending its own A/B.
     expect(store.decorMode()).toBe('canvas');
-    expect(store.canvasDprCap()).toBe(0);
+    expect(store.canvasDprCap()).toBe(1);
     expect(store.freezeSprites()).toBe(false);
   });
 
@@ -177,7 +177,7 @@ describe('DebugSettingsStore', () => {
     expect(store.renderMode()).toBe('dom');
     expect(store.playerSpritesMode()).toBe('dom');
     expect(store.decorMode()).toBe('canvas');
-    expect(store.canvasDprCap()).toBe(0);
+    expect(store.canvasDprCap()).toBe(1);
     expect(store.freezeSprites()).toBe(false);
   });
 
