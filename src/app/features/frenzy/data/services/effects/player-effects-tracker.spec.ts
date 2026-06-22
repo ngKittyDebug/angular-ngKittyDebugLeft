@@ -107,6 +107,15 @@ describe('PlayerEffectsTracker', () => {
     expect(play).toHaveBeenCalledExactlyOnceWith('wellFed');
   });
 
+  it('floats a cactus quip and reuses the shield sound for my own cactus grant', () => {
+    tracker.handle(granted('me', 'cactus'), context);
+
+    const messages = floats.ownedMessages();
+
+    expect(messages[0].textKey).toContain('statusMessage.cactus');
+    expect(play).toHaveBeenCalledExactlyOnceWith('shield');
+  });
+
   it('floats a named quip for another player and stays silent (no sound)', () => {
     tracker.handle(granted('other', 'laying'), context);
 

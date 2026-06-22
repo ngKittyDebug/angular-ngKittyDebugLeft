@@ -71,6 +71,68 @@ exports[`frenzy definition contract > keeps the NPC definition slice values stab
 }
 `;
 
+exports[`frenzy definition contract > keeps the effect-modifier values stable (the flat FRENZY read-model does not project them) 1`] = `
+{
+  "barbedWire": {
+    "enabled": false,
+    "modifiers": {
+      "damageDealt": {
+        "bump": 2,
+      },
+    },
+  },
+  "cactus": {
+    "modifiers": {
+      "contactRam": {
+        "ramDamage": -12,
+        "scratchDamage": -6,
+      },
+    },
+  },
+  "laying": {
+    "emission": {
+      "intervalMs": 1500,
+      "launch": {
+        "angleJitter": 0.4,
+        "back": 0.012,
+        "backSpeed": 0.08,
+        "down": 0.008,
+      },
+      "poolId": "eggEmit",
+    },
+    "exclusiveGroup": "emitter",
+  },
+  "pooping": {
+    "emission": {
+      "intervalMs": 1000,
+      "launch": {
+        "angleJitter": 0.4,
+        "back": 0.012,
+        "backSpeed": 0.1,
+        "down": 0.008,
+      },
+      "poolId": "poopEmit",
+    },
+    "exclusiveGroup": "emitter",
+  },
+  "shield": {
+    "modifiers": {
+      "damageTaken": {
+        "blast": 0,
+        "bump": 0,
+        "item": 0,
+      },
+      "decayPaused": true,
+    },
+  },
+  "wellFed": {
+    "modifiers": {
+      "decayPaused": true,
+    },
+  },
+}
+`;
+
 exports[`frenzy definition contract > keeps the flat FRENZY read-model values stable 1`] = `
 {
   "bomb": {

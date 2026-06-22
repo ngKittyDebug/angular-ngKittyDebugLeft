@@ -53,11 +53,17 @@ describe('nextEmaFps', () => {
   });
 
   it('blends the previous EMA with the instant FPS', () => {
-    expect(nextEmaFps(50, 20)).toBeCloseTo(50 * 0.85 + 50 * 0.15, 5);
+    // Distinct previous (40) and instant (1000/20 = 50) so the weighting actually shows.
+    expect(nextEmaFps(40, 20)).toBeCloseTo(40 * 0.85 + 50 * 0.15, 5);
   });
 
-  it('ignores a non-positive or pause-length interval', () => {
+  it('ignores a non-positive interval, returning the previous EMA unchanged', () => {
     expect(nextEmaFps(50, 0)).toBe(50);
+    expect(nextEmaFps(50, -16)).toBe(50);
+  });
+
+  it('ignores a pause-length interval at and above the 1s cutoff', () => {
+    expect(nextEmaFps(50, 1000)).toBe(50);
     expect(nextEmaFps(50, 5000)).toBe(50);
   });
 });
@@ -90,6 +96,21 @@ describe('frameTimingStats', () => {
     expect(JANK_THRESHOLD_MS).toBeCloseTo(33.33, 1);
     expect(frameTimingStats([JANK_THRESHOLD_MS + 1]).jankPercent).toBe(100);
     expect(frameTimingStats([JANK_THRESHOLD_MS - 1]).jankPercent).toBe(0);
+  });
+
+  it('drops non-positive and non-finite samples before computing the stats', () => {
+    const withGarbage = frameTimingStats([16, 0, -5, Number.NaN, Number.POSITIVE_INFINITY, 16]);
+
+    expect(withGarbage).toEqual(frameTimingStats([16, 16]));
+  });
+
+  it('yields zeros (not NaN) when every sample is garbage', () => {
+    expect(frameTimingStats([0, -1, Number.NaN])).toEqual({
+      p50Fps: 0,
+      p1Fps: 0,
+      jankPercent: 0,
+      jitterMs: 0,
+    });
   });
 });
 
@@ -136,5 +157,15 @@ describe('perfReadoutRows', () => {
     expect(gap?.enabled).toBe(true);
     expect(gap?.text).toBe('—');
     expect(gap?.tone).toBe('ok');
+  });
+
+  it('formats the composite census/write-skip rows and leaves the informational counters untoned', () => {
+    const rows = perfReadoutRows(snapshot(), allEnabled());
+
+    expect(rows.find((row) => row.key === 'actorCensus')?.text).toBe('10i 4p');
+    expect(rows.find((row) => row.key === 'writeSkip')?.text).toBe('8/2');
+    expect(rows.find((row) => row.key === 'restructures')?.text).toBe('3/s');
+    expect(rows.find((row) => row.key === 'actorCensus')?.tone).toBe('ok');
+    expect(rows.find((row) => row.key === 'writeSkip')?.tone).toBe('ok');
   });
 });

@@ -33,6 +33,17 @@ describe('parseServerMessage', () => {
     expect(parseServerMessage('{"type":"brandNewThing","payload":1}')).toBeNull();
   });
 
+  it('drops a frame with a missing or non-string type', () => {
+    expect(parseServerMessage('{"payload":1}')).toBeNull();
+    expect(parseServerMessage('{"type":42}')).toBeNull();
+  });
+
+  it('drops a snapshot whose tick is not a number', () => {
+    expect(
+      parseServerMessage('{"type":"snapshot","state":{"players":[],"items":[],"tick":"7"}}'),
+    ).toBeNull();
+  });
+
   it('drops a snapshot whose state spine is missing or truncated', () => {
     expect(parseServerMessage('{"type":"snapshot"}')).toBeNull();
     expect(parseServerMessage('{"type":"snapshot","state":{"players":[]}}')).toBeNull();

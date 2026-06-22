@@ -30,6 +30,15 @@ function player(id: string, name: string, x = 0.5, y = 0.5): Player {
   };
 }
 
+function npcPlayer(id: string, x = 0.5, y = 0.5): Player {
+  return {
+    ...player(id, 'angryBomb', x, y),
+    kind: 'npc',
+    npcKind: 'angryBomb',
+    appearance: 'angryBomb',
+  };
+}
+
 function snapshot(players: Player[]): ServerMessage {
   return { type: 'snapshot', state: { players, items: [], tick: 0 } };
 }
@@ -98,6 +107,31 @@ describe('PresenceTracker', () => {
     expect(messages[0].textKey).toContain('statusMessage.appeared');
   });
 
+  it('announces an appeared NPC anchored to it but without a name label', () => {
+    tracker.handle(snapshot([player('me', 'Me')]), context);
+    tracker.handle(snapshot([player('me', 'Me'), npcPlayer('npc-1')]), context);
+
+    const messages = floats.ownedMessages();
+
+    expect(messages).toHaveLength(1);
+    expect(messages[0].ownerId).toBe('npc-1');
+    expect(messages[0].who).toBeUndefined();
+    expect(messages[0].textKey).toContain('statusMessage.npcAppeared');
+  });
+
+  it('floats an unnamed NPC death quip when an NPC faints', () => {
+    tracker.handle(snapshot([npcPlayer('npc-1', 0.3, 0.7)]), context);
+    tracker.handle({ type: 'fainted', playerId: 'npc-1' }, context);
+
+    const messages = floats.orphanMessages();
+    const died = messages[messages.length - 1];
+
+    expect(died.textKey).toContain('statusMessage.npcDied');
+    expect(died.who).toBeUndefined();
+    expect(died.x).toBe(0.3);
+    expect(died.y).toBe(0.7);
+  });
+
   it('floats a death quip at the last-known spot when another player faints', () => {
     tracker.handle(snapshot([player('other', 'Ash', 0.4, 0.6)]), context);
     tracker.handle({ type: 'fainted', playerId: 'other' }, context);
@@ -131,6 +165,14 @@ describe('PresenceTracker', () => {
     tracker.handle(slimSnapshot([player('me', 'Me'), player('ghost', 'Ghost')]), context);
 
     expect(floats.ownedMessages()).toHaveLength(0);
+  });
+
+  it('prunes a player dropped from a slim snapshot, so a later faint stamps no quip', () => {
+    tracker.handle(snapshot([player('other', 'Ash', 0.4, 0.6)]), context);
+    tracker.handle(slimSnapshot([]), context);
+    tracker.handle({ type: 'fainted', playerId: 'other' }, context);
+
+    expect(floats.orphanMessages()).toHaveLength(0);
   });
 
   it('stays silent when my own Pokémon faints', () => {

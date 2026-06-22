@@ -85,6 +85,21 @@ describe('serializeSamples', () => {
     expect(lines).toHaveLength(2);
     expect(csv).toContain('"UA, with comma"');
   });
+
+  it('quotes a CSV field with a newline and escapes embedded quotes by doubling', () => {
+    const csv = serializeSamples([sample({ label: 'line1\nline2', device: 'has "quote"' })], 'csv');
+
+    expect(csv).toContain('"line1\nline2"');
+    expect(csv).toContain('"has ""quote"""');
+  });
+
+  it('leaves a blank CSV cell for a metric column the sample did not capture', () => {
+    const csv = serializeSamples([sample({ metrics: { fps: 60 } })], 'csv');
+    const [header, row] = csv.split('\n');
+    const p1Index = header.split(',').indexOf('p1Fps');
+
+    expect(row.split(',')[p1Index]).toBe('');
+  });
 });
 
 describe('parseSamples', () => {
@@ -97,5 +112,17 @@ describe('parseSamples', () => {
   it('returns an empty array for corrupt or non-array input', () => {
     expect(parseSamples('not json {')).toEqual([]);
     expect(parseSamples('{"not":"an array"}')).toEqual([]);
+  });
+
+  it('drops malformed elements while keeping the well-formed ones', () => {
+    const good = sample();
+    const raw = JSON.stringify([
+      good,
+      { label: 'missing-fields' },
+      null,
+      { ...good, timestamp: 'not a number' },
+    ]);
+
+    expect(parseSamples(raw)).toEqual([good]);
   });
 });

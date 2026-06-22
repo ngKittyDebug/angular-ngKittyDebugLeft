@@ -84,4 +84,20 @@ describe('SceneSandPuffsService', () => {
 
     expect(service.puffs()).toHaveLength(2);
   });
+
+  it('suppresses the puff under prefers-reduced-motion', () => {
+    const previous = window.matchMedia;
+
+    Object.defineProperty(window, 'matchMedia', {
+      configurable: true,
+      value: () => ({ matches: true }) as MediaQueryList,
+    });
+
+    service.observe([item({ id: 'a', landed: false })]);
+    service.observe([item({ id: 'a', landed: true })]);
+
+    expect(service.puffs()).toHaveLength(0);
+
+    Object.defineProperty(window, 'matchMedia', { configurable: true, value: previous });
+  });
 });

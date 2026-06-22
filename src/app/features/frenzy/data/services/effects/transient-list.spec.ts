@@ -1,23 +1,29 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createTransientId, TransientList } from './transient-list';
 
 describe('TransientList', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
   afterEach(() => {
     vi.useRealTimers();
   });
 
   it('adds an item and auto-removes it once its ttl elapses', () => {
-    vi.useFakeTimers();
     const list = new TransientList<{ id: string }>();
 
     list.add({ id: 'a' }, 1000);
+
     expect(list.items()).toEqual([{ id: 'a' }]);
 
     vi.advanceTimersByTime(999);
+
     expect(list.items()).toHaveLength(1);
 
     vi.advanceTimersByTime(1);
+
     expect(list.items()).toEqual([]);
   });
 
