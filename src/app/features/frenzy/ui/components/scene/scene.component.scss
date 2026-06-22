@@ -2,172 +2,138 @@
   position: relative;
   width: 100%;
   height: 100%;
-  overflow: hidden;
+  // `clip`, not `hidden`: the world holds focusable per-player poke buttons positioned far out in world space.
+  // An `overflow: hidden` box is still programmatically scrollable, so Tab-focusing one of those buttons fires the
+  // browser's scroll-into-view and drags the whole scene aside, exposing the empty area beyond it. `clip` makes
+  // this a non-scrollable clip box (the camera moves via `transform`, never scroll), so focus can't shift the view.
+  overflow: clip;
   background: var(--scene-bg, var(--gradient-bg));
   touch-action: manipulation;
   user-select: none;
+  // Pre-promote the scene to its own compositor layer. The blast screen-shake (`.scene--shaking` animates this
+  // element's `transform`) then runs as a compositor-only transform with the layer already in place — no layer
+  // promotion/demotion churn at the 450ms shake's start/end, and the 2400×900 world subtree below is not
+  // re-rasterised during the jolt.
+  will-change: transform;
 
-  &__player {
+  // Fixed-size world (aquarium) layer (px size from GAME.world via inline binding) — the positioned offsetParent
+  // every child anchors against. The camera applies `transform: translate + scale` per-frame; `.scene` clips it.
+  &__world {
+    position: relative;
+    transform-origin: 0 0;
+    will-change: transform;
+  }
+
+  // The hybrid-canvas decor layer (?debug decor-mode = canvas, ADR 0007): a world-sized child of `.scene__world`,
+  // stacked UNDER the item canvas (DOM order → the item canvas paints over it), sized imperatively by
+  // SceneDecorCanvasService. Its OWN compositor layer (will-change) keeps the per-frame kelp redraw off the residual
+  // DOM backdrop behind it. Non-interactive — decor takes no taps.
+  &__decor-canvas {
     position: absolute;
-    z-index: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    align-items: center;
-    // Position (left/top) is driven per-frame by rAF extrapolation — no CSS transition, like items.
-    // translateZ(0) promotes its own layer so per-frame repositioning repaints cleanly (no flicker).
-    transform: translate(-50%, -50%) translateZ(0);
-    backface-visibility: hidden;
+    top: 0;
+    left: 0;
     pointer-events: none;
+    will-change: transform;
   }
 
-  // Owned floats live inside the player box and ride along with its drift. Anchored above the box top
-  // (the sprite's head); the float's own rise animation carries it up from there. `left: 50%` pairs with
-  // the float's `translate(-50%, …)` to centre it over the sprite.
-  &__player-float {
+  // The hybrid-canvas actors layer (?debug render-mode / players = canvas): a world-sized child of `.scene__world`
+  // overlaying it exactly (its px size is set imperatively by SceneActorCanvasService). `will-change: transform` puts it on its OWN
+  // compositor layer, so the per-frame canvas redraw uploads just this texture and never repaints the seabed/kelp
+  // backdrop behind it — the point of the canvas backend. Non-interactive: taps go to the scene handler (which
+  // hit-tests the drawn items) and to the bomb DOM node painted above it.
+  &__item-canvas {
     position: absolute;
-    // Each float sits in its own vertical lane above the head (set per message via `--float-lane`),
-    // so several co-existing quips of one player wedge into free slots instead of overlapping.
-    bottom: calc(100% + var(--float-lane, 0) * 1.6rem);
-    left: 50%;
-  }
-
-  // decayShield aura: a soft cyan ring centred on the sprite while the shield is active. Sits behind the
-  // sprite (the player box paints it first; no z-index needed) and is purely decorative (aria-hidden).
-  &__shield {
-    position: absolute;
-    top: calc(var(--scene-sprite-height, 96px) / 2);
-    left: 50%;
-    width: calc(var(--scene-sprite-height, 96px) * 1.5);
-    height: calc(var(--scene-sprite-height, 96px) * 1.5);
-    border-radius: 50%;
-    border: 2px solid rgba(120, 220, 255, 0.85);
-    background: radial-gradient(
-      circle,
-      rgba(120, 220, 255, 0) 55%,
-      rgba(120, 220, 255, 0.22) 80%,
-      rgba(120, 220, 255, 0) 100%
-    );
-    box-shadow:
-      0 0 12px rgba(120, 220, 255, 0.6),
-      inset 0 0 12px rgba(120, 220, 255, 0.35);
-    transform: translate(-50%, -50%);
-    animation: scene-shield-pulse 1.8s ease-in-out infinite;
+    top: 0;
+    left: 0;
     pointer-events: none;
+    will-change: transform;
   }
 
-  &__poke {
-    padding: 0;
-    background: none;
-    border: none;
-    line-height: 0;
-    cursor: pointer;
-    // Re-enable clicks on top of the players layer (`.scene__player` is `pointer-events: none`).
-    pointer-events: auto;
-  }
+  // Owned-float overlay (each live player's quips) lives in its own `left-paw-owned-floats` component now.
 
-  &__sprite {
-    // Animated BW sprites are non-square; height drives the size (per evolution stage, set via the
-    // `--scene-sprite-height` custom property on `.scene__player`) and width follows the aspect ratio.
-    // No `image-rendering: pixelated` here — these detailed sprites read cleaner with smooth scaling.
-    width: auto;
-    height: var(--scene-sprite-height, 96px);
-    transition:
-      filter 0.4s ease,
-      transform 0.2s ease;
-    -webkit-user-drag: none;
-  }
+  // Debug outline boxes (?debug only) live in their own `left-paw-debug-box` component now.
 
-  // Horizontal flip wrapper: kept separate from `&__sprite` so the flip doesn't fight the sprite's
-  // own transform (evolve pulse / hover). Flip is instant — a transition would squash through 0 width.
-  &__sprite-flip {
-    display: inline-block;
-    line-height: 0;
-  }
-
-  &__sprite-flip--right {
-    transform: scaleX(-1);
-  }
-
-  &__sprite--sad {
-    filter: saturate(0.6) brightness(0.85);
-  }
-
-  &__sprite--evolving {
-    animation: scene-evolve-pulse 1.5s ease-out;
-  }
-
-  &__label {
-    color: #f5f5f5;
-    font-size: 0.75rem;
-    white-space: nowrap;
-    // No background pill — a crisp shadow keeps the name legible over the aquarium instead.
-    text-shadow:
-      0 1px 2px rgba(0, 0, 0, 0.9),
-      0 0 4px rgba(0, 0, 0, 0.6);
-  }
-
-  &__player--me &__label {
-    color: #8bf58b;
-    font-weight: 600;
-  }
-
-  &__player--disconnected {
-    opacity: 0.5;
-    filter: grayscale(1);
-  }
-
-  // Vertical health bar for other players, pinned to the right side of the 96px sprite.
-  &__mass-bar {
+  // Foreground parallax particle layers (in front of the world; drift from the CAMERA offset). The wrapper only
+  // clips and carries the layer-wide mask/opacity/scale; the camera's per-frame write is a compositor-only
+  // `transform` on the oversized inner tile sheet below (a `background-position` write here repainted the whole
+  // viewport-sized layer every frame). Decorative, never interactive.
+  &__parallax {
     position: absolute;
-    top: 48px;
-    left: calc(50% + 58px);
-    width: 72px;
-    transform: translate(-50%, -50%) rotate(-90deg);
-    transform-origin: center;
-  }
-
-  &__item {
-    position: absolute;
-    z-index: 1;
-    // Anchor by the bottom edge (translateY -100%) so `y` is the item's foot: it stays fully visible
-    // while falling and lies wholly on the floor (y = 1) without needing its height in scene units.
-    transform: translate(-50%, -100%);
-    padding: 12px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    transition: transform 0.08s ease;
-    outline: none;
-    user-select: none;
-  }
-
-  &__item:hover,
-  &__item:focus-visible {
-    transform: translate(-50%, -100%) scale(1.1);
-  }
-
-  &__item:active {
-    transform: translate(-50%, -100%) scale(0.95);
-  }
-
-  &__item-sprite {
-    display: block;
-    // Integer multiple of the 30px source (×2) so `pixelated` upscaling stays even — a fractional
-    // scale (e.g. 56px) makes nearest-neighbour shimmer/comb during the fall.
-    width: 60px;
-    height: 60px;
-    image-rendering: pixelated;
+    inset: 0;
+    overflow: clip;
     pointer-events: none;
-    -webkit-user-drag: none;
+    // These are WATER-column specks (foreground, scroll faster than the world). They must not drift across the
+    // seabed: the sand is opaque and world-anchored (it carries its OWN grain that moves 1:1 with the camera), so
+    // a faster-moving speck sliding over it reads as the sand being see-through. Fade the layer out over the
+    // bottom band of the viewport — where the floor sits — so the parallax lives only in open water.
+    mask-image: linear-gradient(to bottom, #000 70%, transparent 88%);
+    -webkit-mask-image: linear-gradient(to bottom, #000 70%, transparent 88%);
   }
 
-  // Tumble while falling — duration and direction (animation-direction) are set per item inline so each
-  // spins at its own speed, clockwise or counter-clockwise. The bomb opts out to keep its fuse readable.
-  &__item-sprite--spin {
-    animation-name: scene-item-spin;
-    animation-timing-function: linear;
-    animation-iteration-count: infinite;
+  // Inner tile sheet: one tile larger than the wrapper on each axis, because the camera wraps its translate to
+  // one tile period (the pattern repeats — a whole-period jump is invisible; see `wrapParallaxPhase`), so this
+  // margin is all it ever exposes. Per-layer size below MUST stay = 100% + the layer's `background-size` tile,
+  // which in turn MUST match `PARALLAX_TILE_NEAR`/`PARALLAX_TILE_MID` in camera-math.ts.
+  &__parallax-inner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-repeat: repeat;
+    will-change: transform;
+  }
+
+  // Near layer: a few soft specks on a roomy tile — gentle camera-driven drift, not a swarm. Speck colour is
+  // theme-aware via `--scene-parallax-near` (light-blue on the dark abyss, deep teal on the bright shallows);
+  // per-speck alpha comes from color-mix toward transparent.
+  &__parallax--near {
+    opacity: var(--scene-parallax-near-opacity, 0.55);
+    // Enlarges the specks in the light theme (where white-on-cyan needs more presence); 1 in dark = unchanged.
+    scale: var(--scene-parallax-scale, 1);
+  }
+
+  &__parallax-inner--near {
+    width: calc(100% + 200px);
+    height: calc(100% + 200px);
+    background-image:
+      radial-gradient(
+        circle at 18% 30%,
+        color-mix(in srgb, var(--scene-parallax-near) 60%, transparent) 0,
+        transparent 2.6px
+      ),
+      radial-gradient(
+        circle at 67% 14%,
+        color-mix(in srgb, var(--scene-parallax-near) 50%, transparent) 0,
+        transparent 2px
+      ),
+      radial-gradient(
+        circle at 84% 72%,
+        color-mix(in srgb, var(--scene-parallax-near) 55%, transparent) 0,
+        transparent 3px
+      );
+    background-size: 200px 200px;
+  }
+
+  // Mid layer: smaller, denser specks moving slower — faint depth behind the near layer.
+  &__parallax--mid {
+    opacity: var(--scene-parallax-mid-opacity, 0.4);
+    scale: var(--scene-parallax-scale, 1);
+  }
+
+  &__parallax-inner--mid {
+    width: calc(100% + 125px);
+    height: calc(100% + 125px);
+    background-image:
+      radial-gradient(
+        circle at 25% 60%,
+        color-mix(in srgb, var(--scene-parallax-mid) 45%, transparent) 0,
+        transparent 1.8px
+      ),
+      radial-gradient(
+        circle at 72% 32%,
+        color-mix(in srgb, var(--scene-parallax-mid) 40%, transparent) 0,
+        transparent 1.5px
+      );
+    background-size: 125px 125px;
   }
 
   // Bomb explosion. The element is just a positioning box sized to the exact damage zone (width % from the
@@ -186,7 +152,8 @@
   &__blast-smoke,
   &__blast-core,
   &__blast-flash,
-  &__blast-sparks {
+  &__blast-sparks,
+  &__blast-embers {
     position: absolute;
     inset: 0;
     border-radius: 50%;
@@ -195,9 +162,11 @@
   // Shockwave: a bright ring that expands past the damage radius and thins to a hairline as it fades.
   &__blast-ring {
     border: 3px solid rgba(255, 224, 130, 0.95);
-    box-shadow:
-      0 0 14px rgba(255, 150, 50, 0.7),
-      inset 0 0 14px rgba(255, 120, 40, 0.4);
+    // Glow baked into a radial-gradient band hugging the rim instead of a blurred box-shadow (which spawns an
+    // offscreen-composited buffer per ring — costly when several blasts overlap in a cascade). `border-radius: 50%`
+    // clips the fill to the inscribed circle, so this reproduces the inner glow; the faint outer halo is dropped
+    // (the shadowless `--secondary` ring already sets that precedent and the flash bloom masks the region).
+    background: radial-gradient(circle, rgba(255, 120, 40, 0) 52%, rgba(255, 130, 45, 0.4) 70%);
     animation: scene-blast-ring 700ms ease-out forwards;
   }
 
@@ -210,27 +179,31 @@
 
   // Fireball: a hot core that pops with a brief scale overshoot, then settles and fades.
   &__blast-core {
+    // The orange glow that was a blurred `box-shadow: 0 0 30px` is baked into the gradient's tail (the last two
+    // stops feather an orange band out to transparent), the same blur-free approach as the flash/smoke layers —
+    // so N overlapping cores no longer each spawn an offscreen-composited shadow buffer.
     background: radial-gradient(
       circle,
       rgba(255, 255, 240, 0.98) 0%,
       rgba(255, 190, 80, 0.85) 38%,
-      rgba(255, 110, 40, 0.45) 64%,
-      rgba(255, 90, 40, 0) 80%
+      rgba(255, 110, 40, 0.55) 60%,
+      rgba(255, 150, 50, 0.5) 78%,
+      rgba(255, 150, 50, 0) 100%
     );
-    box-shadow: 0 0 30px rgba(255, 150, 50, 0.8);
     animation: scene-blast-core 700ms ease-out forwards;
   }
 
   // White-hot flash: an instant bright bloom (a touch wider than the core) that snaps in and vanishes fast.
+  // The gradient's own soft tail (last stops feathered out to transparent) stands in for a blur, so there is no
+  // per-frame offscreen `filter` pass when several bombs flash at once.
   &__blast-flash {
     inset: -18%;
     background: radial-gradient(
       circle,
       #fff 0%,
-      rgba(255, 245, 210, 0.9) 30%,
-      rgba(255, 200, 120, 0) 70%
+      rgba(255, 245, 210, 0.9) 34%,
+      rgba(255, 200, 120, 0) 82%
     );
-    filter: blur(2px);
     animation: scene-blast-flash 200ms ease-out forwards;
   }
 
@@ -250,16 +223,38 @@
     animation: scene-blast-sparks 650ms ease-out forwards;
   }
 
-  // Smoke: a soft dark puff that swells after the fireball, drifts up and dissolves — the aftermath.
+  // Hot embers (coals) flung 360° from the blast centre — the same warm debris the seabed impact kicks up
+  // (sand-puff orange), but radiating in EVERY direction so a mid-air detonation sprays too, not just an upward
+  // fan. One element with layered radial-gradient grains (NOT a node per grain): scaling the layer outward flings
+  // the whole scattered ring as it fades — cheap to paint even when several bombs detonate at once.
+  &__blast-embers {
+    background-repeat: no-repeat;
+    background-image:
+      radial-gradient(circle at 92% 50%, #ffae5e 0, transparent 3px),
+      radial-gradient(circle at 84% 74%, #ff7a2a 0, transparent 2.5px),
+      radial-gradient(circle at 64% 90%, #ff9540 0, transparent 3.5px),
+      radial-gradient(circle at 38% 88%, #ffae5e 0, transparent 2.5px),
+      radial-gradient(circle at 16% 72%, #ff7a2a 0, transparent 3px),
+      radial-gradient(circle at 8% 48%, #ff9540 0, transparent 2.5px),
+      radial-gradient(circle at 17% 26%, #ffae5e 0, transparent 3.5px),
+      radial-gradient(circle at 36% 11%, #ff7a2a 0, transparent 2.5px),
+      radial-gradient(circle at 60% 9%, #ff9540 0, transparent 3px),
+      radial-gradient(circle at 78% 22%, #ffae5e 0, transparent 2.5px),
+      radial-gradient(circle at 50% 96%, #ff7a2a 0, transparent 3px),
+      radial-gradient(circle at 50% 4%, #ff9540 0, transparent 3px);
+    animation: scene-blast-embers 800ms ease-out forwards;
+  }
+
+  // Smoke: a soft dark puff that swells after the fireball, drifts up and dissolves — the aftermath. The feathered
+  // gradient tail replaces the old `blur(4px)` so stacked smoke layers cost no offscreen filter pass.
   &__blast-smoke {
     inset: 8%;
     background: radial-gradient(
       circle,
       rgba(40, 30, 25, 0.55) 0%,
-      rgba(40, 30, 25, 0.3) 45%,
-      rgba(40, 30, 25, 0) 72%
+      rgba(40, 30, 25, 0.3) 52%,
+      rgba(40, 30, 25, 0) 85%
     );
-    filter: blur(4px);
     animation: scene-blast-smoke 1000ms ease-out forwards;
   }
 
@@ -269,16 +264,40 @@
   }
 }
 
-@keyframes scene-item-spin {
-  to {
-    transform: rotate(360deg);
-  }
+// ?debug=perf scene-layer toggles: hide a whole layer via a host class so its paint/composite cost drops out, to
+// bisect the FPS culprit on a weak device. `display:none` (not @if) keeps the DOM and the camera's element refs
+// stable and adds no template branching; `items` covers BOTH the canvas backend and the DOM item nodes.
+.scene--hide-decor left-paw-aquarium-decor,
+.scene--hide-items .scene__item-canvas,
+.scene--hide-items left-paw-scene-item,
+.scene--hide-kelp left-paw-midground-kelp,
+.scene--hide-kelp left-paw-foreground-kelp,
+.scene--hide-parallax .scene__parallax,
+.scene--hide-players left-paw-scene-player {
+  display: none;
 }
 
+// ?debug=perf bottom-left panel stack: the readout and perf-log both anchor to the bottom edge, so they share one
+// flex column here instead of overlapping (the wide one-line perf-log used to ride over the readout on a narrow
+// tablet). Readout on top, perf-log below — both left-aligned. Click-through so the empty column gaps don't eat scene
+// clicks; each panel re-enables its own pointer events (the perf-log already caps its own height + scrolls).
+.scene__perf-panels {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 0.5rem;
+  z-index: 11;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+
+// Border width stays constant (set on the selector) — only transform/opacity animate, so the ring rides the
+// compositor with no per-frame layout from an animated `border-width`. The growth+fade carries the shockwave read.
 @keyframes scene-blast-ring {
   0% {
     opacity: 0;
-    border-width: 4px;
     transform: scale(0.5);
   }
 
@@ -289,7 +308,6 @@
 
   100% {
     opacity: 0;
-    border-width: 1px;
     transform: scale(1.25);
   }
 }
@@ -307,7 +325,6 @@
 
   100% {
     opacity: 0;
-    border-width: 1px;
     transform: scale(1.6);
   }
 }
@@ -366,6 +383,22 @@
   }
 }
 
+@keyframes scene-blast-embers {
+  0% {
+    opacity: 0;
+    transform: scale(0.2) rotate(4deg);
+  }
+
+  18% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.95) rotate(-6deg);
+  }
+}
+
 @keyframes scene-blast-smoke {
   0% {
     opacity: 0;
@@ -413,44 +446,9 @@
   }
 }
 
-@keyframes scene-shield-pulse {
-  0%,
-  100% {
-    opacity: 0.7;
-    transform: translate(-50%, -50%) scale(0.97);
-  }
-
-  50% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1.03);
-  }
-}
-
 // Respect reduced-motion: keep the explosion's light/colour but drop the big screen shake.
 @media (prefers-reduced-motion: reduce) {
   .scene--shaking {
     animation: none;
-  }
-
-  // Keep the shield ring visible but static — its job is to signal the buff, not to animate.
-  .scene__shield {
-    animation: none;
-  }
-}
-
-@keyframes scene-evolve-pulse {
-  0% {
-    filter: brightness(1) drop-shadow(0 0 0 rgba(255, 255, 200, 0));
-    transform: scale(1);
-  }
-
-  35% {
-    filter: brightness(2.2) drop-shadow(0 0 24px rgba(255, 240, 150, 1));
-    transform: scale(1.3);
-  }
-
-  100% {
-    filter: brightness(1) drop-shadow(0 0 0 rgba(255, 255, 200, 0));
-    transform: scale(1);
   }
 }

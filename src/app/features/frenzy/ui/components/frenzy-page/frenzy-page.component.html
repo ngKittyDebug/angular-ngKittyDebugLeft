@@ -4,20 +4,50 @@
     [players]="players()"
     [items]="items()"
     [myId]="myId()"
+    [crownId]="crownId()"
     [evolvingPlayers]="evolvingPlayers()"
     [ownedFloats]="ownedFloats()"
     [orphanFloats]="orphanFloats()"
     [blasts]="blasts()"
+    [hitBursts]="hitBursts()"
+    [ownedSparks]="ownedSparks()"
+    [ownedShieldBlocks]="ownedShieldBlocks()"
     (itemClick)="handleItemClick($event)"
     (selfPoke)="handleSelfPoke()"
+    (pokeNpc)="handlePokeNpc($event)"
     (steer)="handleSteer($event)"
   />
 
+  @if (isReconnecting()) {
+    <p
+      *transloco="let t; prefix: 'frenzy.connection'"
+      class="frenzy-page__reconnecting"
+      role="status"
+      aria-live="polite"
+    >
+      {{ t('reconnecting') }}
+    </p>
+  }
+
   @if (me(); as myself) {
-    <div class="frenzy-page__hud-top-left">
+    <div class="frenzy-page__hud-left">
       <left-paw-current-pokemon-status
-        [mass]="myself.mass"
+        [name]="myself.name"
+        [hp]="myself.hp"
         [stage]="myself.stage"
+        [body]="myself.body"
+        [effects]="activeEffects()"
+        [reaction]="reactionFace()"
+        [compact]="isMobile()"
+      />
+      <left-paw-minimap
+        [players]="players()"
+        [items]="items()"
+        [myId]="myId()"
+        [leader]="leader()"
+        [crownId]="crownId()"
+        [online]="presenceCount()"
+        [disconnected]="disconnectedCount()"
         [compact]="isMobile()"
       />
     </div>
@@ -26,29 +56,30 @@
   <div class="frenzy-page__hud-top-right">
     <div class="frenzy-page__hud-row">
       <left-paw-sound-toggle [compact]="isMobile()" />
-      <left-paw-presence-counter
-        [online]="presenceCount()"
-        [disconnected]="disconnectedCount()"
-        [compact]="isMobile()"
-      />
     </div>
-    <left-paw-leaderboard [entries]="leaderboard()" [myId]="myId()" [compact]="isMobile()" />
+    <left-paw-item-legend [compact]="isMobile()" />
+    @if (!isMobile()) {
+      <left-paw-leaderboard [entries]="leaderboard()" [myId]="myId()" [crownId]="crownId()" />
+    }
   </div>
 
-  <div class="frenzy-page__overlay">
+  <div class="frenzy-page__overlay" *transloco="let t; prefix: 'frenzy.connection'">
     @switch (uiState()) {
       @case ('connecting') {
-        <p class="frenzy-page__status">Connecting…</p>
+        <p class="frenzy-page__status" role="status" aria-live="polite">{{ t('connecting') }}</p>
       }
       @case ('roomFull') {
-        <p class="frenzy-page__status">Room is full. Try again later.</p>
+        <p class="frenzy-page__status" role="status" aria-live="polite">{{ t('roomFull') }}</p>
       }
       @case ('closed') {
-        <p class="frenzy-page__status">Disconnected.</p>
+        <div class="frenzy-page__backdrop"></div>
+        <left-paw-disconnected-modal />
       }
       @case ('fainted') {
+        <div class="frenzy-page__backdrop"></div>
         <left-paw-fainted-modal
           [stats]="faintedStats()"
+          [epitaph]="faintedEpitaph()"
           [respawnReady]="respawnReady()"
           [cooldownSeconds]="cooldownSeconds()"
           (respawn)="handleRespawn()"
@@ -56,8 +87,17 @@
         />
       }
       @case ('picking') {
-        <left-paw-pokemon-picker (submitPicker)="handlePickerSubmit($event)" />
+        <left-paw-pokemon-picker
+          [error]="joinError()"
+          [initialName]="savedName"
+          [initialAppearance]="savedAppearance"
+          (submitPicker)="handlePickerSubmit($event)"
+        />
       }
     }
   </div>
 </main>
+
+<span class="frenzy-page__floor" *transloco="let t; prefix: 'frenzy.scene'" aria-hidden="true">{{
+  t('floorLabel')
+}}</span>

@@ -3,180 +3,159 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  DestroyRef,
   effect,
+  ElementRef,
   inject,
   input,
   output,
-  signal,
+  viewChild,
 } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { TuiProgressBar } from '@taiga-ui/kit';
 
-import { GAME } from '@game/frenzy/constants';
-import type { Item, Player, Stage } from '@game/frenzy/types';
+import { FRENZY } from '@game/frenzy/config';
+import type { Item, Player } from '@game/frenzy/types';
 
-import { isSad } from '../../../data/logic/is-sad';
 import type { Blast } from '../../../data/models/blast';
 import type { OrphanFloat, OwnedFloat } from '../../../data/models/floating-message';
-import { spriteHeightFor } from '../../constants/pokemon-registry';
+import type { HitBurst, OwnedSpark } from '../../../data/models/hit-burst';
+import type { OwnedShieldBlock } from '../../../data/models/shield-block';
+import { ActorHostDirective } from '../../directives/actor-host.directive';
 import { ScenePositionDirective } from '../../directives/scene-position.directive';
-import { ItemSpritePipe } from '../../pipes/item-sprite.pipe';
-import { MassToneColorPipe } from '../../pipes/mass-tone-color.pipe';
-import { PokemonSpritePipe } from '../../pipes/pokemon-sprite.pipe';
 import { AquariumDecorComponent } from '../aquarium-decor/aquarium-decor.component';
 import { BubbleBurstComponent } from '../bubble-burst/bubble-burst.component';
+import { DebugConfiguratorComponent } from '../../../debug/debug-configurator/debug-configurator.component';
+import { DebugOverlayComponent } from '../../../debug/debug-overlay/debug-overlay.component';
+import { parseDebugFlags } from '../../../debug/debug-options';
+import { DebugSettingsStore } from '../../../debug/debug-settings.store';
+import type { RenderMode } from '../../../debug/debug-settings.store';
+import type { PerfMetricsSnapshot } from '../../../debug/perf-metrics';
+import { PerfLogPanelComponent } from '../../../debug/perf-log-panel/perf-log-panel.component';
+import { PerfReadoutComponent } from '../../../debug/perf-readout/perf-readout.component';
+import { PerfSampleStore } from '../../../debug/perf-sample.store';
 import { FloatingTextComponent } from '../floating-text/floating-text.component';
+import { ForegroundKelpComponent } from '../foreground-kelp/foreground-kelp.component';
+import { MidgroundKelpComponent } from '../midground-kelp/midground-kelp.component';
+import { OffscreenIndicatorsComponent } from '../offscreen-indicators/offscreen-indicators.component';
+import { OwnedFloatsComponent } from '../owned-floats/owned-floats.component';
+import { SandPuffComponent } from '../sand-puff/sand-puff.component';
+import { SceneItemComponent } from '../scene-item/scene-item.component';
+import { ScenePlayerComponent } from '../scene-player/scene-player.component';
+import { ItemExtrapolatorService } from './prediction/item-extrapolator.service';
+import { PerfMetricsService } from './perf/perf-metrics.service';
+import { PlayerExtrapolatorService } from './prediction/player-extrapolator.service';
+import { SceneActorRegistryService } from './rendering/dom/scene-actor-registry.service';
+import { SceneBurstsService } from './effects/scene-bursts.service';
+import { SceneCameraService } from './camera/scene-camera.service';
+import { SceneDecorCanvasService } from './rendering/canvas/scene-decor-canvas.service';
+import { SceneActorCanvasService } from './rendering/canvas/scene-actor-canvas.service';
+import { SceneSandPuffsService } from './effects/scene-sand-puffs.service';
+import { PlayerSpriteSource } from './rendering/canvas/player-sprite-source';
+import { SpriteFreezeService } from './rendering/canvas/sprite-freeze.service';
+import {
+  hitTestItem,
+  resolveNudge,
+  resolveNudgeFromCenter,
+  resolveSceneTap,
+} from './input/pointer-intent';
+import { SceneFacade } from './scene.facade';
+import { SceneRenderLoopService } from './rendering/shared/scene-render-loop.service';
+import { groupByOwner, sortByDepth } from './scene-view-models';
+import type { ItemClick, RenderedItem } from './scene-view-models';
 
-const MAX_VISUAL_MASS = GAME.thresholds.stage3;
+// Other players' HP bars use a single absolute scale — the hard ceiling — so a bar's fill reads the same for
+// everyone regardless of stage (the OWN widget instead scales to its next evolution threshold).
+const MAX_VISUAL_HP = FRENZY.maxHp;
 
-// How long a click bubble-burst lives before it is removed (ms). Matches the CSS animation.
-const BURST_LIFETIME_MS = 1000;
-
-// Fixed pixel distance the bomb is batted per click — converted to normalized units against the scene width,
-// so a juggle feels the same on any screen size rather than scaling with it.
-const BOMB_NUDGE_PX = 72;
-
-interface RenderedPlayer {
-  appearance: string;
-  facingRight: boolean;
-  hasShield: boolean;
-  id: string;
-  isDisconnected: boolean;
-  isEvolving: boolean;
-  isMe: boolean;
-  isSad: boolean;
-  label: string;
-  mass: number;
-  spriteHeight: string;
-  stage: Stage;
-  x: number;
-  y: number;
-}
-
-interface RenderedItem {
-  id: string;
-  type: Item['type'];
-  x: number;
-  y: number;
-  landed: boolean;
-  spinDurationMs: number;
-  spinReverse: boolean;
-}
-
-interface BubbleBurst {
-  id: number;
-  x: number;
-  y: number;
-}
-
-export interface ItemClick {
-  itemId: string;
-  /** Bomb bat input: signed normalized horizontal displacement (fixed pixel step ÷ scene width). Undefined for non-bomb items. */
-  nudgeX?: number;
-}
-
-interface ItemBaseline {
-  x: number;
-  y0: number;
-  vy: number;
-  clientStartTime: number;
-}
-
-interface PlayerBaseline {
-  x0: number;
-  y0: number;
-  vx: number;
-  vy: number;
-  clientStartTime: number;
-}
-
-// Falling items tumble: each gets a steady spin whose speed and direction are derived from its id, so the
-// value is stable across frames (the CSS animation isn't restarted) yet varies item to item.
-const ITEM_SPIN_MIN_MS = 2500;
-const ITEM_SPIN_MAX_MS = 6000;
-
-function spinFor(id: string): { durationMs: number; reverse: boolean } {
-  let hash = 0;
-
-  for (const character of id) {
-    hash = (hash * 31 + character.charCodeAt(0)) | 0;
-  }
-
-  const magnitude = Math.abs(hash);
-
-  return {
-    durationMs: ITEM_SPIN_MIN_MS + (magnitude % (ITEM_SPIN_MAX_MS - ITEM_SPIN_MIN_MS)),
-    reverse: (magnitude & 1) === 1,
-  };
-}
-
-// Closed-form reflective ("ping-pong") drift along one axis: mirrors the server's bounce so the
-// client can extrapolate between snapshots smoothly instead of stepping each snapshot.
-function reflect(p0: number, v: number, elapsedSeconds: number, min: number, max: number): number {
-  const span = max - min;
-
-  if (span <= 0) {
-    return min;
-  }
-
-  const period = span * 2;
-  const offset = p0 - min + v * elapsedSeconds;
-  const wrapped = ((offset % period) + period) % period;
-
-  return min + (wrapped <= span ? wrapped : period - wrapped);
-}
-
-// Instantaneous horizontal direction of the reflective drift (+1 right, -1 left, 0 stationary):
-// the sign of the derivative of `reflect`, which flips on every wall bounce.
-function reflectDirection(
-  p0: number,
-  v: number,
-  elapsedSeconds: number,
-  min: number,
-  max: number,
-): number {
-  const span = max - min;
-
-  if (v === 0 || span <= 0) {
-    return 0;
-  }
-
-  const period = span * 2;
-  const offset = p0 - min + v * elapsedSeconds;
-  const wrapped = ((offset % period) + period) % period;
-
-  return Math.sign(v) * (wrapped <= span ? 1 : -1);
-}
+// The falling-item tap target in world px: the sprite half-size plus the same 12px padding the DOM `.scene__item`
+// button carries, so a canvas item is as easy to tap as a DOM one (used by the canvas-mode hit-test).
+const ITEM_TAP_PADDING_PX = 12;
+// That tap box as a normalized half-extent per axis (the world is taller than wide), precomputed from the contract
+// sizes for the canvas-mode hit-test.
+const ITEM_HIT_HALF_X = (FRENZY.physicalSizePx.item / 2 + ITEM_TAP_PADDING_PX) / FRENZY.world.width;
+const ITEM_HIT_HALF_Y =
+  (FRENZY.physicalSizePx.item / 2 + ITEM_TAP_PADDING_PX) / FRENZY.world.height;
 
 @Component({
   selector: 'left-paw-scene',
   imports: [
+    ActorHostDirective,
     AquariumDecorComponent,
     BubbleBurstComponent,
+    DebugConfiguratorComponent,
+    DebugOverlayComponent,
     FloatingTextComponent,
-    ItemSpritePipe,
-    MassToneColorPipe,
-    PokemonSpritePipe,
+    ForegroundKelpComponent,
+    MidgroundKelpComponent,
+    OffscreenIndicatorsComponent,
+    OwnedFloatsComponent,
+    PerfLogPanelComponent,
+    PerfReadoutComponent,
+    SandPuffComponent,
+    SceneItemComponent,
+    ScenePlayerComponent,
     ScenePositionDirective,
     TranslocoDirective,
-    TuiProgressBar,
+  ],
+  providers: [
+    SceneFacade,
+    SceneRenderLoopService,
+    ItemExtrapolatorService,
+    PlayerExtrapolatorService,
+    SceneActorRegistryService,
+    SceneCameraService,
+    SceneBurstsService,
+    SceneSandPuffsService,
+    SceneActorCanvasService,
+    SceneDecorCanvasService,
+    PlayerSpriteSource,
+    SpriteFreezeService,
+    // Perf subsystem — provided here but injected only under `?debug=perf` (the metric accumulator by this component
+    // below, the settings store + sample log by the gated panels), so none of them instantiate in normal play.
+    PerfMetricsService,
+    DebugSettingsStore,
+    PerfSampleStore,
   ],
   templateUrl: './scene.component.html',
   styleUrl: './scene.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SceneComponent {
-  private readonly destroyRef = inject(DestroyRef);
-  private readonly _renderedItems = signal<readonly RenderedItem[]>([]);
-  private readonly _renderedPlayers = signal<readonly RenderedPlayer[]>([]);
-  private readonly _bursts = signal<readonly BubbleBurst[]>([]);
-  private readonly itemBaselines = new Map<string, ItemBaseline>();
-  private readonly playerBaselines = new Map<string, PlayerBaseline>();
-  private readonly burstTimers = new Set<ReturnType<typeof setTimeout>>();
-  private burstCounter = 0;
+  private readonly facade = inject(SceneFacade);
+  private readonly loop = inject(SceneRenderLoopService);
+  private readonly actorCanvas = inject(SceneActorCanvasService);
+  private readonly decorCanvas = inject(SceneDecorCanvasService);
+  // The `?debug=perf` metric accumulator — injected (and thus instantiated) only under the master gate, in the
+  // constructor; undefined in normal play. Fed by the render loop; its snapshot drives the readout.
+  private perfMetrics: PerfMetricsService | undefined;
+  // The persisted debug settings (render-mode toggle + DPR cap) — injected only under the master gate like the
+  // accumulator above; undefined in normal play, where the item render mode is always 'dom'.
+  private debugSettings: DebugSettingsStore | undefined;
+  // Optional (not `.required`): the template root sits under `*transloco`, which renders asynchronously, so the
+  // ref is absent for the first few frames. Reading it before then must not throw and kill the rAF loop.
+  private readonly worldRef = viewChild<ElementRef<HTMLElement>>('world');
+  // Foreground parallax INNER tile sheets — the elements the camera translates each frame (their wrappers clip).
+  // Optional like worldRef — absent for the first frames under async *transloco.
+  private readonly parallaxNearRef = viewChild<ElementRef<HTMLElement>>('parallaxNear');
+  private readonly parallaxMidRef = viewChild<ElementRef<HTMLElement>>('parallaxMid');
+  // A component element, so read its host ElementRef explicitly (a bare viewChild would yield the component
+  // instance). The camera writes its width/transform each frame.
+  private readonly foregroundKelpRef = viewChild<ElementRef<HTMLElement>, ElementRef<HTMLElement>>(
+    'foregroundKelp',
+    { read: ElementRef },
+  );
+  // The off-screen indicators overlay — driven imperatively from this loop (positions each frame, structure
+  // throttled) instead of via per-frame inputs, to keep the rAF work off change detection like the rest of the scene.
+  private readonly offscreenIndicators = viewChild(OffscreenIndicatorsComponent);
+  // The hybrid-canvas item layer's element — present only while the render mode is 'canvas' (the template @if).
+  private readonly actorCanvasRef = viewChild<ElementRef<HTMLCanvasElement>>('actorCanvas');
+  // The hybrid-canvas decor layer's element — present only while the decor mode is 'canvas' (the template @if).
+  private readonly decorCanvasRef = viewChild<ElementRef<HTMLCanvasElement>>('decorCanvas');
 
   public readonly blasts = input<readonly Blast[]>([]);
+  public readonly hitBursts = input<readonly HitBurst[]>([]);
+  public readonly ownedSparks = input<readonly OwnedSpark[]>([]);
+  public readonly ownedShieldBlocks = input<readonly OwnedShieldBlock[]>([]);
   public readonly evolvingPlayers = input<ReadonlyMap<string, number>>(new Map());
   public readonly orphanFloats = input<readonly OrphanFloat[]>([]);
   public readonly ownedFloats = input<readonly OwnedFloat[]>([]);
@@ -184,242 +163,277 @@ export class SceneComponent {
   public readonly items = input.required<readonly Item[]>();
   public readonly myId = input<string | null>(null);
   public readonly players = input.required<readonly Player[]>();
+  // The crowned player id (alive hp-leader; null when there's no meaningful leader, e.g. a lone survivor). Gated
+  // and resolved upstream via the shared `crownIdOf`, so the scene marker matches the pill and minimap exactly.
+  public readonly crownId = input<string | null>(null);
   public readonly selfPoke = output<void>();
+  public readonly pokeNpc = output<string>();
   public readonly steer = output<{ x: number; y: number }>();
 
-  protected readonly renderedItems = this._renderedItems.asReadonly();
-  protected readonly renderedPlayers = this._renderedPlayers.asReadonly();
-  protected readonly bursts = this._bursts.asReadonly();
-  protected readonly maxMass = MAX_VISUAL_MASS;
-  // Owned floats grouped by their player, so each `.scene__player` can render (and carry) its own quips.
-  protected readonly floatsByOwner = computed(() => {
-    const grouped = new Map<string, OwnedFloat[]>();
-
-    for (const float of this.ownedFloats()) {
-      const existing = grouped.get(float.ownerId);
-
-      if (existing === undefined) {
-        grouped.set(float.ownerId, [float]);
-      } else {
-        existing.push(float);
-      }
-    }
-
-    return grouped;
+  protected readonly renderedItems = this.facade.renderedItems;
+  // Depth order for the seabed perspective (see `sortByDepth`). track-by-id in the template means a reorder just
+  // moves the existing nodes — no re-create, no animation reset.
+  // Empty in canvas item mode (the items are drawn on the actors-canvas, not as DOM nodes) so the template `@for`
+  // renders nothing without needing its own `@if` guard — keeping the template's cyclomatic complexity down.
+  protected readonly renderedItemsByDepth = computed(() => {
+    return this.renderMode() === 'canvas' ? [] : sortByDepth(this.renderedItems());
   });
+  // The item render backend, reactive so the template @if (and the render loop) pick it up the instant the toggle
+  // flips. Reads the debug store only when it exists (under `?debug=perf`); a real player is always 'dom'.
+  protected readonly renderMode = computed<RenderMode>(
+    () => this.debugSettings?.renderMode() ?? 'dom',
+  );
+  // The player-sprite render backend, reactive so each scene-player picks it up the instant the toggle flips. Reads
+  // the debug store only when it exists (under `?debug=perf`); a real player is always 'dom' (animated DOM sprite).
+  protected readonly playerSpritesMode = computed<RenderMode>(
+    () => this.debugSettings?.playerSpritesMode() ?? 'dom',
+  );
+  // Whether the shared actors-canvas element must exist this frame — when EITHER the items or the player sprites are
+  // on canvas. The single `<canvas>` is bound to SceneActorCanvasService, which draws items and/or players onto it;
+  // the `||` lives here (not the template) to keep the template's cyclomatic complexity down.
+  protected readonly actorsCanvasActive = computed(
+    () => this.renderMode() === 'canvas' || this.playerSpritesMode() === 'canvas',
+  );
+  // The decor render backend, reactive so the template @if (and the render loop) pick it up the instant the toggle
+  // flips. Reads the debug store only when it exists (under `?debug=perf`); a real player gets the default `canvas`
+  // backdrop (ADR 0007 — after the tablet A/B went green), with `dom` kept as the `?debug=perf` fallback.
+  protected readonly decorMode = computed<RenderMode>(
+    () => this.debugSettings?.decorMode() ?? 'canvas',
+  );
+  // Whether to render players as a static first frame (the `?debug=perf` "freeze sprites" toggle), passed down to
+  // each scene-player. Reads the debug store only when it exists; a real player is always animated (false).
+  protected readonly freezeSprites = computed(() => this.debugSettings?.freezeSprites() ?? false);
+  // The frame-pacing cap target in fps (the `?debug=perf` "frame cap" toggle), read each frame by the render loop.
+  // Reads the debug store only when it exists; a real player is always uncapped (0).
+  protected readonly frameCapFps = computed(() => this.debugSettings?.frameCapFps() ?? 0);
+  // Per-layer render switches (the `?debug=perf` "scene layers" toggles), to bisect the FPS culprit on the device.
+  // Undefined in normal play (no debug store) — the template reads `?.<layer> !== false`, so everything renders.
+  protected readonly sceneLayers = computed(() => this.debugSettings?.sceneLayers());
+  // Within-decor diagnostic probes (the `?debug=perf` "decor probe" toggles) — each drives a `.scene--decor-*` host
+  // class that aquarium-decor reads via :host-context, to bisect WHICH part of decor costs the most. Undefined in
+  // normal play (no debug store) — the template reads `?.<probe> === true`, so every probe stays inactive.
+  protected readonly decorProbe = computed(() => this.debugSettings?.decorProbe());
+
+  protected readonly renderedPlayers = this.facade.renderedPlayers;
+  protected readonly bursts = this.facade.bursts;
+  protected readonly sandPuffs = this.facade.sandPuffs;
+  protected readonly maxHp = MAX_VISUAL_HP;
+  protected readonly worldWidth = FRENZY.world.width;
+  protected readonly worldHeight = FRENZY.world.height;
+  // Item sprite size from the shared contract, exposed to CSS so render size tracks the server bound source.
+  protected readonly itemSize = `${FRENZY.physicalSizePx.item}px`;
+  // The bomb's larger collidable size (sensor-horn reach) — for the `?debug` box so it frames the real trigger area.
+  protected readonly bombSize = `${FRENZY.physicalSizePx.bomb}px`;
+  // Per-category `?debug` overlay toggles parsed from the query param (`?debug` = all; `?debug=pokemon-borders`,
+  // `item-borders`, `speed` = pick) — lets a session draw just the boxes it needs against the sprite silhouette.
+  // Snapshot read; no reactivity.
+  protected readonly debug = parseDebugFlags(inject(ActivatedRoute).snapshot.queryParamMap);
+  // The box-drawing debug categories (a dev tool). When any is on, the structure signals are republished every frame
+  // so the overlay's boxes track the imperatively-moved sprites. `perf` is NOT here — it must measure the optimized
+  // path, so it never reintroduces per-frame change detection on the actors.
+  protected readonly debugBoxesActive =
+    this.debug.pokemonBorders || this.debug.itemBorders || this.debug.speed;
+  // The metric snapshot fed to the `?debug=perf` readout — the accumulator's signal when the gate is on, else a
+  // constant null (the readout that reads it isn't rendered then anyway). The closure reads `perfMetrics` lazily,
+  // after the constructor has set it.
+  protected readonly perfMetricsSnapshot = computed<PerfMetricsSnapshot | null>(
+    () => this.perfMetrics?.snapshot() ?? null,
+  );
+  // Owned floats grouped by their player, so the owned-float overlay renders each sprite's quips on its body point.
+  protected readonly floatsByOwner = computed(() => groupByOwner(this.ownedFloats()));
+  // Rock/brick impact sparks grouped by the struck player, so each `.scene__player` renders (and carries) its own.
+  protected readonly sparksByOwner = computed(() => groupByOwner(this.ownedSparks()));
+  // Shield-ward cues grouped by the warded player, so each `.scene__player` pulses its bubble + clinks in place.
+  protected readonly shieldBlocksByOwner = computed(() => groupByOwner(this.ownedShieldBlocks()));
 
   public constructor() {
+    // Re-anchor item/player baselines from each snapshot and paint immediately (before the rAF loop starts).
+    // Reading evolving/myId here too keeps the first paint consistent with them.
     effect(() => {
-      const items = this.items();
-      const now = performance.now();
-      const currentIds = new Set<string>();
-
-      for (const item of items) {
-        currentIds.add(item.id);
-
-        const baseline = this.itemBaselines.get(item.id);
-
-        if (baseline === undefined) {
-          this.itemBaselines.set(item.id, {
-            x: item.x,
-            y0: item.y,
-            vy: item.vy,
-            clientStartTime: now,
-          });
-        } else if (baseline.x !== item.x) {
-          // A nudge (bomb juggle) moved the item sideways — snap the baseline so it tracks the click
-          // instantly, without waiting for a snapshot. Vertical fall (y0/vy/clientStartTime) keeps going.
-          baseline.x = item.x;
-        }
-      }
-
-      for (const id of this.itemBaselines.keys()) {
-        if (!currentIds.has(id)) {
-          this.itemBaselines.delete(id);
-        }
-      }
-
-      this._renderedItems.set(this.computeItems(items, now));
+      this.facade.ingestItems(this.items(), performance.now());
     });
 
     effect(() => {
-      const players = this.players();
-      const now = performance.now();
-
-      this.syncPlayerBaselines(players, now);
-      // Read evolving/myId here too so the first paint (before rAF) reflects them.
-      this._renderedPlayers.set(this.computePlayers(now));
+      this.facade.ingestPlayers(
+        this.players(),
+        this.myId(),
+        this.evolvingPlayers(),
+        performance.now(),
+      );
     });
 
+    // Instantiate the perf accumulator only under the master gate (conditional `inject` in the constructor's
+    // injection context), so a real player never creates it or the settings store the readout/configurator inject.
+    if (this.debug.perf) {
+      this.perfMetrics = inject(PerfMetricsService);
+      this.debugSettings = inject(DebugSettingsStore);
+    }
+
+    // Canvas backend lifecycle: bind + size the item canvas whenever it's present (canvas mode), and re-size it when
+    // the DPR cap changes. When the mode flips back to DOM the template @if removes the element, so there's nothing
+    // to bind; in normal play the canvas never renders and this effect stays inert.
+    effect(() => {
+      const canvas = this.actorCanvasRef()?.nativeElement;
+
+      if (canvas === undefined) {
+        return;
+      }
+
+      this.actorCanvas.attach(canvas);
+      this.actorCanvas.resize(this.debugSettings?.canvasDprCap() ?? 0);
+    });
+
+    // Canvas decor backend lifecycle (ADR 0007): bind + size the decor canvas whenever it's present (decor canvas
+    // mode — the default now, so this runs in normal play too), re-sizing on the DPR-cap change. Mirrors the item-
+    // canvas effect above; only inert when the `?debug=perf` decor toggle is flipped back to the DOM fallback.
+    effect(() => {
+      const canvas = this.decorCanvasRef()?.nativeElement;
+
+      if (canvas === undefined) {
+        return;
+      }
+
+      this.decorCanvas.attach(canvas);
+      this.decorCanvas.resize(this.debugSettings?.canvasDprCap() ?? 0);
+    });
+
+    // Start the rAF render loop once the view exists. The loop service owns the frame lifecycle and the per-frame
+    // facade sequence; this shell only supplies the live inputs and DOM refs it reads each frame (see ADR 0004 §4).
     afterNextRender(() => {
-      let rafId = 0;
-      const loop = (): void => {
-        const now = performance.now();
-
-        this._renderedItems.set(this.computeItems(this.items(), now));
-        this._renderedPlayers.set(this.computePlayers(now));
-        rafId = requestAnimationFrame(loop);
-      };
-
-      rafId = requestAnimationFrame(loop);
-      this.destroyRef.onDestroy(() => cancelAnimationFrame(rafId));
-    });
-
-    this.destroyRef.onDestroy(() => {
-      for (const timer of this.burstTimers) {
-        clearTimeout(timer);
-      }
+      this.loop.start({
+        items: () => this.items(),
+        players: () => this.players(),
+        myId: () => this.myId(),
+        evolving: () => this.evolvingPlayers(),
+        renderMode: () => this.renderMode(),
+        playerSpritesMode: () => this.playerSpritesMode(),
+        decorMode: () => this.decorMode(),
+        decorNoPlants: () => this.decorProbe()?.noPlants === true,
+        frameCapFps: () => this.frameCapFps(),
+        debug: this.debug,
+        debugBoxesActive: this.debugBoxesActive,
+        world: () => this.worldRef()?.nativeElement,
+        parallaxNear: () => this.parallaxNearRef()?.nativeElement,
+        parallaxMid: () => this.parallaxMidRef()?.nativeElement,
+        foregroundKelp: () => this.foregroundKelpRef()?.nativeElement,
+        offscreenIndicators: () => this.offscreenIndicators(),
+        perfMetrics: () => this.perfMetrics,
+      });
     });
   }
 
   protected onItemClick(item: RenderedItem, event: MouseEvent): void {
-    // Bomb is batted: tapping the left half of the sprite knocks it right, the right half knocks it left.
-    const nudgeX = item.type === 'bomb' ? this.batNudge(event) : undefined;
+    // Bomb is shoved away from wherever it was tapped: tap a side and it drifts off in the opposite direction.
+    const button = event.currentTarget as HTMLElement;
+    const shove =
+      item.type === 'bomb'
+        ? resolveNudge(button.getBoundingClientRect(), event.clientX, event.clientY)
+        : undefined;
 
-    this.itemClick.emit({ itemId: item.id, nudgeX });
+    this.itemClick.emit({ itemId: item.id, nudgeX: shove?.x, nudgeY: shove?.y });
   }
 
   protected onSelfPoke(): void {
     this.selfPoke.emit();
   }
 
-  // Press anywhere bubbles up here: always spawn a short-lived decorative bubble burst, and — unless the press
-  // landed on an actionable element (an item to eat, my own Pokémon to poke) — steer my Pokémon toward the point.
-  // Open water, decor and other players all count as steering targets. Item/poke taps keep their own (click) actions.
+  protected onPokeNpc(npcId: string): void {
+    this.pokeNpc.emit(npcId);
+  }
+
+  // Press anywhere bubbles up here. A tap that misses an item spawns the airy bubble burst (the success cue for a
+  // hit is the dense converging burst, driven server-side from `eaten`); and — unless the press landed on an
+  // actionable element (an item to eat, my own Pokémon to poke) — it steers my Pokémon toward the point. Open
+  // water, decor and other players all count as steering targets. Item/poke taps keep their own (click) actions.
   protected onScenePointerDown(event: PointerEvent): void {
-    const host = event.currentTarget as HTMLElement;
-    const bounds = host.getBoundingClientRect();
+    // Coordinates are normalized against the camera-translated world rect (not the viewport), so a tap maps to
+    // the same world point regardless of scroll. Clamped to 0..1 for taps landing in a letterbox margin.
+    const world = this.worldRef()?.nativeElement;
+
+    if (world === undefined) {
+      return;
+    }
+
+    const bounds = world.getBoundingClientRect();
 
     if (bounds.width === 0 || bounds.height === 0) {
       return;
     }
 
-    const id = ++this.burstCounter;
-    const x = (event.clientX - bounds.left) / bounds.width;
-    const y = (event.clientY - bounds.top) / bounds.height;
+    const intent = resolveSceneTap(
+      bounds,
+      event.clientX,
+      event.clientY,
+      event.target as Element | null,
+    );
 
-    this._bursts.update((bursts) => [...bursts, { id, x, y }]);
+    // Canvas mode: items aren't DOM nodes, so a tap on one arrives as open water (steer=true). Hit-test the drawn
+    // items first; a hit eats that item (or shoves the bomb) and suppresses the miss-bubble + steer, exactly like a
+    // DOM item tap. A press on a poke button (still DOM) sets steer=false, so it is left to its own handler.
+    if (this.renderMode() === 'canvas' && intent.steer) {
+      const items = this.canvasHitItems();
+      const hitId = hitTestItem(items, intent.x, intent.y, ITEM_HIT_HALF_X, ITEM_HIT_HALF_Y);
 
-    const timer = setTimeout(() => {
-      this.burstTimers.delete(timer);
-      this._bursts.update((bursts) => bursts.filter((burst) => burst.id !== id));
-    }, BURST_LIFETIME_MS);
+      if (hitId !== null) {
+        // The bomb has no DOM rect on canvas, so its shove is measured from the tap to its world centre.
+        const hit = items.find((item) => item.id === hitId);
+        const shove =
+          hit?.type === 'bomb' ? resolveNudgeFromCenter(hit, intent.x, intent.y) : undefined;
 
-    this.burstTimers.add(timer);
+        this.itemClick.emit({ itemId: hitId, nudgeX: shove?.x, nudgeY: shove?.y });
 
-    if ((event.target as HTMLElement).closest('.scene__item, .scene__poke') === null) {
-      this.steer.emit({ x, y });
-    }
-  }
-
-  // Signed normalized bat displacement: a fixed pixel step (BOMB_NUDGE_PX) converted to scene-width units,
-  // pushed right when the click landed left of the item's centre and left otherwise. Undefined if the scene
-  // can't be measured (server then falls back to its own step).
-  private batNudge(event: MouseEvent): number | undefined {
-    const button = event.currentTarget as HTMLElement;
-    const bounds = button.getBoundingClientRect();
-    const centerX = bounds.left + bounds.width / 2;
-    const direction = event.clientX < centerX ? 1 : -1;
-    const sceneWidth = button.closest('.scene')?.getBoundingClientRect().width ?? 0;
-
-    if (sceneWidth <= 0) {
-      return undefined;
-    }
-
-    return (direction * BOMB_NUDGE_PX) / sceneWidth;
-  }
-
-  // Reset a player's baseline only when the server actually moved it (new snapshot position/velocity).
-  // Non-positional updates (mass on `eaten`, stage on `evolved`) keep the baseline so drift stays smooth.
-  private syncPlayerBaselines(players: readonly Player[], now: number): void {
-    const currentIds = new Set<string>();
-
-    for (const player of players) {
-      currentIds.add(player.id);
-
-      const baseline = this.playerBaselines.get(player.id);
-      const moved =
-        baseline === undefined ||
-        baseline.x0 !== player.x ||
-        baseline.y0 !== player.y ||
-        baseline.vx !== player.vx ||
-        baseline.vy !== player.vy;
-
-      if (moved) {
-        this.playerBaselines.set(player.id, {
-          x0: player.x,
-          y0: player.y,
-          vx: player.vx,
-          vy: player.vy,
-          clientStartTime: now,
-        });
+        return;
       }
     }
 
-    for (const id of this.playerBaselines.keys()) {
-      if (!currentIds.has(id)) {
-        this.playerBaselines.delete(id);
-      }
+    // Bubbles are the miss cue — suppressed on an item hit (the converging success burst comes from `eaten`).
+    if (intent.spawnBurst) {
+      this.facade.spawnBurst(intent.x, intent.y);
+    }
+
+    if (intent.steer) {
+      // Optimistically steer my own sprite this frame, then send the authoritative request. The server confirms
+      // via the next snapshot, which reconciles only a sub-pixel gap (same steer math both sides).
+      this.facade.predictSteer(this.myId(), intent.x, intent.y, performance.now());
+      this.steer.emit({ x: intent.x, y: intent.y });
     }
   }
 
-  private computePlayers(now: number): RenderedPlayer[] {
-    const me = this.myId();
-    const evolving = this.evolvingPlayers();
-    const zone = GAME.playerDriftZone;
-    // Effect expiry is server-clock (Date.now), independent of the rAF `now` (performance.now) — drop the
-    // aura the moment the shield lapses rather than waiting for the snapshot to prune it.
-    const wallNow = Date.now();
+  // Desktop hover for the canvas backend: canvas items have no DOM `:hover`, so track the pointer and tell the
+  // renderer which item to draw with the highlight. Mouse only — a touch drag shouldn't leave a glowing trail.
+  protected onScenePointerMove(event: PointerEvent): void {
+    if (this.renderMode() !== 'canvas' || event.pointerType !== 'mouse') {
+      return;
+    }
 
-    return this.players().map((player) => {
-      const baseline = this.playerBaselines.get(player.id);
-      const elapsed = baseline === undefined ? 0 : (now - baseline.clientStartTime) / 1000;
-      const x0 = baseline?.x0 ?? player.x;
-      const y0 = baseline?.y0 ?? player.y;
-      const vx = baseline?.vx ?? player.vx;
-      const vy = baseline?.vy ?? player.vy;
+    const world = this.worldRef()?.nativeElement;
 
-      return {
-        appearance: player.appearance,
-        facingRight: reflectDirection(x0, vx, elapsed, zone.minX, zone.maxX) > 0,
-        hasShield: player.effects.some(
-          (effect) => effect.kind === 'shield' && effect.expiresAt > wallNow,
-        ),
-        id: player.id,
-        isDisconnected: player.status === 'disconnected',
-        isEvolving: evolving.has(player.id),
-        isMe: player.id === me,
-        isSad: isSad(player.mass, player.stage),
-        label: player.name,
-        mass: player.mass,
-        spriteHeight: spriteHeightFor(player.stage),
-        stage: player.stage,
-        x: reflect(x0, vx, elapsed, zone.minX, zone.maxX),
-        y: reflect(y0, vy, elapsed, zone.minY, zone.maxY),
-      };
-    });
+    if (world === undefined) {
+      return;
+    }
+
+    const bounds = world.getBoundingClientRect();
+
+    if (bounds.width === 0 || bounds.height === 0) {
+      return;
+    }
+
+    const normX = (event.clientX - bounds.left) / bounds.width;
+    const normY = (event.clientY - bounds.top) / bounds.height;
+
+    this.actorCanvas.setHovered(
+      hitTestItem(this.canvasHitItems(), normX, normY, ITEM_HIT_HALF_X, ITEM_HIT_HALF_Y),
+    );
   }
 
-  private computeItems(items: readonly Item[], now: number): RenderedItem[] {
-    return items.map((item) => {
-      const baseline = this.itemBaselines.get(item.id);
-      const x = baseline?.x ?? item.x;
-      const y0 = baseline?.y0 ?? item.y;
-      const vy = baseline?.vy ?? item.vy;
-      const elapsed = baseline === undefined ? 0 : (now - baseline.clientStartTime) / 1000;
-      const y = Math.min(1, y0 + vy * elapsed);
-      const spin = spinFor(item.id);
+  protected onScenePointerLeave(): void {
+    this.actorCanvas.setHovered(null);
+  }
 
-      return {
-        id: item.id,
-        type: item.type,
-        x,
-        y,
-        // Reached the floor (rendered or server-rested) → freeze the tumble.
-        landed: y >= 1 || item.restMs !== undefined,
-        spinDurationMs: spin.durationMs,
-        spinReverse: spin.reverse,
-      };
-    });
+  // Live items in draw order (ascending depth) for the canvas hit-test — the topmost (last) wins, matching the
+  // canvas draw order. Uses the live frame (not the throttled structure signal) so a fast faller is hit where it's
+  // actually drawn. The bomb is included now (drawn on canvas), so a tap on it shoves it instead of steering past.
+  private canvasHitItems(): readonly RenderedItem[] {
+    return [...this.facade.itemFrame()].sort((first, second) => first.y - second.y);
   }
 }

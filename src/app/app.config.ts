@@ -7,22 +7,22 @@ import {
 } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideSignalFormsConfig } from '@angular/forms/signals';
-
 import { routes } from './app.routes';
 import { provideStore } from '@ngrx/store';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { TranslocoHttpLoader } from './transloco-loader';
 import { provideTransloco } from '@jsverse/transloco';
 import { provideTranslocoPersistLang } from '@jsverse/transloco-persist-lang';
+import { authBearerInterceptor } from '@core/interceptors/auth-bearer.interceptor';
 
-export const appConfig: ApplicationConfig = {
+export const appConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideRouter(routes, withComponentInputBinding()),
     provideZoneChangeDetection(),
-    provideTaiga(),
+    provideRouter(routes, withComponentInputBinding()),
     provideStore(),
-    provideHttpClient(),
+    provideHttpClient(withInterceptors([authBearerInterceptor])),
+    provideTaiga(),
     provideTransloco({
       config: {
         availableLangs: ['en', 'ru'],
@@ -37,7 +37,6 @@ export const appConfig: ApplicationConfig = {
         useValue: localStorage,
       },
     }),
-    // TODO При переходе новой версии тайги проверить работоспособность.
     provideSignalFormsConfig({
       classes: {
         'tui-invalid': (field) => field.state().invalid() && field.state().touched(),
@@ -47,4 +46,4 @@ export const appConfig: ApplicationConfig = {
       },
     }),
   ],
-};
+} satisfies ApplicationConfig;

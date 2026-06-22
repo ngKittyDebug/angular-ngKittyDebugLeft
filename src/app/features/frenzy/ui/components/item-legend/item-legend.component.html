@@ -1,0 +1,56 @@
+<div
+  *transloco="let t; prefix: 'frenzy.legend'"
+  class="legend"
+  [class.legend--collapsed]="collapsed()"
+  [class.legend--compact]="compact()"
+>
+  @if (collapsed()) {
+    <button
+      type="button"
+      class="legend__pill"
+      [attr.aria-label]="t('expand')"
+      (click)="toggle($event)"
+    >
+      <tui-icon icon="@tui.book-open" class="legend__pill-icon" />
+      <span class="legend__pill-text">{{ t('title') }}</span>
+    </button>
+  } @else {
+    <section class="legend__panel" [attr.aria-label]="t('ariaLabel')">
+      <button
+        type="button"
+        class="legend__header"
+        [attr.aria-label]="t('collapse')"
+        (click)="toggle($event)"
+      >
+        <span class="legend__title">{{ t('title') }}</span>
+        <tui-icon icon="@tui.minimize-2" class="legend__header-icon" />
+      </button>
+
+      <div class="legend__body">
+        @for (grp of groups; track grp.key) {
+          <div class="legend__group" [class]="'legend__group--' + grp.key">
+            <span class="legend__group-title">{{ t('group.' + grp.key) }}</span>
+            <ul class="legend__entries">
+              @for (item of grp.entries; track item.type) {
+                <li class="legend__entry">
+                  <span
+                    class="legend__swatch"
+                    [style.background]="item.color"
+                    aria-hidden="true"
+                  ></span>
+                  <img
+                    class="legend__sprite"
+                    [src]="item.type | itemSprite"
+                    alt=""
+                    draggable="false"
+                  />
+                  <span class="legend__name">{{ t('items.' + item.type) }}</span>
+                </li>
+              }
+            </ul>
+          </div>
+        }
+      </div>
+    </section>
+  }
+</div>

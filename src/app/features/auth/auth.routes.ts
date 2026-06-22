@@ -3,13 +3,18 @@ import { provideTranslocoScope } from '@jsverse/transloco';
 import { guestGuard } from '@shared/guards/guest.guard';
 import { LoginFormService } from './data/services/login-form.service';
 import { SignupFormService } from './data/services/signup-form.service';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { httpErrorsInterceptor } from '@features/auth/interceptors/http-errors.interceptor';
 
 export const authRoutes: Routes = [
   {
     path: 'auth',
     loadComponent: () =>
       import('./ui/components/auth-page/auth-page.component').then((m) => m.AuthPageComponent),
-    providers: [provideTranslocoScope('auth')],
+    providers: [
+      provideTranslocoScope('auth'),
+      provideHttpClient(withInterceptors([httpErrorsInterceptor])),
+    ],
     canActivate: [guestGuard],
     children: [
       {

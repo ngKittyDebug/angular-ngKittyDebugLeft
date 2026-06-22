@@ -1,0 +1,61 @@
+@use 'utility/mixins';
+@use 'screens-width';
+
+$stats: hp, attack, defense, special-attack, special-defense, speed;
+
+:host {
+  @include mixins.flex_container_function($direction: column, $align-items: start, $gap: 1rem);
+  width: 100%;
+  background: var(--gradient-bg);
+  border-radius: 1.6rem;
+  border: 1px solid var(--border);
+  padding: 1rem;
+  grid-column: span 2;
+  @include mixins.respond-to(screens-width.$screen-large, 'max') {
+    grid-column: auto;
+  }
+  * {
+    margin: 0;
+  }
+}
+
+.pokemon__stats_content {
+  @include mixins.flex_container_function($gap: 1rem);
+  width: 100%;
+  @include mixins.respond-to(screens-width.$screen-large, 'max') {
+    @include mixins.flex_container_function($direction: column, $gap: 1rem);
+  }
+}
+
+.pokemon__stats_items {
+  @include mixins.flex_container_function($direction: column, $gap: 0.5rem);
+  max-width: 23rem;
+  width: 100%;
+}
+
+.pokemon__stats_group {
+  @include mixins.grid_container_function($grid_template_columns: 7rem 1rem auto);
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  &-total {
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+}
+
+.pokemon__stats_bar {
+  max-width: 16rem;
+  width: 100%;
+  @each $stat in $stats {
+    &-#{$stat} {
+      color: var(--stat-#{$stat}-start);
+    }
+  }
+}
+
+.pokemon__stats_radar {
+  height: 18rem;
+  max-width: 23rem;
+  width: 100%;
+}

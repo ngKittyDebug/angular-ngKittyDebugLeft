@@ -1,4 +1,8 @@
-<div *transloco="let t; prefix: 'frenzy.sound'" class="sound-toggle">
+<div
+  *transloco="let t; prefix: 'frenzy.sound'"
+  class="sound-toggle"
+  [class.sound-toggle--compact]="compact()"
+>
   <tui-icon class="sound-toggle__icon" [icon]="enabled() ? '@tui.volume-2' : '@tui.volume-x'" />
   @if (!compact() && enabled()) {
     <input

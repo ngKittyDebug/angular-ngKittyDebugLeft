@@ -1,0 +1,368 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`frenzy definition contract > keeps the NPC definition slice values stable 1`] = `
+{
+  "anger": {
+    "base": 5,
+    "cooldownPerTick": 1,
+    "max": 400,
+    "windowMs": 1500,
+  },
+  "appearance": "angryBomb",
+  "body": {
+    "1": {
+      "height": 64,
+      "hp": 0,
+      "maxSpeed": 0.04,
+      "speed": 0.02,
+      "width": 64,
+    },
+    "2": {
+      "height": 88,
+      "hp": 200,
+      "maxSpeed": 0.036,
+      "speed": 0.018,
+      "width": 88,
+    },
+    "3": {
+      "height": 112,
+      "hp": 500,
+      "maxSpeed": 0.032,
+      "speed": 0.016,
+      "width": 112,
+    },
+  },
+  "decayPerStep": 3,
+  "enabled": true,
+  "floorBob": {
+    "amplitudeY": 0.018,
+    "periodTicks": 70,
+  },
+  "floorY": 0.9,
+  "respawnDelayMs": 40000,
+  "retargetEveryTicks": 5,
+  "seekItemTypes": [
+    "food",
+    "crumb",
+    "rareCandy",
+    "goldenBerry",
+    "mushroom",
+    "vitamin",
+    "easterEgg",
+  ],
+  "spawnDelayMsRange": [
+    0,
+    20000,
+  ],
+  "startingHp": 100,
+  "startingMana": 0,
+  "strongBlast": {
+    "stageDamageMultiplier": {
+      "1": 1,
+      "2": 1.6,
+      "3": 2.4,
+    },
+    "stageRadiusMultiplier": {
+      "1": 1,
+      "2": 1.3,
+      "3": 1.6,
+    },
+  },
+}
+`;
+
+exports[`frenzy definition contract > keeps the flat FRENZY read-model values stable 1`] = `
+{
+  "bomb": {
+    "blastImpulse": 0.1,
+    "blastImpulseMaxFactor": 1.3,
+    "blastRadius": 0.18,
+    "clickImpulse": 0.012,
+    "clicksToExplodeRange": [
+      4,
+      10,
+    ],
+    "emitBackSpeed": 0.018,
+    "maxDamage": -40,
+    "maxDriftSpeed": 0.05,
+    "minDamage": -6,
+  },
+  "bounceDamping": {
+    "floor": 0.6,
+    "wall": 0.85,
+  },
+  "clickRateLimitMax": 10,
+  "clickRateLimitWindowMs": 1000,
+  "collision": {
+    "bombCatchGenerosity": 1,
+    "brickDamage": -30,
+    "catchGenerosity": 1.5,
+    "rockDamage": -15,
+  },
+  "cooldownAfterFaintedMs": 3000,
+  "decayIntervalMs": 3000,
+  "decayPerTick": 2,
+  "easterEgg": {
+    "durationMs": 10000,
+    "emitAngleJitter": 0.4,
+    "emitBack": 0.012,
+    "emitBackSpeed": 0.08,
+    "emitDown": 0.008,
+    "emitIntervalMs": 1500,
+    "hpOnPickup": 10,
+  },
+  "eggEmitWeights": {
+    "crumb": 35,
+    "food": 55,
+    "goldenBerry": 5,
+    "mushroom": 12,
+    "rareCandy": 5,
+    "shield": 6,
+    "vitamin": 8,
+  },
+  "fallSpeed": {
+    "barbedWire": 0.16,
+    "bomb": 0.01,
+    "brick": 0.22,
+    "cactus": 0.16,
+    "crumb": 0.25,
+    "easterEgg": 0.18,
+    "food": 0.15,
+    "goldenBerry": 0.18,
+    "mushroom": 0.15,
+    "poop": 0.18,
+    "rareCandy": 0.15,
+    "rock": 0.2,
+    "rotten": 0.15,
+    "shield": 0.15,
+    "vitamin": 0.15,
+  },
+  "features": {
+    "items": {
+      "barbedWire": {
+        "enabled": false,
+      },
+      "bomb": {
+        "enabled": true,
+      },
+      "brick": {
+        "enabled": true,
+      },
+      "cactus": {
+        "enabled": true,
+      },
+      "crumb": {
+        "enabled": true,
+      },
+      "easterEgg": {
+        "enabled": true,
+      },
+      "food": {
+        "enabled": true,
+      },
+      "goldenBerry": {
+        "enabled": true,
+      },
+      "mushroom": {
+        "enabled": true,
+      },
+      "poop": {
+        "enabled": true,
+      },
+      "rareCandy": {
+        "enabled": true,
+      },
+      "rock": {
+        "enabled": true,
+      },
+      "rotten": {
+        "enabled": true,
+      },
+      "shield": {
+        "enabled": true,
+      },
+      "vitamin": {
+        "enabled": true,
+      },
+    },
+    "playerCollision": {
+      "enabled": true,
+    },
+  },
+  "floatPriority": {
+    "appeared": 20,
+    "bumped": 50,
+    "cactus": 60,
+    "detonated": 80,
+    "died": 100,
+    "dying": 90,
+    "eaten": 40,
+    "effectGranted": 60,
+    "evolved": 70,
+    "fainted": 100,
+    "happy": 30,
+    "laying": 60,
+    "npcAppeared": 20,
+    "npcDied": 100,
+    "npcPoke": 10,
+    "poke": 10,
+    "pooping": 60,
+    "sad": 30,
+    "shield": 60,
+    "wellFed": 60,
+  },
+  "graceMs": 60000,
+  "heartbeatMs": 2000,
+  "itemEffects": {
+    "barbedWire": 0,
+    "bomb": 0,
+    "brick": 0,
+    "cactus": 0,
+    "crumb": 5,
+    "easterEgg": 0,
+    "food": 10,
+    "goldenBerry": 25,
+    "mushroom": 0,
+    "poop": 0,
+    "rareCandy": 30,
+    "rock": 0,
+    "rotten": -15,
+    "shield": 0,
+    "vitamin": 0,
+  },
+  "itemRestMs": 6000,
+  "itemRestYRange": [
+    0.867,
+    0.937,
+  ],
+  "itemSpawnXRange": [
+    0.05,
+    0.95,
+  ],
+  "lowHpWarningThreshold": 6,
+  "maxConnections": 60,
+  "maxHp": 1500,
+  "maxPlayers": 20,
+  "mushroom": {
+    "maxDelta": 40,
+    "minDelta": -20,
+  },
+  "npc": {
+    "anger": {
+      "base": 5,
+      "cooldownPerTick": 1,
+      "max": 400,
+      "windowMs": 1500,
+    },
+    "decayPerStep": 3,
+    "floorBob": {
+      "amplitudeY": 0.018,
+      "periodTicks": 70,
+    },
+    "floorY": 0.9,
+    "respawnDelayMs": 40000,
+    "retargetEveryTicks": 5,
+    "spawnDelayMsRange": [
+      0,
+      20000,
+    ],
+    "strongBlast": {
+      "stageDamageMultiplier": {
+        "1": 1,
+        "2": 1.6,
+        "3": 2.4,
+      },
+      "stageRadiusMultiplier": {
+        "1": 1,
+        "2": 1.3,
+        "3": 1.6,
+      },
+    },
+  },
+  "physicalSizePx": {
+    "bomb": 84,
+    "item": 60,
+  },
+  "playerCollision": {
+    "bumpDamage": -5,
+    "bumpImpulse": 0.04,
+    "bumpImpulseScale": 0.5,
+    "bumpSpeedThreshold": 0.05,
+    "maxCorrectionPx": 40,
+    "relaxation": 0.5,
+    "restitution": 0,
+    "slopPx": 2,
+  },
+  "playerDriftZone": {
+    "maxX": 0.96,
+    "maxY": 0.92,
+    "minX": 0.04,
+    "minY": 0.12,
+  },
+  "playerSpawnMaxAttempts": 12,
+  "playerSpawnMinDistance": 0.12,
+  "poop": {
+    "durationMs": 10000,
+    "emitAngleJitter": 0.4,
+    "emitBack": 0.012,
+    "emitBackSpeed": 0.1,
+    "emitDown": 0.008,
+    "emitIntervalMs": 1000,
+    "hpOnPickup": -10,
+  },
+  "poopEmitWeights": {
+    "bomb": 7,
+    "brick": 20,
+    "cactus": 6,
+    "rock": 10,
+  },
+  "score": {
+    "weights": {
+      "crownKills": 25,
+      "kills": 10,
+      "timeAlive": 0.1,
+    },
+  },
+  "shield": {
+    "shieldMs": 15000,
+    "spawnShieldMs": 3000,
+  },
+  "snapshotEveryNTicks": 3,
+  "spawnIntervalMsRange": [
+    480,
+    880,
+  ],
+  "spawnReferencePlayers": 3,
+  "spawnScalingMaxPlayers": 3,
+  "spawnWeights": {
+    "barbedWire": 5,
+    "bomb": 10,
+    "brick": 10,
+    "cactus": 10,
+    "crumb": 35,
+    "easterEgg": 12,
+    "food": 55,
+    "goldenBerry": 5,
+    "mushroom": 12,
+    "poop": 6,
+    "rareCandy": 5,
+    "rock": 20,
+    "rotten": 15,
+    "shield": 6,
+    "vitamin": 8,
+  },
+  "startingHp": 100,
+  "steer": {
+    "impulse": 0.02,
+  },
+  "tickRateHz": 10,
+  "vitamin": {
+    "decayPauseMs": 60000,
+    "hp": 20,
+  },
+  "world": {
+    "height": 900,
+    "width": 2400,
+  },
+}
+`;

@@ -36,6 +36,7 @@ yarn-error.log
 /coverage
 /libpeerconnection.log
 testem.log
+bitbucket.log
 /typings
 __screenshots__/
 
@@ -48,11 +49,28 @@ Thumbs.db
 # Local planning notes (per-developer, not for merge)
 .planning/
 
-# Claude Code — ignore all local config / sessions / skills
-.claude/
-CLAUDE.md
+# Local markdown issue tracker for agent skills (see docs/agents/issue-tracker.md)
+.scratch/
+
+# Per-developer agent-skills config (issue tracker, triage labels, domain docs)
+docs/agents/
+
+# Local domain glossary for grill-with-docs (per-developer, not for merge)
+CONTEXT.md
+
+# Local architecture decision records (per-developer, not for merge)
+docs/adr/
+
+# Claude Code — local config / sessions / skills stay local, EXCEPT the committed review
+# skills (used by cloud routines, which only see what's in the repo), CLAUDE.md and .mcp.json
+# (cloud routines need the taiga-ui / angular-cli verification MCPs too).
+.claude/*
+!.claude/skills/
+.claude/skills/*
+!.claude/skills/pr-review/
+!.claude/skills/codebase-audit/
+!.claude/skills/_shared/
 skills-lock.json
-.mcp.json
 
 # PartyKit local dev state
 .partykit/

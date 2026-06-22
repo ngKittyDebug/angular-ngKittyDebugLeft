@@ -8,6 +8,7 @@ import type { ItemType } from '@game/frenzy/types';
 import type { FaintedStats } from '../../../data/models/fainted-stats';
 import { ItemSpritePipe } from '../../pipes/item-sprite.pipe';
 import { StageRomanPipe } from '../../pipes/stage-roman.pipe';
+import type { Epitaph } from '../../services/death-epitaph.service';
 
 interface BreakdownRow {
   count: number;
@@ -22,6 +23,7 @@ const BREAKDOWN_ORDER: readonly ItemType[] = [
   'mushroom',
   'rotten',
   'rock',
+  'brick',
 ];
 
 @Component({
@@ -35,6 +37,7 @@ export class FaintedModalComponent {
   public readonly cooldownSeconds = input.required<number>();
   public readonly respawnReady = input.required<boolean>();
   public readonly stats = input.required<FaintedStats>();
+  public readonly epitaph = input.required<Epitaph>();
   public readonly chooseNew = output<void>();
   public readonly respawn = output<void>();
   protected readonly breakdown = computed<readonly BreakdownRow[]>(() => {

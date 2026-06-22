@@ -1,133 +1,72 @@
-export type Stage = 1 | 2 | 3;
-export type ItemType =
-  | 'food'
-  | 'rotten'
-  | 'rock'
-  | 'rareCandy'
-  | 'bomb'
-  | 'goldenBerry'
-  | 'crumb'
-  | 'mushroom'
-  | 'vitamin';
-export type PlayerStatus = 'alive' | 'disconnected';
+/**
+ * The frenzy game's wire/state contract: the generic engine types (`../engine/types`) instantiated with the
+ * id unions derived from the definition rosters (`./definition`). Every export keeps its historical name,
+ * so client and server imports stay textually unchanged. Adding an ENABLED item/effect slice — or flipping a
+ * dormant slice's `enabled` flag on — grows the matching union and breaks every exhaustive client `Record` at
+ * compile time, which is the point; a slice shipped `enabled: false` stays out of the union (see `EnabledKey`).
+ */
+import type { EnabledKey } from '../engine/definition';
+import type {
+  EatenEvent as EngineEatenEvent,
+  EffectGrantedEvent as EngineEffectGrantedEvent,
+  FaintCause as EngineFaintCause,
+  FaintedEvent as EngineFaintedEvent,
+  GameEvent as EngineGameEvent,
+  HumanPlayer as EngineHumanPlayer,
+  Item as EngineItem,
+  NpcPlayer as EngineNpcPlayer,
+  Player as EnginePlayer,
+  PlayerBase as EnginePlayerBase,
+  PlayerEffect as EnginePlayerEffect,
+  ServerMessage as EngineServerMessage,
+  ServerState as EngineServerState,
+  SlimPlayer as EngineSlimPlayer,
+  SlimServerState as EngineSlimServerState,
+} from '../engine/types';
+import type { FRENZY_EFFECTS, FRENZY_ITEMS, FRENZY_NPCS } from './definition';
 
-// Timed buffs/debuffs a Pokémon carries. The union grows per phase; `shield` (vitamin) suspends mass decay
-// AND wards off all incoming damage (bomb blast, rock bonk, rotten/negative-mushroom) for its duration.
-export type PlayerEffectKind = 'shield';
+export type {
+  BlastHit,
+  BumpedEvent,
+  ClientMessage,
+  DetonatedEvent,
+  EvolvedEvent,
+  ItemNudgedEvent,
+  JoinRejectReason,
+  NpcAngeredMessage,
+  PickupVia,
+  PlayerBody,
+  PlayerStatus,
+  ScoreKind,
+  Stage,
+  StageBody,
+  SteeredMessage,
+} from '../engine/types';
+export { isNPC } from '../engine/types';
 
-export interface PlayerEffect {
-  kind: PlayerEffectKind;
-  /** Server-clock ms (Date.now) after which the effect lapses; the engine prunes it each tick. */
-  expiresAt: number;
-}
+/** Derived from the item roster's ENABLED slices (`definition/items/`) — a flagged-off item can never spawn,
+ * so the wire/client never sees its literal; flipping the flag grows the union at compile time. */
+export type ItemType = EnabledKey<typeof FRENZY_ITEMS>;
 
-export interface Player {
-  id: string;
-  name: string;
-  /** Opaque appearance id the player chose. The server relays it but never interprets it; the client maps it
-   * to a Pokémon line/sprite (with a fallback for unknown ids). Keeps the server independent of the roster. */
-  appearance: string;
-  stage: Stage;
-  mass: number;
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  status: PlayerStatus;
-  disconnectedAt: number | null;
-  joinedAt: number;
-  /** Active timed effects, always present (default `[]`). Carried in snapshots; refreshed via `effectGranted`. */
-  effects: PlayerEffect[];
-}
+/** Derived from the effect roster's ENABLED slices (`definition/effects/`) — what each kind DOES lives in its
+ * slice; a flagged-off effect can never be granted, so the wire/client never sees its literal. */
+export type PlayerEffectKind = EnabledKey<typeof FRENZY_EFFECTS>;
 
-export interface Item {
-  id: string;
-  type: ItemType;
-  x: number;
-  y: number;
-  vy: number;
-  /** Set once the item lands on the floor: remaining lie-on-floor time, ms. Counts down to removal; the item stays edible meanwhile. Undefined while still falling. */
-  restMs?: number;
-}
+/** Derived from the NPC roster in `definition/`. */
+export type NpcKind = keyof typeof FRENZY_NPCS;
 
-export interface ServerState {
-  players: Player[];
-  items: Item[];
-  tick: number;
-}
-
-export interface EatenEvent {
-  type: 'eaten';
-  itemId: string;
-  itemType: ItemType;
-  playerId: string;
-  newMass: number;
-  delta: number;
-  x: number;
-  y: number;
-}
-
-export interface EvolvedEvent {
-  type: 'evolved';
-  playerId: string;
-  newStage: Stage;
-}
-
-export interface FaintedEvent {
-  type: 'fainted';
-  playerId: string;
-}
-
-// A bomb was juggled by a click: it moved horizontally to `x` (no mass change). Clients snap the item there immediately.
-export interface ItemNudgedEvent {
-  type: 'itemNudged';
-  itemId: string;
-  x: number;
-}
-
-// A bomb exploded at (x, y) over `radius`; `playerIds` are everyone caught in the blast (incl. the owner).
-// `itemId` is the bomb itself — clients drop it immediately so its sprite doesn't linger until the next snapshot.
-export interface DetonatedEvent {
-  type: 'detonated';
-  itemId: string;
-  x: number;
-  y: number;
-  radius: number;
-  playerIds: string[];
-}
-
-// A player picked up an effect item (e.g. vitamin → shield) and gained a timed effect. `itemId` is the
-// consumed pickup so clients drop its sprite at once; `effect` carries the kind and server-clock expiry for the aura.
-export interface EffectGrantedEvent {
-  type: 'effectGranted';
-  playerId: string;
-  effect: PlayerEffect;
-  itemId: string;
-}
-
-// Gameplay events emitted by the engine (apply-click/apply-tick) — single source; ServerMessage reuses them.
-export type GameEvent =
-  | EatenEvent
-  | EvolvedEvent
-  | FaintedEvent
-  | ItemNudgedEvent
-  | DetonatedEvent
-  | EffectGrantedEvent;
-
-export type ClientMessage =
-  | { type: 'identify'; sessionToken: string }
-  | { type: 'join'; name: string; appearance: string }
-  // `nudgeX` is the bomb-bat input: the signed horizontal displacement (normalized 0..1) the player wants,
-  // computed client-side from a fixed pixel step and the tapped side. Server caps/clamps it. Ignored for non-bomb items.
-  | { type: 'click'; itemId: string; nudgeX?: number }
-  // Steering: the player tapped empty water at normalized point (x, y). The server adds a velocity impulse toward
-  // it on top of the current drift (speed capped), so taps nudge the Pokémon's heading without replacing the drift.
-  | { type: 'steer'; x: number; y: number }
-  | { type: 'leave' };
-
-export type ServerMessage =
-  | GameEvent
-  | { type: 'snapshot'; state: ServerState }
-  | { type: 'spawned'; item: Item }
-  | { type: 'roomFull' }
-  | { type: 'rejoined'; playerId: string };
+export type PlayerEffect = EnginePlayerEffect<PlayerEffectKind>;
+export type PlayerBase = EnginePlayerBase<PlayerEffectKind>;
+export type HumanPlayer = EngineHumanPlayer<PlayerEffectKind>;
+export type NpcPlayer = EngineNpcPlayer<PlayerEffectKind, NpcKind>;
+export type Player = EnginePlayer<PlayerEffectKind, NpcKind>;
+export type Item = EngineItem<ItemType>;
+export type ServerState = EngineServerState<ItemType, PlayerEffectKind, NpcKind>;
+export type SlimPlayer = EngineSlimPlayer<PlayerEffectKind>;
+export type SlimServerState = EngineSlimServerState<ItemType, PlayerEffectKind>;
+export type EatenEvent = EngineEatenEvent<ItemType>;
+export type FaintCause = EngineFaintCause<ItemType>;
+export type FaintedEvent = EngineFaintedEvent<ItemType>;
+export type EffectGrantedEvent = EngineEffectGrantedEvent<PlayerEffectKind>;
+export type GameEvent = EngineGameEvent<ItemType, PlayerEffectKind>;
+export type ServerMessage = EngineServerMessage<ItemType, PlayerEffectKind, NpcKind>;

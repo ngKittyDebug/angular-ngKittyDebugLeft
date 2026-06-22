@@ -1,0 +1,39 @@
+@use 'utility/mixins';
+@use 'screens-width';
+
+:host {
+  @include mixins.flex_container_function($direction: column, $gap: 1rem);
+  width: 100%;
+  * {
+    margin: 0;
+  }
+}
+
+.carousel__wrapper {
+  @include mixins.flex_container_function($direction: row, $gap: 1rem);
+  width: 100%;
+  max-width: 15rem;
+}
+
+.adaptive-carousel {
+  flex: 1;
+  width: 100%;
+}
+
+.transparent-slide {
+  background: transparent !important;
+  padding: 0;
+  height: 5rem;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.card {
+  @include mixins.flex_container_function($direction: column);
+  height: 6.5rem;
+  width: 100%;
+}
+
+.evolution_chain__image {
+  height: 3rem;
+}

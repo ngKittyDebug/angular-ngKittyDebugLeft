@@ -4,17 +4,21 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import type { Player } from '@game/frenzy/types';
 
+import { bodyForAppearance } from '../../../ui/constants/pokemon-registry';
 import { FrenzyStore } from '../../store/frenzy.store';
 import { FloatingMessagesStore } from './floating-messages.store';
 import { SelfMoodEffect } from './self-mood-effect.service';
 
-function me(mass: number): Player {
+function me(hp: number): Player {
   return {
+    kind: 'human',
     id: 'me',
     name: 'Me',
     appearance: 'pidgey',
+    body: bodyForAppearance('pidgey'),
     stage: 1,
-    mass,
+    hp,
+    mana: 0,
     x: 0.5,
     y: 0.5,
     vx: 0,
@@ -23,6 +27,7 @@ function me(mass: number): Player {
     disconnectedAt: null,
     joinedAt: 0,
     effects: [],
+    scores: {},
   };
 }
 

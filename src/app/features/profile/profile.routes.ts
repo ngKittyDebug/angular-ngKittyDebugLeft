@@ -1,6 +1,7 @@
 import type { Routes } from '@angular/router';
 import { provideTranslocoScope } from '@jsverse/transloco';
 
+export const PROFILE_PATH = 'profile';
 export const profileRoutes: Routes = [
   {
     path: 'profile',

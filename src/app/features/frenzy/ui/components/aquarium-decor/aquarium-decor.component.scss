@@ -21,11 +21,71 @@
   inset: 0;
   overflow: hidden;
 
-  /* ---------- Floor glow ---------- */
+  /* ---------- Sandy seabed ---------- */
+  // A real bottom strip the kelp roots into (was a full-cover radial glow): the sand gradient body, a tiled
+  // speckle grain, an uneven lit dune ridge along the top (`::before`), and the old soft floor glow rising above
+  // it (`::after`). Theme vars come from aquarium-theme.scss; pure CSS, no raster assets. Static (no animation).
   &__floor {
     position: absolute;
-    inset: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 18%;
+    background-color: #cda869;
+    // Speckle grain (four offset radial-dot tiles at different periods so the texture never visibly repeats),
+    // over the vertical sand gradient.
+    background-image:
+      radial-gradient(circle at 20% 35%, var(--aq-sand-grain) 0 1px, transparent 2px),
+      radial-gradient(circle at 62% 72%, var(--aq-sand-grain) 0 1px, transparent 2px),
+      radial-gradient(circle at 85% 22%, var(--aq-sand-grain) 0 1px, transparent 2px),
+      radial-gradient(circle at 42% 88%, var(--aq-sand-grain) 0 1px, transparent 2px),
+      var(--aq-sand);
+    background-size:
+      70px 70px,
+      94px 94px,
+      58px 58px,
+      112px 112px,
+      100% 100%;
+  }
+
+  // Uneven top edge: FOUR superimposed dune-hump rows at incommensurate periods, widths and peak heights (so the
+  // pattern only realigns over a huge distance and never reads as a regular comb). Each row is a repeat-x of a
+  // lit-crest hump whose bottom sits flush with the band's top; their union is a lumpy, natural-looking ridge.
+  &__floor::before {
+    content: '';
+    position: absolute;
+    right: 0;
+    bottom: 100%;
+    left: 0;
+    height: 40px;
+    background-image:
+      radial-gradient(60% 100% at 50% 100%, var(--aq-sand-crest) 0 62%, transparent 74%),
+      radial-gradient(50% 100% at 50% 100%, var(--aq-sand-crest) 0 58%, transparent 72%),
+      radial-gradient(70% 100% at 50% 100%, var(--aq-sand-crest) 0 55%, transparent 70%),
+      radial-gradient(46% 100% at 50% 100%, var(--aq-sand-crest) 0 60%, transparent 72%);
+    background-repeat: repeat-x;
+    background-position:
+      0 100%,
+      23px 100%,
+      11px 100%,
+      41px 100%;
+    background-size:
+      167px 40px,
+      97px 27px,
+      263px 33px,
+      61px 17px;
+  }
+
+  // Keep the old floor radial-glow as a soft halo rising off the sand (subtler now that the sand is opaque).
+  &__floor::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 320%;
     background: var(--aq-floor);
+    opacity: 0.6;
   }
 
   /* ---------- Light rays (caustics) ---------- */
@@ -41,7 +101,9 @@
     top: -10%;
     height: 130%;
     transform-origin: top center;
-    filter: blur(10px);
+    // No `filter: blur()`: the rays sway (rotate) every frame, so a per-ray blur is re-rasterized each frame on top
+    // of the container's screen blend — a real fill-rate cost on weak GPUs (~20fps tablets). They still read as soft
+    // light shafts via the screen blend + the vertical fade-to-transparent of this gradient.
     background: linear-gradient(to bottom, var(--aq-ray) 0%, rgba(255, 255, 255, 0) 78%);
     animation: aq-ray-sway 9s ease-in-out infinite alternate;
 
@@ -66,19 +128,32 @@
   &__mote {
     position: absolute;
     border-radius: 50%;
-    background: var(--aq-plankton);
-    box-shadow: 0 0 6px var(--aq-glow);
+    // Glow baked into the fill as a radial gradient — a bright plankton core fading through the glow tint to
+    // transparent, the same soft halo the old `box-shadow: 0 0 6px var(--aq-glow)` drew. Painted into the element
+    // once, it just composites as the mote drifts, with no per-frame blur re-raster (a fill-rate cost on weak GPUs
+    // for 16 continuously-moving motes). The element box below is enlarged to hold the former glow radius.
+    background: radial-gradient(
+      circle,
+      var(--aq-plankton) 0 22%,
+      var(--aq-glow) 44%,
+      transparent 72%
+    );
+    // `scale` (independent of the drift `transform`) enlarges motes in the light theme; 1 in dark = unchanged.
+    scale: var(--aq-mote-scale, 1);
     animation: aq-mote-drift 16s ease-in-out infinite alternate;
 
     // Per-mote variety (was inline vars from the component).
     @for $i from 1 through 16 {
       &:nth-child(#{$i}) {
         $size: 1.5 + $i % 3;
+        // Box = core + glow halo room (the gradient fades to transparent inside it), so the baked halo replaces the
+        // old 6px box-shadow spread. The few-px shift from the larger box is imperceptible on scattered decor motes.
+        $box: $size + 10;
 
         left: (($i * 37) % 100) * 1%;
         top: (($i * 53) % 100) * 1%;
-        width: #{$size}px;
-        height: #{$size}px;
+        width: #{$box}px;
+        height: #{$box}px;
         --dx: #{($i % 7 - 3) * 8}px;
         --dy: #{-($i % 5 * 7)}px;
         --peak: #{0.4 + $i % 6 * 0.1};
@@ -89,24 +164,37 @@
   }
 
   /* ---------- Bottom plants (kelp + coral) ---------- */
+  // Full-world box so each blade can root at its own depth-driven `--root` line (% from the world bottom): the
+  // near tier roots LOW (close to the viewer, just above the resting-item line), the far tier roots HIGH (back of
+  // the sand, near the dune crest) — a receding ground plane rather than every blade sprouting from one ruled row.
   &__plants {
     position: absolute;
-    left: 0;
-    right: 0;
-    bottom: -2%;
-    height: 46%;
+    inset: 0;
   }
 
   &__plant {
     position: absolute;
-    bottom: 0;
+    bottom: var(--root, 13%);
     transform-origin: 50% 100%;
-    animation: aq-plant-sway 6s ease-in-out infinite alternate;
+    // PERF (CPU-4×/6× bisection): the per-frame repaint of 218 independently rotating SVG blades is the scene's
+    // dominant cost — BUT only when the main thread is saturated (the weak-tablet dense-cluster regime; on a light
+    // scene there is headroom and it costs nothing). The compositor won't promote that many layers, and forcing
+    // promotion (`will-change`) measured NET NEGATIVE (layer overhead > saved repaint — the ADR-0006 risk made
+    // real). So keep full forest density (every blade still painted) but only sway a sparse 1-in-3; the rest hold a
+    // gentle per-blade lean. Cuts the sway repaint to a third — a deliberate near-neutral trade (NOT pixel-neutral:
+    // 2/3 of blades go still). Validated on the weak tablet: a small but real fps gain, look accepted — so the
+    // ADR-0006 revisit resolved in favour of this trade rather than a quality tier.
+    transform: rotate(calc(var(--rot, -4deg) * 0.5));
+
+    &:nth-child(3n) {
+      transform: none;
+      animation: aq-plant-sway 6s ease-in-out infinite alternate;
+    }
   }
 
   &__blade {
     display: block;
-    width: 34px;
+    width: var(--w, 34px);
     height: var(--h, 120px);
     fill: currentColor;
 
@@ -224,5 +312,60 @@
   .aq__plant,
   .aq__bubble {
     animation: none;
+  }
+}
+
+/* ---------- ?debug=perf decor sub-probes (DebugSettingsStore.decorProbe) ----------
+   The scene host carries a `.scene--decor-*` class per active probe; we read it via `:host-context` because
+   scene.component.scss can't reach into this component's encapsulated internals. Each isolates ONE decor cost so a
+   weak device can bisect the FPS culprit WITHIN the decor layer (finer than the whole-layer `decor` toggle):
+     · frozen    — stop every decor animation but keep it PAINTED → splits per-frame animation cost from static paint.
+     · no-plants / no-rays — hide one sub-element to attribute the cost.
+     · flat-rays — the speculative neutral fix (ADR 0006): drop the `mix-blend-mode: screen` pass and approximate the
+       light shafts with a flat translucent gradient. Kept behind this A/B toggle until the eye confirms it on the
+       tablet; the flat colour is a starting point to tune per theme before any promotion to always-on. */
+:host-context(.scene--decor-frozen) {
+  .aq__ray,
+  .aq__mote,
+  .aq__plant,
+  .aq__bubble {
+    animation: none;
+  }
+}
+
+:host-context(.scene--decor-no-plants) .aq__plants {
+  display: none;
+}
+
+:host-context(.scene--decor-no-rays) .aq__rays {
+  display: none;
+}
+
+:host-context(.scene--decor-flat-rays) {
+  .aq__rays {
+    mix-blend-mode: normal;
+  }
+
+  .aq__ray {
+    background: linear-gradient(
+      to bottom,
+      var(--aq-ray-flat, rgba(255, 255, 255, 0.16)) 0%,
+      rgba(255, 255, 255, 0) 78%
+    );
+  }
+}
+
+/* ---------- Canvas decor backend (DebugSettingsStore.decorMode === 'canvas', ADR 0007) ----------
+   When the ANIMATED backdrop layers are drawn on the decor canvas, hide their DOM originals so they don't double-
+   paint: the kelp blades, the plankton motes, the bubbles and the edge vignette. The sandy floor and the screen-
+   blended light rays deliberately STAY in the DOM (a static near-free texture / a blend that has no clean canvas
+   port) — see ADR 0007. Same `:host-context` reach as the decor probes above (scene.component.scss can't reach
+   these internals). */
+:host-context(.scene--canvas-decor) {
+  .aq__plants,
+  .aq__plankton,
+  .aq__bubbles,
+  .aq__vignette {
+    display: none;
   }
 }

@@ -4,6 +4,7 @@
 :host {
   max-width: screens-width.$screen-xx-large;
   width: 100%;
+  height: 100%;
 }
 
 .catalog-container {
@@ -25,4 +26,9 @@
   @include mixins.respond-to(screens-width.$screen-medium, 'max') {
     @include mixins.grid_container_function($grid_template_columns: repeat(1, 13.75rem));
   }
+}
+
+.empty__card {
+  @include mixins.flex_container_function();
+  height: 19.125rem;
 }

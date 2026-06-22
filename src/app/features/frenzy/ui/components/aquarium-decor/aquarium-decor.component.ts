@@ -8,6 +8,10 @@ import {
   signal,
 } from '@angular/core';
 
+import { KELP_BLADES, kelpTint } from '../../utils/kelp-blades';
+import type { KelpBlade } from '../../utils/kelp-blades';
+import { buildKelpField, kelpFieldCount } from '../../utils/kelp-field';
+
 /**
  * Purely decorative aquarium backdrop for the Frenzy scene.
  *
@@ -27,39 +31,30 @@ import {
 interface Plant {
   left: number;
   height: number;
+  width: number;
+  root: number;
   rotation: number;
-  brightness: number;
   zIndex: number;
   color: string;
-  shape: number;
+  art: KelpBlade;
   duration: number;
   delay: number;
 }
 
-const PLANT_COLORS = ['var(--aq-plant-a)', 'var(--aq-plant-b)', 'var(--aq-plant-c)'];
-// Roughly one kelp blade per this many CSS px of scene width (blades are wider than this, so they
-// overlap into a dense forest). Lower = denser. The blade count is derived from the measured width.
-const KELP_SPACING_PX = 14;
-const MIN_PLANTS = 12;
-
-// 1-based indices, mirroring the original `@for $i from 1 through N` formulas.
-function indices(length: number): number[] {
-  return Array.from({ length }, (_, index) => index + 1);
-}
-
+// Map the shared numeric blade field (one source of truth with the canvas backend, see `kelp-field.ts`) to the CSS
+// shape the template binds: the tint factor → a resolved colour, the shape index → its blade art, the rest 1:1.
 function buildPlants(count: number): Plant[] {
-  return indices(count).map((i) => ({
-    // Cell-centered across the full width (so the first/last blades hug the edges) plus a small
-    // deterministic wobble so the row doesn't read like a comb.
-    left: ((i - 0.5) / count) * 100 + (((i * 37) % 7) - 3),
-    height: 70 + ((i * 17) % 95),
-    rotation: -3 - (i % 4),
-    brightness: 0.85 + (i % 3) * 0.07,
-    zIndex: (i * 7) % 9,
-    color: PLANT_COLORS[(i - 1) % 3],
-    shape: (i - 1) % 3,
-    duration: 4.5 + (i % 4),
-    delay: -(i * 0.6),
+  return buildKelpField(count).map((blade) => ({
+    left: blade.left,
+    height: blade.height,
+    width: blade.width,
+    root: blade.root,
+    rotation: blade.rotation,
+    zIndex: blade.zIndex,
+    color: kelpTint(blade.shape, blade.brightness),
+    art: KELP_BLADES[blade.shape],
+    duration: blade.durationSeconds,
+    delay: blade.delaySeconds,
   }));
 }
 
@@ -94,7 +89,7 @@ export class AquariumDecorComponent {
 
   // Rebuild only when the blade count actually changes, so a resize drag doesn't churn the DOM.
   private syncPlants(width: number): void {
-    const count = Math.max(MIN_PLANTS, Math.round(width / KELP_SPACING_PX));
+    const count = kelpFieldCount(width);
 
     if (count === this.plantCount) {
       return;

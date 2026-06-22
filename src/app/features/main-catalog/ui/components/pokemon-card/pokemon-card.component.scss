@@ -11,6 +11,7 @@ $stats: hp, attack, defense;
   display: block;
   background: var(--gradient-bg);
   width: 13.75rem;
+  min-height: 19.125rem;
   border-radius: 1.6rem;
   border: 1px solid var(--border);
   transition: all 0.3s;
@@ -18,6 +19,8 @@ $stats: hp, attack, defense;
   * {
     margin: 0;
     @include mixins.font_function($size: 0.75rem);
+    text-decoration: none;
+    color: inherit;
   }
   &:hover {
     border: 1px solid var(--sidebar-primary);
@@ -33,6 +36,7 @@ $stats: hp, attack, defense;
 
 .card__image {
   width: 10rem;
+  height: 10rem;
   border-radius: 1rem;
   background: var(--gradient-card);
 }
@@ -68,6 +72,7 @@ $stats: hp, attack, defense;
 .card__type {
   color: var(--accent-foreground);
   text-transform: uppercase;
+  min-width: 2rem;
   @each $type in $types {
     &-#{$type} {
       background: linear-gradient(to right, var(--type-#{$type}-start), var(--type-#{$type}-end));
@@ -77,6 +82,11 @@ $stats: hp, attack, defense;
 
 .stats__name {
   text-transform: uppercase;
+  min-width: 1rem;
+}
+
+.stats__value {
+  min-width: 1rem;
 }
 
 .stats__bar {

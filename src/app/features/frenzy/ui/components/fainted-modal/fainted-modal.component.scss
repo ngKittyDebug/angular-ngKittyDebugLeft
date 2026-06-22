@@ -1,4 +1,5 @@
 @use 'utility/hud-pill' as *;
+@use 'screens-width' as *;
 
 .fainted-modal {
   display: flex;
@@ -16,8 +17,16 @@
 
   &__title {
     margin: 0;
+    // The obituary is a full sentence (not a two-word heading), so it's set smaller with a comfortable
+    // line-height to read as a caption rather than a shout.
     color: var(--tui-status-negative);
-    font-size: 1.5rem;
+    font-size: 1rem;
+    line-height: 1.3;
+
+    // Narrow phones: the modal is near full-width and the sentence wraps to several lines, so drop it a notch.
+    @media (max-width: $screen-small) {
+      font-size: 0.85rem;
+    }
   }
 
   &__stats {

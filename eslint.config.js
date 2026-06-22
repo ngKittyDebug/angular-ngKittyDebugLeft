@@ -126,7 +126,9 @@ export default defineConfig(
         {
           ts: 'never',
           config: 'off',
+          constants: 'off',
           routes: 'off',
+          providers: 'off',
           model: 'off',
           pipe: 'off',
           directive: 'off',
@@ -139,6 +141,7 @@ export default defineConfig(
           facade: 'off',
           guard: 'off',
           store: 'off',
+          interceptor: 'off'
         },
       ],
       'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
@@ -229,6 +232,7 @@ export default defineConfig(
       '**/*.js',
       '.angular/**',
       '.planning/**',
+      '.claude/**',
       'partykit-server/**',
     ],
   }]

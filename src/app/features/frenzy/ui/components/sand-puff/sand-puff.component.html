@@ -1,0 +1,14 @@
+<span class="sand-puff" aria-hidden="true">
+  <span class="sand-puff__cloud"></span>
+  @for (grain of grains(); track $index) {
+    <span
+      class="sand-puff__grain"
+      [style.--gx]="grain.gx"
+      [style.--gy]="grain.gy"
+      [style.--g-size]="grain.size"
+      [style.--g-delay]="grain.delay"
+      [style.background]="grainBackground()"
+      [style.box-shadow]="grainGlow()"
+    ></span>
+  }
+</span>

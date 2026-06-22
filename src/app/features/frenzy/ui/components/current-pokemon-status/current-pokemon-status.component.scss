@@ -1,74 +1,180 @@
 @use 'utility/hud-pill' as *;
 
+// Own-Pokémon status card: [mood avatar] | { name + STAGE badge / progress-to-evolution / HP · until-evolution }.
+// Width is driven by the page wrapper (a wide top-centre card on desktop, a compact pill top-left on mobile).
 .current-pokemon-status {
   display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  width: 13rem;
-  padding: 0.55rem 0.85rem 0.65rem;
-  border-radius: 0.6rem;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  padding: 0.5rem 0.8rem;
+  border-radius: 0.7rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
 
   @include hud_pill;
 
-  &__header {
+  &__avatar {
+    flex: none;
+  }
+
+  &__body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-width: 0;
+  }
+
+  // Buff-chip strip above the panel content — small tone-coloured glyph chips mirroring the over-head sprite badges
+  // (same EFFECT_BADGE icon/tone). A flex row that wraps; the whole block is absent when no effect is active.
+  &__buffs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
+  // One chip: a glyph on a faint tone-tinted disc. Positive (default) green, warning amber — matching the badges.
+  &__buff {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.15rem;
+    height: 1.15rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--tui-status-positive) 22%, transparent);
+    color: var(--tui-status-positive);
+    font-size: 0.85rem;
+
+    &--warning {
+      background: color-mix(in srgb, var(--tui-status-warning) 22%, transparent);
+      color: var(--tui-status-warning);
+    }
+  }
+
+  &__head {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    // Leave room on the right so a long name never slides under the top-right stage badge — sized for the widest
+    // badge ("СТАДИЯ 3" / "STAGE 3") so a 24-char name still clears it.
+    padding-inline-end: 2.5rem;
   }
 
-  &__label {
-    font-size: 0.7rem;
+  &__name {
+    overflow: hidden;
+    font-size: 0.95rem;
     font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--tui-text-secondary);
-  }
-
-  &__value {
-    flex: 1;
-    margin: 0;
-    font-size: 1.05rem;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    text-overflow: ellipsis;
     color: var(--tui-text-primary);
   }
 
-  &__stage {
-    min-inline-size: 1.6rem;
-    padding: 0.1rem 0.45rem;
+  // Symmetric corner-chip pair: HP (top-left) and Stage (top-right) share identical metrics + font so they read as
+  // a matched set — same vertical padding, radius, shadow, font-size/weight and line-height. Only side, fill colour
+  // and content differ. The HP fill is data-driven (`hpToneColor`); the Stage fill is the Taiga accent.
+  &__hp-badge,
+  &__stage-badge {
+    position: absolute;
+    top: -0.5rem;
+    z-index: 1;
+    display: inline-flex;
+    gap: 0.2rem;
+    align-items: baseline;
+    padding: 0.16rem 0.55rem;
     border-radius: 999px;
-    background: color-mix(in srgb, var(--tui-text-primary) 12%, transparent);
-    color: var(--tui-text-primary);
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    text-align: center;
-    font-variant-numeric: tabular-nums;
+    box-shadow: 0 3px 10px -2px rgba(0, 0, 0, 0.5);
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: 0.04em;
+    // Lifts white off the lighter amber/green HP tones (the weakest pairing) without hurting it on red/accent.
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  }
+
+  &__stage-badge {
+    right: -0.6rem;
+    background: var(--tui-background-accent-1);
+    text-transform: uppercase;
+  }
+
+  &__bar-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
   }
 
   &__bar {
-    width: 100%;
+    flex: 1;
+    min-width: 4rem;
   }
 
-  &__mood {
+  // Stage zones: a translucent three-band overlay (info → warning → positive) painted over the bar via an inline
+  // hard-stop gradient, splitting it at the two evolution gates. Alpha is low so the HP fill underneath still reads;
+  // the crisp notches sit on top of it. Decorative + non-interactive.
+  &__zones {
+    --lp-zone-1: color-mix(in srgb, var(--tui-status-info) 12%, transparent);
+    --lp-zone-2: color-mix(in srgb, var(--tui-status-warning) 12%, transparent);
+    --lp-zone-3: color-mix(in srgb, var(--tui-status-positive) 16%, transparent);
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    pointer-events: none;
+  }
+
+  // Evolution notch on the absolute bar — positioned by `left` (%) at an evolution gate. A gate already passed
+  // reads muted and shorter; the upcoming one stays bright and tall. On top of the bar + zones.
+  &__tick {
+    position: absolute;
+    top: 50%;
+    z-index: 1;
+    width: 2px;
+    height: 0.7rem;
+    border-radius: 1px;
+    background: var(--tui-text-primary);
+    opacity: 0.7;
+    transform: translate(-50%, -50%);
+
+    &--reached {
+      height: 0.55rem;
+      opacity: 0.3;
+    }
+  }
+
+  // HP corner chip: same shared metrics as the stage chip; the fill is the HP tone (`hpToneColor`: green → amber →
+  // red), so it doubles as an at-a-glance health read like the bar.
+  &__hp-badge {
+    left: -0.6rem;
+    transition: background 0.3s ease;
+  }
+
+  &__hp-value {
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__hp-unit {
+    text-transform: uppercase;
+    opacity: 0.85;
+  }
+
+  &__foot {
     display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    margin: 0;
-    font-size: 0.8rem;
+  }
+
+  &__until {
+    font-size: 0.75rem;
     font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
     color: var(--tui-text-secondary);
   }
 
-  &__mood-icon {
-    block-size: 1rem;
-    inline-size: 1rem;
-  }
-
   &--compact {
-    gap: 0.25rem;
-    width: 9rem;
-    padding: 0.4rem 0.6rem 0.5rem;
+    gap: 0.5rem;
+    padding: 0.4rem 0.55rem;
+
+    .current-pokemon-status__name {
+      font-size: 0.85rem;
+    }
   }
 }

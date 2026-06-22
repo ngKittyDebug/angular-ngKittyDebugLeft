@@ -1,8 +1,28 @@
 :host {
   display: flex;
   flex-direction: column;
+  // `dvh` tracks the *visible* viewport (mobile browser chrome shows/hides). Plain `100vh` is the LARGE viewport
+  // that counts the strip behind the chrome, so on mobile/tablet it overshoots the screen and forces a small
+  // vertical scroll — most visible on the full-bleed immersive game, which is meant to never scroll. `100vh`
+  // stays first as the fallback for engines without `dvh`.
   min-height: 100vh;
+  min-height: 100dvh;
   height: 100%;
+}
+
+// Immersive routes (e.g. Frenzy) opt in via `data: { immersive: true }`; LayoutComponent then sets this
+// host class. The play area should TRY to fit the viewport height, but never collapse below a usable
+// floor — past that point it stops shrinking and the page scrolls instead.
+//
+// `flex: 1` (= `1 1 0%`) is deliberate over the base `.root-wrapper`'s `flex: 1 0 auto`: a `0%` basis
+// makes the wrapper size purely from the column's free space, NOT from its content. With `auto` basis
+// the wrapper reads its (stale) content height, which during a live window-resize — or the footer
+// flickering in/out across the 800px breakpoint — leaves the wrapper at an outdated size and breaks the
+// fit-to-viewport scaling. The min-height is the floor that switches the page to scrolling on short
+// viewports (the min-height: 100vh shell then grows past the viewport).
+:host(.layout--immersive) .root-wrapper {
+  flex: 1;
+  min-height: 30rem;
 }
 
 .mobile_nav-bar {

@@ -1,0 +1,29 @@
+// Host is the outline box itself: written at top:0/left:0 and driven by the scene-position directive's
+// `translate` (compositor path); the static `transform` here is the centre anchor. Non-interactive.
+:host {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 5;
+  display: block;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+// Green = body hitbox (the collidable torso the server uses), centred on the actor point.
+:host(.debug-box--body) {
+  border: 1px solid rgba(0, 255, 120, 0.9);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+}
+
+// Yellow = full-art bounds, shifted by the centring offset so it frames the visible sprite (wings/tail included).
+// Same colour as the item box; compare against the green body box to tune each sprite's `bodyRect`.
+:host(.debug-box--art) {
+  border: 1px dashed rgba(255, 200, 0, 0.9);
+  transform: translate(-50%, -50%) translate(var(--debug-box-off-x, 0), var(--debug-box-off-y, 0));
+}
+
+// Yellow = item bounds.
+:host(.debug-box--item) {
+  border: 1px dashed rgba(255, 200, 0, 0.9);
+}

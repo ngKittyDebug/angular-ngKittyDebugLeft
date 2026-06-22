@@ -13,11 +13,15 @@ export interface ToneOptions {
 
 const SILENCE = 0.0001;
 const ATTACK_SECONDS = 0.01;
+// Cap concurrent oscillators so a burst (e.g. a multi-bomb cascade firing two explosion tones each) can't pile up
+// dozens of voices into a harsh clipped wall of sound; extra tones past the limit are skipped, not queued.
+const MAX_VOICES = 6;
 
 @Injectable()
 export class AudioEngineService {
   private readonly settings = inject(SoundSettingsService);
   private context: AudioContext | null = null;
+  private activeVoices = 0;
 
   public playTone(options: ToneOptions): void {
     if (!this.settings.enabled()) {
@@ -36,6 +40,12 @@ export class AudioEngineService {
       return;
     }
 
+    if (this.activeVoices >= MAX_VOICES) {
+      return;
+    }
+
+    this.activeVoices += 1;
+
     const startAt = context.currentTime + (options.delayMs ?? 0) / 1000;
     const stopAt = startAt + options.durationMs / 1000;
     const oscillator = context.createOscillator();
@@ -52,6 +62,9 @@ export class AudioEngineService {
     envelope.gain.exponentialRampToValueAtTime(peak, startAt + ATTACK_SECONDS);
     envelope.gain.exponentialRampToValueAtTime(SILENCE, stopAt);
     oscillator.connect(envelope).connect(context.destination);
+    oscillator.onended = () => {
+      this.activeVoices = Math.max(0, this.activeVoices - 1);
+    };
     oscillator.start(startAt);
     oscillator.stop(stopAt + 0.02);
   }

@@ -5,7 +5,7 @@
       <p class="species_card__label">{{ t('pokemonProfile.capture') }}</p>
       <div class="circle__progress" tuiProgressLabel>
         <span class="circle__progress_label" tuiHeader="h6">
-          <p>{{ pokemonProfileDataSpecies().capture_rate! }}</p>
+          <p>{{ pokemonProfileDataSpecies().capture_rate }}</p>
           <p tuiSubtitle>{{ t('pokemonProfile.from') }}</p>
           <p>255</p>
         </span>
@@ -13,7 +13,9 @@
           class="circle__progress_image"
           size="xxl"
           [max]="100"
-          [value]="pokemonProfileDataSpecies().capture_rate | leftPawPercentage: 255"
+          [value]="
+            pokemonProfileDataSpecies().capture_rate | leftPawPercentage: this.maxSpeciesValue
+          "
         />
       </div>
     </div>
@@ -29,7 +31,9 @@
           class="circle__progress_image"
           size="xxl"
           [max]="100"
-          [value]="pokemonProfileDataSpecies().base_happiness | leftPawPercentage: 255"
+          [value]="
+            pokemonProfileDataSpecies().base_happiness | leftPawPercentage: this.maxSpeciesValue
+          "
         />
       </div>
     </div>
@@ -48,15 +52,18 @@
       <div class="circle__progress" tuiProgressLabel>
         <span class="circle__progress_label" tuiHeader="h6">
           <p>
-            {{ pokemonProfileDataSpecies().hatch_counter! * 255 }} {{ t('pokemonProfile.steps') }}
+            {{ pokemonProfileDataSpecies().hatch_counter * this.maxSpeciesValue }}
+            {{ t('pokemonProfile.steps') }}
           </p>
-          <p>({{ pokemonProfileDataSpecies().hatch_counter! }} {{ t('pokemonProfile.cycles') }})</p>
+          <p>({{ pokemonProfileDataSpecies().hatch_counter }} {{ t('pokemonProfile.cycles') }})</p>
         </span>
         <tui-progress-circle
           class="circle__progress_image"
           size="xxl"
           [max]="100"
-          [value]="pokemonProfileDataSpecies().hatch_counter | leftPawPercentage: 40"
+          [value]="
+            pokemonProfileDataSpecies().hatch_counter | leftPawPercentage: this.maxCycleValue
+          "
         />
       </div>
     </div>

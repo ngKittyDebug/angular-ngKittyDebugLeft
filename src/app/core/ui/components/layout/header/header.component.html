@@ -1,14 +1,14 @@
 @let itemsList = navListItems();
 
 <header *transloco="let t" class="header_component">
-  <a href="#" tuiLink class="icon_wrapper">
+  <a [routerLink]="'/'" tuiLink class="icon_wrapper">
     <img [src]="pokeDexIcoSrc" alt="pokedex_icon" class="pokedex_icon" />
     <h1>PokeDex</h1>
   </a>
   <div *leftPawResponsiveRender="`(min-width:${tableBreakpoint}px)`" class="nav_container">
     <nav class="nav_container">
       @for (item of itemsList; track item.label) {
-        <a routerLink="item.link" tuiLink class="nav_link">
+        <a [routerLink]="item.link" tuiLink class="nav_link">
           <tui-icon [icon]="item.icon" />
           <span>{{ t(item.label) }}</span>
         </a>

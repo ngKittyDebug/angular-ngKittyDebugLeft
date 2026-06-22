@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Shield">
+  <defs>
+    <linearGradient id="shieldBody" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9fe4ff"/>
+      <stop offset="0.5" stop-color="#3fa9e0"/>
+      <stop offset="1" stop-color="#1f6fab"/>
+    </linearGradient>
+    <radialGradient id="shieldGloss" cx="0.35" cy="0.28" r="0.5">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <path d="M32 4 L56 13 V32 C56 47 45 56 32 60 C19 56 8 47 8 32 V13 Z"
+        fill="url(#shieldBody)" stroke="#11405f" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M32 12 L48 18 V32 C48 42 41 49 32 52 V12 Z" fill="#0f3b58" opacity="0.18"/>
+  <path d="M27 31 l4 5 9 -12" fill="none" stroke="#ffffff" stroke-width="4"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M32 4 L56 13 V32 C56 47 45 56 32 60 C19 56 8 47 8 32 V13 Z" fill="url(#shieldGloss)"/>
+</svg>

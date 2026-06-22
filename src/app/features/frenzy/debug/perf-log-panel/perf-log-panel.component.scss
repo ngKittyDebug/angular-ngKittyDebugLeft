@@ -1,0 +1,139 @@
+// Host adds no box (`display: contents`), so the panel positions as a screen-space sibling of `.scene__world`,
+// never riding the camera transform.
+:host {
+  display: contents;
+}
+
+// ?debug=perf perf-log panel. Positioned by the parent `.scene__perf-panels` flex stack (bottom-left, below the
+// readout — they used to overlap when this wide panel sat bottom-right); scrolls if the sample table grows.
+// Near-opaque + monospace to match the sibling debug panels. Dev-only.
+.perf-log {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  // Wide enough for the single-line control row (fields + capture/export/clear) so it no longer scrolls sideways.
+  max-width: 96vw;
+  max-height: 45%;
+  overflow: auto;
+  // The parent stack is click-through; this is the interactive capture tool, so re-enable pointer events on it.
+  pointer-events: auto;
+  padding: 0.35rem 0.5rem;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.85);
+  color: #6cf;
+  font-family: ui-monospace, monospace;
+  font-size: 0.7rem;
+  line-height: 1.3;
+}
+
+// The whole header bar is the collapse toggle — a flush, borderless button inheriting the panel's mono/cyan look
+// (debug chrome, not a Taiga widget). When collapsed the panel is just this bar, so it stops covering the scene.
+.perf-log__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.perf-log__count {
+  opacity: 0.6;
+}
+
+.perf-log--collapsed {
+  padding: 0.2rem 0.5rem;
+}
+
+// All controls on ONE line — fields then the capture/export/clear buttons pulled up alongside them (was a wrapped
+// second row). The panel scrolls horizontally if the line outgrows it on a narrow viewport.
+.perf-log__controls {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.perf-log__field {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.perf-log__field input,
+.perf-log__field select {
+  font: inherit;
+}
+
+.perf-log__field input[type='text'] {
+  width: 4rem;
+}
+
+.perf-log__field input[type='number'] {
+  width: 3rem;
+}
+
+.perf-log__buttons {
+  display: flex;
+  gap: 4px;
+}
+
+// Buttons restyled to the configurator's chip look (bordered cyan, transparent fill) instead of native grey, so the
+// whole control line reads as one debug surface.
+.perf-log__buttons button {
+  padding: 2px 8px;
+  border: 1px solid #6cf;
+  border-radius: 4px;
+  background: transparent;
+  color: #6cf;
+  font: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.perf-log__buttons button:hover {
+  background: rgba(102, 204, 255, 0.15);
+}
+
+.perf-log__textarea {
+  width: 100%;
+  font-family: ui-monospace, monospace;
+  font-size: 0.65rem;
+}
+
+.perf-log__table {
+  display: block;
+  border-collapse: collapse;
+}
+
+// Keep the header fixed and scroll only the sample rows, capped to ~6 rows, so the table stops growing as captures
+// accumulate. `display: table` + fixed layout on the header row and each body row keeps the columns aligned with the
+// independently-scrolled body.
+.perf-log__table thead,
+.perf-log__table tbody tr {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.perf-log__table tbody {
+  display: block;
+  max-height: 5.5rem;
+  overflow-y: auto;
+}
+
+.perf-log__table th,
+.perf-log__table td {
+  padding: 0 4px;
+  text-align: right;
+}
+
+.perf-log__table th:first-child,
+.perf-log__table td:first-child {
+  text-align: left;
+}

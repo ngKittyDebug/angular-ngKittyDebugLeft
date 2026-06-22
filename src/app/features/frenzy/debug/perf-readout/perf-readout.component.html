@@ -1,0 +1,48 @@
+<!-- Screen-space corner panel listing every perf metric live, each row carrying its own toggle. Collapsed by default
+     to an FPS pill; expands to the metric rows. Shares the theme-aware HUD-panel chrome (leaderboard/minimap/legend)
+     but does NOT collapse on an outside click — a live watch panel. Rendered only under ?debug=perf. -->
+<div class="perf-readout" [class.perf-readout--collapsed]="collapsed()">
+  @if (collapsed()) {
+    <button type="button" class="perf-readout__pill" aria-label="readout" (click)="toggle()">
+      <span class="perf-readout__pill-label">FPS</span>
+      <span class="perf-readout__pill-value">{{ fpsText() }}</span>
+    </button>
+  } @else {
+    <button
+      type="button"
+      class="perf-readout__header"
+      [attr.aria-expanded]="!collapsed()"
+      (click)="toggle()"
+    >
+      <tui-icon icon="@tui.activity" class="perf-readout__header-icon" />
+      <h3 class="perf-readout__title">readout</h3>
+      <tui-icon icon="@tui.minimize-2" class="perf-readout__chevron" />
+    </button>
+
+    <div class="perf-readout__metrics" *transloco="let t; prefix: 'frenzy-debug'">
+      @for (row of rows(); track row.key) {
+        <div class="perf-readout__row" [class.perf-readout__row--off]="!row.enabled">
+          <!-- Checkbox + label are the toggle; the value and the info icon sit OUTSIDE this label so a tap on either
+               never flips the metric. -->
+          <label class="perf-readout__toggle">
+            <input type="checkbox" [checked]="row.enabled" (change)="store.toggleMetric(row.key)" />
+            <span class="perf-readout__label">{{ t('metrics.' + row.key + '.label') }}</span>
+          </label>
+          <span
+            class="perf-readout__value"
+            [class.perf-readout__value--warn]="row.enabled && row.tone === 'warn'"
+            [class.perf-readout__value--bad]="row.enabled && row.tone === 'bad'"
+            >{{ row.enabled ? row.text : '—' }}</span
+          >
+          <!-- Info hint stays available even on a disabled (dimmed) row, so a metric can be read before turning on. -->
+          <left-paw-perf-metric-info
+            class="perf-readout__info"
+            [key]="row.key"
+            [open]="openKey() === row.key"
+            (toggled)="onInfoToggled(row.key)"
+          />
+        </div>
+      }
+    </div>
+  }
+</div>

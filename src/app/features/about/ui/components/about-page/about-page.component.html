@@ -1,56 +1,75 @@
 <div *transloco="let t" class="wrapper">
   <h1 class="heading">PokeDex (ngKittyDebugLeftPaw)</h1>
-  <ul class="team-list">
-    <a href="https://github.com/pavelkuvsh1noff" target="_blank" class="team-card">
+  <div class="team-list">
+    <a
+      href="https://github.com/pavelkuvsh1noff"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="team-card"
+    >
       <div>
         <h3 class="name">{{ t('about.pavelkuvsh1noff.name') }}</h3>
-        <p class="position">Frontend developer</p>
+        <p class="position">{{ t('about.pavelkuvsh1noff.position') }}</p>
       </div>
       <div class="img-wrapper">
         <img src="images/team/PavelCat.jpg" alt="Pavel" />
       </div>
     </a>
-    <a href="https://github.com/AlexGorSer" target="_blank" class="team-card">
+    <a
+      href="https://github.com/AlexGorSer"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="team-card"
+    >
       <div>
         <h3 class="name">{{ t('about.alexgorser.name') }}</h3>
-        <p class="position">Fullstack developer</p>
+        <p class="position">{{ t('about.alexgorser.position') }}</p>
       </div>
       <div class="img-wrapper">
         <img src="images/team/AlexCat.jpg" alt="Alex" />
       </div>
     </a>
-    <a href="https://github.com/Oksi2510" target="_blank" class="team-card">
-      <div href="">
+    <a
+      href="https://github.com/Oksi2510"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="team-card"
+    >
+      <div>
         <h3 class="name">{{ t('about.oksi2510.name') }}</h3>
-        <p class="position">Frontend developer / Designer</p>
+        <p class="position">{{ t('about.oksi2510.position') }}</p>
       </div>
       <div class="img-wrapper">
         <img src="images/team/OksanaCat.jpg" alt="Oksana" />
       </div>
     </a>
-  </ul>
+  </div>
   <div class="description">
     <p>
       <span>PokeDex</span>
       {{ t('about.description.partOne') }}
-      <a class="angular" href="https://angular.dev/" target="_blank">Angular</a>
+      <a class="angular" href="https://angular.dev/" target="_blank" rel="noopener noreferrer"
+        >Angular</a
+      >
       {{ t('about.description.partTwo') }}
-      <a class="rs" href="https://rs.school/" target="_blank">The Rolling Scopes School</a>
+      <a class="rs" href="https://rs.school/" target="_blank" rel="noopener noreferrer"
+        >The Rolling Scopes School</a
+      >
     </p>
     <p>
       {{ t('about.description.partThree') }}
     </p>
   </div>
   <ul class="features">
-    <div class="feature bg-green">{{ t('about.feature.one') }}</div>
-    <div class="feature">{{ t('about.feature.two') }}</div>
-    <div class="feature bg-pink">{{ t('about.feature.three') }}</div>
-    <div class="feature">{{ t('about.feature.four') }}</div>
-    <div class="feature bg-red">{{ t('about.feature.five') }}</div>
-    <div class="feature bg-orange">{{ t('about.feature.six') }}</div>
+    <li class="feature bg-green">{{ t('about.feature.one') }}</li>
+    <li class="feature">{{ t('about.feature.two') }}</li>
+    <li class="feature bg-pink">{{ t('about.feature.three') }}</li>
+    <li class="feature">{{ t('about.feature.four') }}</li>
+    <li class="feature bg-red">{{ t('about.feature.five') }}</li>
+    <li class="feature bg-orange">{{ t('about.feature.six') }}</li>
   </ul>
   <tui-accordion class="accordion">
-    @for (item of AccordionData; track item) {
+    @for (item of accordionData; track item.title) {
       <button [tuiAccordion]="$index === 0">{{ t(item.title) }}</button>
       <tui-expand class="accordion_content">{{ t(item.value) }}</tui-expand>
     }

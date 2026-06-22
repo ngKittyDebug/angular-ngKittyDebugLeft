@@ -7,7 +7,7 @@
   tuiForm="m"
   class="login__form"
   [formGroup]="loginForm"
-  (ngSubmit)="submit()"
+  (submit)="onLoginSubmit()"
 >
   <div class="login__title-wrapper">
     <h2 class="login__title" tuiTitle>{{ t('auth.login.heading') }}</h2>
@@ -55,16 +55,20 @@
     tuiButton
     appearance="brand-accent"
     type="submit"
-    [disabled]="loginForm.invalid"
+    [disabled]="loginForm.invalid || isLoading()"
   >
     {{ t('auth.login.button') }}
   </button>
   <div class="login__title-wrapper">
     <p class="login__form_text">
       {{ t('auth.login.endingText') }}
-      <a [routerLink]="['/auth', 'signup']" tuiLink class="login__form_link">{{
-        t('auth.login.loginLink')
-      }}</a>
+      <a
+        [routerLink]="['/auth', 'signup']"
+        queryParamsHandling="preserve"
+        tuiLink
+        class="login__form_link"
+        >{{ t('auth.login.loginLink') }}</a
+      >
     </p>
   </div>
 </form>
