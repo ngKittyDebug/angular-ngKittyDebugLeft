@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { TuiButton } from '@taiga-ui/core';
 import { TuiBadge, TuiProgress } from '@taiga-ui/kit';
@@ -15,14 +15,4 @@ import { DivideByTenPipe } from '@shared/pipes/divide-by-ten.pipe';
 })
 export class PokemonProfileInfoComponent {
   public readonly pokemonProfileData = input.required<PokemonDetailApiData>();
-  protected readonly pokemonWeight = computed(() => {
-    const weight = Number(this.pokemonProfileData()?.weight) / 10;
-
-    return weight;
-  });
-  protected readonly pokemonHeight = computed(() => {
-    const height = Number(this.pokemonProfileData()?.height) / 10;
-
-    return height;
-  });
 }

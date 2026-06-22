@@ -5,6 +5,9 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import type { PokemonSpeciesApiData } from '@shared/models/pokemon-species-api-data-interface';
 import { PercentagePipe } from '@shared/pipes/percentage.pipe';
 
+export const MAX_SPECIES_VALUE = 255;
+export const MAX_CYCLE_VALUE = 40;
+
 @Component({
   selector: 'left-paw-pokemon-profile-species-breeding',
   imports: [TuiHeader, TuiBadge, TuiProgress, TranslocoDirective, PercentagePipe],
@@ -14,4 +17,7 @@ import { PercentagePipe } from '@shared/pipes/percentage.pipe';
 })
 export class PokemonProfileSpeciesBreedingComponent {
   public readonly pokemonProfileDataSpecies = input.required<PokemonSpeciesApiData>();
+
+  protected readonly maxSpeciesValue = MAX_SPECIES_VALUE;
+  protected readonly maxCycleValue = MAX_CYCLE_VALUE;
 }

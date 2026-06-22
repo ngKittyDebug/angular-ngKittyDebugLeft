@@ -55,16 +55,7 @@ $stats: hp, attack, defense, special-attack, special-defense, speed;
 }
 
 .pokemon__stats_radar {
-  height: 18rem; /* Фиксированная высота для предотвращения схлопывания SVG */
+  height: 18rem;
   max-width: 23rem;
   width: 100%;
-}
-
-.pokemon_chart {
-  --tui-chart-categorical-00: var(--stat-hp-start);
-  --tui-chart-categorical-01: var(--stat-attack-start);
-  --tui-chart-categorical-02: var(--stat-defense-start);
-  --tui-chart-categorical-03: var(--stat-special-attack-start);
-  --tui-chart-categorical-04: var(--stat-special-defense-start);
-  --tui-chart-categorical-05: var(--stat-speed-start);
 }
