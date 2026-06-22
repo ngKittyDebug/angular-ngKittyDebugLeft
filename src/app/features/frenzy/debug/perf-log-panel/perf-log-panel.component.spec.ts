@@ -1,6 +1,6 @@
 import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PerfLogPanelComponent } from './perf-log-panel.component';
 import { DebugSettingsStore } from '../debug-settings.store';
@@ -43,6 +43,23 @@ function controlsVisible(fixture: ComponentFixture<PerfLogPanelComponent>): bool
   return (fixture.nativeElement as HTMLElement).querySelector('.perf-log__controls') !== null;
 }
 
+function fieldBefore(
+  fixture: ComponentFixture<PerfLogPanelComponent>,
+  labelText: string,
+): HTMLInputElement | HTMLSelectElement {
+  const host = fixture.nativeElement as HTMLElement;
+  const field = [...host.querySelectorAll<HTMLLabelElement>('.perf-log__field')].find((label) =>
+    (label.textContent ?? '').includes(labelText),
+  );
+  const control = field?.querySelector<HTMLInputElement | HTMLSelectElement>('input, select');
+
+  if (!control) {
+    throw new Error(`no perf-log field labelled "${labelText}"`);
+  }
+
+  return control;
+}
+
 // The panel starts collapsed (header only); the capture/clear controls live behind the header toggle.
 function expand(fixture: ComponentFixture<PerfLogPanelComponent>): void {
   clickButton(fixture, 'perf-log');
@@ -55,6 +72,10 @@ describe('PerfLogPanelComponent', () => {
     TestBed.configureTestingModule({
       providers: [FrenzyStorageService, DebugSettingsStore, PerfSampleStore],
     });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   function render(): ComponentFixture<PerfLogPanelComponent> {
@@ -101,5 +122,73 @@ describe('PerfLogPanelComponent', () => {
     fixture.detectChanges();
 
     expect(rowCount(fixture)).toBe(0);
+  });
+
+  it('routes the exported text into the readonly textarea when the destination is textarea', () => {
+    const settings = TestBed.inject(DebugSettingsStore);
+
+    settings.updatePerfLog({ exportDestination: 'textarea' });
+
+    const fixture = render();
+
+    expand(fixture);
+    clickButton(fixture, 'capture');
+    fixture.detectChanges();
+    clickButton(fixture, 'export');
+    fixture.detectChanges();
+
+    const textarea = (fixture.nativeElement as HTMLElement).querySelector<HTMLTextAreaElement>(
+      '.perf-log__textarea',
+    );
+
+    expect(textarea?.value.length).toBeGreaterThan(0);
+  });
+
+  it('writes a label edit through to the perf-log config', () => {
+    const settings = TestBed.inject(DebugSettingsStore);
+    const fixture = render();
+
+    expand(fixture);
+
+    const input = fieldBefore(fixture, 'label') as HTMLInputElement;
+
+    input.value = 'lever-x';
+    input.dispatchEvent(new Event('input'));
+
+    expect(settings.perfLog().label).toBe('lever-x');
+  });
+
+  it('ignores a non-positive capture interval edit, keeping the previous value', () => {
+    const settings = TestBed.inject(DebugSettingsStore);
+    const fixture = render();
+
+    expand(fixture);
+
+    const input = fieldBefore(fixture, 'every') as HTMLInputElement;
+
+    input.value = '0';
+    input.dispatchEvent(new Event('input'));
+
+    expect(settings.perfLog().captureIntervalSeconds).toBe(10);
+  });
+
+  it('auto-captures on the configured interval while the mode is auto', () => {
+    vi.useFakeTimers();
+
+    const settings = TestBed.inject(DebugSettingsStore);
+
+    settings.updatePerfLog({ captureMode: 'auto', captureIntervalSeconds: 5 });
+
+    const fixture = render();
+
+    expand(fixture);
+    expect(rowCount(fixture)).toBe(0);
+
+    vi.advanceTimersByTime(5000);
+    fixture.detectChanges();
+
+    expect(rowCount(fixture)).toBe(1);
+
+    fixture.destroy();
   });
 });

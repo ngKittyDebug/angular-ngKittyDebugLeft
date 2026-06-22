@@ -219,6 +219,30 @@ describe('SceneRenderLoopService', () => {
     expect(frameNow).toBe(tickNow);
   });
 
+  it('holds the frame — skipping all tick work — while the fps cap has not banked an interval yet', () => {
+    const facade = createFakeFacade();
+    const { service } = createService(facade);
+
+    // A 60fps cap needs ~16.6ms banked; the first synchronous frame elapses ~0ms, so the pacer holds it.
+    service.start(makeContext({ frameCapFps: () => 60 }));
+    runOneFrame();
+
+    expect(facade.tickItems).not.toHaveBeenCalled();
+    expect(facade.tickPlayers).not.toHaveBeenCalled();
+    expect(facade.updateCamera).not.toHaveBeenCalled();
+  });
+
+  it('reschedules the next animation frame even on a held (capped) frame, so the loop never stalls', () => {
+    const facade = createFakeFacade();
+    const { service } = createService(facade);
+
+    service.start(makeContext({ frameCapFps: () => 60 }));
+    runOneFrame();
+
+    // The held frame returned early, yet it scheduled its successor first — the loop is still pending.
+    expect(frame).not.toBeNull();
+  });
+
   it('cancels the scheduled frame when its injection scope is destroyed', () => {
     const facade = createFakeFacade();
     const { service, injector } = createService(facade);

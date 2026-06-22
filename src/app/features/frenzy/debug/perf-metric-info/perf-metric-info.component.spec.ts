@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import type { ComponentFixture } from '@angular/core/testing';
 import { TranslocoTestingModule } from '@jsverse/transloco';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { PerfMetricInfoComponent } from './perf-metric-info.component';
 
@@ -57,12 +57,12 @@ describe('PerfMetricInfoComponent', () => {
 
   it('emits toggled when the icon is tapped, without self-managing open state', () => {
     const fixture = render();
-    let emissions = 0;
+    const onToggled = vi.fn();
 
-    fixture.componentInstance.toggled.subscribe(() => (emissions += 1));
+    fixture.componentInstance.toggled.subscribe(onToggled);
 
     button(fixture).click();
 
-    expect(emissions).toBe(1);
+    expect(onToggled).toHaveBeenCalledTimes(1);
   });
 });

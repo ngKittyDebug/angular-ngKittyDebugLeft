@@ -229,6 +229,41 @@ describe('FeedingRoom orchestration', () => {
     expect(byType(room, 'snapshot')).toHaveLength(snapshotsBefore);
   });
 
+  it('ignores a non-string (binary) message without touching game state', () => {
+    const { room, server } = setup();
+    const conn = new FakeConnection('c1');
+
+    server.onConnect(asParty(conn));
+    joinPlayer(server, conn, 'token-1');
+
+    const before = room.broadcasts.length;
+
+    // A binary frame is never a valid client message — the adapter drops it before parsing, no broadcast, no throw.
+    expect(() => server.onMessage(new ArrayBuffer(8), asParty(conn))).not.toThrow();
+    expect(room.broadcasts).toHaveLength(before);
+  });
+
+  it('drops player input once the per-session click budget is spent within the window', () => {
+    const { room, server } = setup();
+    const conn = new FakeConnection('c1');
+
+    server.onConnect(asParty(conn));
+    joinPlayer(server, conn, 'token-1');
+
+    // Frozen fake time → every steer shares one rate-limit window. Alternating the target keeps each accepted
+    // steer changing velocity (so it broadcasts), proving the cap is hit on count, not on a saturated no-op.
+    for (let i = 0; i < FRENZY.clickRateLimitMax; i += 1) {
+      send(server, conn, { type: 'steer', x: i % 2 === 0 ? 0.9 : 0.1, y: 0.5 });
+    }
+
+    const accepted = byType(room, 'steered').length;
+
+    send(server, conn, { type: 'steer', x: 0.1, y: 0.9 });
+
+    expect(accepted).toBe(FRENZY.clickRateLimitMax);
+    expect(byType(room, 'steered')).toHaveLength(FRENZY.clickRateLimitMax);
+  });
+
   it('broadcasts slim snapshots on the scheduled cadence and full ones on roster changes', () => {
     // random→0.5 keeps the NPC spawn window (10s) far beyond the few ticks below, so no roster-change
     // full snapshot can sneak into the cadence window being asserted.

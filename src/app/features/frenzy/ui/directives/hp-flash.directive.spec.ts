@@ -26,7 +26,7 @@ describe('HpFlashDirective', () => {
   let animate: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    animate = vi.fn().mockReturnValue({ cancel: vi.fn() });
+    animate = vi.fn().mockImplementation(() => ({ cancel: vi.fn() }));
     Element.prototype.animate = animate as unknown as Element['animate'];
 
     TestBed.configureTestingModule({ imports: [HostComponent] });
@@ -60,5 +60,17 @@ describe('HpFlashDirective', () => {
     fixture.detectChanges();
 
     expect(animate).not.toHaveBeenCalled();
+  });
+
+  it('cancels a still-playing flash before starting a fresh one', () => {
+    host.hp.set(150);
+    fixture.detectChanges();
+    const firstAnimation = animate.mock.results[0].value as { cancel: ReturnType<typeof vi.fn> };
+
+    host.hp.set(50);
+    fixture.detectChanges();
+
+    expect(firstAnimation.cancel).toHaveBeenCalledTimes(1);
+    expect(animate).toHaveBeenCalledTimes(2);
   });
 });

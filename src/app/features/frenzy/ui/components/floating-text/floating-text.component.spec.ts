@@ -90,6 +90,13 @@ describe('FloatingTextComponent', () => {
     expect(host.style.animationDuration).toBe('5500ms');
   });
 
+  it('scales the rise distance with the lifetime so every float climbs at the same speed', () => {
+    const host = createFixture({ text: 'Gone…', durationMs: 5000 }).nativeElement as HTMLElement;
+
+    // 5000ms * 0.06 px/ms = 300px.
+    expect(host.style.getPropertyValue('--ft-rise')).toBe('300px');
+  });
+
   it('renders a Taiga icon when one is provided', () => {
     const element = createFixture({ text: 'Gone…', icon: '@tui.skull' })
       .nativeElement as HTMLElement;

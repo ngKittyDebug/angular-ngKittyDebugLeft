@@ -93,4 +93,29 @@ describe('moveNpc', () => {
     // Off a retarget tick it keeps its rightward vx (does not flip toward the left-side food).
     expect(moved.vx).toBe(0.01);
   });
+
+  it('reverses heading at the right wall instead of grinding into the edge', () => {
+    const { maxX } = FRENZY.playerDriftZone;
+    const npc = makeNpc({ x: maxX, vx: 0.02 }); // already pinned to the wall, still pushing right
+
+    const moved = moveNpc(npc, [], 0.1, RETARGET + 1); // non-retarget: keeps vx, so it hits the wall
+
+    expect(moved.x).toBe(maxX); // clamped, can't advance past the wall
+    expect(moved.vx).toBe(-0.02); // and bounced back away from it
+  });
+
+  it('cruises along its current leftward heading when no food is in reach', () => {
+    const npc = makeNpc({ x: 0.5, vx: -0.005 }); // heading left, no items
+    const moved = moveNpc(npc, [], 0.1, RETARGET);
+
+    // On a retarget tick with no target it eases to a gentle cruise at stage speed, keeping the leftward heading.
+    expect(moved.vx).toBeCloseTo(-npc.body[1].speed, 5);
+  });
+
+  it('defaults a parked NPC (vx 0) to a rightward cruise when no food is in reach', () => {
+    const npc = makeNpc({ x: 0.5, vx: 0 });
+    const moved = moveNpc(npc, [], 0.1, RETARGET);
+
+    expect(moved.vx).toBeCloseTo(npc.body[1].speed, 5);
+  });
 });

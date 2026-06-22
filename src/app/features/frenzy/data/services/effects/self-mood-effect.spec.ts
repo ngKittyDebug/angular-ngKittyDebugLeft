@@ -96,6 +96,22 @@ describe('SelfMoodEffect', () => {
     expect(floats.ownedMessages().some((message) => message.id === dying.id)).toBe(false);
   });
 
+  it('raises only the dying warning (not sad) when hp is critically low', () => {
+    meSignal.set(me(4));
+    TestBed.tick();
+
+    const keys = floats.ownedMessages().map((message) => message.textKey);
+
+    expect(keys.some((key) => key.includes('statusMessage.dying'))).toBe(true);
+    expect(keys.some((key) => key.includes('statusMessage.sad'))).toBe(false);
+  });
+
+  it('pokeSelf does nothing when there is no local Pokémon', () => {
+    mood.pokeSelf();
+
+    expect(floats.ownedMessages()).toHaveLength(0);
+  });
+
   it('pokeSelf floats a quip and replaces the previous one on rapid clicks', () => {
     meSignal.set(me(150));
 

@@ -56,6 +56,32 @@ describe('resolveSceneTap', () => {
     expect(intent.spawnBurst).toBe(true);
     expect(intent.steer).toBe(false);
   });
+
+  it('still spawns the bubble but suppresses steering when the press lands on the NPC poke target', () => {
+    const intent = resolveSceneTap(WORLD, 500, 250, elementWith('scene__poke-npc'));
+
+    expect(intent.spawnBurst).toBe(true);
+    expect(intent.steer).toBe(false);
+  });
+
+  it('spawns the bubble and steers when the press has no target element', () => {
+    const intent = resolveSceneTap(WORLD, 500, 250, null);
+
+    expect(intent.spawnBurst).toBe(true);
+    expect(intent.steer).toBe(true);
+  });
+
+  it('resolves the item/actionable target from an ancestor when the press lands on a child', () => {
+    const item = elementWith('scene__item');
+    const child = document.createElement('img');
+
+    item.append(child);
+
+    const intent = resolveSceneTap(WORLD, 500, 250, child);
+
+    expect(intent.spawnBurst).toBe(false);
+    expect(intent.steer).toBe(false);
+  });
 });
 
 describe('resolveNudge', () => {

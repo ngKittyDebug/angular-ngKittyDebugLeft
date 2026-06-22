@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buriedClipPoints, buriedClipPolygon } from './buried-clip';
+import { buriedClipPoints, buriedClipPolygon, hashItemId } from './buried-clip';
 
 describe('buriedClipPoints', () => {
   it('returns the two top corners then one wavy sample per segment boundary', () => {
@@ -32,6 +32,24 @@ describe('buriedClipPoints', () => {
 
   it('gives different ids different sand lines', () => {
     expect(buriedClipPoints('aaa')).not.toEqual(buriedClipPoints('zzz'));
+  });
+});
+
+describe('hashItemId', () => {
+  it('returns an unsigned 32-bit integer', () => {
+    const hash = hashItemId('item-1');
+
+    expect(Number.isInteger(hash)).toBe(true);
+    expect(hash).toBeGreaterThanOrEqual(0);
+    expect(hash).toBeLessThanOrEqual(0xffff_ffff);
+  });
+
+  it('is deterministic for the same id', () => {
+    expect(hashItemId('same-id')).toBe(hashItemId('same-id'));
+  });
+
+  it('gives different ids different hashes', () => {
+    expect(hashItemId('aaa')).not.toBe(hashItemId('zzz'));
   });
 });
 
