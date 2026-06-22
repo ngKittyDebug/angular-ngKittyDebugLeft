@@ -3,13 +3,11 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  DestroyRef,
   effect,
   ElementRef,
   inject,
   input,
   output,
-  signal,
   viewChild,
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
@@ -26,50 +24,57 @@ import { ActorHostDirective } from '../../directives/actor-host.directive';
 import { ScenePositionDirective } from '../../directives/scene-position.directive';
 import { AquariumDecorComponent } from '../aquarium-decor/aquarium-decor.component';
 import { BubbleBurstComponent } from '../bubble-burst/bubble-burst.component';
+import { DebugConfiguratorComponent } from '../../../debug/debug-configurator/debug-configurator.component';
 import { DebugOverlayComponent } from '../../../debug/debug-overlay/debug-overlay.component';
 import { parseDebugFlags } from '../../../debug/debug-options';
+import { DebugSettingsStore } from '../../../debug/debug-settings.store';
+import type { RenderMode } from '../../../debug/debug-settings.store';
+import type { PerfMetricsSnapshot } from '../../../debug/perf-metrics';
+import { PerfLogPanelComponent } from '../../../debug/perf-log-panel/perf-log-panel.component';
 import { PerfReadoutComponent } from '../../../debug/perf-readout/perf-readout.component';
+import { PerfSampleStore } from '../../../debug/perf-sample.store';
 import { FloatingTextComponent } from '../floating-text/floating-text.component';
 import { ForegroundKelpComponent } from '../foreground-kelp/foreground-kelp.component';
 import { MidgroundKelpComponent } from '../midground-kelp/midground-kelp.component';
 import { OffscreenIndicatorsComponent } from '../offscreen-indicators/offscreen-indicators.component';
+import { OwnedFloatsComponent } from '../owned-floats/owned-floats.component';
 import { SandPuffComponent } from '../sand-puff/sand-puff.component';
 import { SceneItemComponent } from '../scene-item/scene-item.component';
 import { ScenePlayerComponent } from '../scene-player/scene-player.component';
-import { ItemExtrapolatorService } from './item-extrapolator.service';
-import { PlayerExtrapolatorService } from './player-extrapolator.service';
-import { SceneActorRegistryService } from './scene-actor-registry.service';
-import { SceneBurstsService } from './scene-bursts.service';
-import { SceneCameraService } from './scene-camera.service';
-import { SceneSandPuffsService } from './scene-sand-puffs.service';
+import { ItemExtrapolatorService } from './prediction/item-extrapolator.service';
+import { PerfMetricsService } from './perf/perf-metrics.service';
+import { PlayerExtrapolatorService } from './prediction/player-extrapolator.service';
+import { SceneActorRegistryService } from './rendering/dom/scene-actor-registry.service';
+import { SceneBurstsService } from './effects/scene-bursts.service';
+import { SceneCameraService } from './camera/scene-camera.service';
+import { SceneDecorCanvasService } from './rendering/canvas/scene-decor-canvas.service';
+import { SceneActorCanvasService } from './rendering/canvas/scene-actor-canvas.service';
+import { SceneSandPuffsService } from './effects/scene-sand-puffs.service';
+import { PlayerSpriteSource } from './rendering/canvas/player-sprite-source';
+import { SpriteFreezeService } from './rendering/canvas/sprite-freeze.service';
+import {
+  hitTestItem,
+  resolveNudge,
+  resolveNudgeFromCenter,
+  resolveSceneTap,
+} from './input/pointer-intent';
 import { SceneFacade } from './scene.facade';
-import type { ItemClick, RenderedItem, RenderedPlayer } from './scene-view-models';
+import { SceneRenderLoopService } from './rendering/shared/scene-render-loop.service';
+import { groupByOwner, sortByDepth } from './scene-view-models';
+import type { ItemClick, RenderedItem } from './scene-view-models';
 
 // Other players' HP bars use a single absolute scale — the hard ceiling — so a bar's fill reads the same for
 // everyone regardless of stage (the OWN widget instead scales to its next evolution threshold).
 const MAX_VISUAL_HP = FRENZY.maxHp;
 
-function clamp01(value: number): number {
-  return Math.min(1, Math.max(0, value));
-}
-
-// Bucket owner-scoped scene items (floats, sparks) by their `ownerId`. Sparks render inside each `.scene__player`;
-// floats render in the scene's owned-float overlay keyed by the same id. Preserves source order within each bucket.
-function groupByOwner<T extends { ownerId: string }>(items: readonly T[]): Map<string, T[]> {
-  const grouped = new Map<string, T[]>();
-
-  for (const item of items) {
-    const existing = grouped.get(item.ownerId);
-
-    if (existing === undefined) {
-      grouped.set(item.ownerId, [item]);
-    } else {
-      existing.push(item);
-    }
-  }
-
-  return grouped;
-}
+// The falling-item tap target in world px: the sprite half-size plus the same 12px padding the DOM `.scene__item`
+// button carries, so a canvas item is as easy to tap as a DOM one (used by the canvas-mode hit-test).
+const ITEM_TAP_PADDING_PX = 12;
+// That tap box as a normalized half-extent per axis (the world is taller than wide), precomputed from the contract
+// sizes for the canvas-mode hit-test.
+const ITEM_HIT_HALF_X = (FRENZY.physicalSizePx.item / 2 + ITEM_TAP_PADDING_PX) / FRENZY.world.width;
+const ITEM_HIT_HALF_Y =
+  (FRENZY.physicalSizePx.item / 2 + ITEM_TAP_PADDING_PX) / FRENZY.world.height;
 
 @Component({
   selector: 'left-paw-scene',
@@ -77,11 +82,14 @@ function groupByOwner<T extends { ownerId: string }>(items: readonly T[]): Map<s
     ActorHostDirective,
     AquariumDecorComponent,
     BubbleBurstComponent,
+    DebugConfiguratorComponent,
     DebugOverlayComponent,
     FloatingTextComponent,
     ForegroundKelpComponent,
     MidgroundKelpComponent,
     OffscreenIndicatorsComponent,
+    OwnedFloatsComponent,
+    PerfLogPanelComponent,
     PerfReadoutComponent,
     SandPuffComponent,
     SceneItemComponent,
@@ -91,20 +99,38 @@ function groupByOwner<T extends { ownerId: string }>(items: readonly T[]): Map<s
   ],
   providers: [
     SceneFacade,
+    SceneRenderLoopService,
     ItemExtrapolatorService,
     PlayerExtrapolatorService,
     SceneActorRegistryService,
     SceneCameraService,
     SceneBurstsService,
     SceneSandPuffsService,
+    SceneActorCanvasService,
+    SceneDecorCanvasService,
+    PlayerSpriteSource,
+    SpriteFreezeService,
+    // Perf subsystem — provided here but injected only under `?debug=perf` (the metric accumulator by this component
+    // below, the settings store + sample log by the gated panels), so none of them instantiate in normal play.
+    PerfMetricsService,
+    DebugSettingsStore,
+    PerfSampleStore,
   ],
   templateUrl: './scene.component.html',
   styleUrl: './scene.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SceneComponent {
-  private readonly destroyRef = inject(DestroyRef);
   private readonly facade = inject(SceneFacade);
+  private readonly loop = inject(SceneRenderLoopService);
+  private readonly actorCanvas = inject(SceneActorCanvasService);
+  private readonly decorCanvas = inject(SceneDecorCanvasService);
+  // The `?debug=perf` metric accumulator — injected (and thus instantiated) only under the master gate, in the
+  // constructor; undefined in normal play. Fed by the render loop; its snapshot drives the readout.
+  private perfMetrics: PerfMetricsService | undefined;
+  // The persisted debug settings (render-mode toggle + DPR cap) — injected only under the master gate like the
+  // accumulator above; undefined in normal play, where the item render mode is always 'dom'.
+  private debugSettings: DebugSettingsStore | undefined;
   // Optional (not `.required`): the template root sits under `*transloco`, which renders asynchronously, so the
   // ref is absent for the first few frames. Reading it before then must not throw and kill the rAF loop.
   private readonly worldRef = viewChild<ElementRef<HTMLElement>>('world');
@@ -121,6 +147,10 @@ export class SceneComponent {
   // The off-screen indicators overlay — driven imperatively from this loop (positions each frame, structure
   // throttled) instead of via per-frame inputs, to keep the rAF work off change detection like the rest of the scene.
   private readonly offscreenIndicators = viewChild(OffscreenIndicatorsComponent);
+  // The hybrid-canvas item layer's element — present only while the render mode is 'canvas' (the template @if).
+  private readonly actorCanvasRef = viewChild<ElementRef<HTMLCanvasElement>>('actorCanvas');
+  // The hybrid-canvas decor layer's element — present only while the decor mode is 'canvas' (the template @if).
+  private readonly decorCanvasRef = viewChild<ElementRef<HTMLCanvasElement>>('decorCanvas');
 
   public readonly blasts = input<readonly Blast[]>([]);
   public readonly hitBursts = input<readonly HitBurst[]>([]);
@@ -141,13 +171,48 @@ export class SceneComponent {
   public readonly steer = output<{ x: number; y: number }>();
 
   protected readonly renderedItems = this.facade.renderedItems;
-  // Paint items far→near for seabed perspective: sort by y ascending so an item lower on screen (nearer the camera,
-  // higher y) renders LATER and overlaps the ones behind it. DOM order is the depth cue at the shared item z-index
-  // (the bomb keeps its own lift; players paint after all items, so they stay above). track-by-id means a reorder
-  // just moves the existing nodes — no re-create, no animation reset.
-  protected readonly renderedItemsByDepth = computed(() =>
-    [...this.renderedItems()].sort((first, second) => first.y - second.y),
+  // Depth order for the seabed perspective (see `sortByDepth`). track-by-id in the template means a reorder just
+  // moves the existing nodes — no re-create, no animation reset.
+  // Empty in canvas item mode (the items are drawn on the actors-canvas, not as DOM nodes) so the template `@for`
+  // renders nothing without needing its own `@if` guard — keeping the template's cyclomatic complexity down.
+  protected readonly renderedItemsByDepth = computed(() => {
+    return this.renderMode() === 'canvas' ? [] : sortByDepth(this.renderedItems());
+  });
+  // The item render backend, reactive so the template @if (and the render loop) pick it up the instant the toggle
+  // flips. Reads the debug store only when it exists (under `?debug=perf`); a real player is always 'dom'.
+  protected readonly renderMode = computed<RenderMode>(
+    () => this.debugSettings?.renderMode() ?? 'dom',
   );
+  // The player-sprite render backend, reactive so each scene-player picks it up the instant the toggle flips. Reads
+  // the debug store only when it exists (under `?debug=perf`); a real player is always 'dom' (animated DOM sprite).
+  protected readonly playerSpritesMode = computed<RenderMode>(
+    () => this.debugSettings?.playerSpritesMode() ?? 'dom',
+  );
+  // Whether the shared actors-canvas element must exist this frame — when EITHER the items or the player sprites are
+  // on canvas. The single `<canvas>` is bound to SceneActorCanvasService, which draws items and/or players onto it;
+  // the `||` lives here (not the template) to keep the template's cyclomatic complexity down.
+  protected readonly actorsCanvasActive = computed(
+    () => this.renderMode() === 'canvas' || this.playerSpritesMode() === 'canvas',
+  );
+  // The decor render backend, reactive so the template @if (and the render loop) pick it up the instant the toggle
+  // flips. Reads the debug store only when it exists (under `?debug=perf`); a real player gets the default `canvas`
+  // backdrop (ADR 0007 — after the tablet A/B went green), with `dom` kept as the `?debug=perf` fallback.
+  protected readonly decorMode = computed<RenderMode>(
+    () => this.debugSettings?.decorMode() ?? 'canvas',
+  );
+  // Whether to render players as a static first frame (the `?debug=perf` "freeze sprites" toggle), passed down to
+  // each scene-player. Reads the debug store only when it exists; a real player is always animated (false).
+  protected readonly freezeSprites = computed(() => this.debugSettings?.freezeSprites() ?? false);
+  // The frame-pacing cap target in fps (the `?debug=perf` "frame cap" toggle), read each frame by the render loop.
+  // Reads the debug store only when it exists; a real player is always uncapped (0).
+  protected readonly frameCapFps = computed(() => this.debugSettings?.frameCapFps() ?? 0);
+  // Per-layer render switches (the `?debug=perf` "scene layers" toggles), to bisect the FPS culprit on the device.
+  // Undefined in normal play (no debug store) — the template reads `?.<layer> !== false`, so everything renders.
+  protected readonly sceneLayers = computed(() => this.debugSettings?.sceneLayers());
+  // Within-decor diagnostic probes (the `?debug=perf` "decor probe" toggles) — each drives a `.scene--decor-*` host
+  // class that aquarium-decor reads via :host-context, to bisect WHICH part of decor costs the most. Undefined in
+  // normal play (no debug store) — the template reads `?.<probe> === true`, so every probe stays inactive.
+  protected readonly decorProbe = computed(() => this.debugSettings?.decorProbe());
 
   protected readonly renderedPlayers = this.facade.renderedPlayers;
   protected readonly bursts = this.facade.bursts;
@@ -168,9 +233,12 @@ export class SceneComponent {
   // path, so it never reintroduces per-frame change detection on the actors.
   protected readonly debugBoxesActive =
     this.debug.pokemonBorders || this.debug.itemBorders || this.debug.speed;
-  // Live per-frame player VMs fed to the `?debug=perf` panel only (set each frame solely under `?debug=perf`), so the
-  // panel reads the true rendered position for its gap without forcing the actors through change detection.
-  protected readonly perfPlayers = signal<readonly RenderedPlayer[]>([]);
+  // The metric snapshot fed to the `?debug=perf` readout — the accumulator's signal when the gate is on, else a
+  // constant null (the readout that reads it isn't rendered then anyway). The closure reads `perfMetrics` lazily,
+  // after the constructor has set it.
+  protected readonly perfMetricsSnapshot = computed<PerfMetricsSnapshot | null>(
+    () => this.perfMetrics?.snapshot() ?? null,
+  );
   // Owned floats grouped by their player, so the owned-float overlay renders each sprite's quips on its body point.
   protected readonly floatsByOwner = computed(() => groupByOwner(this.ownedFloats()));
   // Rock/brick impact sparks grouped by the struck player, so each `.scene__player` renders (and carries) its own.
@@ -194,50 +262,73 @@ export class SceneComponent {
       );
     });
 
+    // Instantiate the perf accumulator only under the master gate (conditional `inject` in the constructor's
+    // injection context), so a real player never creates it or the settings store the readout/configurator inject.
+    if (this.debug.perf) {
+      this.perfMetrics = inject(PerfMetricsService);
+      this.debugSettings = inject(DebugSettingsStore);
+    }
+
+    // Canvas backend lifecycle: bind + size the item canvas whenever it's present (canvas mode), and re-size it when
+    // the DPR cap changes. When the mode flips back to DOM the template @if removes the element, so there's nothing
+    // to bind; in normal play the canvas never renders and this effect stays inert.
+    effect(() => {
+      const canvas = this.actorCanvasRef()?.nativeElement;
+
+      if (canvas === undefined) {
+        return;
+      }
+
+      this.actorCanvas.attach(canvas);
+      this.actorCanvas.resize(this.debugSettings?.canvasDprCap() ?? 0);
+    });
+
+    // Canvas decor backend lifecycle (ADR 0007): bind + size the decor canvas whenever it's present (decor canvas
+    // mode — the default now, so this runs in normal play too), re-sizing on the DPR-cap change. Mirrors the item-
+    // canvas effect above; only inert when the `?debug=perf` decor toggle is flipped back to the DOM fallback.
+    effect(() => {
+      const canvas = this.decorCanvasRef()?.nativeElement;
+
+      if (canvas === undefined) {
+        return;
+      }
+
+      this.decorCanvas.attach(canvas);
+      this.decorCanvas.resize(this.debugSettings?.canvasDprCap() ?? 0);
+    });
+
+    // Start the rAF render loop once the view exists. The loop service owns the frame lifecycle and the per-frame
+    // facade sequence; this shell only supplies the live inputs and DOM refs it reads each frame (see ADR 0004 §4).
     afterNextRender(() => {
-      let rafId = 0;
-      const loop = (): void => {
-        // Schedule the next frame first, so a throw anywhere below can never kill the animation loop.
-        rafId = requestAnimationFrame(loop);
-
-        const now = performance.now();
-
-        this.facade.tickItems(this.items(), now);
-        this.facade.tickPlayers(this.players(), this.myId(), this.evolvingPlayers(), now);
-
-        // Feed the perf panel the live rendered positions (only under `?debug=perf`), so its gap reflects the
-        // optimized path. The box overlay (a dev tool) instead republishes structure so its boxes track the sprites.
-        if (this.debug.perf) {
-          this.perfPlayers.set(this.facade.playerFrame());
-        }
-
-        if (this.debugBoxesActive) {
-          this.facade.publishDebugFrame();
-        }
-
-        const world = this.worldRef()?.nativeElement;
-
-        if (world !== undefined) {
-          this.facade.updateCamera(
-            world,
-            this.parallaxNearRef()?.nativeElement,
-            this.parallaxMidRef()?.nativeElement,
-            this.foregroundKelpRef()?.nativeElement,
-          );
-          // Right after the camera writes this frame's transform, reposition the off-screen indicators off the
-          // matching snapshot (zero phase skew); the overlay throttles its own structural recompute internally.
-          this.offscreenIndicators()?.frame(this.facade.cameraSnapshot(), now);
-        }
-      };
-
-      rafId = requestAnimationFrame(loop);
-      this.destroyRef.onDestroy(() => cancelAnimationFrame(rafId));
+      this.loop.start({
+        items: () => this.items(),
+        players: () => this.players(),
+        myId: () => this.myId(),
+        evolving: () => this.evolvingPlayers(),
+        renderMode: () => this.renderMode(),
+        playerSpritesMode: () => this.playerSpritesMode(),
+        decorMode: () => this.decorMode(),
+        decorNoPlants: () => this.decorProbe()?.noPlants === true,
+        frameCapFps: () => this.frameCapFps(),
+        debug: this.debug,
+        debugBoxesActive: this.debugBoxesActive,
+        world: () => this.worldRef()?.nativeElement,
+        parallaxNear: () => this.parallaxNearRef()?.nativeElement,
+        parallaxMid: () => this.parallaxMidRef()?.nativeElement,
+        foregroundKelp: () => this.foregroundKelpRef()?.nativeElement,
+        offscreenIndicators: () => this.offscreenIndicators(),
+        perfMetrics: () => this.perfMetrics,
+      });
     });
   }
 
   protected onItemClick(item: RenderedItem, event: MouseEvent): void {
     // Bomb is shoved away from wherever it was tapped: tap a side and it drifts off in the opposite direction.
-    const shove = item.type === 'bomb' ? this.batNudge(event) : undefined;
+    const button = event.currentTarget as HTMLElement;
+    const shove =
+      item.type === 'bomb'
+        ? resolveNudge(button.getBoundingClientRect(), event.clientX, event.clientY)
+        : undefined;
 
     this.itemClick.emit({ itemId: item.id, nudgeX: shove?.x, nudgeY: shove?.y });
   }
@@ -269,38 +360,80 @@ export class SceneComponent {
       return;
     }
 
-    const x = clamp01((event.clientX - bounds.left) / bounds.width);
-    const y = clamp01((event.clientY - bounds.top) / bounds.height);
-    const target = event.target as HTMLElement;
+    const intent = resolveSceneTap(
+      bounds,
+      event.clientX,
+      event.clientY,
+      event.target as Element | null,
+    );
 
-    // Bubbles are the miss cue — suppressed on an item hit (the converging success burst comes from `eaten`).
-    if (target.closest('.scene__item') === null) {
-      this.facade.spawnBurst(x, y);
+    // Canvas mode: items aren't DOM nodes, so a tap on one arrives as open water (steer=true). Hit-test the drawn
+    // items first; a hit eats that item (or shoves the bomb) and suppresses the miss-bubble + steer, exactly like a
+    // DOM item tap. A press on a poke button (still DOM) sets steer=false, so it is left to its own handler.
+    if (this.renderMode() === 'canvas' && intent.steer) {
+      const items = this.canvasHitItems();
+      const hitId = hitTestItem(items, intent.x, intent.y, ITEM_HIT_HALF_X, ITEM_HIT_HALF_Y);
+
+      if (hitId !== null) {
+        // The bomb has no DOM rect on canvas, so its shove is measured from the tap to its world centre.
+        const hit = items.find((item) => item.id === hitId);
+        const shove =
+          hit?.type === 'bomb' ? resolveNudgeFromCenter(hit, intent.x, intent.y) : undefined;
+
+        this.itemClick.emit({ itemId: hitId, nudgeX: shove?.x, nudgeY: shove?.y });
+
+        return;
+      }
     }
 
-    if (target.closest('.scene__item, .scene__poke, .scene__poke-npc') === null) {
+    // Bubbles are the miss cue — suppressed on an item hit (the converging success burst comes from `eaten`).
+    if (intent.spawnBurst) {
+      this.facade.spawnBurst(intent.x, intent.y);
+    }
+
+    if (intent.steer) {
       // Optimistically steer my own sprite this frame, then send the authoritative request. The server confirms
       // via the next snapshot, which reconciles only a sub-pixel gap (same steer math both sides).
-      this.facade.predictSteer(this.myId(), x, y, performance.now());
-      this.steer.emit({ x, y });
+      this.facade.predictSteer(this.myId(), intent.x, intent.y, performance.now());
+      this.steer.emit({ x: intent.x, y: intent.y });
     }
   }
 
-  // Shove direction (unit vector) pointing from the tapped point toward the bomb's centre — i.e. AWAY from the side
-  // that was hit, so tapping the right edge pushes it left, the top pushes it down, a corner pushes diagonally. The
-  // server scales this by a fixed `bomb.clickImpulse`, so only the direction matters here. A dead-centre tap falls
-  // back to a straight-up nudge.
-  private batNudge(event: MouseEvent): { x: number; y: number } {
-    const button = event.currentTarget as HTMLElement;
-    const bounds = button.getBoundingClientRect();
-    const deltaX = bounds.left + bounds.width / 2 - event.clientX;
-    const deltaY = bounds.top + bounds.height / 2 - event.clientY;
-    const magnitude = Math.hypot(deltaX, deltaY);
-
-    if (magnitude === 0) {
-      return { x: 0, y: -1 };
+  // Desktop hover for the canvas backend: canvas items have no DOM `:hover`, so track the pointer and tell the
+  // renderer which item to draw with the highlight. Mouse only — a touch drag shouldn't leave a glowing trail.
+  protected onScenePointerMove(event: PointerEvent): void {
+    if (this.renderMode() !== 'canvas' || event.pointerType !== 'mouse') {
+      return;
     }
 
-    return { x: deltaX / magnitude, y: deltaY / magnitude };
+    const world = this.worldRef()?.nativeElement;
+
+    if (world === undefined) {
+      return;
+    }
+
+    const bounds = world.getBoundingClientRect();
+
+    if (bounds.width === 0 || bounds.height === 0) {
+      return;
+    }
+
+    const normX = (event.clientX - bounds.left) / bounds.width;
+    const normY = (event.clientY - bounds.top) / bounds.height;
+
+    this.actorCanvas.setHovered(
+      hitTestItem(this.canvasHitItems(), normX, normY, ITEM_HIT_HALF_X, ITEM_HIT_HALF_Y),
+    );
+  }
+
+  protected onScenePointerLeave(): void {
+    this.actorCanvas.setHovered(null);
+  }
+
+  // Live items in draw order (ascending depth) for the canvas hit-test — the topmost (last) wins, matching the
+  // canvas draw order. Uses the live frame (not the throttled structure signal) so a fast faller is hit where it's
+  // actually drawn. The bomb is included now (drawn on canvas), so a tap on it shoves it instead of steering past.
+  private canvasHitItems(): readonly RenderedItem[] {
+    return [...this.facade.itemFrame()].sort((first, second) => first.y - second.y);
   }
 }

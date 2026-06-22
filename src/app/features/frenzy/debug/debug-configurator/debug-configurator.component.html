@@ -1,0 +1,142 @@
+<!-- ?debug=perf configurator: the render levers for the on-device A/B (render/players/decor backend, DPR + frame-pacing
+     caps, sprite freeze, per-layer hides, decor probes). Choices persisted via DebugSettingsStore. Dev-only, gated
+     behind the master ?debug=perf flag. The per-metric toggles live on their rows in the readout, not here. -->
+<div class="debug-configurator" [class.debug-configurator--collapsed]="collapsed()">
+  <!-- Header doubles as the collapse toggle (collapsed by default): when closed, only this bar shows, so the
+       configurator stops covering the scene. -->
+  <button
+    type="button"
+    class="debug-configurator__header"
+    [attr.aria-expanded]="!collapsed()"
+    (click)="toggleCollapsed()"
+  >
+    <span class="debug-configurator__chevron">{{ collapsed() ? '▸' : '▾' }}</span>
+    <span>config</span>
+  </button>
+
+  @if (!collapsed()) {
+    <!-- Item render backend toggle (DOM vs hybrid canvas) + the canvas DPR cap, for the on-device A/B. -->
+    <p class="debug-configurator__title">render</p>
+    <div class="debug-configurator__chips">
+      @for (mode of renderModes; track mode) {
+        <button
+          type="button"
+          class="debug-configurator__chip"
+          [class.debug-configurator__chip--active]="store.renderMode() === mode"
+          (click)="store.setRenderMode(mode)"
+        >
+          {{ mode }}
+        </button>
+      }
+    </div>
+
+    <!-- Player sprite render backend (DOM animated GIF vs hybrid canvas) — A/B'd independently of the item backend. -->
+    <p class="debug-configurator__title">players</p>
+    <div class="debug-configurator__chips">
+      @for (mode of renderModes; track mode) {
+        <button
+          type="button"
+          class="debug-configurator__chip"
+          [class.debug-configurator__chip--active]="store.playerSpritesMode() === mode"
+          (click)="store.setPlayerSpritesMode(mode)"
+        >
+          {{ mode }}
+        </button>
+      }
+    </div>
+
+    <!-- Decor backdrop render backend (DOM swaying-SVG kelp vs hybrid canvas, ADR 0007) — A/B'd independently of the
+         item render backend above. -->
+    <p class="debug-configurator__title">decor</p>
+    <div class="debug-configurator__chips">
+      @for (mode of renderModes; track mode) {
+        <button
+          type="button"
+          class="debug-configurator__chip"
+          [class.debug-configurator__chip--active]="store.decorMode() === mode"
+          (click)="store.setDecorMode(mode)"
+        >
+          {{ mode }}
+        </button>
+      }
+    </div>
+
+    @if (
+      store.renderMode() === 'canvas' ||
+      store.playerSpritesMode() === 'canvas' ||
+      store.decorMode() === 'canvas'
+    ) {
+      <p class="debug-configurator__title">canvas dpr</p>
+      <div class="debug-configurator__chips">
+        @for (cap of dprCaps; track cap) {
+          <button
+            type="button"
+            class="debug-configurator__chip"
+            [class.debug-configurator__chip--active]="store.canvasDprCap() === cap"
+            (click)="store.setCanvasDprCap(cap)"
+          >
+            {{ dprLabel(cap) }}
+          </button>
+        }
+      </div>
+    }
+
+    <!-- Frame-pacing cap (slice 13): hold a steady FPS instead of a jittery 17↔30 swing on a weak tablet. `off` =
+         uncapped (desktop default); a target ≥ the device rate stays inactive there. Persisted via DebugSettingsStore. -->
+    <p class="debug-configurator__title">frame cap</p>
+    <div class="debug-configurator__chips">
+      @for (cap of frameCaps; track cap) {
+        <button
+          type="button"
+          class="debug-configurator__chip"
+          [class.debug-configurator__chip--active]="store.frameCapFps() === cap"
+          (click)="store.setFrameCapFps(cap)"
+        >
+          {{ frameCapLabel(cap) }}
+        </button>
+      }
+    </div>
+
+    <!-- Freeze player sprites: render a static first frame instead of the animated GIF (kills per-frame sprite decode
+         — the FPS lever for weak tablets). On-device A/B; persisted via DebugSettingsStore. -->
+    <p class="debug-configurator__title">sprites</p>
+    <label class="debug-configurator__row">
+      <input
+        type="checkbox"
+        [checked]="store.freezeSprites()"
+        (change)="store.setFreezeSprites(!store.freezeSprites())"
+      />
+      freeze (static)
+    </label>
+
+    <!-- Scene render layers: uncheck one to HIDE that layer (in both DOM and canvas mode) and watch the FPS — bisects
+         which layer costs the most fill-rate on a weak device. Persisted via DebugSettingsStore. -->
+    <p class="debug-configurator__title">scene layers</p>
+    @for (layer of layerKeys; track layer) {
+      <label class="debug-configurator__row">
+        <input
+          type="checkbox"
+          [checked]="store.sceneLayers()[layer]"
+          (change)="store.toggleSceneLayer(layer)"
+        />
+        {{ layer }}
+      </label>
+    }
+
+    <!-- Decor sub-probes: finer than the whole `decor` layer toggle — to bisect WHICH part of decor costs the most.
+         `freeze` stops decor animations (keeps it painted) → splits per-frame vs static cost; `noPlants`/`noRays` hide
+         one sub-element; `flatRays` is the speculative neutral fix (rays without the screen blend). Each CHECKED =
+         probe active (default off). Persisted via DebugSettingsStore. -->
+    <p class="debug-configurator__title">decor probe</p>
+    @for (probe of decorProbeKeys; track probe) {
+      <label class="debug-configurator__row">
+        <input
+          type="checkbox"
+          [checked]="store.decorProbe()[probe]"
+          (change)="store.toggleDecorProbe(probe)"
+        />
+        {{ probe }}
+      </label>
+    }
+  }
+</div>

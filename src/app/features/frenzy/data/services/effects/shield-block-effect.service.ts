@@ -1,9 +1,9 @@
-import { inject, Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 
 import type { ItemType, ServerMessage } from '@game/frenzy/types';
 
 import type { OwnedShieldBlock } from '../../models/shield-block';
-import { FrenzyStore } from '../../store/frenzy.store';
+import type { EffectContext } from './effect-context';
 import type { FrenzyEffect } from './frenzy-effect';
 import { createTransientId, TransientList } from './transient-list';
 
@@ -26,12 +26,12 @@ const WARDED_EATEN_TYPES = new Set<ItemType>(['rock', 'brick', 'rotten']);
  */
 @Injectable()
 export class ShieldBlockEffect implements FrenzyEffect {
-  private readonly store = inject(FrenzyStore);
   private readonly blocks = new TransientList<OwnedShieldBlock>();
 
   public readonly ownedShieldBlocks = this.blocks.items;
+  public readonly messageTypes = ['eaten', 'detonated'] as const;
 
-  public handle(message: ServerMessage): void {
+  public handle(message: ServerMessage, context: EffectContext): void {
     if (
       message.type === 'eaten' &&
       message.delta === 0 &&
@@ -43,15 +43,15 @@ export class ShieldBlockEffect implements FrenzyEffect {
     }
 
     if (message.type === 'detonated') {
-      this.addShieldedInRadius(message.x, message.y, message.radius);
+      this.addShieldedInRadius(message.x, message.y, message.radius, context);
     }
   }
 
-  private addShieldedInRadius(x: number, y: number, radius: number): void {
+  private addShieldedInRadius(x: number, y: number, radius: number, context: EffectContext): void {
     const now = Date.now();
     const radiusSquared = radius * radius;
 
-    for (const player of this.store.state()?.players ?? []) {
+    for (const player of context.players) {
       const shielded = player.effects.some(
         (effect) => effect.kind === 'shield' && effect.expiresAt > now,
       );

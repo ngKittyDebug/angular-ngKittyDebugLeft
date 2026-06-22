@@ -7,13 +7,28 @@ import { SoundSettingsService } from './sound-settings.service';
 
 // jsdom has no Web Audio — stand in a fake context and record oscillator creation.
 const createOscillator = vi.fn();
-const node = {
+const node: {
+  type: string;
+  frequency: {
+    setValueAtTime: ReturnType<typeof vi.fn>;
+    linearRampToValueAtTime: ReturnType<typeof vi.fn>;
+  };
+  gain: {
+    setValueAtTime: ReturnType<typeof vi.fn>;
+    exponentialRampToValueAtTime: ReturnType<typeof vi.fn>;
+  };
+  connect: ReturnType<typeof vi.fn>;
+  start: ReturnType<typeof vi.fn>;
+  stop: ReturnType<typeof vi.fn>;
+  onended: (() => void) | null;
+} = {
   type: 'square',
   frequency: { setValueAtTime: vi.fn(), linearRampToValueAtTime: vi.fn() },
   gain: { setValueAtTime: vi.fn(), exponentialRampToValueAtTime: vi.fn() },
   connect: vi.fn().mockReturnThis(),
   start: vi.fn(),
   stop: vi.fn(),
+  onended: null,
 };
 
 class FakeAudioContext {
@@ -59,5 +74,25 @@ describe('AudioEngineService', () => {
     engine.playTone({ frequency: 200, durationMs: 280, gain: 0.3 });
 
     expect(createOscillator).not.toHaveBeenCalled();
+  });
+
+  it('caps concurrent voices, skipping tones past the limit', () => {
+    for (let i = 0; i < 9; i++) {
+      engine.playTone({ frequency: 200, durationMs: 280, gain: 0.3 });
+    }
+
+    expect(createOscillator).toHaveBeenCalledTimes(6);
+  });
+
+  it('frees a voice slot once an oscillator ends', () => {
+    for (let i = 0; i < 6; i++) {
+      engine.playTone({ frequency: 200, durationMs: 280, gain: 0.3 });
+    }
+    expect(createOscillator).toHaveBeenCalledTimes(6);
+
+    node.onended?.();
+    engine.playTone({ frequency: 200, durationMs: 280, gain: 0.3 });
+
+    expect(createOscillator).toHaveBeenCalledTimes(7);
   });
 });

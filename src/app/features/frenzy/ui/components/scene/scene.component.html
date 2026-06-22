@@ -2,8 +2,20 @@
   *transloco="let t; prefix: 'frenzy.scene'"
   class="scene"
   [class.scene--shaking]="blasts().length > 0"
+  [class.scene--hide-decor]="sceneLayers()?.decor === false"
+  [class.scene--hide-kelp]="sceneLayers()?.kelp === false"
+  [class.scene--hide-parallax]="sceneLayers()?.parallax === false"
+  [class.scene--hide-items]="sceneLayers()?.items === false"
+  [class.scene--hide-players]="sceneLayers()?.players === false"
+  [class.scene--decor-frozen]="decorProbe()?.freeze === true"
+  [class.scene--decor-no-plants]="decorProbe()?.noPlants === true"
+  [class.scene--decor-no-rays]="decorProbe()?.noRays === true"
+  [class.scene--decor-flat-rays]="decorProbe()?.flatRays === true"
+  [class.scene--canvas-decor]="decorMode() === 'canvas'"
   aria-label="Feeding frenzy scene"
   (pointerdown)="onScenePointerDown($event)"
+  (pointermove)="onScenePointerMove($event)"
+  (pointerleave)="onScenePointerLeave()"
 >
   <div
     class="scene__world"
@@ -12,8 +24,30 @@
     [style.height.px]="worldHeight"
     [style.--scene-item-size]="itemSize"
   >
+    <!-- decor / items / kelp / parallax / players layers are gated via CSS `display:none` (the `scene--hide-*` host
+         classes below), NOT @if — so the perf-panel scene-layer toggles isolate each layer's paint/composite cost
+         without DOM churn (or template-cyclomatic-complexity), and `items` hides BOTH render backends at once. -->
     <left-paw-aquarium-decor />
 
+    @if (decorMode() === 'canvas') {
+      <!-- Hybrid-canvas decor layer (?debug=perf decor-mode toggle, ADR 0007): the ANIMATED backdrop layers (motes,
+           kelp, bubbles, vignette) drawn on ONE canvas (world-sized child of the world, panned by the parent camera)
+           instead of ~246 swaying/drifting DOM nodes — the kelp alone is the scene's proven dominant cost. The static
+           floor + screen-blended rays stay DOM. Stacked UNDER the item canvas; its own compositor layer (SCSS) keeps
+           the redraw off the residual DOM backdrop. Sized imperatively by SceneDecorCanvasService. -->
+      <canvas class="scene__decor-canvas" #decorCanvas aria-hidden="true"></canvas>
+    }
+
+    @if (actorsCanvasActive()) {
+      <!-- Shared hybrid-canvas actors layer (?debug=perf render-mode / players toggles): the falling items (bomb
+           included) and/or the player sprites drawn on ONE canvas, a world-sized child of the world so the parent
+           camera transform pans/zooms it. Its own compositor layer (will-change, see SCSS) keeps the per-frame redraw
+           off the seabed/kelp raster. Present whenever EITHER backend is on canvas; items paint first, players on top. -->
+      <canvas class="scene__item-canvas" #actorCanvas aria-hidden="true"></canvas>
+    }
+
+    <!-- DOM item layer (renderMode 'dom'): `renderedItemsByDepth()` is empty in canvas mode, so this `@for` renders
+         nothing then without a guarding `@if` (keeps the template's cyclomatic complexity down). -->
     @for (item of renderedItemsByDepth(); track item.id) {
       <left-paw-scene-item
         leftPawActorHost="item"
@@ -44,36 +78,9 @@
       />
     }
 
-    <!-- Owned floats (live-sprite quips) render here, in the same overlay as orphan floats, instead of nested in
-         the player container: nesting trapped them inside the player's z-index:1 stacking context, so the kelp
-         layers (z 2/3) painted over them. As direct world children at the floating-text z-index (4) they clear the
-         kelp. Each player's column is positioned on its live body point via the same compositor `translate` path the
-         sprite uses, so the quips still ride the drift; the anchor lifts them above the head (see `.scene__owned-floats`). -->
-    @for (player of renderedPlayers(); track player.id) {
-      @if (floatsByOwner().get(player.id); as floats) {
-        @if (floats.length) {
-          <div
-            class="scene__owned-floats"
-            leftPawActorHost="float"
-            [actorId]="player.id"
-            [style.--scene-sprite-height]="player.spriteHeight"
-            [style.--scene-sprite-offset-y]="-player.spriteOffsetY + 'px'"
-          >
-            @for (float of floats; track float.id) {
-              <left-paw-floating-text
-                class="scene__owned-float"
-                [icon]="float.icon"
-                [who]="float.who"
-                [text]="t(float.textKey)"
-                [delta]="float.delta"
-                [tone]="float.tone"
-                [durationMs]="float.durationMs"
-              />
-            }
-          </div>
-        }
-      }
-    }
+    <!-- Owned floats (live-sprite quips): direct world children at the floating-text z-index (so they clear the
+         kelp, unlike if nested in the player), each column riding its sprite's drift. See OwnedFloatsComponent. -->
+    <left-paw-owned-floats [players]="renderedPlayers()" [floatsByOwner]="floatsByOwner()" />
 
     @for (player of renderedPlayers(); track player.id) {
       <left-paw-scene-player
@@ -84,6 +91,8 @@
         [shieldBlocks]="shieldBlocksByOwner().get(player.id) ?? []"
         [maxHp]="maxHp"
         [isLeader]="player.id === crownId()"
+        [freezeSprite]="freezeSprites()"
+        [spritesMode]="playerSpritesMode()"
         (poke)="onSelfPoke()"
         (pokeNpc)="onPokeNpc($event)"
       />
@@ -150,13 +159,18 @@
        the scene's rAF loop via its `frame()`; aria-hidden as a real-time visual-only aid. -->
   <left-paw-offscreen-indicators [players]="players()" aria-hidden="true" />
 
-  <!-- ?debug=perf readout: FPS / own-sprite prediction-gap / authoritative-snapshot staleness. A screen-space
-       sibling of the world (NOT inside it — the world is camera-transformed), so the panel stays pinned. Self-
-       contained in `debug/` like the other ?debug panels; it samples in its own rAF loop, gated on `enabled`. -->
-  <left-paw-perf-readout
-    [enabled]="debug.perf"
-    [players]="players()"
-    [renderedPlayers]="perfPlayers()"
-    [myId]="myId()"
-  />
+  @if (debug.perf) {
+    <!-- ?debug=perf panels: the metric readout (consumes the PerfMetricsService snapshot) + the runtime metric
+         configurator. Both inject the DebugSettingsStore / PerfMetricsService, so this @if keeps the whole perf
+         subsystem uninstantiated in normal play. Screen-space siblings of the world (NOT camera-transformed). -->
+    <left-paw-debug-configurator />
+    <!-- Readout (small, always-on glance) + perf-log (wide one-line capture tool) share the bottom edge, so they
+         stack in one bottom-left flex column instead of fighting for it — on a narrow tablet the wide perf-log used
+         to reach across and cover the readout. The column is click-through (children re-enable), so empty gaps don't
+         block scene interaction. -->
+    <div class="scene__perf-panels">
+      <left-paw-perf-readout [snapshot]="perfMetricsSnapshot()" />
+      <left-paw-perf-log-panel [snapshot]="perfMetricsSnapshot()" />
+    </div>
+  }
 </section>

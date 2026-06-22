@@ -77,6 +77,14 @@
   animation: scene-actor-shadow-in 150ms ease-out;
 }
 
+// Player-sprites canvas mode: the sprite is drawn on the actors-canvas (a layer BELOW this DOM chrome), so this
+// grounding shadow — which must sit BEHIND the sprite (z-index -1 only works within the player's own DOM stack) —
+// can't host it here. The shadow is instead painted ON the canvas behind the sprite, with the same theme base /
+// effect tint / breathe (SceneActorCanvasService.drawPlayerShadow), so this DOM copy is suppressed to avoid doubling.
+.scene__shadow--hidden {
+  display: none;
+}
+
 // Effect tint: recolour the gradient core to the shared per-effect tint and breathe in time with the bubble pulse.
 .scene__shadow--shield,
 .scene__shadow--wellFed,
@@ -314,6 +322,15 @@
     outline-offset: 4px;
     border-radius: 12px;
   }
+}
+
+// Canvas-mode poke target: the sprite is drawn on the actors-canvas, so the poke button needs a sized transparent
+// box (the sprite's world-px footprint) to stay tappable/focusable. Background stays transparent so the canvas
+// sprite shows through; the button keeps its own focus-visible ring.
+.scene__poke-hit {
+  display: inline-block;
+  width: var(--scene-sprite-width, 96px);
+  height: var(--scene-sprite-height, 96px);
 }
 
 .scene__sprite {

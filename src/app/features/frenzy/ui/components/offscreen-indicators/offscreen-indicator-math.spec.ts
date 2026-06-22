@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { CameraSnapshot } from '../scene/scene-camera.service';
+import type { CameraSnapshot } from '../scene/camera/scene-camera.service';
 import {
   clusterEdgeArrows,
   edgeHit,

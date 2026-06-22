@@ -1,0 +1,45 @@
+:host {
+  display: inline-flex;
+}
+
+// The info trigger. Sits in the readout's metric grid (which is click-through except its controls), so it re-enables
+// pointer events for itself. A square box with the icon centred (TuiIcon scales by font-size, not box size). Recedes
+// by default, lifts on focus.
+.perf-metric-info {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--tui-text-secondary);
+  cursor: pointer;
+  pointer-events: auto;
+
+  // Touch target enlargement. The visible glyph is only 1rem, so a finger easily undershoots — most often to the
+  // left, into the gap before the value column. This invisible overlay widens the clickable area across that gap (and
+  // a little past the glyph) so a near-miss still triggers. It keeps the row's height, so it never steals taps from
+  // the rows above/below.
+  &::after {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    inset-inline: -0.6rem -0.25rem;
+  }
+
+  &:focus-visible {
+    color: var(--tui-text-primary);
+    outline: none;
+  }
+}
+
+.perf-metric-info__icon {
+  font-size: 1rem;
+}
+
+// Note: the hint body (.perf-metric-info__hint) renders inside Taiga's portal, outside this view's emulated
+// encapsulation — its bubble chrome (theme-aware background, padding, max-width) comes from Taiga's floating hint, and
+// the <b> lead-ins are user-agent bold. No portal-targeting CSS is needed here.

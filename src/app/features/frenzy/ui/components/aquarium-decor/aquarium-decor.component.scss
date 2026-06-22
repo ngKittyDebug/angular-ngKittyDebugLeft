@@ -176,7 +176,20 @@
     position: absolute;
     bottom: var(--root, 13%);
     transform-origin: 50% 100%;
-    animation: aq-plant-sway 6s ease-in-out infinite alternate;
+    // PERF (CPU-4×/6× bisection): the per-frame repaint of 218 independently rotating SVG blades is the scene's
+    // dominant cost — BUT only when the main thread is saturated (the weak-tablet dense-cluster regime; on a light
+    // scene there is headroom and it costs nothing). The compositor won't promote that many layers, and forcing
+    // promotion (`will-change`) measured NET NEGATIVE (layer overhead > saved repaint — the ADR-0006 risk made
+    // real). So keep full forest density (every blade still painted) but only sway a sparse 1-in-3; the rest hold a
+    // gentle per-blade lean. Cuts the sway repaint to a third — a deliberate near-neutral trade (NOT pixel-neutral:
+    // 2/3 of blades go still). Validated on the weak tablet: a small but real fps gain, look accepted — so the
+    // ADR-0006 revisit resolved in favour of this trade rather than a quality tier.
+    transform: rotate(calc(var(--rot, -4deg) * 0.5));
+
+    &:nth-child(3n) {
+      transform: none;
+      animation: aq-plant-sway 6s ease-in-out infinite alternate;
+    }
   }
 
   &__blade {
@@ -299,5 +312,60 @@
   .aq__plant,
   .aq__bubble {
     animation: none;
+  }
+}
+
+/* ---------- ?debug=perf decor sub-probes (DebugSettingsStore.decorProbe) ----------
+   The scene host carries a `.scene--decor-*` class per active probe; we read it via `:host-context` because
+   scene.component.scss can't reach into this component's encapsulated internals. Each isolates ONE decor cost so a
+   weak device can bisect the FPS culprit WITHIN the decor layer (finer than the whole-layer `decor` toggle):
+     · frozen    — stop every decor animation but keep it PAINTED → splits per-frame animation cost from static paint.
+     · no-plants / no-rays — hide one sub-element to attribute the cost.
+     · flat-rays — the speculative neutral fix (ADR 0006): drop the `mix-blend-mode: screen` pass and approximate the
+       light shafts with a flat translucent gradient. Kept behind this A/B toggle until the eye confirms it on the
+       tablet; the flat colour is a starting point to tune per theme before any promotion to always-on. */
+:host-context(.scene--decor-frozen) {
+  .aq__ray,
+  .aq__mote,
+  .aq__plant,
+  .aq__bubble {
+    animation: none;
+  }
+}
+
+:host-context(.scene--decor-no-plants) .aq__plants {
+  display: none;
+}
+
+:host-context(.scene--decor-no-rays) .aq__rays {
+  display: none;
+}
+
+:host-context(.scene--decor-flat-rays) {
+  .aq__rays {
+    mix-blend-mode: normal;
+  }
+
+  .aq__ray {
+    background: linear-gradient(
+      to bottom,
+      var(--aq-ray-flat, rgba(255, 255, 255, 0.16)) 0%,
+      rgba(255, 255, 255, 0) 78%
+    );
+  }
+}
+
+/* ---------- Canvas decor backend (DebugSettingsStore.decorMode === 'canvas', ADR 0007) ----------
+   When the ANIMATED backdrop layers are drawn on the decor canvas, hide their DOM originals so they don't double-
+   paint: the kelp blades, the plankton motes, the bubbles and the edge vignette. The sandy floor and the screen-
+   blended light rays deliberately STAY in the DOM (a static near-free texture / a blend that has no clean canvas
+   port) — see ADR 0007. Same `:host-context` reach as the decor probes above (scene.component.scss can't reach
+   these internals). */
+:host-context(.scene--canvas-decor) {
+  .aq__plants,
+  .aq__plankton,
+  .aq__bubbles,
+  .aq__vignette {
+    display: none;
   }
 }

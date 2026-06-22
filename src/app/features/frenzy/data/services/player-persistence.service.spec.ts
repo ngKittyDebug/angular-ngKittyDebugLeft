@@ -45,25 +45,16 @@ describe('PlayerPersistenceService', () => {
     expect(service.getName()).toBe('Ash');
   });
 
-  it('persists name, appearance and minimap state together under one key', () => {
+  it('persists name and appearance together under one key', () => {
     const service = TestBed.inject(PlayerPersistenceService);
 
     service.saveName('Misty');
     service.saveAppearance('squirtle');
-    service.saveMinimapCollapsed(true);
 
     expect(localStorage.getItem('frenzy-session')).toBe(
-      JSON.stringify({ name: 'Misty', appearance: 'squirtle', minimapCollapsed: true }),
+      JSON.stringify({ name: 'Misty', appearance: 'squirtle' }),
     );
     expect(service.getName()).toBe('Misty');
     expect(service.getAppearance()).toBe('squirtle');
-  });
-
-  it('returns null minimap state until one is saved, then the saved value', () => {
-    const service = TestBed.inject(PlayerPersistenceService);
-
-    expect(service.getMinimapCollapsed()).toBeNull();
-    service.saveMinimapCollapsed(false);
-    expect(service.getMinimapCollapsed()).toBe(false);
   });
 });

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 
-import { KELP_BLADES, KELP_COLORS, kelpBladeWidth } from '../../constants/kelp-blades';
-import type { KelpBlade } from '../../constants/kelp-blades';
+import { KELP_BLADES, KELP_COLORS, kelpBladeWidth } from '../../utils/kelp-blades';
+import type { KelpBlade } from '../../utils/kelp-blades';
 
 /**
  * In-world MIDGROUND kelp: a sparse row of near, low-rooted fronds rendered IN FRONT of the actors (host

@@ -1,0 +1,34 @@
+<ng-container *transloco="let t; prefix: 'frenzy-debug'">
+  <!-- Touch-first: a click-controlled manual hint (no hover). The readout owns which one is open via [open]. -->
+  <button
+    type="button"
+    class="perf-metric-info"
+    [attr.aria-label]="t('infoAriaLabel', { metric: t('metrics.' + key() + '.label') })"
+    [tuiHint]="content"
+    [tuiHintManual]="open()"
+    tuiHintAppearance="floating"
+    tuiHintDirection="top"
+    (click)="onToggle()"
+  >
+    <tui-icon icon="@tui.info" class="perf-metric-info__icon" />
+  </button>
+
+  <!-- The hint body is stamped into Taiga's portal, but reads come straight from the global Transloco store (which the
+       in-view readout has already loaded under the route scope), so a plain `prefix` resolves there too. -->
+  <ng-template #content>
+    <div class="perf-metric-info__hint" *transloco="let t; prefix: 'frenzy-debug'">
+      <p class="perf-metric-info__title">
+        <strong>{{ t('metrics.' + key() + '.name') }}</strong>
+      </p>
+      <p>
+        <b>{{ t('sections.what') }}.</b> {{ t('metrics.' + key() + '.what') }}
+      </p>
+      <p>
+        <b>{{ t('sections.why') }}.</b> {{ t('metrics.' + key() + '.why') }}
+      </p>
+      <p>
+        <b>{{ t('sections.interpret') }}.</b> {{ t('metrics.' + key() + '.interpret') }}
+      </p>
+    </div>
+  </ng-template>
+</ng-container>

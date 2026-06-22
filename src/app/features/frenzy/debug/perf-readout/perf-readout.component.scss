@@ -1,46 +1,147 @@
-// Host adds no box (`display: contents`), so the panel positions against the scene like the inline div it
-// replaced — placed as a screen-space sibling of `.scene__world`, it never rides the camera transform.
+@use 'utility/hud-pill' as *;
+
+// Host adds no box (`display: contents`), so the panel positions against the scene like the inline div it replaced —
+// placed in the parent `.scene__perf-panels` flex stack (bottom-left), it never rides the camera transform.
 :host {
   display: contents;
 }
 
-// `?debug=perf` readout: a small screen-space corner panel (FPS / own-sprite prediction-gap / authoritative
-// staleness) for diagnosing framerate and the steering rubber-band on low-end devices. The top-left corner is taken
-// by the HUD status card + minimap, so the panel lives bottom-left out of their way. Hidden until enabled.
+// Shared glass surface for the readout chrome — same recipe as the leaderboard/minimap/legend HUD panels, so the
+// readout follows the active Taiga theme instead of the old hardcoded near-black.
+%perf-readout-surface {
+  border-radius: 0.6rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+
+  @include hud_pill;
+}
+
 .perf-readout {
-  position: absolute;
-  bottom: 0.5rem;
-  left: 0.5rem;
-  z-index: 10;
-  display: none;
+  display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 0.25rem 0.4rem;
-  border-radius: 6px;
-  // Near-opaque so the readout stays legible over the seabed/sprites.
-  background: rgba(0, 0, 0, 0.82);
-  color: #6cf;
+  align-items: flex-start;
   font-family: ui-monospace, monospace;
   font-size: 0.7rem;
   line-height: 1.2;
+  // The parent stack is click-through; only the interactive chrome below re-enables pointer events.
   pointer-events: none;
+  user-select: none;
 }
 
-.perf-readout--on {
+// Collapsed glance: a compact pill showing the current FPS.
+.perf-readout__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.55rem;
+  border: none;
+  color: var(--tui-text-primary);
+  font: inherit;
+  cursor: pointer;
+  pointer-events: auto;
+
+  @extend %perf-readout-surface;
+}
+
+.perf-readout__pill-label {
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tui-text-secondary);
+}
+
+.perf-readout__pill-value {
+  font-variant-numeric: tabular-nums;
+}
+
+// Expanded header: the collapse toggle, an uppercase title with a chevron — the leaderboard idiom.
+.perf-readout__header {
   display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0.3rem 0.5rem;
+  border: none;
+  border-bottom: 1px solid var(--tui-border-normal);
+  border-radius: 0.6rem 0.6rem 0 0;
+  color: var(--tui-text-primary);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  pointer-events: auto;
+
+  @include hud_pill;
 }
 
-// One metric line. Inherits the panel's blue while healthy; a tone modifier overrides the colour (and weight) once
-// the reading degrades, so a bad value jumps out against the others.
-.perf-readout__metric {
-  // Amber: the reading is off-target but still playable (FPS dipping, prediction starting to lead).
+.perf-readout__title {
+  flex: 1;
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.perf-readout__header-icon,
+.perf-readout__chevron {
+  block-size: 0.9rem;
+  inline-size: 0.9rem;
+}
+
+// Metric rows: continuation of the surface, rounded only at the bottom so it reads as one panel with the header. A
+// single grid (rows are `display: contents`) so every value lands in one fixed-width column — the panel keeps a steady
+// width and the readings stay right-aligned as their digit counts change. Columns: [ toggle | value | info ].
+.perf-readout__metrics {
+  display: grid;
+  grid-template-columns: 1fr 4.75rem auto;
+  align-items: center;
+  gap: 0.15rem 0.5rem;
+  width: 100%;
+  padding: 0.3rem 0.45rem;
+  border-radius: 0 0 0.6rem 0.6rem;
+  pointer-events: auto;
+
+  @extend %perf-readout-surface;
+}
+
+// Each row drops its own box into the parent grid so the toggle/value columns are shared (and aligned) across rows.
+.perf-readout__row {
+  display: contents;
+}
+
+// A disabled metric stays visible but recedes — dimmed toggle + «—» value, no tone. Applied to the cells, since the
+// row itself has no box.
+.perf-readout__row--off .perf-readout__toggle,
+.perf-readout__row--off .perf-readout__value {
+  opacity: 0.45;
+}
+
+.perf-readout__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  cursor: pointer;
+}
+
+.perf-readout__label {
+  color: var(--tui-text-primary);
+}
+
+// The value column. Healthy reads in the panel's text colour; a tone modifier recolours it (theme-aware status
+// tokens) once the reading degrades, so a bad value jumps out against the others.
+.perf-readout__value {
+  color: var(--tui-text-primary);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+
+  // Amber: off-target but still playable (FPS dipping, prediction starting to lead).
   &--warn {
-    color: #fc6;
+    color: var(--tui-status-warning);
   }
 
-  // Red: the reading is at an unacceptable level (choppy FPS, large overshoot, snapshots stalling).
+  // Red: an unacceptable level (choppy FPS, large overshoot, snapshots stalling).
   &--bad {
-    color: #f66;
+    color: var(--tui-status-negative);
     font-weight: 700;
   }
 }

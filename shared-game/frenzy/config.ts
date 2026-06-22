@@ -56,6 +56,7 @@ export const FRENZY = {
   poopEmitWeights: SPAWN_POOLS.poopEmit,
   spawnIntervalMsRange: spawn.intervalMsRange,
   spawnReferencePlayers: spawn.referencePlayers,
+  spawnScalingMaxPlayers: spawn.scalingMaxPlayers,
   mushroom: {
     minDelta: FRENZY_ITEMS.mushroom.interactions.onClick.minDelta,
     maxDelta: FRENZY_ITEMS.mushroom.interactions.onClick.maxDelta,

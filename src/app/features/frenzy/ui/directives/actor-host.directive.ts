@@ -1,6 +1,6 @@
 import { afterNextRender, DestroyRef, Directive, ElementRef, inject, input } from '@angular/core';
 
-import { SceneActorRegistryService } from '../components/scene/scene-actor-registry.service';
+import { SceneActorRegistryService } from '../components/scene/rendering/dom/scene-actor-registry.service';
 
 // Which registry bucket the host belongs to: a falling item, a player sprite, or a player's owned-float column
 // (the last shares the player's id and rides the same body point, but is a separate element from the sprite host).

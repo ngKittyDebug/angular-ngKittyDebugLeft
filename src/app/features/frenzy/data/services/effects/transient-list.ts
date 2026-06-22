@@ -14,8 +14,15 @@ export class TransientList<T extends { id: string }> {
 
   public readonly items = this._items.asReadonly();
 
-  public add(item: T, ttlMs: number): void {
-    this._items.update((current) => [...current, item]);
+  public add(item: T, ttlMs: number, cap?: number): void {
+    this._items.update((current) => {
+      const next = [...current, item];
+
+      // With a cap, keep only the newest `cap` items (drop-oldest) so an event burst — e.g. a bomb cascade
+      // adding many blasts at once — can't pile up unbounded transient DOM. The dropped item's pending TTL
+      // timer still fires later and removes a now-absent id, which is a harmless no-op.
+      return cap !== undefined && next.length > cap ? next.slice(next.length - cap) : next;
+    });
     setTimeout(() => this.remove(item.id), ttlMs);
   }
 
