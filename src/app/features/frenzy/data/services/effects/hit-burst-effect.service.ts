@@ -1,9 +1,9 @@
-import { inject, Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 
 import type { PickupVia, ServerMessage } from '@game/frenzy/types';
 
 import type { HitBurst, OwnedSpark } from '../../models/hit-burst';
-import { FrenzyStore } from '../../store/frenzy.store';
+import { type EffectContext, isMine } from './effect-context';
 import type { FrenzyEffect } from './frenzy-effect';
 import { createTransientId, TransientList } from './transient-list';
 
@@ -28,14 +28,14 @@ const SPARK_TTL_MS = 800;
  */
 @Injectable()
 export class HitBurstEffect implements FrenzyEffect {
-  private readonly store = inject(FrenzyStore);
   private readonly bursts = new TransientList<HitBurst>();
   private readonly sparks = new TransientList<OwnedSpark>();
 
   public readonly hitBursts = this.bursts.items;
   public readonly ownedSparks = this.sparks.items;
+  public readonly messageTypes = ['eaten', 'effectGranted', 'bumped'] as const;
 
-  public handle(message: ServerMessage): void {
+  public handle(message: ServerMessage, context: EffectContext): void {
     if (message.type === 'eaten') {
       // A falling rock/brick that drifted into a Pokémon bonked it on the head — sparks over the struck sprite,
       // but only when the bonk actually hurt. A shielded Pokémon takes no damage (delta 0): no sparks, and instead
@@ -50,13 +50,13 @@ export class HitBurstEffect implements FrenzyEffect {
         return;
       }
 
-      this.addBurst(message.x, message.y, message.playerId, message.via);
+      this.addBurst(message.x, message.y, message.playerId, message.via, context);
 
       return;
     }
 
     if (message.type === 'effectGranted') {
-      this.addBurst(message.x, message.y, message.playerId, message.via);
+      this.addBurst(message.x, message.y, message.playerId, message.via, context);
 
       return;
     }
@@ -68,7 +68,13 @@ export class HitBurstEffect implements FrenzyEffect {
     }
   }
 
-  private addBurst(x: number, y: number, playerId: string, via: PickupVia): void {
+  private addBurst(
+    x: number,
+    y: number,
+    playerId: string,
+    via: PickupVia,
+    context: EffectContext,
+  ): void {
     this.bursts.add(
       {
         id: createTransientId(),
@@ -76,7 +82,7 @@ export class HitBurstEffect implements FrenzyEffect {
         // Items are centre-anchored now (item.y is the sprite's visual centre = the server collision centre), so
         // the burst sits on the item with no lift.
         y,
-        mine: playerId === this.store.myId(),
+        mine: isMine(playerId, context),
         mode: via === 'click' ? 'converge' : 'burst',
       },
       HIT_BURST_TTL_MS,

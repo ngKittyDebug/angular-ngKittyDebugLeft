@@ -15,11 +15,11 @@ import type {
 import { projectTimeAlive } from '../../engine/core/apply-scores';
 import { accrueAnger } from './slices/angry-bomb/anger';
 import { createNpc } from './slices/angry-bomb/create-npc';
-import { checkClickRate } from './check-click-rate';
 import { frenzyEngine } from './game';
 import { markDisconnected } from './mark-disconnected';
 import { parseClientMessage } from './parse-client-message';
 import { restoreConnected } from './restore-connected';
+import { RoomSession } from './room-session';
 import { serializeServerMessage } from './serialize-server-message';
 import { validateJoin } from './validate-join';
 
@@ -49,18 +49,15 @@ function toSlimPlayer(player: Player): SlimPlayer {
 }
 
 export default class FeedingRoom implements Party.Server {
-  // Click history keyed by sessionToken (per player), so opening extra tabs can't multiply the click budget.
-  private readonly clickTimestamps = new Map<string, number[]>();
+  // Per-session state keyed by the private session token (issue #124): the connection↔token binding, the
+  // session→player-id mapping, the per-session click budget and the grace timer all live on one `RoomSession`
+  // object. The snapshot/event wire carries only the server-generated public id, never the token, so seeing the
+  // wire gives nobody the credential to hijack a player. A session is removed when its last connection closes with
+  // no active player, on leave, or when its grace purge fires.
+  private readonly sessions = new Map<string, RoomSession>();
   // Poke history keyed by NPC id — the timestamps of ALL clickers' pokes (anger is density summed across players,
-  // D4). Anger gain is superlinear in the per-window poke count; the NPC's own `clickTimestamps` budget rate-limits.
+  // D4). Anger gain is superlinear in the per-window poke count; each clicker's session click budget rate-limits.
   private readonly npcPokeTimestamps = new Map<string, number[]>();
-  private readonly connectionToSession = new Map<string, string>();
-  // Private session-secret → public player-id mapping (issue #124): the snapshot/event wire carries only the
-  // server-generated public id, never the token a connection identifies with — so seeing the wire gives nobody
-  // the credential to hijack a player. Entries die with the player (leave / grace purge); a fainted player's
-  // stale entry is harmlessly overwritten by the session's next join.
-  private readonly sessionToPlayerId = new Map<string, string>();
-  private readonly graceTimers = new Map<string, ReturnType<typeof setTimeout>>();
   // Accepted connection ids — bounds total connections (incl. idle/not-yet-joined) beyond the player cap.
   private readonly connections = new Set<string>();
   private items: Item[] = [];
@@ -148,32 +145,30 @@ export default class FeedingRoom implements Party.Server {
       this.stopHeartbeat();
     }
 
-    const sessionToken = this.connectionToSession.get(conn.id);
+    const session = this.sessionForConnection(conn.id);
 
-    this.connectionToSession.delete(conn.id);
-
-    if (sessionToken === undefined) {
+    if (session === undefined) {
       this.log(`[party] disconnected: ${conn.id} (unidentified)`);
 
       return;
     }
 
-    const stillUsedByOtherConnection = [...this.connectionToSession.values()].includes(
-      sessionToken,
-    );
+    session.unbindConnection(conn.id);
 
-    if (stillUsedByOtherConnection) {
+    if (session.hasConnections()) {
       this.log(`[party] disconnected: ${conn.id} (other tabs open)`);
 
       return;
     }
 
     // Last connection for this session is gone — no other tab can share its click history.
-    this.clickTimestamps.delete(sessionToken);
+    session.clearClicks();
 
-    const playerId = this.sessionToPlayerId.get(sessionToken);
+    const playerId = session.playerId;
 
-    if (playerId === undefined || !this.players.some((player) => player.id === playerId)) {
+    if (playerId === null || !this.players.some((player) => player.id === playerId)) {
+      // No active player to hold a grace seat — the session is finished, drop it.
+      this.sessions.delete(session.token);
       this.log(`[party] disconnected: ${conn.id} (no active player)`);
 
       return;
@@ -183,7 +178,7 @@ export default class FeedingRoom implements Party.Server {
 
     this.syncState(next);
     this.broadcast(this.snapshot());
-    this.scheduleGracePurge(sessionToken);
+    this.scheduleGracePurge(session);
 
     this.log(`[party] disconnected: ${conn.id} (player=${playerId}, grace started)`);
   }
@@ -296,23 +291,19 @@ export default class FeedingRoom implements Party.Server {
     nudgeX?: number,
     nudgeY?: number,
   ): void {
-    const sessionToken = this.connectionToSession.get(connectionId);
+    const session = this.sessionForConnection(connectionId);
 
-    if (sessionToken === undefined) {
+    if (session === undefined) {
       return;
     }
 
-    const rate = checkClickRate(this.clickTimestamps.get(sessionToken) ?? [], Date.now());
-
-    this.clickTimestamps.set(sessionToken, rate.timestamps);
-
-    if (!rate.allowed) {
+    if (!session.recordClick(Date.now())) {
       return;
     }
 
-    const playerId = this.sessionToPlayerId.get(sessionToken);
+    const playerId = session.playerId;
 
-    if (playerId === undefined) {
+    if (playerId === null) {
       return;
     }
 
@@ -335,24 +326,20 @@ export default class FeedingRoom implements Party.Server {
   }
 
   private handleSteer(connectionId: string, x: number, y: number): void {
-    const sessionToken = this.connectionToSession.get(connectionId);
+    const session = this.sessionForConnection(connectionId);
 
-    if (sessionToken === undefined) {
+    if (session === undefined) {
       return;
     }
 
     // Steering shares the click rate-limit budget — it's player input and each accepted steer broadcasts an event.
-    const rate = checkClickRate(this.clickTimestamps.get(sessionToken) ?? [], Date.now());
-
-    this.clickTimestamps.set(sessionToken, rate.timestamps);
-
-    if (!rate.allowed) {
+    if (!session.recordClick(Date.now())) {
       return;
     }
 
-    const playerId = this.sessionToPlayerId.get(sessionToken);
+    const playerId = session.playerId;
 
-    if (playerId === undefined) {
+    if (playerId === null) {
       return;
     }
 
@@ -387,9 +374,9 @@ export default class FeedingRoom implements Party.Server {
   // clicker's per-session click budget (a poke is a click for anti-spam), and the NPC keeps a window of EVERY
   // clicker's pokes so rapid spam from the room sums superlinearly toward the max-anger strong blast.
   private handlePokeNpc(connectionId: string, npcId: string): void {
-    const sessionToken = this.connectionToSession.get(connectionId);
+    const session = this.sessionForConnection(connectionId);
 
-    if (sessionToken === undefined) {
+    if (session === undefined) {
       return;
     }
 
@@ -400,11 +387,8 @@ export default class FeedingRoom implements Party.Server {
     }
 
     const now = Date.now();
-    const rate = checkClickRate(this.clickTimestamps.get(sessionToken) ?? [], now);
 
-    this.clickTimestamps.set(sessionToken, rate.timestamps);
-
-    if (!rate.allowed) {
+    if (!session.recordClick(now)) {
       return;
     }
 
@@ -427,9 +411,11 @@ export default class FeedingRoom implements Party.Server {
   // tears the old socket down before dialing, so in practice the close lands first, and the client recovers from
   // a stray rejection by rotating to a fresh token (playing on as a new Pokémon rather than being locked out).
   private handleIdentify(conn: Party.Connection, sessionToken: string): void {
-    const boundElsewhere = [...this.connectionToSession.entries()].some(
-      ([connectionId, token]) => token === sessionToken && connectionId !== conn.id,
-    );
+    // First-bind-guard: a token already held by another live connection is refused (rebinding is only legal in the
+    // grace-window reconnect, where no live connection holds it). All of a token's bindings live on its one session.
+    const existingSession = this.sessions.get(sessionToken);
+    const boundElsewhere =
+      existingSession !== undefined && existingSession.hasOtherConnection(conn.id);
 
     if (boundElsewhere) {
       this.sendTo(conn, { type: 'identifyRejected' });
@@ -438,13 +424,13 @@ export default class FeedingRoom implements Party.Server {
       return;
     }
 
-    this.connectionToSession.set(conn.id, sessionToken);
+    const session = this.bindConnectionToSession(conn.id, sessionToken);
 
-    const playerId = this.sessionToPlayerId.get(sessionToken);
+    const playerId = session.playerId;
     const existing =
-      playerId === undefined ? undefined : this.players.find((player) => player.id === playerId);
+      playerId === null ? undefined : this.players.find((player) => player.id === playerId);
 
-    if (playerId === undefined || existing === undefined) {
+    if (playerId === null || existing === undefined) {
       return;
     }
 
@@ -456,12 +442,7 @@ export default class FeedingRoom implements Party.Server {
       return;
     }
 
-    const timer = this.graceTimers.get(sessionToken);
-
-    if (timer !== undefined) {
-      clearTimeout(timer);
-      this.graceTimers.delete(sessionToken);
-    }
+    session.clearGrace();
 
     this.syncState(restoreConnected(this.currentState(), playerId));
     this.broadcast({ type: 'rejoined', playerId });
@@ -475,17 +456,17 @@ export default class FeedingRoom implements Party.Server {
     appearance: string,
     body: PlayerBody,
   ): void {
-    const sessionToken = this.connectionToSession.get(conn.id);
+    const session = this.sessionForConnection(conn.id);
 
-    if (sessionToken === undefined) {
+    if (session === undefined) {
       return;
     }
 
     // One live player per session: ignore a re-join while this session's player is still in the room (a fainted
     // or purged player has already left `players[]`, so its stale mapping doesn't block the next join).
-    const mappedId = this.sessionToPlayerId.get(sessionToken);
+    const mappedId = session.playerId;
 
-    if (mappedId !== undefined && this.players.some((player) => player.id === mappedId)) {
+    if (mappedId !== null && this.players.some((player) => player.id === mappedId)) {
       return;
     }
 
@@ -506,7 +487,7 @@ export default class FeedingRoom implements Party.Server {
       existingPlayers: this.players,
     });
 
-    this.sessionToPlayerId.set(sessionToken, player.id);
+    session.playerId = player.id;
     // Ack the public id to the joiner BEFORE the roster snapshot below — same socket, ordered delivery — so the
     // client knows which player is "me" by the time the snapshot renders.
     this.sendTo(conn, { type: 'joined', playerId: player.id });
@@ -527,19 +508,19 @@ export default class FeedingRoom implements Party.Server {
   }
 
   private handleLeave(connectionId: string): void {
-    const sessionToken = this.connectionToSession.get(connectionId);
+    const session = this.sessionForConnection(connectionId);
 
-    if (sessionToken === undefined) {
+    if (session === undefined) {
       return;
     }
 
-    const playerId = this.sessionToPlayerId.get(sessionToken);
+    const playerId = session.playerId;
 
-    if (playerId === undefined) {
+    if (playerId === null) {
       return;
     }
 
-    this.sessionToPlayerId.delete(sessionToken);
+    session.playerId = null;
 
     const before = this.players.length;
 
@@ -599,6 +580,39 @@ export default class FeedingRoom implements Party.Server {
     return this.players.filter((player) => player.kind === 'human').length;
   }
 
+  // Routes an inbound message to its session by the bound connection id (≤ maxConnections sessions, so a scan is
+  // negligible). Returns undefined for an unidentified connection — every handler short-circuits on that.
+  private sessionForConnection(connectionId: string): RoomSession | undefined {
+    for (const session of this.sessions.values()) {
+      if (session.hasConnection(connectionId)) {
+        return session;
+      }
+    }
+
+    return undefined;
+  }
+
+  // Binds a connection to its session token, creating the session on first identify. A connection re-identifying
+  // with a different token is moved off any prior session first (mirrors the old `connectionToSession.set` overwrite).
+  private bindConnectionToSession(connectionId: string, token: string): RoomSession {
+    const prior = this.sessionForConnection(connectionId);
+
+    if (prior !== undefined && prior.token !== token) {
+      prior.unbindConnection(connectionId);
+    }
+
+    let session = this.sessions.get(token);
+
+    if (session === undefined) {
+      session = new RoomSession(token);
+      this.sessions.set(token, session);
+    }
+
+    session.bindConnection(connectionId);
+
+    return session;
+  }
+
   // Random delay (ms) in `npc.spawnDelayMsRange` (inclusive) before the NPC appears after the first human joins.
   private randomSpawnDelayMs(): number {
     const [min, max] = ANGRY_BOMB_NPC.spawnDelayMsRange;
@@ -634,24 +648,18 @@ export default class FeedingRoom implements Party.Server {
     this.loopHandle = setInterval(() => this.gameTick(), TICK_INTERVAL_MS);
   }
 
-  private scheduleGracePurge(sessionToken: string): void {
-    const existing = this.graceTimers.get(sessionToken);
-
-    if (existing !== undefined) {
-      clearTimeout(existing);
-    }
-
-    const timer = setTimeout(() => {
-      this.graceTimers.delete(sessionToken);
-
-      const playerId = this.sessionToPlayerId.get(sessionToken);
+  private scheduleGracePurge(session: RoomSession): void {
+    session.startGrace(() => {
+      const playerId = session.playerId;
       const player = this.players.find((candidate) => candidate.id === playerId);
 
       if (player === undefined || player.status !== 'disconnected') {
         return;
       }
 
-      this.sessionToPlayerId.delete(sessionToken);
+      session.playerId = null;
+      // The session has no live connection (its last one closed to start grace) and no player left — drop it.
+      this.sessions.delete(session.token);
       this.players = this.players.filter((candidate) => candidate.id !== playerId);
       this.log(`[party] grace expired, purged player=${playerId}`);
 
@@ -663,8 +671,6 @@ export default class FeedingRoom implements Party.Server {
 
       this.broadcast(this.snapshot());
     }, FRENZY.graceMs);
-
-    this.graceTimers.set(sessionToken, timer);
   }
 
   private stopLoop(): void {
@@ -673,11 +679,10 @@ export default class FeedingRoom implements Party.Server {
       this.loopHandle = null;
     }
 
-    for (const timer of this.graceTimers.values()) {
-      clearTimeout(timer);
+    for (const session of this.sessions.values()) {
+      session.clearGrace();
     }
 
-    this.graceTimers.clear();
     this.clearNpc();
     this.items = [];
     this.tick = 0;

@@ -5,7 +5,7 @@ import type { ServerMessage } from '@game/frenzy/types';
 
 import type { Blast } from '../../models/blast';
 import type { OwnedFloat } from '../../models/floating-message';
-import { ExplosionSoundService } from '../sound/explosion-sound.service';
+import { SoundPlayerService } from '../sound/sound-player.service';
 import type { FrenzyEffect } from './frenzy-effect';
 import { FloatingMessagesStore } from './floating-messages.store';
 import { createTransientId, TransientList } from './transient-list';
@@ -22,18 +22,19 @@ const MAX_BLASTS = 3;
 /** A bomb exploded: boom for everyone, a shockwave ring at the blast point, and a "−25" float over each hit Pokémon. */
 @Injectable()
 export class DetonationEffect implements FrenzyEffect {
-  private readonly explosionSound = inject(ExplosionSoundService);
   private readonly floats = inject(FloatingMessagesStore);
+  private readonly sound = inject(SoundPlayerService);
   private readonly list = new TransientList<Blast>();
 
   public readonly blasts = this.list.items;
+  public readonly messageTypes = ['detonated'] as const;
 
   public handle(message: ServerMessage): void {
     if (message.type !== 'detonated') {
       return;
     }
 
-    this.explosionSound.play();
+    this.sound.play('explosion');
 
     const blast: Blast = {
       id: createTransientId(),

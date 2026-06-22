@@ -2,9 +2,8 @@ import { inject, Injectable } from '@angular/core';
 
 import type { ServerMessage } from '@game/frenzy/types';
 
-import { EggEmissionSoundService } from '../sound/egg-emission-sound.service';
-import { PoopEmissionSoundService } from '../sound/poop-emission-sound.service';
-import { FrenzyStore } from '../../store/frenzy.store';
+import { SoundPlayerService } from '../sound/sound-player.service';
+import type { EffectContext } from './effect-context';
 import type { FrenzyEffect } from './frenzy-effect';
 
 /**
@@ -16,25 +15,25 @@ import type { FrenzyEffect } from './frenzy-effect';
  */
 @Injectable()
 export class EmissionSoundEffect implements FrenzyEffect {
-  private readonly store = inject(FrenzyStore);
-  private readonly eggEmission = inject(EggEmissionSoundService);
-  private readonly poopEmission = inject(PoopEmissionSoundService);
+  private readonly sound = inject(SoundPlayerService);
 
-  public handle(message: ServerMessage): void {
+  public readonly messageTypes = ['spawned'] as const;
+
+  public handle(message: ServerMessage, context: EffectContext): void {
     if (message.type !== 'spawned' || message.item.ownerId === undefined) {
       return;
     }
 
-    const owner = this.store.state()?.players.find((player) => player.id === message.item.ownerId);
+    const owner = context.playerById(message.item.ownerId);
 
     if (owner === undefined) {
       return;
     }
 
     if (owner.effects.some((effect) => effect.kind === 'pooping')) {
-      this.poopEmission.play();
+      this.sound.play('poopEmission');
     } else if (owner.effects.some((effect) => effect.kind === 'laying')) {
-      this.eggEmission.play();
+      this.sound.play('eggEmission');
     }
   }
 }

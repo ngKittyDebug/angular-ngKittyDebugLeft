@@ -2,8 +2,8 @@ import { inject, Injectable, signal } from '@angular/core';
 
 import type { ServerMessage } from '@game/frenzy/types';
 
-import { EvolveSoundService } from '../sound/evolve-sound.service';
-import { FrenzyStore } from '../../store/frenzy.store';
+import { SoundPlayerService } from '../sound/sound-player.service';
+import { type EffectContext, isMine } from './effect-context';
 import type { FrenzyEffect } from './frenzy-effect';
 import { FloatingMessagesStore } from './floating-messages.store';
 
@@ -12,27 +12,27 @@ const EVOLUTION_ANIMATION_MS = 1500;
 /** Flags an evolving Pokémon for the scene's flash, plays the chime + an "evolved" quip for own evolutions. */
 @Injectable()
 export class EvolutionEffect implements FrenzyEffect {
-  private readonly evolveSound = inject(EvolveSoundService);
   private readonly floats = inject(FloatingMessagesStore);
-  private readonly store = inject(FrenzyStore);
+  private readonly sound = inject(SoundPlayerService);
   // Map of playerId → flash start time, not a TransientList (the scene keys the flash by id, not order).
   private readonly _evolvingPlayers = signal<ReadonlyMap<string, number>>(new Map());
 
   public readonly evolvingPlayers = this._evolvingPlayers.asReadonly();
+  public readonly messageTypes = ['evolved'] as const;
 
-  public handle(message: ServerMessage): void {
+  public handle(message: ServerMessage, context: EffectContext): void {
     if (message.type !== 'evolved') {
       return;
     }
 
     this.markEvolving(message.playerId);
 
-    if (message.playerId === this.store.myId()) {
-      this.evolveSound.play();
+    if (isMine(message.playerId, context)) {
+      this.sound.play('evolve');
 
-      const me = this.store.me();
+      const me = context.playerById(message.playerId);
 
-      if (me !== null) {
+      if (me !== undefined) {
         this.floats.pushOwnedStatus('evolved', me.id);
       }
     }

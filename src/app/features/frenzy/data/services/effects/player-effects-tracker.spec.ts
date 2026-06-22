@@ -1,15 +1,11 @@
-import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { Player, PlayerEffectKind, ServerMessage, ServerState } from '@game/frenzy/types';
+import type { Player, PlayerEffectKind, ServerMessage } from '@game/frenzy/types';
 
-import { EasterEggSoundService } from '../sound/easter-egg-sound.service';
-import { PoopEatSoundService } from '../sound/poop-eat-sound.service';
-import { ShieldSoundService } from '../sound/shield-sound.service';
-import { WellFedSoundService } from '../sound/well-fed-sound.service';
+import { SoundPlayerService } from '../sound/sound-player.service';
 import { bodyForAppearance } from '../../../ui/constants/pokemon-registry';
-import { FrenzyStore } from '../../store/frenzy.store';
+import { effectContext } from './effect-context.mock';
 import { FloatingMessagesStore } from './floating-messages.store';
 import { PlayerEffectsTracker } from './player-effects-tracker.service';
 
@@ -50,32 +46,22 @@ function granted(playerId: string, kind: PlayerEffectKind = 'shield'): ServerMes
 describe('PlayerEffectsTracker', () => {
   let tracker: PlayerEffectsTracker;
   let floats: FloatingMessagesStore;
-  let shieldPlay: ReturnType<typeof vi.fn>;
-  let wellFedPlay: ReturnType<typeof vi.fn>;
-  let layingPlay: ReturnType<typeof vi.fn>;
-  let poopPlay: ReturnType<typeof vi.fn>;
-  let state: ReturnType<typeof signal<ServerState | null>>;
+  // The per-effect sound services collapsed into one data-driven facade; specs mock that facade and assert the
+  // `SoundKind` it was asked to play (issue 08 accepted trade-off — no more per-sound module mocks).
+  let play: ReturnType<typeof vi.fn>;
+  const context = effectContext({
+    myId: 'me',
+    state: { players: [player('me', 'Me'), player('other', 'Ash')], items: [], tick: 0 },
+  });
 
   beforeEach(() => {
-    shieldPlay = vi.fn();
-    wellFedPlay = vi.fn();
-    layingPlay = vi.fn();
-    poopPlay = vi.fn();
-    state = signal<ServerState | null>({
-      players: [player('me', 'Me'), player('other', 'Ash')],
-      items: [],
-      tick: 0,
-    });
+    play = vi.fn();
 
     TestBed.configureTestingModule({
       providers: [
         PlayerEffectsTracker,
         FloatingMessagesStore,
-        { provide: FrenzyStore, useValue: { myId: signal('me'), state } },
-        { provide: ShieldSoundService, useValue: { play: shieldPlay } },
-        { provide: WellFedSoundService, useValue: { play: wellFedPlay } },
-        { provide: EasterEggSoundService, useValue: { play: layingPlay } },
-        { provide: PoopEatSoundService, useValue: { play: poopPlay } },
+        { provide: SoundPlayerService, useValue: { play } },
       ],
     });
     tracker = TestBed.inject(PlayerEffectsTracker);
@@ -83,7 +69,7 @@ describe('PlayerEffectsTracker', () => {
   });
 
   it('floats a shield quip and plays the shield sound for my own grant (no name)', () => {
-    tracker.handle(granted('me'));
+    tracker.handle(granted('me'), context);
 
     const messages = floats.ownedMessages();
 
@@ -91,55 +77,51 @@ describe('PlayerEffectsTracker', () => {
     expect(messages[0].ownerId).toBe('me');
     expect(messages[0].who).toBeUndefined();
     expect(messages[0].textKey).toContain('statusMessage.shield');
-    expect(shieldPlay).toHaveBeenCalledOnce();
+    expect(play).toHaveBeenCalledExactlyOnceWith('shield');
   });
 
   it('plays the matching sound per effect kind when the effect lands on me', () => {
-    tracker.handle(granted('me', 'laying'));
+    tracker.handle(granted('me', 'laying'), context);
 
     const messages = floats.ownedMessages();
 
     expect(messages[0].textKey).toContain('statusMessage.laying');
-    expect(layingPlay).toHaveBeenCalledOnce();
-    expect(shieldPlay).not.toHaveBeenCalled();
+    expect(play).toHaveBeenCalledExactlyOnceWith('easterEgg');
   });
 
   it('floats a pooping quip and plays the poop-eat sound for my own poop grant', () => {
-    tracker.handle(granted('me', 'pooping'));
+    tracker.handle(granted('me', 'pooping'), context);
 
     const messages = floats.ownedMessages();
 
     expect(messages[0].textKey).toContain('statusMessage.pooping');
-    expect(poopPlay).toHaveBeenCalledOnce();
-    expect(layingPlay).not.toHaveBeenCalled();
+    expect(play).toHaveBeenCalledExactlyOnceWith('poopEat');
   });
 
   it('floats a wellFed quip and plays the wellFed sound for my own vitamin grant', () => {
-    tracker.handle(granted('me', 'wellFed'));
+    tracker.handle(granted('me', 'wellFed'), context);
 
     const messages = floats.ownedMessages();
 
     expect(messages[0].textKey).toContain('statusMessage.wellFed');
-    expect(wellFedPlay).toHaveBeenCalledOnce();
-    expect(shieldPlay).not.toHaveBeenCalled();
-    expect(layingPlay).not.toHaveBeenCalled();
+    expect(play).toHaveBeenCalledExactlyOnceWith('wellFed');
   });
 
   it('floats a named quip for another player and stays silent (no sound)', () => {
-    tracker.handle(granted('other', 'laying'));
+    tracker.handle(granted('other', 'laying'), context);
 
     const messages = floats.ownedMessages();
 
     expect(messages[0].ownerId).toBe('other');
     expect(messages[0].who).toBe('Ash');
     expect(messages[0].textKey).toContain('statusMessage.laying');
-    expect(layingPlay).not.toHaveBeenCalled();
+    expect(play).not.toHaveBeenCalled();
   });
 
   it('ignores non-effect messages', () => {
-    tracker.handle({ type: 'fainted', playerId: 'me' });
+    tracker.handle({ type: 'fainted', playerId: 'me' }, context);
 
     expect(floats.ownedMessages()).toHaveLength(0);
-    expect(shieldPlay).not.toHaveBeenCalled();
+    expect(play).not.toHaveBeenCalled();
   });
 });

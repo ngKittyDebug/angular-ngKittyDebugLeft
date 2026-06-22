@@ -2,7 +2,7 @@ import { DestroyRef, inject, Injectable, signal } from '@angular/core';
 
 import type { ItemType, PlayerEffectKind, ServerMessage } from '@game/frenzy/types';
 
-import { FrenzyStore } from '../../store/frenzy.store';
+import type { EffectContext } from './effect-context';
 import type { FrenzyEffect } from './frenzy-effect';
 
 // The transient face the avatar shows in reaction to a thing happening to MY Pokémon, on top of the
@@ -26,26 +26,26 @@ const BLUNT_ITEMS: ReadonlySet<ItemType> = new Set(['rock', 'brick']);
  */
 @Injectable()
 export class ReactiveMoodEffect implements FrenzyEffect {
-  private readonly store = inject(FrenzyStore);
   private readonly face = signal<ReactionFace | null>(null);
   private clearTimer: ReturnType<typeof setTimeout> | null = null;
 
   public readonly reactionFace = this.face.asReadonly();
+  public readonly messageTypes = ['detonated', 'bumped', 'eaten', 'effectGranted'] as const;
 
   public constructor() {
     inject(DestroyRef).onDestroy(() => this.cancelClear());
   }
 
-  public handle(message: ServerMessage): void {
-    const reaction = this.reactionFor(message);
+  public handle(message: ServerMessage, context: EffectContext): void {
+    const reaction = this.reactionFor(message, context);
 
     if (reaction !== null) {
       this.flash(reaction);
     }
   }
 
-  private reactionFor(message: ServerMessage): ReactionFace | null {
-    const myId = this.store.myId();
+  private reactionFor(message: ServerMessage, context: EffectContext): ReactionFace | null {
+    const myId = context.myId;
 
     if (myId === null) {
       return null;

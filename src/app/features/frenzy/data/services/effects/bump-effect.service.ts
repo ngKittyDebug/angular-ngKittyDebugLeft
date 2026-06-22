@@ -17,6 +17,8 @@ const BUMP_FLOAT_TTL_MS = 1400;
 export class BumpEffect implements FrenzyEffect {
   private readonly floats = inject(FloatingMessagesStore);
 
+  public readonly messageTypes = ['bumped'] as const;
+
   public handle(message: ServerMessage): void {
     if (message.type !== 'bumped') {
       return;

@@ -1,10 +1,9 @@
-import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { ServerMessage } from '@game/frenzy/types';
 
-import { FrenzyStore } from '../../store/frenzy.store';
+import { effectContext } from './effect-context.mock';
 import { HitBurstEffect } from './hit-burst-effect.service';
 
 // Items are centre-anchored (item.y is the sprite's visual centre), so the burst sits exactly on the reported y.
@@ -41,12 +40,13 @@ function effectGranted(
 
 describe('HitBurstEffect', () => {
   let effect: HitBurstEffect;
+  const context = effectContext({ myId: 'me' });
 
   beforeEach(() => {
     vi.useFakeTimers();
 
     TestBed.configureTestingModule({
-      providers: [HitBurstEffect, { provide: FrenzyStore, useValue: { myId: signal('me') } }],
+      providers: [HitBurstEffect],
     });
     effect = TestBed.inject(HitBurstEffect);
   });
@@ -56,7 +56,7 @@ describe('HitBurstEffect', () => {
   });
 
   it('spawns a gold (mine) converging burst at my own clicked-eat item centre', () => {
-    effect.handle(eaten({ playerId: 'me', via: 'click', x: 0.9, y: 0.8 }));
+    effect.handle(eaten({ playerId: 'me', via: 'click', x: 0.9, y: 0.8 }), context);
 
     const bursts = effect.hitBursts();
 
@@ -68,7 +68,7 @@ describe('HitBurstEffect', () => {
   });
 
   it('spawns an outward (burst) cue for a drift-in collision, gold when my own Pokémon grabbed it', () => {
-    effect.handle(eaten({ playerId: 'me', via: 'collision' }));
+    effect.handle(eaten({ playerId: 'me', via: 'collision' }), context);
 
     const bursts = effect.hitBursts();
 
@@ -78,7 +78,7 @@ describe('HitBurstEffect', () => {
   });
 
   it('spawns a non-mine converging burst for other players clicks too (the room sees each grab)', () => {
-    effect.handle(eaten({ playerId: 'other', via: 'click', x: 0.1, y: 0.2 }));
+    effect.handle(eaten({ playerId: 'other', via: 'click', x: 0.1, y: 0.2 }), context);
 
     const bursts = effect.hitBursts();
 
@@ -90,8 +90,14 @@ describe('HitBurstEffect', () => {
   });
 
   it('turns a rock/brick collision into sparks over the struck Pokémon — no bubble burst', () => {
-    effect.handle(eaten({ playerId: 'victim', itemType: 'rock', via: 'collision', delta: -20 }));
-    effect.handle(eaten({ playerId: 'me', itemType: 'brick', via: 'collision', delta: -40 }));
+    effect.handle(
+      eaten({ playerId: 'victim', itemType: 'rock', via: 'collision', delta: -20 }),
+      context,
+    );
+    effect.handle(
+      eaten({ playerId: 'me', itemType: 'brick', via: 'collision', delta: -40 }),
+      context,
+    );
 
     expect(effect.hitBursts()).toHaveLength(0);
 
@@ -103,7 +109,7 @@ describe('HitBurstEffect', () => {
   });
 
   it('falls back to the default collision burst when a rock/brick bonk dealt no damage (shielded, delta 0)', () => {
-    effect.handle(eaten({ playerId: 'me', itemType: 'rock', via: 'collision', delta: 0 }));
+    effect.handle(eaten({ playerId: 'me', itemType: 'rock', via: 'collision', delta: 0 }), context);
 
     expect(effect.ownedSparks()).toHaveLength(0);
     expect(effect.hitBursts()).toHaveLength(1);
@@ -111,7 +117,7 @@ describe('HitBurstEffect', () => {
   });
 
   it('a CLICKED rock is a normal burst, not sparks (only the collision bonk sparks)', () => {
-    effect.handle(eaten({ playerId: 'me', itemType: 'rock', via: 'click', delta: 0 }));
+    effect.handle(eaten({ playerId: 'me', itemType: 'rock', via: 'click', delta: 0 }), context);
 
     expect(effect.ownedSparks()).toHaveLength(0);
     expect(effect.hitBursts()).toHaveLength(1);
@@ -119,8 +125,8 @@ describe('HitBurstEffect', () => {
   });
 
   it('spawns a burst at the item centre for an effectGranted (egg/poop/shield) — at the spot it vanished', () => {
-    effect.handle(effectGranted({ playerId: 'me', via: 'click', x: 0.3, y: 0.5 }));
-    effect.handle(effectGranted({ playerId: 'other', via: 'collision', x: 0.6, y: 0.4 }));
+    effect.handle(effectGranted({ playerId: 'me', via: 'click', x: 0.3, y: 0.5 }), context);
+    effect.handle(effectGranted({ playerId: 'other', via: 'collision', x: 0.6, y: 0.4 }), context);
 
     const bursts = effect.hitBursts();
 
@@ -134,7 +140,7 @@ describe('HitBurstEffect', () => {
   });
 
   it('sparks over the rammed Pokémon on a bump — no bubble burst', () => {
-    effect.handle({ type: 'bumped', playerId: 'victim', amount: -5 });
+    effect.handle({ type: 'bumped', playerId: 'victim', amount: -5 }, context);
 
     expect(effect.hitBursts()).toHaveLength(0);
 
@@ -145,22 +151,28 @@ describe('HitBurstEffect', () => {
   });
 
   it('ignores itemNudged and detonated', () => {
-    effect.handle({ type: 'itemNudged', itemId: 'b1', x: 0.5, y: 0.5, vx: 0.04, vy: 0.02 });
-    effect.handle({
-      type: 'detonated',
-      itemId: 'b1',
-      x: 0.5,
-      y: 0.5,
-      radius: 0.2,
-      hits: [{ playerId: 'me', delta: -10 }],
-    });
+    effect.handle(
+      { type: 'itemNudged', itemId: 'b1', x: 0.5, y: 0.5, vx: 0.04, vy: 0.02 },
+      context,
+    );
+    effect.handle(
+      {
+        type: 'detonated',
+        itemId: 'b1',
+        x: 0.5,
+        y: 0.5,
+        radius: 0.2,
+        hits: [{ playerId: 'me', delta: -10 }],
+      },
+      context,
+    );
 
     expect(effect.hitBursts()).toHaveLength(0);
     expect(effect.ownedSparks()).toHaveLength(0);
   });
 
   it('auto-removes the burst after its TTL', () => {
-    effect.handle(eaten({ playerId: 'me' }));
+    effect.handle(eaten({ playerId: 'me' }), context);
 
     expect(effect.hitBursts()).toHaveLength(1);
 

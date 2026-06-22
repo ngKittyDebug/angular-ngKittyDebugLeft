@@ -2,12 +2,9 @@ import { inject, Injectable } from '@angular/core';
 
 import type { PlayerEffectKind, ServerMessage } from '@game/frenzy/types';
 
-import type { SoundEffect } from '../../models/sound-effect';
-import { EasterEggSoundService } from '../sound/easter-egg-sound.service';
-import { PoopEatSoundService } from '../sound/poop-eat-sound.service';
-import { ShieldSoundService } from '../sound/shield-sound.service';
-import { WellFedSoundService } from '../sound/well-fed-sound.service';
-import { FrenzyStore } from '../../store/frenzy.store';
+import { type SoundKind } from '../sound/sound-config';
+import { SoundPlayerService } from '../sound/sound-player.service';
+import { type EffectContext, isMine } from './effect-context';
 import type { FrenzyEffect } from './frenzy-effect';
 import { FloatingMessagesStore } from './floating-messages.store';
 
@@ -27,32 +24,32 @@ const STATUS_FOR_EFFECT: Record<
 @Injectable()
 export class PlayerEffectsTracker implements FrenzyEffect {
   private readonly floats = inject(FloatingMessagesStore);
-  private readonly store = inject(FrenzyStore);
+  private readonly sound = inject(SoundPlayerService);
   // Sound cue per effect kind played only when the effect lands on my own Pokémon (buff pickup or being frozen).
-  private readonly soundForEffect: Record<PlayerEffectKind, SoundEffect> = {
-    shield: inject(ShieldSoundService),
-    wellFed: inject(WellFedSoundService),
-    laying: inject(EasterEggSoundService),
-    pooping: inject(PoopEatSoundService),
+  private readonly soundForEffect: Record<PlayerEffectKind, SoundKind> = {
+    shield: 'shield',
+    wellFed: 'wellFed',
+    laying: 'easterEgg',
+    pooping: 'poopEat',
     // Cactus reuses the shield buff-pickup cue (both are defensive wards; no bespoke sound for the MVP).
-    cactus: inject(ShieldSoundService),
+    cactus: 'shield',
   };
 
-  public handle(message: ServerMessage): void {
+  public readonly messageTypes = ['effectGranted'] as const;
+
+  public handle(message: ServerMessage, context: EffectContext): void {
     if (message.type !== 'effectGranted') {
       return;
     }
 
-    const isMine = message.playerId === this.store.myId();
+    const mine = isMine(message.playerId, context);
     // My own effect needs no name — it's obvious; others' floats carry the name like presence/eat quips.
-    const who = isMine
-      ? undefined
-      : this.store.state()?.players.find((player) => player.id === message.playerId)?.name;
+    const who = mine ? undefined : context.playerById(message.playerId)?.name;
 
     this.floats.pushOwnedStatus(STATUS_FOR_EFFECT[message.effect.kind], message.playerId, who);
 
-    if (isMine) {
-      this.soundForEffect[message.effect.kind].play();
+    if (mine) {
+      this.sound.play(this.soundForEffect[message.effect.kind]);
     }
   }
 }

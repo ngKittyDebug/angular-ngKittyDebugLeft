@@ -11,7 +11,7 @@ import type {
   StageBody,
 } from '@game/frenzy/types';
 
-import { FrenzyStore } from '../../store/frenzy.store';
+import { effectContext } from './effect-context.mock';
 import { ShieldBlockEffect } from './shield-block-effect.service';
 
 const STAGE: StageBody = { width: 60, height: 60, speed: 0.03, maxSpeed: 0.07, hp: 0 };
@@ -83,7 +83,7 @@ describe('ShieldBlockEffect', () => {
     state = signal<ServerState | null>(null);
 
     TestBed.configureTestingModule({
-      providers: [ShieldBlockEffect, { provide: FrenzyStore, useValue: { state } }],
+      providers: [ShieldBlockEffect],
     });
     effect = TestBed.inject(ShieldBlockEffect);
   });
@@ -92,9 +92,14 @@ describe('ShieldBlockEffect', () => {
     vi.useRealTimers();
   });
 
+  // Dispatch with a context snapshot of the current state — mirrors how the orchestrator rebuilds it per message.
+  function dispatch(message: ServerMessage): void {
+    effect.handle(message, effectContext({ state: state() }));
+  }
+
   it('marks a warded rock/brick collision (delta 0) as a shield block for the struck player', () => {
-    effect.handle(eaten({ playerId: 'victim', itemType: 'rock', delta: 0 }));
-    effect.handle(eaten({ playerId: 'me', itemType: 'brick', delta: 0 }));
+    dispatch(eaten({ playerId: 'victim', itemType: 'rock', delta: 0 }));
+    dispatch(eaten({ playerId: 'me', itemType: 'brick', delta: 0 }));
 
     const blocks = effect.ownedShieldBlocks();
 
@@ -104,22 +109,22 @@ describe('ShieldBlockEffect', () => {
   });
 
   it('marks a warded rotten bite (delta 0 via click) as a shield block', () => {
-    effect.handle(eaten({ playerId: 'me', itemType: 'rotten', via: 'click', delta: 0 }));
+    dispatch(eaten({ playerId: 'me', itemType: 'rotten', via: 'click', delta: 0 }));
 
     expect(effect.ownedShieldBlocks()).toHaveLength(1);
     expect(effect.ownedShieldBlocks()[0].ownerId).toBe('me');
   });
 
   it('does NOT fire when a damaging hit actually dealt damage (delta < 0 — not warded)', () => {
-    effect.handle(eaten({ playerId: 'me', itemType: 'rock', delta: -20 }));
+    dispatch(eaten({ playerId: 'me', itemType: 'rock', delta: -20 }));
 
     expect(effect.ownedShieldBlocks()).toHaveLength(0);
   });
 
   it('does NOT fire for a genuinely neutral delta-0 pickup (non-damaging type)', () => {
-    effect.handle(eaten({ playerId: 'me', itemType: 'food', delta: 0 }));
+    dispatch(eaten({ playerId: 'me', itemType: 'food', delta: 0 }));
     // mushroom can roll a neutral 0 without a shield — excluded as ambiguous.
-    effect.handle(eaten({ playerId: 'me', itemType: 'mushroom', delta: 0 }));
+    dispatch(eaten({ playerId: 'me', itemType: 'mushroom', delta: 0 }));
 
     expect(effect.ownedShieldBlocks()).toHaveLength(0);
   });
@@ -133,7 +138,7 @@ describe('ShieldBlockEffect', () => {
       ]),
     );
 
-    effect.handle(detonated({ x: 0.5, y: 0.5, radius: 0.18 }));
+    dispatch(detonated({ x: 0.5, y: 0.5, radius: 0.18 }));
 
     const blocks = effect.ownedShieldBlocks();
 
@@ -146,13 +151,13 @@ describe('ShieldBlockEffect', () => {
       stateWith([player('ghost', { x: 0.5, y: 0.5, status: 'disconnected', effects: [SHIELD] })]),
     );
 
-    effect.handle(detonated({ x: 0.5, y: 0.5, radius: 0.18 }));
+    dispatch(detonated({ x: 0.5, y: 0.5, radius: 0.18 }));
 
     expect(effect.ownedShieldBlocks()).toHaveLength(0);
   });
 
   it('auto-removes the block cue after its TTL', () => {
-    effect.handle(eaten({ playerId: 'me', itemType: 'rock', delta: 0 }));
+    dispatch(eaten({ playerId: 'me', itemType: 'rock', delta: 0 }));
 
     expect(effect.ownedShieldBlocks()).toHaveLength(1);
 

@@ -3,7 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { isNPC } from '@game/frenzy/types';
 import type { Player, ServerMessage, SlimPlayer } from '@game/frenzy/types';
 
-import { FrenzyStore } from '../../store/frenzy.store';
+import type { EffectContext } from './effect-context';
 import type { FrenzyEffect } from './frenzy-effect';
 import { FloatingMessagesStore } from './floating-messages.store';
 
@@ -14,7 +14,6 @@ import { FloatingMessagesStore } from './floating-messages.store';
 @Injectable()
 export class PresenceTracker implements FrenzyEffect {
   private readonly floats = inject(FloatingMessagesStore);
-  private readonly store = inject(FrenzyStore);
   private readonly lastKnownPlayers = new Map<
     string,
     { x: number; y: number; name: string; isNpc: boolean }
@@ -22,9 +21,11 @@ export class PresenceTracker implements FrenzyEffect {
   private knownPlayerIds = new Set<string>();
   private seenFirstSnapshot = false;
 
-  public handle(message: ServerMessage): void {
+  public readonly messageTypes = ['snapshot', 'slimSnapshot', 'fainted'] as const;
+
+  public handle(message: ServerMessage, context: EffectContext): void {
     if (message.type === 'snapshot') {
-      this.handleSnapshot(message.state.players);
+      this.handleSnapshot(message.state.players, context);
     }
 
     if (message.type === 'slimSnapshot') {
@@ -32,12 +33,12 @@ export class PresenceTracker implements FrenzyEffect {
     }
 
     if (message.type === 'fainted') {
-      this.handleFainted(message.playerId);
+      this.handleFainted(message.playerId, context);
     }
   }
 
-  private handleSnapshot(players: readonly Player[]): void {
-    const myId = this.store.myId();
+  private handleSnapshot(players: readonly Player[], context: EffectContext): void {
+    const myId = context.myId;
     const currentIds = new Set<string>();
 
     for (const player of players) {
@@ -95,8 +96,8 @@ export class PresenceTracker implements FrenzyEffect {
     }
   }
 
-  private handleFainted(playerId: string): void {
-    if (playerId === this.store.myId()) {
+  private handleFainted(playerId: string, context: EffectContext): void {
+    if (playerId === context.myId) {
       return;
     }
 
