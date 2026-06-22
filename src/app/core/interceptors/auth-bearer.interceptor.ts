@@ -1,9 +1,9 @@
 import type { HttpInterceptorFn } from '@angular/common/http';
-import { AUTH_SERVER_URL } from '@core/constants/auth-constants';
+import { ACCESS_TOKEN_KEY, AUTH_SERVER_URL } from '@core/constants/auth-constants';
 
 export const authBearerInterceptor: HttpInterceptorFn = (request, next) => {
   if (request.url.includes(AUTH_SERVER_URL)) {
-    const token = localStorage.getItem('accessToken');
+    const token = localStorage.getItem(ACCESS_TOKEN_KEY);
 
     if (!token) {
       return next(request);
