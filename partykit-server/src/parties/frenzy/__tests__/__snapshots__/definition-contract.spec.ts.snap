@@ -333,6 +333,7 @@ exports[`frenzy definition contract > keeps the flat FRENZY read-model values st
     880,
   ],
   "spawnReferencePlayers": 3,
+  "spawnScalingMaxPlayers": 3,
   "spawnWeights": {
     "barbedWire": 5,
     "bomb": 10,

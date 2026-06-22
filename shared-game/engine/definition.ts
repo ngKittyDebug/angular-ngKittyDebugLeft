@@ -231,6 +231,9 @@ export interface SpawnSpec {
   intervalMsRange: readonly [number, number];
   /** Active-player count at which the interval applies as-is (`referencePlayers / activePlayers` scaling). */
   referencePlayers: number;
+  /** Ceiling on the active-player count fed into that scaling, so simultaneous item count never climbs past the
+   * `referencePlayers` density in a crowded room (anti-pileup). Should be `>= referencePlayers`. */
+  scalingMaxPlayers: number;
   /** `[min, max]` horizontal spawn position (normalized 0..1), inset from the scene edges. */
   xRange: readonly [number, number];
   /** How long an item lies on the floor (still edible) after landing before it disappears, ms. */

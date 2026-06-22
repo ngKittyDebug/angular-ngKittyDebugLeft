@@ -621,8 +621,11 @@ export default class FeedingRoom implements Party.Server {
       1,
       this.players.filter((player) => player.kind === 'human' && player.status === 'alive').length,
     );
+    // Cap the count fed into the scaling so a crowded room never spawns denser than the calibrated
+    // `referencePlayers` density (anti-pileup at 3-4+ players; the cap value is a playtest dial — see issue 12).
+    const effectiveCount = Math.min(activeCount, FRENZY.spawnScalingMaxPlayers);
 
-    return (baseDelay * FRENZY.spawnReferencePlayers) / activeCount;
+    return (baseDelay * FRENZY.spawnReferencePlayers) / effectiveCount;
   }
 
   private startLoop(): void {
