@@ -9,7 +9,7 @@
       type="button"
       class="legend__pill"
       [attr.aria-label]="t('expand')"
-      (click)="toggle($event)"
+      (click)="onToggle($event)"
     >
       <tui-icon icon="@tui.book-open" class="legend__pill-icon" />
       <span class="legend__pill-text">{{ t('title') }}</span>
@@ -20,7 +20,7 @@
         type="button"
         class="legend__header"
         [attr.aria-label]="t('collapse')"
-        (click)="toggle($event)"
+        (click)="onToggle($event)"
       >
         <span class="legend__title">{{ t('title') }}</span>
         <tui-icon icon="@tui.minimize-2" class="legend__header-icon" />

@@ -5,7 +5,12 @@
   [class.minimap--compact]="compact()"
 >
   @if (collapsed()) {
-    <button type="button" class="minimap__pill" [attr.aria-label]="t('expand')" (click)="toggle()">
+    <button
+      type="button"
+      class="minimap__pill"
+      [attr.aria-label]="t('expand')"
+      (click)="onToggle()"
+    >
       <left-paw-online-participants [count]="online()" [compact]="true" />
       <left-paw-offline-participants [count]="disconnected()" [compact]="true" />
       @if (leaderView(); as top) {
@@ -25,7 +30,7 @@
         type="button"
         class="minimap__header"
         [attr.aria-label]="t('collapse')"
-        (click)="toggle()"
+        (click)="onToggle()"
       >
         <left-paw-online-participants [count]="online()" [compact]="true" />
         <left-paw-offline-participants [count]="disconnected()" [compact]="true" />
