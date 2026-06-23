@@ -166,7 +166,7 @@ export class MinimapComponent {
     })),
   );
 
-  protected toggle(): void {
+  protected onToggle(): void {
     this.collapsed.update((value) => !value);
   }
 }

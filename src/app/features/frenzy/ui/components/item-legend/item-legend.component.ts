@@ -62,8 +62,8 @@ const LEGEND_GROUPS: readonly LegendGroup[] = GROUP_ORDER.map((key) => ({
   // A click anywhere on the open panel collapses it (a big, forgiving close target); a click OUTSIDE the widget
   // closes it too. The toggle buttons stopPropagation, so opening from the pill never reaches either handler.
   host: {
-    '(click)': 'collapseIfOpen()',
-    '(document:click)': 'collapseOnOutsideClick($event)',
+    '(click)': 'onCollapseIfOpen()',
+    '(document:click)': 'onCollapseOnOutsideClick($event)',
   },
 })
 export class ItemLegendComponent {
@@ -77,14 +77,14 @@ export class ItemLegendComponent {
   // desktop (mirrors the minimap). A manual toggle persists (write-through) and thereafter wins over the default.
   protected readonly collapsed = persistedCollapse(COLLAPSE_KEY.legend, () => this.compact());
 
-  protected toggle(event: Event): void {
-    // Keep the button's click from bubbling to the host `collapseIfOpen` — otherwise opening from the pill would
+  protected onToggle(event: Event): void {
+    // Keep the button's click from bubbling to the host `onCollapseIfOpen` — otherwise opening from the pill would
     // immediately bubble up and close again.
     event.stopPropagation();
     this.collapsed.update((value) => !value);
   }
 
-  protected collapseIfOpen(): void {
+  protected onCollapseIfOpen(): void {
     if (this.collapsed()) {
       return;
     }
@@ -92,7 +92,7 @@ export class ItemLegendComponent {
     this.collapsed.set(true);
   }
 
-  protected collapseOnOutsideClick(event: Event): void {
+  protected onCollapseOnOutsideClick(event: Event): void {
     if (this.collapsed() || this.host.nativeElement.contains(event.target as Node)) {
       return;
     }
