@@ -1,8 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { provideTranslocoScope } from '@jsverse/transloco';
+import { provideTranslocoScope, TranslocoDirective } from '@jsverse/transloco';
 import { TuiLink } from '@taiga-ui/core';
-import { TranslocoDirective } from '@jsverse/transloco';
 
 @Component({
   selector: 'left-paw-footer',
