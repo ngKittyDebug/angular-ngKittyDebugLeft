@@ -7,14 +7,14 @@
         <span class="circle__progress_label" tuiHeader="h6">
           <p>{{ pokemonProfileDataSpecies().capture_rate }}</p>
           <p tuiSubtitle>{{ t('pokemonProfile.from') }}</p>
-          <p>255</p>
+          <p>{{stepsPerHatchCycle}}</p>
         </span>
         <tui-progress-circle
           class="circle__progress_image"
           size="xxl"
           [max]="100"
           [value]="
-            pokemonProfileDataSpecies().capture_rate | leftPawPercentage: this.maxSpeciesValue
+            pokemonProfileDataSpecies().capture_rate | leftPawPercentage: this.stepsPerHatchCycle
           "
         />
       </div>
@@ -25,14 +25,14 @@
         <span class="circle__progress_label" tuiHeader="h6">
           <p>{{ pokemonProfileDataSpecies().base_happiness }}</p>
           <p tuiSubtitle>{{ t('pokemonProfile.from') }}</p>
-          <p>255</p>
+          <p>{{stepsPerHatchCycle}}</p>
         </span>
         <tui-progress-circle
           class="circle__progress_image"
           size="xxl"
           [max]="100"
           [value]="
-            pokemonProfileDataSpecies().base_happiness | leftPawPercentage: this.maxSpeciesValue
+            pokemonProfileDataSpecies().base_happiness | leftPawPercentage: this.stepsPerHatchCycle
           "
         />
       </div>
@@ -52,7 +52,7 @@
       <div class="circle__progress" tuiProgressLabel>
         <span class="circle__progress_label" tuiHeader="h6">
           <p>
-            {{ pokemonProfileDataSpecies().hatch_counter * this.maxSpeciesValue }}
+            {{ pokemonProfileDataSpecies().hatch_counter * this.stepsPerHatchCycle }}
             {{ t('pokemonProfile.steps') }}
           </p>
           <p>({{ pokemonProfileDataSpecies().hatch_counter }} {{ t('pokemonProfile.cycles') }})</p>
@@ -62,7 +62,7 @@
           size="xxl"
           [max]="100"
           [value]="
-            pokemonProfileDataSpecies().hatch_counter | leftPawPercentage: this.maxCycleValue
+            pokemonProfileDataSpecies().hatch_counter | leftPawPercentage: this.maxHatchCounter
           "
         />
       </div>
