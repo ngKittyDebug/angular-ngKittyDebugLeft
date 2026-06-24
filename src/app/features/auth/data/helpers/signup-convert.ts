@@ -1,7 +1,7 @@
 import type { CredentialsApiData } from '../models/credentials-api-data';
 import type { SignupModel } from '../models/signup/signup-form.model';
 
-export const convertSignUpModelToCredentialsApiData = (
+export const convertSignupModelToCredentialsApiData = (
   signupModel: SignupModel,
 ): CredentialsApiData => {
   return {

@@ -4,7 +4,7 @@ import { AUTH_SERVER_URL_TOKEN } from '@core/tokens/auth-server-url.token';
 import type { LoginFormGroup } from '@features/auth/data/models/login/login-form.model';
 import { convertLoginFormModelToCredentialsApiData } from '../data/helpers/login-convert';
 import type { SignupModel } from '../data/models/signup/signup-form.model';
-import { convertSignUpModelToCredentialsApiData } from '../data/helpers/signup-convert';
+import { convertSignupModelToCredentialsApiData } from '../data/helpers/signup-convert';
 import type { AuthApiResponse } from '@shared/models/auth-api-response.model';
 
 @Service({ autoProvided: false })
@@ -24,12 +24,12 @@ export class AuthApiService {
     );
   }
 
-  public registration(signupModel: SignupModel) {
-    const convertedSignUpModel = convertSignUpModelToCredentialsApiData(signupModel);
+  public register(signupModel: SignupModel) {
+    const convertedSignupModel = convertSignupModelToCredentialsApiData(signupModel);
 
     return this.httpClient.post<AuthApiResponse>(
       `${this.authURLToken}auth/register`,
-      convertedSignUpModel,
+      convertedSignupModel,
       {
         withCredentials: true,
       },

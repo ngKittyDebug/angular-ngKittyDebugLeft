@@ -72,6 +72,16 @@ docs/adr/
 !.claude/skills/_shared/
 skills-lock.json
 
+# Gemini CLI — local config / sessions / skills stay local, EXCEPT the committed review
+# skills, settings.json
+.gemini/*
+!.gemini/skills/
+.gemini/skills/*
+!.gemini/skills/pr-review/
+!.gemini/skills/codebase-audit/
+!.gemini/skills/_shared/
+!.gemini/settings.json
+
 # PartyKit local dev state
 .partykit/
 partykit-server/.partykit/
