@@ -1,8 +1,8 @@
-import type { EvolutionChainItem } from '@shared/models/pokemon-evolution-chain-api-data-interface';
+import type { EvolutionChainItemApiData } from '@shared/models/pokemon-evolution-chain-api-data-interface';
 import type { EvolutionNodeModel } from '@shared/services/pokemon-data.service';
 
 export function convertEvolutionChainToNodeModel(
-  node: EvolutionChainItem | null | undefined,
+  node: EvolutionChainItemApiData | null | undefined,
 ): EvolutionNodeModel | null {
   if (!node || !node.species) {
     return null;
@@ -12,7 +12,7 @@ export function convertEvolutionChainToNodeModel(
   const condition = detail?.min_level ? `Lv. ${detail.min_level}` : detail?.trigger?.name || null;
 
   const children: EvolutionNodeModel[] = (node.evolves_to || [])
-    .map((child: EvolutionChainItem) => convertEvolutionChainToNodeModel(child))
+    .map((child: EvolutionChainItemApiData) => convertEvolutionChainToNodeModel(child))
     .filter((c): c is EvolutionNodeModel => c !== null);
 
   return {
