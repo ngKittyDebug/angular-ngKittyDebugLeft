@@ -140,8 +140,6 @@ describe('PokemonDataService', () => {
       await vi.waitUntil(() => result.profileSpecies() !== undefined);
       appReference.tick();
 
-      await new Promise((resolve) => setTimeout(resolve, 0));
-
       expect(result.profileEvolution()).toBeUndefined();
     });
   });
