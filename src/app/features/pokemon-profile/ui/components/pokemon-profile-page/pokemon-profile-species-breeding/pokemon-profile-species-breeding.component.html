@@ -6,16 +6,12 @@
       <div class="circle__progress" tuiProgressLabel>
         <span class="circle__progress_label" tuiHeader="h6">
           <p>{{ pokemonProfileDataSpecies().capture_rate }}</p>
-          <p tuiSubtitle>{{ t('pokemonProfile.from') }}</p>
-          <p>{{ stepsPerHatchCycle }}</p>
         </span>
         <tui-progress-circle
           class="circle__progress_image"
           size="xxl"
-          [max]="100"
-          [value]="
-            pokemonProfileDataSpecies().capture_rate | leftPawPercentage: this.stepsPerHatchCycle
-          "
+          [max]="maxSpeciesStat"
+          [value]="pokemonProfileDataSpecies().capture_rate | leftPawPercentage: maxSpeciesStat"
         />
       </div>
     </div>
@@ -24,16 +20,12 @@
       <div class="circle__progress" tuiProgressLabel>
         <span class="circle__progress_label" tuiHeader="h6">
           <p>{{ pokemonProfileDataSpecies().base_happiness }}</p>
-          <p tuiSubtitle>{{ t('pokemonProfile.from') }}</p>
-          <p>{{ stepsPerHatchCycle }}</p>
         </span>
         <tui-progress-circle
           class="circle__progress_image"
           size="xxl"
-          [max]="100"
-          [value]="
-            pokemonProfileDataSpecies().base_happiness | leftPawPercentage: this.stepsPerHatchCycle
-          "
+          [max]="maxSpeciesStat"
+          [value]="pokemonProfileDataSpecies().base_happiness | leftPawPercentage: maxSpeciesStat"
         />
       </div>
     </div>
@@ -52,7 +44,7 @@
       <div class="circle__progress" tuiProgressLabel>
         <span class="circle__progress_label" tuiHeader="h6">
           <p>
-            {{ pokemonProfileDataSpecies().hatch_counter * this.stepsPerHatchCycle }}
+            {{ pokemonProfileDataSpecies().hatch_counter * stepsPerHatchCycle }}
             {{ t('pokemonProfile.steps') }}
           </p>
           <p>({{ pokemonProfileDataSpecies().hatch_counter }} {{ t('pokemonProfile.cycles') }})</p>
@@ -60,10 +52,8 @@
         <tui-progress-circle
           class="circle__progress_image"
           size="xxl"
-          [max]="100"
-          [value]="
-            pokemonProfileDataSpecies().hatch_counter | leftPawPercentage: this.maxHatchCounter
-          "
+          [max]="maxHatchCounter"
+          [value]="pokemonProfileDataSpecies().hatch_counter | leftPawPercentage: maxHatchCounter"
         />
       </div>
     </div>

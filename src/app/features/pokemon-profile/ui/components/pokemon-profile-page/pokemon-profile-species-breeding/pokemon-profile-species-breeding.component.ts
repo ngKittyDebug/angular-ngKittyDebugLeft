@@ -6,6 +6,7 @@ import type { PokemonSpeciesApiData } from '@shared/models/pokemon-species-api-d
 import { PercentagePipe } from '@shared/pipes/percentage.pipe';
 import {
   MAX_HATCH_COUNTER,
+  MAX_SPECIES_STAT,
   STEPS_PER_HATCH_CYCLE,
 } from '@features/pokemon-profile/data/constants/pokemon-profile.constants';
 
@@ -19,6 +20,7 @@ import {
 export class PokemonProfileSpeciesBreedingComponent {
   public readonly pokemonProfileDataSpecies = input.required<PokemonSpeciesApiData>();
 
+  protected readonly maxSpeciesStat = MAX_SPECIES_STAT;
   protected readonly stepsPerHatchCycle = STEPS_PER_HATCH_CYCLE;
   protected readonly maxHatchCounter = MAX_HATCH_COUNTER;
 }
