@@ -1,9 +1,11 @@
+import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import type { ComponentRef } from '@angular/core';
 import { signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { PokemonDataService } from '@shared/services/pokemon-data.service';
 import { POKEMON_DATA_FIXTURE } from '@shared/fixtures/eevee.fixture';
+import type { MockedObject } from 'vitest';
 import { vi } from 'vitest';
 
 import { PokemonCardComponent } from './pokemon-card.component';
@@ -12,6 +14,7 @@ import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-dat
 describe('PokemonCardComponent', () => {
   let component: PokemonCardComponent;
   let componentReference: ComponentRef<PokemonCardComponent>;
+  let fixture: ComponentFixture<PokemonCardComponent>;
 
   const mockCardDataSignal = signal<PokemonDetailApiData | null>(null);
 
@@ -20,7 +23,7 @@ describe('PokemonCardComponent', () => {
       cardData: mockCardDataSignal,
       cardDataError: signal(undefined),
     })),
-  };
+  } as const satisfies Partial<MockedObject<PokemonDataService>>;
 
   beforeEach(() => {
     pokemonDataServiceMock.createPokemonCardData.mockClear();
@@ -34,7 +37,7 @@ describe('PokemonCardComponent', () => {
       ],
     });
 
-    const fixture = TestBed.createComponent(PokemonCardComponent);
+    fixture = TestBed.createComponent(PokemonCardComponent);
 
     component = fixture.componentInstance;
     componentReference = fixture.componentRef;
@@ -42,6 +45,7 @@ describe('PokemonCardComponent', () => {
 
   it('должен инициализироваться', () => {
     componentReference.setInput('pokemonName', POKEMON_DATA_FIXTURE.name);
+
     expect(component).toBeTruthy();
   });
 
@@ -58,20 +62,24 @@ describe('PokemonCardComponent', () => {
   });
 
   describe('Лимитирование характеристик (pokemonLimitedStats)', () => {
-    it('должен возвращать пустой массив, если данные еще загружаются или отсутствуют', () => {
+    it('должен возвращать пустой массив (не рендерить статы), если данные еще загружаются или отсутствуют', () => {
       componentReference.setInput('pokemonName', POKEMON_DATA_FIXTURE.name);
       mockCardDataSignal.set(null);
+      fixture.detectChanges();
 
-      expect(component['pokemonLimitedStats']()).toEqual([]);
+      const statRows = fixture.nativeElement.querySelectorAll('.card__line-stats');
+
+      expect(statRows).toHaveLength(3);
     });
 
     it('должен возвращать максимум 3 характеристики, если их приходит больше', () => {
       componentReference.setInput('pokemonName', POKEMON_DATA_FIXTURE.name);
       mockCardDataSignal.set(POKEMON_DATA_FIXTURE);
+      fixture.detectChanges();
 
-      const expectedStats = POKEMON_DATA_FIXTURE.stats.slice(0, 3);
+      const statRows = fixture.nativeElement.querySelectorAll('.card__line-stats');
 
-      expect(component['pokemonLimitedStats']()).toEqual(expectedStats);
+      expect(statRows).toHaveLength(3);
     });
 
     it('должен возвращать все характеристики, если их меньше лимита', () => {
@@ -80,14 +88,23 @@ describe('PokemonCardComponent', () => {
         ...POKEMON_DATA_FIXTURE,
         stats: POKEMON_DATA_FIXTURE.stats.slice(0, 1),
       });
+      fixture.detectChanges();
 
-      expect(component['pokemonLimitedStats']()).toHaveLength(1);
+      const statRows = fixture.nativeElement.querySelectorAll('.card__line-stats');
+
+      expect(statRows).toHaveLength(1);
     });
   });
 
   describe('Заглушки характеристик (skeletonStats)', () => {
     it('должен содержать массив из 3 элементов для рендеринга скелетонов', () => {
-      expect(component['skeletonStats']).toHaveLength(3);
+      componentReference.setInput('pokemonName', POKEMON_DATA_FIXTURE.name);
+      mockCardDataSignal.set(null);
+      fixture.detectChanges();
+
+      const skeletonRows = fixture.nativeElement.querySelectorAll('.card__line-stats');
+
+      expect(skeletonRows).toHaveLength(3);
     });
   });
 });
