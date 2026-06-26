@@ -5,6 +5,7 @@ import { FRENZY } from '@game/frenzy/config';
 import type { ClientMessage, ServerMessage, ServerState } from '@game/frenzy/types';
 
 import FeedingRoom from '../index';
+import { NAME_MAX_LENGTH } from '../validate-join';
 import { TEST_BODY } from '../../../engine/__tests__/test-body';
 
 const TICK_MS = 1000 / FRENZY.tickRateHz;
@@ -128,6 +129,22 @@ describe('FeedingRoom orchestration', () => {
     expect(overflow.closed).toBe(true);
     expect(overflow.sent.some((message) => message.type === 'roomFull')).toBe(true);
     expect(latestSnapshot(room)?.state.players).toHaveLength(FRENZY.maxPlayers);
+  });
+
+  it('truncates an over-long player name to NAME_MAX_LENGTH on join', () => {
+    const { room, server } = setup();
+    const conn = new FakeConnection('c1');
+
+    server.onConnect(asParty(conn));
+    send(server, conn, { type: 'identify', sessionToken: 'long-name-token' });
+    send(server, conn, {
+      type: 'join',
+      name: 'x'.repeat(NAME_MAX_LENGTH + 16),
+      appearance: 'caterpie',
+      body: TEST_BODY,
+    });
+
+    expect(humanPlayers(room)[0].name).toHaveLength(NAME_MAX_LENGTH);
   });
 
   it('lets a player eat a spawned item (click path works end to end)', () => {
