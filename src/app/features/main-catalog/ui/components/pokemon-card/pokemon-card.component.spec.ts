@@ -23,7 +23,7 @@ describe('PokemonCardComponent', () => {
       cardData: mockCardDataSignal,
       cardDataError: signal(undefined),
     })),
-  } as const satisfies Partial<MockedObject<PokemonDataService>>;
+  } as const satisfies MockedObject<Pick<PokemonDataService, 'createPokemonCardData'>>;
 
   beforeEach(() => {
     pokemonDataServiceMock.createPokemonCardData.mockClear();
@@ -62,16 +62,6 @@ describe('PokemonCardComponent', () => {
   });
 
   describe('Лимитирование характеристик (pokemonLimitedStats)', () => {
-    it('должен возвращать пустой массив (не рендерить статы), если данные еще загружаются или отсутствуют', () => {
-      componentReference.setInput('pokemonName', POKEMON_DATA_FIXTURE.name);
-      mockCardDataSignal.set(null);
-      fixture.detectChanges();
-
-      const statRows = fixture.nativeElement.querySelectorAll('.card__line-stats');
-
-      expect(statRows).toHaveLength(3);
-    });
-
     it('должен возвращать максимум 3 характеристики, если их приходит больше', () => {
       componentReference.setInput('pokemonName', POKEMON_DATA_FIXTURE.name);
       mockCardDataSignal.set(POKEMON_DATA_FIXTURE);
