@@ -1,5 +1,6 @@
 import { FRENZY } from '@game/frenzy/config';
-import type { JoinRejectReason, PlayerBody, Stage, StageBody } from '@game/frenzy/types';
+import { STAGES } from '@game/frenzy/types';
+import type { JoinRejectReason, PlayerBody, StageBody } from '@game/frenzy/types';
 
 // Length cap of the opaque appearance id — bounds garbage without coupling the server to the client's roster.
 const APPEARANCE_MAX_LENGTH = 32;
@@ -7,7 +8,6 @@ const APPEARANCE_MAX_LENGTH = 32;
 // axis, and drift/steer speeds can't exceed this (normalized units/sec). Generous bounds — just anti-griefing.
 const BODY_MAX_DIMENSION_PX = 300;
 const BODY_MAX_SPEED = 0.3;
-const STAGES: readonly Stage[] = [1, 2, 3];
 
 /** Game-policy bounds on one stage's descriptor (the numbers are already finite — `parse-client-message`). */
 function isStageBodyInBounds(stageBody: StageBody): boolean {

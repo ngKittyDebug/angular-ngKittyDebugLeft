@@ -1,6 +1,5 @@
-import type { ClientMessage, PlayerBody, Stage } from '@game/frenzy/types';
-
-const STAGES: readonly Stage[] = [1, 2, 3];
+import { STAGES } from '@game/frenzy/types';
+import type { ClientMessage, PlayerBody } from '@game/frenzy/types';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;

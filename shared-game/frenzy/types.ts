@@ -42,7 +42,7 @@ export type {
   StageBody,
   SteeredMessage,
 } from '../engine/types';
-export { isNPC } from '../engine/types';
+export { isNPC, STAGES } from '../engine/types';
 
 /** Derived from the item roster's ENABLED slices (`definition/items/`) — a flagged-off item can never spawn,
  * so the wire/client never sees its literal; flipping the flag grows the union at compile time. */
