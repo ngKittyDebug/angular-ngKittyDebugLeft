@@ -1,4 +1,5 @@
 import type { GameDefinition } from '@game/engine/definition';
+import { rescaleVelocity } from '@game/engine/geometry';
 import type { EatenEvent, GameEvent, Item, Player, ServerState } from '@game/engine/types';
 
 import { applyEffects, resolveGrants } from './apply-effect';
@@ -69,8 +70,7 @@ function nudgeResult<TItemId extends string, TEffectId extends string, TNpcId ex
   const speed = Math.hypot(vx, vy);
 
   if (speed > cap && speed > 0) {
-    vx = (vx / speed) * cap;
-    vy = (vy / speed) * cap;
+    ({ vx, vy } = rescaleVelocity(vx, vy, cap));
   }
 
   // Stamp the shover so a kill from this item's blast credits them in the obituary (last toucher wins a tug-of-war).

@@ -31,3 +31,23 @@ export function restYFor(id: string, range: readonly [number, number]): number {
 
   return min + fraction * (max - min);
 }
+
+/**
+ * Rescales a velocity to `target` speed, preserving its direction. A zero (parked) velocity gets a default +x
+ * heading `{ vx: target, vy: 0 }` so it doesn't stay frozen; callers that must NOT move a zero vector guard with
+ * their own `speed > 0` before calling. Used to cap a velocity to a ceiling, floor it up to a cruise speed, or
+ * recruise on evolution — the per-site condition stays at the call site, only the normalize-and-scale math lives here.
+ */
+export function rescaleVelocity(
+  vx: number,
+  vy: number,
+  target: number,
+): { vx: number; vy: number } {
+  const magnitude = Math.hypot(vx, vy);
+
+  if (magnitude === 0) {
+    return { vx: target, vy: 0 };
+  }
+
+  return { vx: (vx / magnitude) * target, vy: (vy / magnitude) * target };
+}
