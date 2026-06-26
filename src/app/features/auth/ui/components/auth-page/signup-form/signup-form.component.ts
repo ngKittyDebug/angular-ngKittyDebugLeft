@@ -8,7 +8,7 @@ import type { Field } from '@angular/forms/signals';
 import { FormField } from '@angular/forms/signals';
 import { AUTH_SERVER_URL_TOKEN } from '@core/tokens/auth-server-url.token';
 import { AuthApiService } from '@features/auth/api/auth-api.service';
-import { SignUpFacade } from '@features/auth/data/facades/signup.facade';
+import { SignupFacade } from '@features/auth/data/facades/signup.facade';
 import { AUTH_SERVER_URL } from '@core/constants/auth-constants';
 
 @Component({
@@ -30,14 +30,14 @@ import { AUTH_SERVER_URL } from '@core/constants/auth-constants';
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [
     AuthApiService,
-    SignUpFacade,
+    SignupFacade,
     { provide: AUTH_SERVER_URL_TOKEN, useValue: AUTH_SERVER_URL },
   ],
 })
 export class SignupFormComponent {
   protected loginRouterPath = '../login';
 
-  protected readonly signupFacade = inject(SignUpFacade);
+  protected readonly signupFacade = inject(SignupFacade);
   protected readonly isLoading = this.signupFacade.isLoading;
 
   protected readonly returnUrl = input<string>('/');
@@ -50,6 +50,6 @@ export class SignupFormComponent {
 
   protected onSubmit(event: Event): void {
     event.preventDefault();
-    this.signupFacade.onSignUpSubmit(this.returnUrl());
+    this.signupFacade.onSignupSubmit(this.returnUrl());
   }
 }
