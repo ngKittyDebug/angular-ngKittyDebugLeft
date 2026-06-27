@@ -1,4 +1,4 @@
-import { convertEvolutionChainToNodeModel } from './convert-evolution-chain'; // Замените на ваш реальный путь
+import { convertEvolutionChainToNodeModel } from './convert-evolution-chain';
 import type { EvolutionChainItemApiData } from '@shared/models/pokemon-evolution-chain-api-data-interface';
 import { POKEMON_EVOLUTION_CHAIN_FIXTURE } from '@shared/fixtures/eevee-evolution-chain.fixture';
 
