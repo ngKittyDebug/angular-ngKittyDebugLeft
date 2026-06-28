@@ -13,8 +13,7 @@ import type { BattleEvent, BattlePokemon, BattleState } from '@game/pokemon-batt
 import { AudioManagerService } from '../../../../data/services/audio-manager.service';
 
 @Component({
-  selector: 'app-canvas-renderer',
-  standalone: true,
+  selector: 'left-paw-canvas-renderer',
   templateUrl: './canvas-renderer.component.html',
   styleUrl: './canvas-renderer.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

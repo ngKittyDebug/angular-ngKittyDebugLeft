@@ -8,13 +8,12 @@ import type {
   BattleState,
   PokemonMove,
 } from '@game/pokemon-battle/types';
-import { CHARMANDER_FIXTURE, IVYSAUR_FIXTURE } from '../fixtures/pokemon.fixture';
 import { BotPlayerService } from '../services/bot-player.service';
 import { AudioManagerService } from '../services/audio-manager.service';
 import { PokemonBattleStore } from '../store/pokemon-battle.store';
 
 @Service({ autoProvided: false })
-export class PokemonBattleFacade {
+export class PokemonBattleArenaFacade {
   private readonly botPlayerService = inject(BotPlayerService);
   private readonly audioManager = inject(AudioManagerService);
   private readonly pokemonBattleStore = inject(PokemonBattleStore);
@@ -26,15 +25,7 @@ export class PokemonBattleFacade {
   public readonly turnResolved$ = this.turnResolvedSubject.asObservable();
 
   // Expose store signals
-  public readonly pokemonList = this.pokemonBattleStore.pokemonList;
-  public readonly selectedTeam = this.pokemonBattleStore.selectedTeam;
-  public readonly opponentTeam = this.pokemonBattleStore.opponentTeam;
-  public readonly isLoading = this.pokemonBattleStore.isLoading;
-  public readonly error = this.pokemonBattleStore.error;
   public readonly battleStarted = this.pokemonBattleStore.battleStarted;
-  public readonly currentPage = this.pokemonBattleStore.currentPage;
-  public readonly totalCount = this.pokemonBattleStore.totalCount;
-  public readonly limit = this.pokemonBattleStore.limit;
 
   // Expose AudioManager signals
   public readonly soundEnabled = this.audioManager.enabled;
@@ -87,7 +78,6 @@ export class PokemonBattleFacade {
   });
 
   constructor() {
-    this.pokemonBattleStore.loadPokemons({ page: 0, limit: 10 });
     this.resetBattle();
   }
 
@@ -177,59 +167,9 @@ export class PokemonBattleFacade {
     this.isAnimating.set(false);
   }
 
-  public onSelectPokemon(pokemon: BattlePokemon): void {
-    this.pokemonBattleStore.selectPokemonForTeam(pokemon);
-  }
-
-  public onStartBattleClick(): void {
-    const selected = this.pokemonBattleStore.selectedTeam();
-
-    if (selected.length !== 2) {
-      return;
-    }
-
-    const available = this.pokemonBattleStore
-      .pokemonList()
-      .filter((p) => !selected.some((s) => s.id === p.id));
-
-    const opponents: BattlePokemon[] = [];
-
-    if (available.length >= 2) {
-      const shuffled = [...available].sort(() => 0.5 - Math.random());
-
-      opponents.push(shuffled[0], shuffled[1]);
-    } else {
-      opponents.push(
-        JSON.parse(JSON.stringify(CHARMANDER_FIXTURE)),
-        JSON.parse(JSON.stringify(IVYSAUR_FIXTURE)),
-      );
-    }
-
-    this.pokemonBattleStore.startBattle(opponents);
-    this.resetBattle();
-  }
-
   public goBackToSelection(): void {
     this.pokemonBattleStore.clearSelectedTeam();
     this.battleState.set(null);
-  }
-
-  public onPrevPage(): void {
-    const current = this.pokemonBattleStore.currentPage();
-
-    if (current > 0) {
-      this.pokemonBattleStore.loadPokemons({ page: current - 1, limit: 10 });
-    }
-  }
-
-  public onNextPage(): void {
-    const current = this.pokemonBattleStore.currentPage();
-    const total = this.pokemonBattleStore.totalCount();
-    const limit = this.pokemonBattleStore.limit();
-
-    if ((current + 1) * limit < total) {
-      this.pokemonBattleStore.loadPokemons({ page: current + 1, limit: 10 });
-    }
   }
 
   public resetBattle(): void {

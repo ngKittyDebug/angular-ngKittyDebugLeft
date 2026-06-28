@@ -1,0 +1,66 @@
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, viewChild } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import type { BattleEvent, BattlePokemon, PokemonMove } from '@game/pokemon-battle/types';
+import { CanvasRendererComponent } from '../canvas-renderer/canvas-renderer.component';
+import { PokemonBattleArenaFacade } from '../../../../data/facades/pokemon-battle-arena.facade';
+
+@Component({
+  selector: 'left-paw-pokemon-battle-arena',
+  imports: [CommonModule, CanvasRendererComponent],
+  providers: [PokemonBattleArenaFacade],
+  templateUrl: './pokemon-battle-arena.component.html',
+  styleUrl: './pokemon-battle-arena.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class PokemonBattleArenaComponent {
+  // View child for the canvas renderer to play events (private field before public fields)
+  private readonly canvasRenderer = viewChild(CanvasRendererComponent);
+
+  public readonly facade = inject(PokemonBattleArenaFacade);
+
+  constructor() {
+    const destroyReference = inject(DestroyRef);
+
+    this.facade.turnResolved$.pipe(takeUntilDestroyed(destroyReference)).subscribe((events) => {
+      this.playEvents(events);
+    });
+  }
+
+  public playEvents(events: BattleEvent[]): void {
+    this.canvasRenderer()?.playEvents(events);
+  }
+
+  // Event handlers starting with "on" as per styleguide
+  public onSelectMove(move: PokemonMove): void {
+    this.facade.onSelectMove(move);
+  }
+
+  public onSelectTarget(target: BattlePokemon): void {
+    this.facade.onSelectTarget(target);
+  }
+
+  public onCancelMoveSelection(): void {
+    this.facade.cancelMoveSelection();
+  }
+
+  public onResetSelection(): void {
+    this.facade.resetSelection();
+  }
+
+  public onResetBattle(): void {
+    this.facade.resetBattle();
+  }
+
+  public onGoBackToSelection(): void {
+    this.facade.goBackToSelection();
+  }
+
+  public onEventTriggered(event: BattleEvent): void {
+    this.facade.onEventTriggered(event);
+  }
+
+  public onAnimationFinished(): void {
+    this.facade.onAnimationFinished();
+  }
+}

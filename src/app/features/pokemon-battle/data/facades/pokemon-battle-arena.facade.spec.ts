@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { PokemonBattleFacade } from './pokemon-battle.facade';
+import { PokemonBattleArenaFacade } from './pokemon-battle-arena.facade';
 import { BotPlayerService } from '../services/bot-player.service';
 import { AudioManagerService } from '../services/audio-manager.service';
 import { PokemonBattleStore } from '../store/pokemon-battle.store';
@@ -12,11 +12,11 @@ import {
   SQUIRTLE_FIXTURE,
 } from '../fixtures/pokemon.fixture';
 
-describe('PokemonBattleFacade', () => {
+describe('PokemonBattleArenaFacade', () => {
   let mockStore: any;
   let mockAudioManager: any;
   let mockBotPlayerService: any;
-  let facade: PokemonBattleFacade;
+  let facade: PokemonBattleArenaFacade;
 
   beforeEach(() => {
     mockStore = {
@@ -54,21 +54,20 @@ describe('PokemonBattleFacade', () => {
 
     TestBed.configureTestingModule({
       providers: [
-        PokemonBattleFacade,
+        PokemonBattleArenaFacade,
         { provide: PokemonBattleStore, useValue: mockStore },
         { provide: AudioManagerService, useValue: mockAudioManager },
         { provide: BotPlayerService, useValue: mockBotPlayerService },
       ],
     });
 
-    facade = TestBed.inject(PokemonBattleFacade);
+    facade = TestBed.inject(PokemonBattleArenaFacade);
   });
 
   describe('Happy Path', () => {
     describe('Инициализация', () => {
-      it('должен правильно инициализироваться и загружать покемонов', () => {
+      it('должен правильно инициализироваться и создавать состояние боя', () => {
         expect(facade).toBeDefined();
-        expect(mockStore.loadPokemons).toHaveBeenCalledTimes(1);
         expect(facade.battleState()).not.toBeNull();
         expect(facade.battleState()?.playerSide.pokemons[0].name).toBe('bulbasaur');
         expect(facade.activeAlivePlayerPokemons().length).toBe(2);
@@ -76,19 +75,19 @@ describe('PokemonBattleFacade', () => {
     });
 
     describe('Управление звуком', () => {
-      it('должен вызывать AudioManager.toggle при toggleMute', () => {
+      it('должен переключать звук', () => {
         facade.toggleMute();
         expect(mockAudioManager.toggle).toHaveBeenCalledTimes(1);
       });
 
-      it('должен вызывать AudioManager.setVolume при изменении громкости', () => {
+      it('должен изменять громкость', () => {
         facade.onVolumeChange(0.5);
         expect(mockAudioManager.setVolume).toHaveBeenCalledWith(0.5);
       });
     });
 
     describe('Выбор атак и целей', () => {
-      it('должен переключать выбранный прием и цель', () => {
+      it('должен переходить к следующему покемону при выборе приема и цели', () => {
         expect(facade.selectedMove()).toBeNull();
 
         facade.onSelectMove('tackle');
@@ -98,12 +97,11 @@ describe('PokemonBattleFacade', () => {
 
         facade.onSelectTarget(target);
 
-        // Первый покемон выбрал атаку, ход переходит ко второму
         expect(facade.currentSelectingPokemonIndex()).toBe(1);
         expect(facade.selectedMove()).toBeNull();
       });
 
-      it('должен сбрасывать выбранный прием при cancelMoveSelection', () => {
+      it('должен сбрасывать выбранный прием', () => {
         facade.onSelectMove('tackle');
         expect(facade.selectedMove()?.name).toBe('tackle');
 
@@ -111,7 +109,7 @@ describe('PokemonBattleFacade', () => {
         expect(facade.selectedMove()).toBeNull();
       });
 
-      it('должен очищать все выбранные приемы при resetSelection', () => {
+      it('должен очищать выбор раунда', () => {
         facade.onSelectMove('tackle');
         facade.onSelectTarget(facade.activeAliveOpponentPokemons()[0]);
 

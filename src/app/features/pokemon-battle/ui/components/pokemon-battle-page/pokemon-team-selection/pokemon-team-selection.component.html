@@ -1,0 +1,93 @@
+<main class="team-selection-main">
+  <div class="selection-box">
+    <div class="selection-header">
+      <h2>Выберите Вашу Команду (2 покемона)</h2>
+      <div class="selected-summary">
+        Выбрано: <strong>{{ facade.selectedTeam().length }} / 2</strong>
+      </div>
+    </div>
+
+    @if (facade.isLoading()) {
+      <div class="loader-container">
+        <div class="spinner"></div>
+        <p>Загрузка покемонов из PokeAPI...</p>
+      </div>
+    } @else if (facade.error(); as err) {
+      <div class="error-container">
+        <p class="error-message">Ошибка: {{ err }}</p>
+        <button class="retry-button" (click)="onPrevClick()">Попробовать снова</button>
+      </div>
+    } @else {
+      <div class="pokemon-selection-grid">
+        @for (pokemon of facade.pokemonList(); track pokemon.id) {
+          @let isSelected = facade.selectedTeam().some((p) => p.id === pokemon.id);
+          @let limitReached = facade.selectedTeam().length >= 2;
+
+          <button
+            type="button"
+            class="pokemon-card"
+            [class.selected]="isSelected"
+            [class.disabled]="!isSelected && limitReached"
+            [disabled]="!isSelected && limitReached"
+            (click)="onPokemonClick(pokemon)"
+          >
+            <div class="card-checkbox">
+              <span class="check-icon">{{ isSelected ? '✓' : '' }}</span>
+            </div>
+            <div class="pokemon-image-wrapper">
+              <img [src]="pokemon.sprites.front" [alt]="pokemon.name" class="pokemon-image" />
+            </div>
+            <h3 class="pokemon-name">{{ pokemon.name | uppercase }}</h3>
+            <div class="pokemon-types">
+              @for (type of pokemon.types; track type) {
+                <span class="type-badge" [attr.data-type]="type">{{ type }}</span>
+              }
+            </div>
+            <div class="pokemon-stats">
+              <div class="stat-row">
+                <span>HP:</span> <strong>{{ pokemon.maxHp }}</strong>
+              </div>
+              <div class="stat-row">
+                <span>ATK:</span> <strong>{{ pokemon.stats.attack }}</strong>
+              </div>
+              <div class="stat-row">
+                <span>DEF:</span> <strong>{{ pokemon.stats.defense }}</strong>
+              </div>
+              <div class="stat-row">
+                <span>SPD:</span> <strong>{{ pokemon.stats.speed }}</strong>
+              </div>
+            </div>
+          </button>
+        }
+      </div>
+
+      <div class="pagination-controls">
+        <button
+          class="pagination-button"
+          [disabled]="facade.currentPage() === 0"
+          (click)="onPrevClick()"
+        >
+          ← Назад
+        </button>
+        <span class="page-indicator">Страница {{ facade.currentPage() + 1 }}</span>
+        <button
+          class="pagination-button"
+          [disabled]="(facade.currentPage() + 1) * facade.limit() >= facade.totalCount()"
+          (click)="onNextClick()"
+        >
+          Вперед →
+        </button>
+      </div>
+
+      <div class="battle-start-action">
+        <button
+          class="start-battle-action-btn"
+          [disabled]="facade.selectedTeam().length !== 2"
+          (click)="onStartBattleClick()"
+        >
+          🔥 НАЧАТЬ БОЙ 🔥
+        </button>
+      </div>
+    }
+  </div>
+</main>
