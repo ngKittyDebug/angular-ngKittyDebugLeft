@@ -3,8 +3,8 @@ import { patchState, signalStore, withMethods, withState } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { EMPTY, pipe } from 'rxjs';
 import { catchError, switchMap, tap } from 'rxjs/operators';
-import { PokemonBattleApiService } from './pokemon-battle-api.service';
-import { mapToBattlePokemon } from './pokemon-mapper';
+import { PokemonBattleApiService } from '../api/pokemon/services/pokemon-battle-api.service';
+import { mapToBattlePokemon } from '../api/pokemon/helpers/pokemon-mapper';
 import type { BattlePokemon } from '@game/pokemon-battle/types';
 
 export interface PokemonBattleStoreState {

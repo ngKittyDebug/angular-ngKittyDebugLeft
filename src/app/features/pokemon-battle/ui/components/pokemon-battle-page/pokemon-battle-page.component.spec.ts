@@ -3,8 +3,8 @@ import { TestBed } from '@angular/core/testing';
 import { describe, expect, it, vi } from 'vitest';
 
 import { PokemonBattlePageComponent } from './pokemon-battle-page.component';
-import { BotPlayerService } from '../../../data/bot-player.service';
-import { PokemonBattleStore } from '../../../data/pokemon-battle.store';
+import { BotPlayerService } from '../../../data/services/bot-player.service';
+import { PokemonBattleStore } from '../../../data/store/pokemon-battle.store';
 import {
   BULBASAUR_FIXTURE,
   CHARMANDER_FIXTURE,

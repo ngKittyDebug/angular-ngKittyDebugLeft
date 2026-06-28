@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { BattleState } from '@game/pokemon-battle/types';
 import { CanvasRendererComponent } from './canvas-renderer.component';
-import { AudioManagerService } from '../../../../data/audio-manager.service';
+import { AudioManagerService } from '../../../../data/services/audio-manager.service';
 
 describe('CanvasRendererComponent', () => {
   beforeEach(() => {

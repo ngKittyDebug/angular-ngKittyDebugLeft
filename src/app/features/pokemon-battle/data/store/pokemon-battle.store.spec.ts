@@ -2,8 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
 import { PokemonBattleStore } from './pokemon-battle.store';
-import { PokemonBattleApiService } from './pokemon-battle-api.service';
-import { mapToBattlePokemon } from './pokemon-mapper';
+import { PokemonBattleApiService } from '../api/pokemon/services/pokemon-battle-api.service';
+import { mapToBattlePokemon } from '../api/pokemon/helpers/pokemon-mapper';
 import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
 
 const MOCK_RAW_POKEMON: PokemonDetailApiData = {

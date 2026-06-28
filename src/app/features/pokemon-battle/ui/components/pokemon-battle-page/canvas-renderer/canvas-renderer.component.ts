@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 
 import type { BattleEvent, BattlePokemon, BattleState } from '@game/pokemon-battle/types';
-import { AudioManagerService } from '../../../../data/audio-manager.service';
+import { AudioManagerService } from '../../../../data/services/audio-manager.service';
 
 @Component({
   selector: 'app-canvas-renderer',
