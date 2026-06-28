@@ -16,15 +16,11 @@ import type {
   BattleState,
   PokemonMove,
 } from '@game/pokemon-battle/types';
-import {
-  BULBASAUR_FIXTURE,
-  CHARMANDER_FIXTURE,
-  IVYSAUR_FIXTURE,
-  SQUIRTLE_FIXTURE,
-} from '../../../data/fixtures/pokemon.fixture';
+import { CHARMANDER_FIXTURE, IVYSAUR_FIXTURE } from '../../../data/fixtures/pokemon.fixture';
 import { CanvasRendererComponent } from './canvas-renderer/canvas-renderer.component';
 import { BotPlayerService } from '../../../data/bot-player.service';
 import { AudioManagerService } from '../../../data/audio-manager.service';
+import { PokemonBattleStore } from '../../../data/pokemon-battle.store';
 
 @Component({
   selector: 'app-pokemon-battle-page',
@@ -37,6 +33,7 @@ import { AudioManagerService } from '../../../data/audio-manager.service';
 export class PokemonBattlePageComponent {
   private botPlayerService = inject(BotPlayerService);
   private readonly audioManager = inject(AudioManagerService);
+  private readonly pokemonBattleStore = inject(PokemonBattleStore);
   private engine!: BattleEngine;
 
   private readonly canvasRenderer = viewChild(CanvasRendererComponent);
@@ -54,7 +51,18 @@ export class PokemonBattlePageComponent {
   public readonly currentSelectingPokemonIndex = signal<number>(0);
   public readonly selectedMove = signal<PokemonMove | null>(null);
 
+  // Expose store signals for the template
+  public readonly storePokemonList = this.pokemonBattleStore.pokemonList;
+  public readonly storeSelectedTeam = this.pokemonBattleStore.selectedTeam;
+  public readonly storeIsLoading = this.pokemonBattleStore.isLoading;
+  public readonly storeError = this.pokemonBattleStore.error;
+  public readonly storeBattleStarted = this.pokemonBattleStore.battleStarted;
+  public readonly storeCurrentPage = this.pokemonBattleStore.currentPage;
+  public readonly storeTotalCount = this.pokemonBattleStore.totalCount;
+  public readonly storeLimit = this.pokemonBattleStore.limit;
+
   constructor() {
+    this.pokemonBattleStore.loadPokemons({ page: 0, limit: 10 });
     this.resetBattle();
   }
 
@@ -184,18 +192,76 @@ export class PokemonBattlePageComponent {
     this.isAnimating.set(false);
   }
 
-  public resetBattle(): void {
-    const playerTeam = [
-      JSON.parse(JSON.stringify(BULBASAUR_FIXTURE)),
-      JSON.parse(JSON.stringify(SQUIRTLE_FIXTURE)),
-    ];
-    const opponentTeam = [
-      JSON.parse(JSON.stringify(CHARMANDER_FIXTURE)),
-      JSON.parse(JSON.stringify(IVYSAUR_FIXTURE)),
-    ];
+  public onSelectPokemon(pokemon: BattlePokemon): void {
+    this.pokemonBattleStore.selectPokemonForTeam(pokemon);
+  }
 
-    this.engine = new BattleEngine(playerTeam, opponentTeam, true);
-    this.battleState.set(this.engine.getState());
+  public onStartBattleClick(): void {
+    const selected = this.pokemonBattleStore.selectedTeam();
+
+    if (selected.length !== 2) {
+      return;
+    }
+
+    const available = this.pokemonBattleStore
+      .pokemonList()
+      .filter((p) => !selected.some((s) => s.id === p.id));
+
+    const opponents: BattlePokemon[] = [];
+
+    if (available.length >= 2) {
+      const shuffled = [...available].sort(() => 0.5 - Math.random());
+
+      opponents.push(shuffled[0], shuffled[1]);
+    } else {
+      opponents.push(
+        JSON.parse(JSON.stringify(CHARMANDER_FIXTURE)),
+        JSON.parse(JSON.stringify(IVYSAUR_FIXTURE)),
+      );
+    }
+
+    this.pokemonBattleStore.startBattle(opponents);
+    this.resetBattle();
+  }
+
+  public goBackToSelection(): void {
+    this.pokemonBattleStore.clearSelectedTeam();
+    this.battleState.set(null);
+  }
+
+  public onPrevPage(): void {
+    const current = this.pokemonBattleStore.currentPage();
+
+    if (current > 0) {
+      this.pokemonBattleStore.loadPokemons({ page: current - 1, limit: 10 });
+    }
+  }
+
+  public onNextPage(): void {
+    const current = this.pokemonBattleStore.currentPage();
+    const total = this.pokemonBattleStore.totalCount();
+    const limit = this.pokemonBattleStore.limit();
+
+    if ((current + 1) * limit < total) {
+      this.pokemonBattleStore.loadPokemons({ page: current + 1, limit: 10 });
+    }
+  }
+
+  public resetBattle(): void {
+    if (this.pokemonBattleStore.battleStarted()) {
+      const playerTeam = JSON.parse(
+        JSON.stringify(this.pokemonBattleStore.selectedTeam()),
+      ) as BattlePokemon[];
+      const opponentTeam = JSON.parse(
+        JSON.stringify(this.pokemonBattleStore.opponentTeam()),
+      ) as BattlePokemon[];
+
+      this.engine = new BattleEngine(playerTeam, opponentTeam, true);
+      this.battleState.set(this.engine.getState());
+    } else {
+      this.battleState.set(null);
+    }
+
     this.textLog.set([]);
     this.isAnimating.set(false);
 
