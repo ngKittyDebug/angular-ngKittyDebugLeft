@@ -1,0 +1,46 @@
+<div class="pokemon-battle-container">
+  <header class="battle-header">
+    <h1 class="battle-title">Битва Покемонов (MVP)</h1>
+    <p class="battle-subtitle">Интеграция Движка и CanvasRenderer вне Zone.js</p>
+  </header>
+
+  <main class="battle-main">
+    <div class="canvas-wrapper">
+      @if (battleState(); as state) {
+        <app-canvas-renderer [state]="state" />
+      }
+    </div>
+
+    <section class="battle-info">
+      <h2 class="info-title">Состояние боя</h2>
+      @if (battleState(); as state) {
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">Раунд:</span>
+            <span class="info-value">{{ state.turn }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Статус:</span>
+            <span class="info-value status-badge">{{ state.status }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Режим:</span>
+            <span class="info-value">1 на 1 (Hardcoded)</span>
+          </div>
+        </div>
+      }
+
+      <div class="battle-rules">
+        <h3>Правила и Информация</h3>
+        <ul>
+          <li>Отрисовка сцены и полосок здоровья производится на HTML5 Canvas.</li>
+          <li>
+            Анимационный цикл (requestAnimationFrame) запущен вне зоны Angular, что предотвращает
+            избыточные циклы Change Detection.
+          </li>
+          <li>Для старта боя загружаются Bulbasaur и Charmander.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+</div>
