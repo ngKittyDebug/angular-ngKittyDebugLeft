@@ -28,5 +28,40 @@ describe('PokemonBattlePageComponent', () => {
         expect(state?.turn).toBe(1);
       });
     });
+
+    describe('Взаимодействие', () => {
+      it('должен проводить раунд боя при выборе атаки и логировать события', () => {
+        TestBed.configureTestingModule({
+          imports: [PokemonBattlePageComponent],
+        });
+
+        const fixture = TestBed.createComponent(PokemonBattlePageComponent);
+
+        fixture.detectChanges();
+        const component = fixture.componentInstance;
+
+        expect(component.textLog()).toHaveLength(0);
+
+        // Игрок выбирает атаку 'tackle'
+        component.onSelectMove('tackle');
+
+        // Лог должен заполниться записями о раунде и уроне
+        const logs = component.textLog();
+
+        expect(logs.length).toBeGreaterThan(0);
+        expect(logs[0]).toBe('--- Раунд 1 ---');
+
+        // Проверяем, что события содержат информацию о нанесении урона
+        const hasDamageLog = logs.some((log) => log.includes('took') && log.includes('damage'));
+
+        expect(hasDamageLog).toBe(true);
+
+        // Проверяем изменение состояния боя
+        const state = component.battleState();
+
+        expect(state).not.toBeNull();
+        expect(state?.turn).toBeGreaterThanOrEqual(1);
+      });
+    });
   });
 });

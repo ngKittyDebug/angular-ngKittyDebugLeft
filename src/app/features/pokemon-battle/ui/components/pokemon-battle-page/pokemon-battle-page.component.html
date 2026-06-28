@@ -5,10 +5,53 @@
   </header>
 
   <main class="battle-main">
-    <div class="canvas-wrapper">
+    <div class="battle-arena">
+      <div class="canvas-wrapper">
+        @if (battleState(); as state) {
+          <app-canvas-renderer [state]="state" />
+        }
+      </div>
+
       @if (battleState(); as state) {
-        <app-canvas-renderer [state]="state" />
+        @if (state.status === 'waiting-for-commands') {
+          @if (activePlayerPokemon; as pokemon) {
+            <div class="battle-controls">
+              <h3 class="controls-title">Выберите атаку для {{ pokemon.name | uppercase }}:</h3>
+              <div class="moves-grid">
+                @for (move of pokemon.moves; track move.name) {
+                  <button class="move-button" (click)="onSelectMove(move.name)">
+                    <span class="move-name">{{ move.name }}</span>
+                    <span class="move-type" [attr.data-type]="move.type">{{ move.type }}</span>
+                    <span class="move-power">Power: {{ move.power }}</span>
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        } @else if (state.status === 'finished') {
+          <div class="battle-controls result-panel">
+            <h3 class="controls-title victory-title">Битва завершена!</h3>
+            <p class="winner-message">
+              Победитель:
+              <span class="winner-name">{{ state.winner === 'player' ? 'Игрок' : 'Бот' }}</span>
+            </p>
+            <button class="restart-button" (click)="resetBattle()">Начать заново</button>
+          </div>
+        }
       }
+
+      <div class="log-panel">
+        <h3 class="log-title">Журнал событий (Battle Log)</h3>
+        <div class="log-box">
+          @if (textLog().length === 0) {
+            <p class="empty-log-message">Бой еще не начался. Сделайте первый ход!</p>
+          } @else {
+            @for (log of textLog(); track $index) {
+              <p class="log-entry" [class.round-header]="log.startsWith('---')">{{ log }}</p>
+            }
+          }
+        </div>
+      </div>
     </div>
 
     <section class="battle-info">
@@ -25,7 +68,7 @@
           </div>
           <div class="info-item">
             <span class="info-label">Режим:</span>
-            <span class="info-value">1 на 1 (Hardcoded)</span>
+            <span class="info-value">1 на 1 (Interactive)</span>
           </div>
         </div>
       }

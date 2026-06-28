@@ -38,3 +38,34 @@ export interface BattleState {
   winner: 'player' | 'opponent' | null;
   turn: number;
 }
+
+export interface BattleCommand {
+  pokemonId: number;
+  moveName: string;
+  targetId: number;
+}
+
+export type BattleEventType =
+  | 'turn-start'
+  | 'use-move'
+  | 'damage'
+  | 'faint'
+  | 'text'
+  | 'battle-over';
+
+export interface BattleEventPayload {
+  attackerId?: number;
+  moveName?: string;
+  targetId?: number;
+  damage?: number;
+  hpBefore?: number;
+  hpAfter?: number;
+  pokemonId?: number;
+  winner?: 'player' | 'opponent';
+}
+
+export interface BattleEvent {
+  type: BattleEventType;
+  message: string;
+  payload?: BattleEventPayload;
+}
