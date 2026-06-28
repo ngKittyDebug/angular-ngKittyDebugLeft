@@ -18,18 +18,54 @@
 
       @if (battleState(); as state) {
         @if (state.status === 'waiting-for-commands' && !isAnimating()) {
-          @if (activePlayerPokemon; as pokemon) {
+          @if (currentSelectingPokemon; as pokemon) {
             <div class="battle-controls">
-              <h3 class="controls-title">Выберите атаку для {{ pokemon.name | uppercase }}:</h3>
-              <div class="moves-grid">
-                @for (move of pokemon.moves; track move.name) {
-                  <button class="move-button" (click)="onSelectMove(move.name)">
-                    <span class="move-name">{{ move.name }}</span>
-                    <span class="move-type" [attr.data-type]="move.type">{{ move.type }}</span>
-                    <span class="move-power">Power: {{ move.power }}</span>
+              <div class="controls-header">
+                <h3 class="controls-title">
+                  Ход {{ currentSelectingPokemonIndex() + 1 }} из
+                  {{ activeAlivePlayerPokemons.length }}
+                </h3>
+                @if (currentSelectingPokemonIndex() > 0) {
+                  <button class="reset-selection-button" (click)="resetSelection()">
+                    Сбросить выбор
                   </button>
                 }
               </div>
+
+              @if (selectedMove() === null) {
+                <div class="selection-prompt">
+                  Выберите атаку для <strong>{{ pokemon.name | uppercase }}</strong
+                  >:
+                </div>
+                <div class="moves-grid">
+                  @for (move of pokemon.moves; track move.name) {
+                    <button class="move-button" (click)="onSelectMove(move)">
+                      <span class="move-name">{{ move.name }}</span>
+                      <span class="move-type" [attr.data-type]="move.type">{{ move.type }}</span>
+                      <span class="move-power">Power: {{ move.power }}</span>
+                    </button>
+                  }
+                </div>
+              } @else {
+                <div class="selection-prompt">
+                  Выберите цель для <strong>{{ pokemon.name | uppercase }}</strong> ({{
+                    selectedMove()?.name
+                  }}):
+                </div>
+                <div class="targets-grid">
+                  @for (target of activeAliveOpponentPokemons; track target.id) {
+                    <button class="target-button" (click)="onSelectTarget(target)">
+                      <span class="target-name">{{ target.name | uppercase }}</span>
+                      <span class="target-hp">HP: {{ target.hp }}/{{ target.maxHp }}</span>
+                    </button>
+                  }
+                </div>
+                <div class="target-actions">
+                  <button class="back-button" (click)="cancelMoveSelection()">
+                    Назад к приёмам
+                  </button>
+                </div>
+              }
             </div>
           }
         } @else if (state.status === 'finished') {
@@ -72,7 +108,7 @@
           </div>
           <div class="info-item">
             <span class="info-label">Режим:</span>
-            <span class="info-value">1 на 1 (Interactive)</span>
+            <span class="info-value">2 на 2 (Doubles)</span>
           </div>
         </div>
       }
@@ -85,7 +121,11 @@
             Анимационный цикл (requestAnimationFrame) запущен вне зоны Angular, что предотвращает
             избыточные циклы Change Detection.
           </li>
-          <li>Для старта боя загружаются Bulbasaur и Charmander.</li>
+          <li>Формат боя: 2 на 2 (Doubles) с возможностью выбора целей для каждого приема.</li>
+          <li>
+            Приемы перенаправляются на оставшегося активного противника в случае нокаута
+            первоначальной цели.
+          </li>
         </ul>
       </div>
     </section>

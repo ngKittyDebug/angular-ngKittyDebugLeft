@@ -114,5 +114,73 @@ describe('BotPlayerService', () => {
 
       expect(commands).toHaveLength(0);
     });
+
+    it('должен возвращать команды для всех активных живых покемонов бота в режиме 2 на 2', () => {
+      const mockState: BattleState = {
+        playerSide: {
+          playerType: 'player',
+          pokemons: [
+            {
+              id: 1,
+              name: 'bulbasaur',
+              maxHp: 45,
+              hp: 45,
+              stats: { hp: 45, attack: 49, defense: 49, speed: 45 },
+              types: ['grass', 'poison'],
+              sprites: { front: '', back: '' },
+              moves: [{ name: 'tackle', type: 'normal', power: 40 }],
+            },
+            {
+              id: 2,
+              name: 'ivysaur',
+              maxHp: 60,
+              hp: 60,
+              stats: { hp: 60, attack: 62, defense: 63, speed: 60 },
+              types: ['grass', 'poison'],
+              sprites: { front: '', back: '' },
+              moves: [{ name: 'tackle', type: 'normal', power: 40 }],
+            },
+          ],
+          activePokemonIds: [1, 2],
+        },
+        opponentSide: {
+          playerType: 'bot',
+          pokemons: [
+            {
+              id: 4,
+              name: 'charmander',
+              maxHp: 39,
+              hp: 39,
+              stats: { hp: 39, attack: 52, defense: 43, speed: 65 },
+              types: ['fire'],
+              sprites: { front: '', back: '' },
+              moves: [{ name: 'scratch', type: 'normal', power: 40 }],
+            },
+            {
+              id: 5,
+              name: 'charmeleon',
+              maxHp: 58,
+              hp: 58,
+              stats: { hp: 58, attack: 64, defense: 58, speed: 80 },
+              types: ['fire'],
+              sprites: { front: '', back: '' },
+              moves: [{ name: 'scratch', type: 'normal', power: 40 }],
+            },
+          ],
+          activePokemonIds: [4, 5],
+        },
+        status: 'waiting-for-commands',
+        winner: null,
+        turn: 1,
+      };
+
+      const commands = service.getCommands(mockState);
+
+      expect(commands).toHaveLength(2);
+      expect(commands.map((c) => c.pokemonId)).toContain(4);
+      expect(commands.map((c) => c.pokemonId)).toContain(5);
+      expect([1, 2]).toContain(commands[0].targetId);
+      expect([1, 2]).toContain(commands[1].targetId);
+    });
   });
 });

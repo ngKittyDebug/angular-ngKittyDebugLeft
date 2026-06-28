@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { describe, expect, it, vi } from 'vitest';
 
 import { PokemonBattlePageComponent } from './pokemon-battle-page.component';
+import { BotPlayerService } from '../../../data/bot-player.service';
 
 describe('PokemonBattlePageComponent', () => {
   describe('Happy Path', () => {
@@ -30,10 +31,14 @@ describe('PokemonBattlePageComponent', () => {
     });
 
     describe('Взаимодействие', () => {
-      it('должен проводить раунд боя при выборе атаки и логировать события', () => {
+      it('должен проводить раунд боя при выборе атак и целей для обоих покемонов игрока', () => {
         TestBed.configureTestingModule({
           imports: [PokemonBattlePageComponent],
         });
+
+        const botPlayerService = TestBed.inject(BotPlayerService);
+
+        vi.spyOn(botPlayerService, 'getCommands').mockReturnValue([]);
 
         const fixture = TestBed.createComponent(PokemonBattlePageComponent);
 
@@ -52,10 +57,32 @@ describe('PokemonBattlePageComponent', () => {
           });
         }
 
-        // Игрок выбирает атаку 'tackle'
+        // Игрок выбирает атаку для Bulbasaur (первый покемон)
         component.onSelectMove('tackle');
 
-        // Лог должен заполниться записями о раунде и уроне
+        expect(component.selectedMove()).not.toBeNull();
+        expect(component.selectedMove()?.name).toBe('tackle');
+
+        // Выбираем цель для Bulbasaur
+        const target1 = component.activeAliveOpponentPokemons[0];
+
+        component.onSelectTarget(target1);
+
+        // Теперь ход переходит ко второму покемону (Squirtle)
+        expect(component.currentSelectingPokemonIndex()).toBe(1);
+        expect(component.selectedMove()).toBeNull();
+
+        // Выбираем атаку для Squirtle
+        component.onSelectMove('water-gun');
+
+        expect(component.selectedMove()?.name).toBe('water-gun');
+
+        // Выбираем цель для Squirtle
+        const target2 = component.activeAliveOpponentPokemons[1];
+
+        component.onSelectTarget(target2);
+
+        // После выбора целей для обоих покемонов раунд завершается и лог заполняется
         const logs = component.textLog();
 
         expect(logs.length).toBeGreaterThan(0);
@@ -70,7 +97,47 @@ describe('PokemonBattlePageComponent', () => {
         const state = component.battleState();
 
         expect(state).not.toBeNull();
-        expect(state?.turn).toBeGreaterThanOrEqual(1);
+        expect(state?.turn).toBe(2); // Раунд увеличился
+      });
+
+      it('должен позволять сбрасывать текущий выбранный прием', () => {
+        TestBed.configureTestingModule({
+          imports: [PokemonBattlePageComponent],
+        });
+
+        const fixture = TestBed.createComponent(PokemonBattlePageComponent);
+
+        fixture.detectChanges();
+        const component = fixture.componentInstance;
+
+        component.onSelectMove('tackle');
+        expect(component.selectedMove()).not.toBeNull();
+
+        component.cancelMoveSelection();
+        expect(component.selectedMove()).toBeNull();
+      });
+
+      it('должен позволять сбрасывать весь выбор ходов раунда', () => {
+        TestBed.configureTestingModule({
+          imports: [PokemonBattlePageComponent],
+        });
+
+        const fixture = TestBed.createComponent(PokemonBattlePageComponent);
+
+        fixture.detectChanges();
+        const component = fixture.componentInstance;
+
+        component.onSelectMove('tackle');
+        component.onSelectTarget(component.activeAliveOpponentPokemons[0]);
+
+        expect(component.currentSelectingPokemonIndex()).toBe(1);
+        expect(component.pendingCommands()).toHaveLength(1);
+
+        component.resetSelection();
+
+        expect(component.currentSelectingPokemonIndex()).toBe(0);
+        expect(component.pendingCommands()).toHaveLength(0);
+        expect(component.selectedMove()).toBeNull();
       });
     });
   });

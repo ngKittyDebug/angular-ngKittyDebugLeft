@@ -282,5 +282,95 @@ describe('BattleEngine', () => {
         expect(state.turn).toBe(2); // Раунд увеличился
       });
     });
+
+    describe('Doubles & Redirection', () => {
+      it('должен перенаправлять атаку на другого активного покемона противника, если первоначальная цель потеряла сознание в этом же раунде', () => {
+        const playerPokemons: BattlePokemon[] = [
+          {
+            id: 1,
+            name: 'bulbasaur',
+            maxHp: 45,
+            hp: 45,
+            stats: { hp: 45, attack: 50, defense: 50, speed: 100 }, // Очень быстрый
+            types: ['grass'],
+            sprites: { front: '', back: '' },
+            moves: [{ name: 'tackle', type: 'normal', power: 40 }],
+          },
+          {
+            id: 2,
+            name: 'ivysaur',
+            maxHp: 60,
+            hp: 60,
+            stats: { hp: 60, attack: 50, defense: 50, speed: 50 }, // Медленнее
+            types: ['grass'],
+            sprites: { front: '', back: '' },
+            moves: [{ name: 'tackle', type: 'normal', power: 40 }],
+          },
+        ];
+        const opponentPokemons: BattlePokemon[] = [
+          {
+            id: 4,
+            name: 'charmander',
+            maxHp: 10, // Мало здоровья, упадет с одного удара
+            hp: 10,
+            stats: { hp: 10, attack: 50, defense: 50, speed: 10 }, // Очень медленный
+            types: ['fire'],
+            sprites: { front: '', back: '' },
+            moves: [{ name: 'scratch', type: 'normal', power: 40 }],
+          },
+          {
+            id: 5,
+            name: 'charmeleon',
+            maxHp: 80,
+            hp: 80,
+            stats: { hp: 80, attack: 50, defense: 50, speed: 20 },
+            types: ['fire'],
+            sprites: { front: '', back: '' },
+            moves: [{ name: 'scratch', type: 'normal', power: 40 }],
+          },
+        ];
+
+        const engine = new BattleEngine(playerPokemons, opponentPokemons, true);
+
+        // Оба атакуют Charmander (id 4)
+        const playerCommands: BattleCommand[] = [
+          { pokemonId: 1, moveName: 'tackle', targetId: 4 }, // Убьет его
+          { pokemonId: 2, moveName: 'tackle', targetId: 4 }, // Должен перенаправиться на Charmeleon (id 5)
+        ];
+        const opponentCommands: BattleCommand[] = [];
+
+        const events = engine.resolveTurn(playerCommands, opponentCommands);
+
+        // Charmander (id 4) должен потерять сознание
+        const faintCharmander = events.find(
+          (event_) => event_.type === 'faint' && event_.payload?.pokemonId === 4,
+        );
+
+        expect(faintCharmander).toBeDefined();
+
+        // Атака Ivysaur (id 2) должна перенаправиться на Charmeleon (id 5)
+        // Ищем событие использования приема Ivysaur (id 2)
+        const ivysaurMove = events.find(
+          (event_) => event_.type === 'use-move' && event_.payload?.attackerId === 2,
+        );
+
+        expect(ivysaurMove).toBeDefined();
+        expect(ivysaurMove?.payload?.targetId).toBe(5); // Перенаправлено на 5!
+
+        // Ищем событие получения урона Charmeleon (id 5)
+        const charmeleonDamage = events.find(
+          (event_) => event_.type === 'damage' && event_.payload?.targetId === 5,
+        );
+
+        expect(charmeleonDamage).toBeDefined();
+        expect(charmeleonDamage?.payload?.damage).toBeGreaterThan(0);
+
+        // Проверяем конечное состояние
+        const state = engine.getState();
+
+        expect(state.opponentSide.pokemons.find((p) => p.id === 4)?.hp).toBe(0);
+        expect(state.opponentSide.pokemons.find((p) => p.id === 5)?.hp).toBeLessThan(80);
+      });
+    });
   });
 });

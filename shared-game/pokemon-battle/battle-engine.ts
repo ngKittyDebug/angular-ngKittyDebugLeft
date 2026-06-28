@@ -81,11 +81,26 @@ export class BattleEngine {
         continue;
       }
 
-      // 2. Check if target is alive
-      const defender = this.findPokemon(cmd.targetId);
+      // 2. Check if target is alive. In Doubles (2v2), if the original target faints,
+      // redirect the move to the other active alive opponent if possible.
+      let defender = this.findPokemon(cmd.targetId);
 
       if (!defender || defender.hp <= 0) {
-        continue;
+        const isTargetPlayerSide = this.state.playerSide.pokemons.some(
+          (p) => p.id === cmd.targetId,
+        );
+        const targetSide = isTargetPlayerSide ? this.state.playerSide : this.state.opponentSide;
+
+        const alternativeTarget = targetSide.activePokemonIds
+          .map((id) => targetSide.pokemons.find((p) => p.id === id))
+          .find((p) => p && p.hp > 0);
+
+        if (alternativeTarget) {
+          defender = alternativeTarget;
+          cmd.targetId = alternativeTarget.id;
+        } else {
+          continue;
+        }
       }
 
       // 3. Find move or use default

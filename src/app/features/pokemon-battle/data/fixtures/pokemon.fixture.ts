@@ -33,3 +33,37 @@ export const CHARMANDER_FIXTURE = {
     { name: 'ember', type: 'fire', power: 40 },
   ],
 } as const satisfies BattlePokemon;
+
+export const SQUIRTLE_FIXTURE = {
+  id: 7,
+  name: 'squirtle',
+  maxHp: 44,
+  hp: 44,
+  stats: { hp: 44, attack: 48, defense: 65, speed: 43 },
+  types: ['water'],
+  sprites: {
+    front: 'frenzy/pokemon/sprites/squirtle.gif',
+    back: 'frenzy/pokemon/sprites/squirtle.gif',
+  },
+  moves: [
+    { name: 'tackle', type: 'normal', power: 40 },
+    { name: 'water-gun', type: 'water', power: 40 },
+  ],
+} as const satisfies BattlePokemon;
+
+export const IVYSAUR_FIXTURE = {
+  id: 2,
+  name: 'ivysaur',
+  maxHp: 60,
+  hp: 60,
+  stats: { hp: 60, attack: 62, defense: 63, speed: 60 },
+  types: ['grass', 'poison'],
+  sprites: {
+    front: 'frenzy/pokemon/sprites/ivysaur.gif',
+    back: 'frenzy/pokemon/sprites/ivysaur.gif',
+  },
+  moves: [
+    { name: 'tackle', type: 'normal', power: 40 },
+    { name: 'vine-whip', type: 'grass', power: 45 },
+  ],
+} as const satisfies BattlePokemon;
