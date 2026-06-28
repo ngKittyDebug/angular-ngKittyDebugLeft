@@ -72,6 +72,8 @@ docs/adr/
 !.claude/skills/_shared/
 skills-lock.json
 
+.gemini
+
 # PartyKit local dev state
 .partykit/
 partykit-server/.partykit/
