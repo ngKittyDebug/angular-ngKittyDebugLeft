@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 
 import type { BattleEvent, BattlePokemon, BattleState } from '@game/pokemon-battle/types';
+import { AudioManagerService } from '../../../../data/audio-manager.service';
 
 @Component({
   selector: 'app-canvas-renderer',
@@ -21,6 +22,7 @@ import type { BattleEvent, BattlePokemon, BattleState } from '@game/pokemon-batt
 export class CanvasRendererComponent implements OnInit, OnDestroy {
   private readonly canvasRef = viewChild<ElementRef<HTMLCanvasElement>>('battleCanvas');
   private readonly ngZone = inject(NgZone);
+  private readonly audioManager = inject(AudioManagerService);
   private ctx!: CanvasRenderingContext2D;
   private animationFrameId: number | null = null;
   private readonly imageCache = new Map<string, HTMLImageElement>();
@@ -50,6 +52,9 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
     canvas.height = 400;
     this.ctx = canvas.getContext('2d')!;
 
+    // Play initial cries at the start of battle
+    this.playInitialCries();
+
     // Run the continuous rendering loop entirely outside Angular's Zone
     this.ngZone.runOutsideAngular(() => {
       const tick = (timestamp: number) => {
@@ -71,14 +76,28 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
     this.eventQueue.push(...events);
   }
 
-  private render(timestamp: number): void {
-    const context = this.ctx;
-    const canvas = this.canvasRef()?.nativeElement;
+  private playInitialCries(): void {
+    const state = this.state();
 
-    if (!canvas) {
+    if (!state) {
       return;
     }
 
+    const allActiveIds = [
+      ...state.playerSide.activePokemonIds,
+      ...state.opponentSide.activePokemonIds,
+    ];
+
+    this.ngZone.runOutsideAngular(() => {
+      allActiveIds.forEach((id, index) => {
+        setTimeout(() => {
+          this.audioManager.playCry(id);
+        }, index * 400);
+      });
+    });
+  }
+
+  private updateAnimations(timestamp: number): void {
     // Process sequential animations in the queue
     if (!this.currentEvent && this.eventQueue.length > 0) {
       const nextEvent = this.eventQueue.shift()!;
@@ -91,6 +110,12 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
         this.eventDuration = 1000;
       } else if (nextEvent.type === 'damage') {
         this.eventDuration = 1000;
+
+        const targetId = nextEvent.payload?.targetId;
+
+        if (targetId) {
+          this.audioManager.playCry(targetId);
+        }
       } else if (nextEvent.type === 'faint') {
         this.eventDuration = 1000;
       } else {
@@ -142,6 +167,18 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
         }
       }
     }
+  }
+
+  private render(timestamp: number): void {
+    const context = this.ctx;
+    const canvas = this.canvasRef()?.nativeElement;
+
+    if (!canvas) {
+      return;
+    }
+
+    // Update animations state
+    this.updateAnimations(timestamp);
 
     // Synchronize static HP values when no animations are running
     if (!this.currentEvent && this.eventQueue.length === 0) {

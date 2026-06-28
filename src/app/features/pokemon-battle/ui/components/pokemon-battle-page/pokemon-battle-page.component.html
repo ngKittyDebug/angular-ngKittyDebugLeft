@@ -1,7 +1,30 @@
 <div class="pokemon-battle-container">
   <header class="battle-header">
-    <h1 class="battle-title">Битва Покемонов (MVP)</h1>
-    <p class="battle-subtitle">Интеграция Движка и CanvasRenderer вне Zone.js</p>
+    <div class="header-main">
+      <h1 class="battle-title">Битва Покемонов (MVP)</h1>
+      <p class="battle-subtitle">Интеграция Движка и CanvasRenderer вне Zone.js</p>
+    </div>
+
+    <div class="sound-controls">
+      <button
+        class="sound-toggle-button"
+        (click)="toggleMute()"
+        [attr.aria-label]="soundEnabled() ? 'Выключить звук' : 'Включить звук'"
+      >
+        <span class="sound-icon">{{ soundEnabled() ? '🔊' : '🔇' }}</span>
+      </button>
+      <input
+        type="range"
+        min="0"
+        max="1"
+        step="0.05"
+        [value]="soundVolume()"
+        (input)="onVolumeChange($event)"
+        class="sound-slider"
+        title="Громкость"
+      />
+      <span class="volume-label">{{ soundVolumePercent() }}%</span>
+    </div>
   </header>
 
   <main class="battle-main">

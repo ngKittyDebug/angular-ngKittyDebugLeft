@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, inject, signal, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 import { BattleEngine } from '@game/pokemon-battle/battle-engine';
@@ -17,6 +24,7 @@ import {
 } from '../../../data/fixtures/pokemon.fixture';
 import { CanvasRendererComponent } from './canvas-renderer/canvas-renderer.component';
 import { BotPlayerService } from '../../../data/bot-player.service';
+import { AudioManagerService } from '../../../data/audio-manager.service';
 
 @Component({
   selector: 'app-pokemon-battle-page',
@@ -28,9 +36,14 @@ import { BotPlayerService } from '../../../data/bot-player.service';
 })
 export class PokemonBattlePageComponent {
   private botPlayerService = inject(BotPlayerService);
+  private readonly audioManager = inject(AudioManagerService);
   private engine!: BattleEngine;
 
   private readonly canvasRenderer = viewChild(CanvasRendererComponent);
+
+  public readonly soundEnabled = this.audioManager.enabled;
+  public readonly soundVolume = this.audioManager.volume;
+  public readonly soundVolumePercent = computed(() => Math.round(this.soundVolume() * 100));
 
   public readonly battleState = signal<BattleState | null>(null);
   public readonly textLog = signal<string[]>([]);
@@ -147,6 +160,18 @@ export class PokemonBattlePageComponent {
     this.pendingCommands.set([]);
     this.currentSelectingPokemonIndex.set(0);
     this.selectedMove.set(null);
+  }
+
+  public toggleMute(): void {
+    this.audioManager.toggle();
+  }
+
+  public onVolumeChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+
+    if (input) {
+      this.audioManager.setVolume(Number.parseFloat(input.value));
+    }
   }
 
   public onEventTriggered(event: BattleEvent): void {

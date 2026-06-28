@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { BattleState } from '@game/pokemon-battle/types';
 import { CanvasRendererComponent } from './canvas-renderer.component';
+import { AudioManagerService } from '../../../../data/audio-manager.service';
 
 describe('CanvasRendererComponent', () => {
   beforeEach(() => {
@@ -24,8 +25,14 @@ describe('CanvasRendererComponent', () => {
   describe('Happy Path', () => {
     describe('Инициализация', () => {
       it('должен правильно инициализироваться и запускать цикл анимации вне Zone.js', () => {
+        vi.useFakeTimers();
+        const audioManagerMock = {
+          playCry: vi.fn(),
+        };
+
         TestBed.configureTestingModule({
           imports: [CanvasRendererComponent],
+          providers: [{ provide: AudioManagerService, useValue: audioManagerMock }],
         });
 
         const ngZone = TestBed.inject(NgZone);
@@ -75,13 +82,26 @@ describe('CanvasRendererComponent', () => {
 
         expect(fixture.componentInstance).toBeDefined();
         expect(runOutsideAngularSpy).toHaveBeenCalled();
+
+        // Advance timers to trigger the playCry timeouts
+        vi.advanceTimersByTime(1000);
+        expect(audioManagerMock.playCry).toHaveBeenCalledTimes(2);
+        expect(audioManagerMock.playCry).toHaveBeenNthCalledWith(1, 1);
+        expect(audioManagerMock.playCry).toHaveBeenNthCalledWith(2, 4);
+
+        vi.useRealTimers();
       });
     });
 
     describe('Последовательная очередь анимаций и события', () => {
       it('должен последовательно проигрывать события, вызывать eventTriggered и завершаться с animationFinished', () => {
+        const audioManagerMock = {
+          playCry: vi.fn(),
+        };
+
         TestBed.configureTestingModule({
           imports: [CanvasRendererComponent],
+          providers: [{ provide: AudioManagerService, useValue: audioManagerMock }],
         });
 
         const fixture = TestBed.createComponent(CanvasRendererComponent);
@@ -164,6 +184,9 @@ describe('CanvasRendererComponent', () => {
         expect(eventTriggeredSpy).toHaveBeenCalledTimes(2);
         expect(eventTriggeredSpy).toHaveBeenLastCalledWith(damageEvent);
         expect(animationFinishedSpy).not.toHaveBeenCalled();
+
+        // Проверяем, что воспроизвелся крик покемона, получившего урон
+        expect(audioManagerMock.playCry).toHaveBeenCalledWith(4);
 
         // Проверяем интерполяцию HP во время второго события (через 500 мс после начала)
         component['render'](1701); // 1201 + 500
