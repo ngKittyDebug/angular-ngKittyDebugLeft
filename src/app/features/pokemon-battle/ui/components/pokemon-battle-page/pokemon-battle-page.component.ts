@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 import { BattleEngine } from '@game/pokemon-battle/battle-engine';
-import type { BattleState } from '@game/pokemon-battle/types';
+import type { BattleEvent, BattleState } from '@game/pokemon-battle/types';
 import { BULBASAUR_FIXTURE, CHARMANDER_FIXTURE } from '../../../data/fixtures/pokemon.fixture';
 import { CanvasRendererComponent } from './canvas-renderer/canvas-renderer.component';
 import { BotPlayerService } from '../../../data/bot-player.service';
@@ -19,8 +19,11 @@ export class PokemonBattlePageComponent {
   private botPlayerService = inject(BotPlayerService);
   private engine!: BattleEngine;
 
+  private readonly canvasRenderer = viewChild(CanvasRendererComponent);
+
   public readonly battleState = signal<BattleState | null>(null);
   public readonly textLog = signal<string[]>([]);
+  public readonly isAnimating = signal<boolean>(false);
 
   constructor() {
     this.resetBattle();
@@ -40,7 +43,7 @@ export class PokemonBattlePageComponent {
   public onSelectMove(moveName: string): void {
     const state = this.battleState();
 
-    if (!state || state.status !== 'waiting-for-commands') {
+    if (!state || state.status !== 'waiting-for-commands' || this.isAnimating()) {
       return;
     }
 
@@ -64,14 +67,27 @@ export class PokemonBattlePageComponent {
     // 3. Resolve turn in the engine
     const events = this.engine.resolveTurn([playerCommand], botCommands);
 
-    // 4. Update the text log with round information and events
+    // 4. Update the text log with round information immediately
     const roundLogHeader = `--- Раунд ${state.turn} ---`;
-    const newLogs = [roundLogHeader, ...events.map((event_) => event_.message)];
 
-    this.textLog.update((logs) => [...logs, ...newLogs]);
+    this.textLog.update((logs) => [...logs, roundLogHeader]);
 
-    // 5. Update UI state
+    // 5. Start animation sequence
+    this.isAnimating.set(true);
+    this.canvasRenderer()?.playEvents(events);
+
+    // 6. Update UI state (non-HP aspects are safe to update immediately)
     this.battleState.set(this.engine.getState());
+  }
+
+  public onEventTriggered(event: BattleEvent): void {
+    if (event.message) {
+      this.textLog.update((logs) => [...logs, event.message]);
+    }
+  }
+
+  public onAnimationFinished(): void {
+    this.isAnimating.set(false);
   }
 
   public resetBattle(): void {
@@ -81,5 +97,6 @@ export class PokemonBattlePageComponent {
     this.engine = new BattleEngine(playerTeam, opponentTeam, false);
     this.battleState.set(this.engine.getState());
     this.textLog.set([]);
+    this.isAnimating.set(false);
   }
 }

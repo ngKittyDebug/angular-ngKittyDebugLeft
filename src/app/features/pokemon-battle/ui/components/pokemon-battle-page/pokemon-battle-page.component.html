@@ -8,12 +8,16 @@
     <div class="battle-arena">
       <div class="canvas-wrapper">
         @if (battleState(); as state) {
-          <app-canvas-renderer [state]="state" />
+          <app-canvas-renderer
+            [state]="state"
+            (eventTriggered)="onEventTriggered($event)"
+            (animationFinished)="onAnimationFinished()"
+          />
         }
       </div>
 
       @if (battleState(); as state) {
-        @if (state.status === 'waiting-for-commands') {
+        @if (state.status === 'waiting-for-commands' && !isAnimating()) {
           @if (activePlayerPokemon; as pokemon) {
             <div class="battle-controls">
               <h3 class="controls-title">Выберите атаку для {{ pokemon.name | uppercase }}:</h3>

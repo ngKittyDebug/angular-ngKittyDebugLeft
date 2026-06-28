@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { PokemonBattlePageComponent } from './pokemon-battle-page.component';
 
@@ -41,6 +41,16 @@ describe('PokemonBattlePageComponent', () => {
         const component = fixture.componentInstance;
 
         expect(component.textLog()).toHaveLength(0);
+
+        // Переопределяем playEvents на CanvasRendererComponent для мгновенного выполнения в тестах
+        const canvasRenderer = component['canvasRenderer']();
+
+        if (canvasRenderer) {
+          vi.spyOn(canvasRenderer, 'playEvents').mockImplementation((events) => {
+            events.forEach((event_) => component.onEventTriggered(event_));
+            component.onAnimationFinished();
+          });
+        }
 
         // Игрок выбирает атаку 'tackle'
         component.onSelectMove('tackle');

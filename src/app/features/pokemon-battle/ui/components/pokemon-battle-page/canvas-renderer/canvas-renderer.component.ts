@@ -5,10 +5,11 @@ import {
   inject,
   input,
   NgZone,
+  output,
   viewChild,
 } from '@angular/core';
 
-import type { BattlePokemon, BattleState } from '@game/pokemon-battle/types';
+import type { BattleEvent, BattlePokemon, BattleState } from '@game/pokemon-battle/types';
 
 @Component({
   selector: 'app-canvas-renderer',
@@ -24,7 +25,18 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
   private animationFrameId: number | null = null;
   private readonly imageCache = new Map<string, HTMLImageElement>();
 
+  // Event queue and animation state
+  private readonly eventQueue: BattleEvent[] = [];
+  private currentEvent: BattleEvent | null = null;
+  private eventStartTime = 0;
+  private eventDuration = 0;
+  private readonly animatedHps = new Map<number, number>();
+
   public readonly state = input.required<BattleState>();
+
+  // Outputs for sequential event execution
+  public readonly eventTriggered = output<BattleEvent>();
+  public readonly animationFinished = output<void>();
 
   public ngOnInit(): void {
     const canvas = this.canvasRef()?.nativeElement;
@@ -55,12 +67,92 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
     }
   }
 
+  public playEvents(events: BattleEvent[]): void {
+    this.eventQueue.push(...events);
+  }
+
   private render(timestamp: number): void {
     const context = this.ctx;
     const canvas = this.canvasRef()?.nativeElement;
 
     if (!canvas) {
       return;
+    }
+
+    // Process sequential animations in the queue
+    if (!this.currentEvent && this.eventQueue.length > 0) {
+      const nextEvent = this.eventQueue.shift()!;
+
+      this.currentEvent = nextEvent;
+      this.eventStartTime = timestamp;
+
+      // Assign duration based on event type
+      if (nextEvent.type === 'use-move') {
+        this.eventDuration = 1000;
+      } else if (nextEvent.type === 'damage') {
+        this.eventDuration = 1000;
+      } else if (nextEvent.type === 'faint') {
+        this.eventDuration = 1000;
+      } else {
+        this.eventDuration = 800;
+      }
+
+      // Notify parent component within Angular's Zone to update text log
+      this.ngZone.run(() => {
+        this.eventTriggered.emit(nextEvent);
+      });
+    }
+
+    if (this.currentEvent) {
+      const elapsed = timestamp - this.eventStartTime;
+
+      if (this.currentEvent.type === 'damage') {
+        const payload = this.currentEvent.payload;
+
+        if (payload && 'targetId' in payload) {
+          const targetId = payload.targetId as number;
+          const hpBefore = payload.hpBefore as number;
+          const hpAfter = payload.hpAfter as number;
+          const progress = Math.min(1, elapsed / this.eventDuration);
+          const interpolatedHp = hpBefore + (hpAfter - hpBefore) * progress;
+
+          this.animatedHps.set(targetId, interpolatedHp);
+        }
+      }
+
+      if (elapsed >= this.eventDuration) {
+        // Enforce exact final HP at the end of damage animation
+        if (this.currentEvent.type === 'damage') {
+          const payload = this.currentEvent.payload;
+
+          if (payload && 'targetId' in payload) {
+            const targetId = payload.targetId as number;
+            const hpAfter = payload.hpAfter as number;
+
+            this.animatedHps.set(targetId, hpAfter);
+          }
+        }
+
+        this.currentEvent = null;
+
+        if (this.eventQueue.length === 0) {
+          this.ngZone.run(() => {
+            this.animationFinished.emit();
+          });
+        }
+      }
+    }
+
+    // Synchronize static HP values when no animations are running
+    if (!this.currentEvent && this.eventQueue.length === 0) {
+      const stateValue = this.state();
+
+      stateValue.playerSide.pokemons.forEach((p) => {
+        this.animatedHps.set(p.id, p.hp);
+      });
+      stateValue.opponentSide.pokemons.forEach((p) => {
+        this.animatedHps.set(p.id, p.hp);
+      });
     }
 
     // Clear canvas
@@ -92,12 +184,48 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
         return;
       }
 
-      // Layout coordinates
-      const x = 220 - index * 60;
-      const y = 280 + index * 30 + wave;
+      let offsetX = 0;
+      let offsetY = 0;
+      let alpha = 1.0;
 
-      this.drawPokemon(pokemon, x, y, 'back');
-      this.drawUi(pokemon, x, y - 95);
+      if (this.currentEvent) {
+        const elapsed = timestamp - this.eventStartTime;
+        const progress = Math.min(1, elapsed / this.eventDuration);
+
+        if (
+          this.currentEvent.type === 'use-move' &&
+          this.currentEvent.payload?.attackerId === pokemon.id
+        ) {
+          const lungeDistribution = 40;
+          const factor = Math.sin(progress * Math.PI);
+
+          offsetX = lungeDistribution * factor;
+          offsetY = -lungeDistribution * 0.3 * factor;
+        } else if (
+          this.currentEvent.type === 'damage' &&
+          this.currentEvent.payload?.targetId === pokemon.id
+        ) {
+          if (progress < 0.6) {
+            offsetX = Math.sin(elapsed * 0.05) * 5;
+          }
+        } else if (
+          this.currentEvent.type === 'faint' &&
+          this.currentEvent.payload?.pokemonId === pokemon.id
+        ) {
+          offsetY = progress * 50;
+          alpha = 1.0 - progress;
+        }
+      }
+
+      // Base layout coordinates
+      const uiX = 220 - index * 60;
+      const uiY = 280 + index * 30 + wave;
+
+      this.drawPokemon(pokemon, uiX + offsetX, uiY + offsetY, 'back', alpha);
+
+      if (alpha > 0) {
+        this.drawUi(pokemon, uiX, uiY - 95, alpha);
+      }
     });
 
     // Render opponent active pokemons
@@ -110,11 +238,48 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
         return;
       }
 
-      const x = 580 + index * 50;
-      const y = 160 - index * 25 - wave;
+      let offsetX = 0;
+      let offsetY = 0;
+      let alpha = 1.0;
 
-      this.drawPokemon(pokemon, x, y, 'front');
-      this.drawUi(pokemon, x, y - 75);
+      if (this.currentEvent) {
+        const elapsed = timestamp - this.eventStartTime;
+        const progress = Math.min(1, elapsed / this.eventDuration);
+
+        if (
+          this.currentEvent.type === 'use-move' &&
+          this.currentEvent.payload?.attackerId === pokemon.id
+        ) {
+          const lungeDistribution = -40; // Lunge left
+          const factor = Math.sin(progress * Math.PI);
+
+          offsetX = lungeDistribution * factor;
+          offsetY = -lungeDistribution * 0.3 * factor;
+        } else if (
+          this.currentEvent.type === 'damage' &&
+          this.currentEvent.payload?.targetId === pokemon.id
+        ) {
+          if (progress < 0.6) {
+            offsetX = Math.sin(elapsed * 0.05) * 5;
+          }
+        } else if (
+          this.currentEvent.type === 'faint' &&
+          this.currentEvent.payload?.pokemonId === pokemon.id
+        ) {
+          offsetY = progress * 50;
+          alpha = 1.0 - progress;
+        }
+      }
+
+      // Base layout coordinates
+      const uiX = 580 + index * 50;
+      const uiY = 160 - index * 25 - wave;
+
+      this.drawPokemon(pokemon, uiX + offsetX, uiY + offsetY, 'front', alpha);
+
+      if (alpha > 0) {
+        this.drawUi(pokemon, uiX, uiY - 75, alpha);
+      }
     });
   }
 
@@ -123,6 +288,7 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
     x: number,
     y: number,
     spriteType: 'front' | 'back',
+    alpha = 1.0,
   ): void {
     const spriteUrl = spriteType === 'back' ? pokemon.sprites.back : pokemon.sprites.front;
     let img = this.imageCache.get(spriteUrl);
@@ -133,22 +299,34 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
       this.imageCache.set(spriteUrl, img);
     }
 
+    const context = this.ctx;
+    const oldAlpha = context.globalAlpha;
+
+    context.globalAlpha = alpha;
+
     if (img.complete && img.naturalWidth !== 0) {
       const width = 120;
       const height = 120;
 
-      this.ctx.drawImage(img, x - width / 2, y - height / 2, width, height);
+      context.drawImage(img, x - width / 2, y - height / 2, width, height);
     } else {
       // Loading state placeholder circle
-      this.ctx.fillStyle = '#cbd5e1';
-      this.ctx.beginPath();
-      this.ctx.arc(x, y, 30, 0, 2 * Math.PI);
-      this.ctx.fill();
+      context.fillStyle = '#cbd5e1';
+      context.beginPath();
+      context.arc(x, y, 30, 0, 2 * Math.PI);
+      context.fill();
     }
+
+    context.globalAlpha = oldAlpha;
   }
 
-  private drawUi(pokemon: BattlePokemon, x: number, y: number): void {
+  private drawUi(pokemon: BattlePokemon, x: number, y: number, alpha = 1.0): void {
     const context = this.ctx;
+    const oldAlpha = context.globalAlpha;
+
+    context.globalAlpha = alpha;
+
+    const animatedHp = this.animatedHps.get(pokemon.id) ?? pokemon.hp;
 
     // Frame background for HP & name plate
     context.fillStyle = 'rgba(15, 23, 42, 0.75)';
@@ -169,18 +347,25 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
     const barY = y + 2;
 
     // Red background for HP loss
-    context.fillStyle = '#ef4444';
+    context.fillStyle = `rgba(239, 68, 68, ${alpha})`;
     context.fillRect(barX, barY, barWidth, barHeight);
 
     // Green/Yellow fill for current HP
-    const hpRatio = Math.max(0, Math.min(1, pokemon.hp / pokemon.maxHp));
+    const hpRatio = Math.max(0, Math.min(1, animatedHp / pokemon.maxHp));
 
-    context.fillStyle = hpRatio > 0.5 ? '#22c55e' : hpRatio > 0.2 ? '#eab308' : '#ef4444';
+    context.fillStyle =
+      hpRatio > 0.5
+        ? `rgba(34, 197, 94, ${alpha})`
+        : hpRatio > 0.2
+          ? `rgba(234, 179, 8, ${alpha})`
+          : `rgba(239, 68, 68, ${alpha})`;
     context.fillRect(barX, barY, barWidth * hpRatio, barHeight);
 
     // HP numerical text
-    context.fillStyle = '#e2e8f0';
+    context.fillStyle = `rgba(226, 232, 240, ${alpha})`;
     context.font = '10px sans-serif';
-    context.fillText(`${pokemon.hp}/${pokemon.maxHp}`, x, y + 17);
+    context.fillText(`${Math.round(animatedHp)}/${pokemon.maxHp}`, x, y + 17);
+
+    context.globalAlpha = oldAlpha;
   }
 }
