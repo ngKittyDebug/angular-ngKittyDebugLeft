@@ -28,7 +28,7 @@ describe('NotFoundPageComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it('должен инициализироваться', () => {
     expect(component).toBeTruthy();
   });
 });

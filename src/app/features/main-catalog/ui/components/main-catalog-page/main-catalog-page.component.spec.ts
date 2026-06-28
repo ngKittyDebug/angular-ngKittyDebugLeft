@@ -36,7 +36,7 @@ describe('MainCatalogPageComponent', () => {
     await fixture.whenStable();
   });
 
-  it('should create', () => {
+  it('должен инициализироваться', () => {
     expect(component).toBeTruthy();
   });
 });

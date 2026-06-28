@@ -1,6 +1,6 @@
 import type { EChartsOption } from 'echarts';
+import { MAX_STAT_VALUE } from '../constants/pokemon-profile.constants';
 
-// Минимальный интерфейс для внутренней типизации хелпера, чтобы не тянуть весь большой интерфейс API
 interface MiniStat {
   stat?: {
     name?: string;
@@ -15,7 +15,7 @@ export function createRadarChartOptions(
 ): EChartsOption {
   const indicators = stats.map((s) => ({
     name: s.stat?.name ?? '',
-    max: 255,
+    max: MAX_STAT_VALUE,
   }));
 
   return {

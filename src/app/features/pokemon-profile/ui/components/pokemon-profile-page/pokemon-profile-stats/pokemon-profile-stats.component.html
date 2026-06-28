@@ -8,7 +8,7 @@
           <p class="pokemon_stats__value">{{ item.base_stat }}</p>
           <progress
             class="pokemon__stats_bar pokemon__stats_bar-{{ item.stat.name }}"
-            max="300"
+            [max]="statProgressMax"
             tuiProgressBar
             [value]="item.base_stat"
           ></progress>

@@ -1,15 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { TuiProgress } from '@taiga-ui/kit';
 import { TuiCard } from '@taiga-ui/layout';
-import type { EvolutionChainItem } from '@shared/models/pokemon-evolution-chain-api-data-interface';
 import { EvolutionChainItemComponent } from './evolution-chain-item/evolution-chain-item.component';
 import { PokemonProfileInfoComponent } from './pokemon-profile-info/pokemon-profile-info.component';
 import { PokemonProfileStatsComponent } from './pokemon-profile-stats/pokemon-profile-stats.component';
 import { PokemonProfileSpeciesBreedingComponent } from './pokemon-profile-species-breeding/pokemon-profile-species-breeding.component';
-
 import { TranslocoDirective } from '@jsverse/transloco';
-import type { EvolutionNodeModel } from '@shared/services/pokemon-data.service';
 import { PokemonDataService } from '@shared/services/pokemon-data.service';
+import { convertEvolutionChainToNodeModel } from '@features/pokemon-profile/data/helpers/convert-evolution-chain';
 
 @Component({
   selector: 'left-paw-pokemon-profile-page',
@@ -38,25 +36,6 @@ export class PokemonProfilePageComponent {
   protected readonly pokemonEvolutionChain = computed(() => {
     const data = this.pokemonProfile.profileEvolution()?.chain;
 
-    return data ? this.buildStructure(data) : null;
+    return data ? convertEvolutionChainToNodeModel(data) : null;
   });
-
-  private buildStructure(node: EvolutionChainItem): EvolutionNodeModel | null {
-    if (!node || !node.species) {
-      return null;
-    }
-
-    const detail = node.evolution_details?.[0];
-    const condition = detail?.min_level ? `Lv. ${detail.min_level}` : detail?.trigger?.name || null;
-
-    const children: EvolutionNodeModel[] = (node.evolves_to || [])
-      .map((child: EvolutionChainItem) => this.buildStructure(child))
-      .filter((c): c is EvolutionNodeModel => c !== null);
-
-    return {
-      name: node.species.name,
-      condition,
-      children,
-    };
-  }
 }
