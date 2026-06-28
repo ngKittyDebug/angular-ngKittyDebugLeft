@@ -13,5 +13,5 @@ const NOT_FOUND_GIF_URL = 'images/gif/not-found.gif';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NotFoundPageComponent {
-  protected imageUrl = NOT_FOUND_GIF_URL;
+  protected readonly imageUrl = NOT_FOUND_GIF_URL;
 }
