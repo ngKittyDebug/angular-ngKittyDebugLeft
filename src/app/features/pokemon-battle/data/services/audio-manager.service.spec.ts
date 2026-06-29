@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 import { NgZone } from '@angular/core';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import { AudioManagerService } from './audio-manager.service';
 
 describe('AudioManagerService', () => {
   let service: AudioManagerService;
   let ngZone: NgZone;
-  let playSpy: any;
-  let audioInstances: any[];
+  let playSpy: Mock<() => Promise<void>>;
+  let audioInstances: { volume: number; play: Mock<() => Promise<void>> }[];
 
   beforeEach(() => {
     // Clear storage first to prevent persistent side-effects between tests

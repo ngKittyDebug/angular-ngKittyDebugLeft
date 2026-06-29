@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, type MockedObject, vi } from 'vitest';
 import { PokemonBattleArenaFacade } from './pokemon-battle-arena.facade';
 import { BotPlayerService } from '../services/bot-player.service';
 import { AudioManagerService } from '../services/audio-manager.service';
@@ -12,10 +12,13 @@ import {
   SQUIRTLE_FIXTURE,
 } from '../fixtures/pokemon.fixture';
 
+type Public<T> = { [K in keyof T as K extends string ? K : never]: T[K] };
+type StoreType = Public<InstanceType<typeof PokemonBattleStore>>;
+
 describe('PokemonBattleArenaFacade', () => {
-  let mockStore: any;
-  let mockAudioManager: any;
-  let mockBotPlayerService: any;
+  let mockStore: MockedObject<Partial<StoreType>>;
+  let mockAudioManager: MockedObject<Partial<AudioManagerService>>;
+  let mockBotPlayerService: MockedObject<Partial<BotPlayerService>>;
   let facade: PokemonBattleArenaFacade;
 
   beforeEach(() => {
@@ -34,23 +37,25 @@ describe('PokemonBattleArenaFacade', () => {
       limit: signal(10),
       isLoading: signal(false),
       error: signal(null),
-      loadPokemons: vi.fn(),
-      selectPokemonForTeam: vi.fn(),
-      clearSelectedTeam: vi.fn(),
-      startBattle: vi.fn(),
-      endBattle: vi.fn(),
-    };
+      loadPokemons: vi.fn() as unknown as StoreType['loadPokemons'],
+      selectPokemonForTeam: vi.fn() as unknown as StoreType['selectPokemonForTeam'],
+      clearSelectedTeam: vi.fn() as unknown as StoreType['clearSelectedTeam'],
+      startBattle: vi.fn() as unknown as StoreType['startBattle'],
+      endBattle: vi.fn() as unknown as StoreType['endBattle'],
+    } as const satisfies MockedObject<Partial<StoreType>>;
 
     mockAudioManager = {
       enabled: signal(true),
       volume: signal(0.3),
       toggle: vi.fn(),
       setVolume: vi.fn(),
-    };
+      playCry: vi.fn(),
+      setEnabled: vi.fn(),
+    } as const satisfies MockedObject<Partial<AudioManagerService>>;
 
     mockBotPlayerService = {
       getCommands: vi.fn().mockReturnValue([]),
-    };
+    } as const satisfies MockedObject<Partial<BotPlayerService>>;
 
     TestBed.configureTestingModule({
       providers: [
