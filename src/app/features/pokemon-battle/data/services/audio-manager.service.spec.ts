@@ -51,13 +51,15 @@ describe('AudioManagerService', () => {
 
       it('не должен проигрывать звук, если он отключен', () => {
         service.setEnabled(false);
+
         service.playCry(1);
 
-        expect(playSpy).not.toHaveBeenCalled();
+        expect(playSpy).toHaveBeenCalledTimes(0);
       });
 
       it('должен устанавливать правильную громкость звука', () => {
         service.setVolume(0.55);
+
         service.playCry(1);
 
         expect(audioInstances.length).toBe(1);

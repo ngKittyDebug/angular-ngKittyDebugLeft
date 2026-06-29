@@ -34,7 +34,15 @@
       "resetSelection": "Сбросить выбор",
       "selectAttack": "Выберите атаку для",
       "selectTarget": "Выберите цель для",
-      "backToMoves": "Назад к приёмам"
+      "backToMoves": "Назад к приёмам",
+      "power": "Мощь",
+      "hp": "ОЗ"
+    },
+    "status": {
+      "initializing": "Инициализация",
+      "waiting-for-commands": "Ожидание команд",
+      "resolving-turn": "Обработка хода",
+      "finished": "Завершено"
     },
     "result": {
       "title": "Битва завершена!",

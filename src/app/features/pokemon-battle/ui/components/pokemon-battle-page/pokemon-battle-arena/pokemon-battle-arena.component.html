@@ -39,7 +39,7 @@
               <button class="move-button" (click)="onSelectMove(move)">
                 <span class="move-name">{{ move.name }}</span>
                 <span class="move-type" [attr.data-type]="move.type">{{ move.type }}</span>
-                <span class="move-power">Power: {{ move.power }}</span>
+                <span class="move-power">{{ t('controls.power') }}: {{ move.power }}</span>
               </button>
             }
           </div>
@@ -53,7 +53,9 @@
             @for (target of facade.activeAliveOpponentPokemons(); track target.id) {
               <button class="target-button" (click)="onSelectTarget(target)">
                 <span class="target-name">{{ target.name | uppercase }}</span>
-                <span class="target-hp">HP: {{ target.hp }}/{{ target.maxHp }}</span>
+                <span class="target-hp"
+                  >{{ t('controls.hp') }}: {{ target.hp }}/{{ target.maxHp }}</span
+                >
               </button>
             }
           </div>
@@ -112,7 +114,7 @@
         </div>
         <div class="info-item">
           <span class="info-label">{{ t('info.status') }}</span>
-          <span class="info-value status-badge">{{ state.status }}</span>
+          <span class="info-value status-badge">{{ t('status.' + state.status) }}</span>
         </div>
         <div class="info-item">
           <span class="info-label">{{ t('info.mode') }}</span>

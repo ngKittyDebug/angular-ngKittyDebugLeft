@@ -58,7 +58,8 @@ describe('PokemonTeamSelectionFacade', () => {
     describe('Выбор покемонов', () => {
       it('должен вызывать selectPokemonForTeam в сторе при клике', () => {
         facade.onSelectPokemon(BULBASAUR_FIXTURE);
-        expect(mockStore.selectPokemonForTeam).toHaveBeenCalledWith(BULBASAUR_FIXTURE);
+
+        expect(mockStore.selectPokemonForTeam).toHaveBeenNthCalledWith(1, BULBASAUR_FIXTURE);
       });
     });
 

@@ -34,7 +34,15 @@
       "resetSelection": "Reset selection",
       "selectAttack": "Select attack for",
       "selectTarget": "Select target for",
-      "backToMoves": "Back to moves"
+      "backToMoves": "Back to moves",
+      "power": "Power",
+      "hp": "HP"
+    },
+    "status": {
+      "initializing": "Initializing",
+      "waiting-for-commands": "Waiting for commands",
+      "resolving-turn": "Processing turn",
+      "finished": "Finished"
     },
     "result": {
       "title": "Battle finished!",
