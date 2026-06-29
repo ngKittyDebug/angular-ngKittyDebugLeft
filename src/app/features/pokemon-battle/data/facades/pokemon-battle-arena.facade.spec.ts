@@ -90,8 +90,10 @@ describe('PokemonBattleArenaFacade', () => {
       it('должен переходить к следующему покемону при выборе приема и цели', () => {
         expect(facade.selectedMove()).toBeNull();
 
-        facade.onSelectMove('tackle');
-        expect(facade.selectedMove()?.name).toBe('tackle');
+        const move = facade.activeAlivePlayerPokemons()[0].moves[0];
+
+        facade.onSelectMove(move);
+        expect(facade.selectedMove()?.name).toBe(move.name);
 
         const target = facade.activeAliveOpponentPokemons()[0];
 
@@ -102,15 +104,19 @@ describe('PokemonBattleArenaFacade', () => {
       });
 
       it('должен сбрасывать выбранный прием', () => {
-        facade.onSelectMove('tackle');
-        expect(facade.selectedMove()?.name).toBe('tackle');
+        const move = facade.activeAlivePlayerPokemons()[0].moves[0];
+
+        facade.onSelectMove(move);
+        expect(facade.selectedMove()?.name).toBe(move.name);
 
         facade.cancelMoveSelection();
         expect(facade.selectedMove()).toBeNull();
       });
 
       it('должен очищать выбор раунда', () => {
-        facade.onSelectMove('tackle');
+        const move = facade.activeAlivePlayerPokemons()[0].moves[0];
+
+        facade.onSelectMove(move);
         facade.onSelectTarget(facade.activeAliveOpponentPokemons()[0]);
 
         expect(facade.currentSelectingPokemonIndex()).toBe(1);

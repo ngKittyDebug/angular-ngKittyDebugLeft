@@ -81,7 +81,7 @@ export class PokemonBattleArenaFacade {
     this.resetBattle();
   }
 
-  public onSelectMove(move: PokemonMove | string): void {
+  public onSelectMove(move: PokemonMove): void {
     const state = this.battleState();
 
     if (!state || state.status !== 'waiting-for-commands' || this.isAnimating()) {
@@ -94,16 +94,7 @@ export class PokemonBattleArenaFacade {
       return;
     }
 
-    const moveObject =
-      typeof move === 'string'
-        ? currentPokemon.moves.find((m) => m.name.toLowerCase() === move.toLowerCase()) || {
-            name: move,
-            type: 'normal',
-            power: 40,
-          }
-        : move;
-
-    this.selectedMove.set(moveObject);
+    this.selectedMove.set(move);
 
     const targets = this.activeAliveOpponentPokemons();
 
