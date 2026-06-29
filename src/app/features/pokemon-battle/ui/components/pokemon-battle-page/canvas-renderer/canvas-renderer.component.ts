@@ -106,71 +106,82 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
   private updateAnimations(timestamp: number): void {
     // Process sequential animations in the queue
     if (!this.currentEvent && this.eventQueue.length > 0) {
-      const nextEvent = this.eventQueue.shift()!;
-
-      this.currentEvent = nextEvent;
-      this.eventStartTime = timestamp;
-
-      // Assign duration based on event type
-      if (nextEvent.type === 'use-move') {
-        this.eventDuration = 1000;
-      } else if (nextEvent.type === 'damage') {
-        this.eventDuration = 1000;
-
-        const targetId = nextEvent.payload?.targetId;
-
-        if (targetId) {
-          this.audioManager.playCry(targetId);
-        }
-      } else if (nextEvent.type === 'faint') {
-        this.eventDuration = 1000;
-      } else {
-        this.eventDuration = 800;
-      }
-
-      // Notify parent component within Angular's Zone to update text log
-      this.ngZone.run(() => {
-        this.eventTriggered.emit(nextEvent);
-      });
+      this.startNextEvent(timestamp);
     }
 
     if (this.currentEvent) {
-      const elapsed = timestamp - this.eventStartTime;
+      this.processCurrentEvent(timestamp);
+    }
+  }
 
-      if (this.currentEvent.type === 'damage') {
-        const payload = this.currentEvent.payload;
+  private startNextEvent(timestamp: number): void {
+    const nextEvent = this.eventQueue.shift()!;
 
-        if (payload && 'targetId' in payload) {
-          const targetId = payload.targetId as number;
-          const hpBefore = payload.hpBefore as number;
-          const hpAfter = payload.hpAfter as number;
+    this.currentEvent = nextEvent;
+    this.eventStartTime = timestamp;
+
+    // Assign duration based on event type
+    if (nextEvent.type === 'use-move') {
+      this.eventDuration = 1000;
+    } else if (nextEvent.type === 'damage') {
+      this.eventDuration = 1000;
+
+      const targetId = nextEvent.payload?.targetId;
+
+      if (targetId) {
+        this.audioManager.playCry(targetId);
+      }
+    } else if (nextEvent.type === 'faint') {
+      this.eventDuration = 1000;
+    } else {
+      this.eventDuration = 800;
+    }
+
+    // Notify parent component within Angular's Zone to update text log
+    this.ngZone.run(() => {
+      this.eventTriggered.emit(nextEvent);
+    });
+  }
+
+  private processCurrentEvent(timestamp: number): void {
+    const elapsed = timestamp - this.eventStartTime;
+    const currentEvent = this.currentEvent!;
+
+    if (currentEvent.type === 'damage') {
+      const payload = currentEvent.payload;
+
+      if (payload && 'targetId' in payload) {
+        const { targetId, hpBefore, hpAfter } = payload;
+
+        if (targetId !== undefined && hpBefore !== undefined && hpAfter !== undefined) {
           const progress = Math.min(1, elapsed / this.eventDuration);
           const interpolatedHp = hpBefore + (hpAfter - hpBefore) * progress;
 
           this.animatedHps.set(targetId, interpolatedHp);
         }
       }
+    }
 
-      if (elapsed >= this.eventDuration) {
-        // Enforce exact final HP at the end of damage animation
-        if (this.currentEvent.type === 'damage') {
-          const payload = this.currentEvent.payload;
+    if (elapsed >= this.eventDuration) {
+      // Enforce exact final HP at the end of damage animation
+      if (currentEvent.type === 'damage') {
+        const payload = currentEvent.payload;
 
-          if (payload && 'targetId' in payload) {
-            const targetId = payload.targetId as number;
-            const hpAfter = payload.hpAfter as number;
+        if (payload && 'targetId' in payload) {
+          const { targetId, hpAfter } = payload;
 
+          if (targetId !== undefined && hpAfter !== undefined) {
             this.animatedHps.set(targetId, hpAfter);
           }
         }
+      }
 
-        this.currentEvent = null;
+      this.currentEvent = null;
 
-        if (this.eventQueue.length === 0) {
-          this.ngZone.run(() => {
-            this.animationFinished.emit();
-          });
-        }
+      if (this.eventQueue.length === 0) {
+        this.ngZone.run(() => {
+          this.animationFinished.emit();
+        });
       }
     }
   }
