@@ -1,6 +1,9 @@
 import type { ClientMessage, PlayerBody, Stage } from '@game/frenzy/types';
 
 const STAGES: readonly Stage[] = [1, 2, 3];
+// npcId is a server-generated UUID (36 chars); cap the parsed length so a tampered client can't push an oversized
+// string through the boundary (mirrors the named appearance length policy — `APPEARANCE_MAX_LENGTH` — in validate-join).
+const NPC_ID_MAX_LENGTH = 64;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -86,9 +89,7 @@ export function parseClientMessage(raw: string): ClientMessage | null {
         : null;
     }
     case 'pokeNpc': {
-      // npcId is a server-generated UUID (36 chars); cap the length so a tampered client can't pass an oversized
-      // string through parsing (mirrors the appearance length policy in validate-join).
-      return isNonEmptyString(data.npcId) && data.npcId.length <= 64
+      return isNonEmptyString(data.npcId) && data.npcId.length <= NPC_ID_MAX_LENGTH
         ? { type: 'pokeNpc', npcId: data.npcId }
         : null;
     }
