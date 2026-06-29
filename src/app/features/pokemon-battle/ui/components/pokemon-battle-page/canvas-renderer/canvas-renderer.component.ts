@@ -12,6 +12,8 @@ import {
 import type { BattleEvent, BattlePokemon, BattleState } from '@game/pokemon-battle/types';
 import { AudioManagerService } from '../../../../data/services/audio-manager.service';
 
+const CRY_STAGGER_MS = 400;
+
 @Component({
   selector: 'left-paw-canvas-renderer',
   templateUrl: './canvas-renderer.component.html',
@@ -25,6 +27,7 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
   private ctx!: CanvasRenderingContext2D;
   private animationFrameId: number | null = null;
   private readonly imageCache = new Map<string, HTMLImageElement>();
+  private readonly cryTimers: ReturnType<typeof setTimeout>[] = [];
 
   // Event queue and animation state
   private readonly eventQueue: BattleEvent[] = [];
@@ -69,6 +72,8 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
     if (this.animationFrameId !== null) {
       cancelAnimationFrame(this.animationFrameId);
     }
+
+    this.cryTimers.forEach(clearTimeout);
   }
 
   public playEvents(events: BattleEvent[]): void {
@@ -89,9 +94,11 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
 
     this.ngZone.runOutsideAngular(() => {
       allActiveIds.forEach((id, index) => {
-        setTimeout(() => {
+        const timerId = setTimeout(() => {
           this.audioManager.playCry(id);
-        }, index * 400);
+        }, index * CRY_STAGGER_MS);
+
+        this.cryTimers.push(timerId);
       });
     });
   }
