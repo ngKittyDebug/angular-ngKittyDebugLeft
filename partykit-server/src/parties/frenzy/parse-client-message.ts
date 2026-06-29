@@ -1,6 +1,6 @@
-import type { ClientMessage, PlayerBody, Stage } from '@game/frenzy/types';
+import { STAGES } from '@game/frenzy/types';
+import type { ClientMessage, PlayerBody } from '@game/frenzy/types';
 
-const STAGES: readonly Stage[] = [1, 2, 3];
 // npcId is a server-generated UUID (36 chars); cap the parsed length so a tampered client can't push an oversized
 // string through the boundary (mirrors the named appearance length policy — `APPEARANCE_MAX_LENGTH` — in validate-join).
 const NPC_ID_MAX_LENGTH = 64;

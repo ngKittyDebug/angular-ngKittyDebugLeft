@@ -7,6 +7,9 @@
 
 export type Stage = 1 | 2 | 3;
 
+/** Runtime companion of the `Stage` union — the stages in order, for iterating per-stage data. */
+export const STAGES: readonly Stage[] = [1, 2, 3];
+
 /**
  * Per-stage physical descriptor of a player's body, authored client-side per actor line and relayed to the
  * server on `join` as opaque numbers (the server never interprets the roster). Drives collision (AABB), the
