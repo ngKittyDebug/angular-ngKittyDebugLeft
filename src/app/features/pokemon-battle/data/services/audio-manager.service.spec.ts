@@ -28,9 +28,6 @@ describe('AudioManagerService', () => {
     };
 
     vi.stubGlobal('Audio', MockAudio);
-    if (typeof window !== 'undefined') {
-      (window as any).Audio = MockAudio;
-    }
 
     TestBed.configureTestingModule({
       providers: [AudioManagerService],

@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, type MockedObject, vi } from 'vitest';
 import { PokemonBattleStore } from './pokemon-battle.store';
 import { PokemonBattleApiService } from '../api/pokemon/services/pokemon-battle-api.service';
 import { mapToBattlePokemon } from '../api/pokemon/helpers/pokemon-mapper';
@@ -98,12 +98,12 @@ describe('Pokemon mapper', () => {
 });
 
 describe('PokemonBattleStore', () => {
-  let mockApiService: any;
+  let mockApiService: MockedObject<Partial<PokemonBattleApiService>>;
 
   beforeEach(() => {
     mockApiService = {
       getPokemonList: vi.fn(),
-    };
+    } as const satisfies MockedObject<Partial<PokemonBattleApiService>>;
 
     TestBed.configureTestingModule({
       providers: [
@@ -126,7 +126,7 @@ describe('PokemonBattleStore', () => {
   it('should load pokemons and map them successfully', () => {
     const store = TestBed.inject(PokemonBattleStore);
 
-    mockApiService.getPokemonList.mockReturnValue(
+    vi.mocked(mockApiService.getPokemonList!).mockReturnValue(
       of({
         results: [MOCK_RAW_POKEMON],
         total: 1,
@@ -134,6 +134,8 @@ describe('PokemonBattleStore', () => {
     );
 
     store.loadPokemons({ page: 0, limit: 10 });
+
+    expect(mockApiService.getPokemonList).toHaveBeenCalledWith(10, 0);
 
     expect(store.pokemonList().length).toBe(1);
     expect(store.pokemonList()[0].name).toBe('pikachu');
@@ -145,7 +147,9 @@ describe('PokemonBattleStore', () => {
   it('should handle error when loading fails', () => {
     const store = TestBed.inject(PokemonBattleStore);
 
-    mockApiService.getPokemonList.mockReturnValue(throwError(() => new Error('API Error')));
+    vi.mocked(mockApiService.getPokemonList!).mockReturnValue(
+      throwError(() => new Error('API Error')),
+    );
 
     store.loadPokemons({ page: 0, limit: 10 });
 
