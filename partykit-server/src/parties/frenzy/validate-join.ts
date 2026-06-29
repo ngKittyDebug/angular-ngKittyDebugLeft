@@ -4,6 +4,9 @@ import type { JoinRejectReason, PlayerBody, StageBody } from '@game/frenzy/types
 
 // Length cap of the opaque appearance id — bounds garbage without coupling the server to the client's roster.
 const APPEARANCE_MAX_LENGTH = 32;
+// Max stored player-name length — mirrors the client input's maxlength (pokemon-picker) and is shared with the
+// join adapter (index.ts) so the cap has one source. An over-long name is truncated to this there, not rejected.
+export const NAME_MAX_LENGTH = 24;
 // Sanity caps for the per-stage body the client authors: a sprite can't be larger than this many world px on an
 // axis, and drift/steer speeds can't exceed this (normalized units/sec). Generous bounds — just anti-griefing.
 const BODY_MAX_DIMENSION_PX = 300;

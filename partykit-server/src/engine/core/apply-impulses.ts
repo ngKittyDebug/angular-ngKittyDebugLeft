@@ -1,3 +1,4 @@
+import { rescaleVelocity } from '@game/engine/geometry';
 import type { Player, ServerState } from '@game/engine/types';
 
 import type { PlayerImpulse } from '../verbs';
@@ -38,8 +39,7 @@ function kickPlayer<TEffectId extends string, TNpcId extends string>(
   const speed = Math.hypot(vx, vy);
 
   if (speed > cap && speed > 0) {
-    vx = (vx / speed) * cap;
-    vy = (vy / speed) * cap;
+    ({ vx, vy } = rescaleVelocity(vx, vy, cap));
   }
 
   return { ...player, vx, vy };

@@ -3,7 +3,7 @@ import { inject, Service } from '@angular/core';
 import { PokemonApiService } from '@core/api/pokemon-api.service';
 import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
 import type { PokemonSpeciesApiData } from '@shared/models/pokemon-species-api-data-interface';
-import type { EvolutionChainResponse } from '@shared/models/pokemon-evolution-chain-api-data-interface';
+import type { EvolutionChainApiResponse } from '@shared/models/pokemon-evolution-chain-api-data-interface';
 
 export interface EvolutionNodeModel {
   name: string;
@@ -22,7 +22,7 @@ export class PokemonDataService {
     const pokemonSpeciesResource = httpResource<PokemonSpeciesApiData>(() =>
       this.pokemonApiService.getPokemonSpecies(pokemonEndpoint()),
     );
-    const pokemonEvolutionResource = httpResource<EvolutionChainResponse>(() => {
+    const pokemonEvolutionResource = httpResource<EvolutionChainApiResponse>(() => {
       const speciesData = pokemonSpeciesResource.value();
 
       if (!speciesData || pokemonSpeciesResource.error() || !speciesData.evolution_chain?.url) {
