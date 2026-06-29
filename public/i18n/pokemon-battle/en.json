@@ -46,7 +46,8 @@
     },
     "log": {
       "title": "Battle Log",
-      "empty": "The battle hasn't started yet. Make your first move!"
+      "empty": "The battle hasn't started yet. Make your first move!",
+      "roundHeader": "--- Round {{ turn }} ---"
     },
     "info": {
       "title": "Battle Status",

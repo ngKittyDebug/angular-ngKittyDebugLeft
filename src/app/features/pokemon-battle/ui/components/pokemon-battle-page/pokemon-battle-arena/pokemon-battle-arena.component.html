@@ -88,7 +88,13 @@
       <h3 class="log-title">{{ t('log.title') }}</h3>
       <div class="log-box">
         @for (log of textLog; track $index) {
-          <p class="log-entry" [class.round-header]="log.startsWith('---')">{{ log }}</p>
+          <p class="log-entry" [class.round-header]="log.key === 'roundHeader'">
+            @if (log.key === 'roundHeader') {
+              {{ t('log.' + log.key, log.params) }}
+            } @else {
+              {{ log.params?.['message'] || log.key }}
+            }
+          </p>
         } @empty {
           <p class="empty-log-message">{{ t('log.empty') }}</p>
         }

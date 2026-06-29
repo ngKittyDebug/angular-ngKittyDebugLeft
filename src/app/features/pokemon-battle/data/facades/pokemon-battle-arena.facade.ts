@@ -34,7 +34,7 @@ export class PokemonBattleArenaFacade {
 
   // Battle play state
   public readonly battleState = signal<BattleState | null>(null);
-  public readonly textLog = signal<string[]>([]);
+  public readonly textLog = signal<{ key: string; params?: Record<string, unknown> }[]>([]);
   public readonly isAnimating = signal<boolean>(false);
 
   // Doubles selection state
@@ -159,7 +159,7 @@ export class PokemonBattleArenaFacade {
 
   public onEventTriggered(event: BattleEvent): void {
     if (event.message) {
-      this.textLog.update((logs) => [...logs, event.message]);
+      this.textLog.update((logs) => [...logs, { key: 'raw', params: { message: event.message } }]);
     }
   }
 
@@ -207,9 +207,7 @@ export class PokemonBattleArenaFacade {
     const botCommands = this.botPlayerService.getCommands(state);
     const events = this.engine.resolveTurn(this.pendingCommands(), botCommands);
 
-    const roundLogHeader = `--- Раунд ${currentTurn} ---`;
-
-    this.textLog.update((logs) => [...logs, roundLogHeader]);
+    this.textLog.update((logs) => [...logs, { key: 'roundHeader', params: { turn: currentTurn } }]);
 
     this.isAnimating.set(true);
 
