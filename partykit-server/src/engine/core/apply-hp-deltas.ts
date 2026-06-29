@@ -1,4 +1,5 @@
 import type { GameDefinition } from '@game/engine/definition';
+import { rescaleVelocity } from '@game/engine/geometry';
 import type { FaintCause, GameEvent, Player, ServerState } from '@game/engine/types';
 
 import { calculateStage } from './calculate-stage';
@@ -18,21 +19,6 @@ export interface HpDeltaResult<
 interface PlayerHpOutcome<TItemId extends string, TEffectId extends string, TNpcId extends string> {
   player?: Player<TEffectId, TNpcId>;
   event?: GameEvent<TItemId, TEffectId>;
-}
-
-/**
- * Rescales a velocity to the target speed, keeping its direction. Used on evolution so a grown player cruises
- * at its new stage's `speed` instead of carrying the smaller stage's momentum. A near-zero velocity (parked) gets
- * a default heading so it doesn't stay frozen at the new size.
- */
-function renormalizeVelocity(vx: number, vy: number, speed: number): { vx: number; vy: number } {
-  const magnitude = Math.hypot(vx, vy);
-
-  if (magnitude === 0) {
-    return { vx: speed, vy: 0 };
-  }
-
-  return { vx: (vx / magnitude) * speed, vy: (vy / magnitude) * speed };
 }
 
 /** Groups the deltas per player, so one target hit by several deltas in a tick resolves against a single net amount. */
@@ -94,7 +80,7 @@ function resolvePlayerHp<TItemId extends string, TEffectId extends string, TNpcI
   if (newStage > player.stage) {
     // Grew a stage: emit `evolved` and recruise at the new stage's speed so the bigger body doesn't keep the
     // smaller one's momentum (or stay slow).
-    const { vx, vy } = renormalizeVelocity(player.vx, player.vy, player.body[newStage].speed);
+    const { vx, vy } = rescaleVelocity(player.vx, player.vy, player.body[newStage].speed);
 
     return {
       player: { ...player, hp: newHp, stage: newStage, vx, vy },
