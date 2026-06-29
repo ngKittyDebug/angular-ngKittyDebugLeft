@@ -1,11 +1,12 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslocoDirective } from '@jsverse/transloco';
 import type { BattlePokemon } from '@game/pokemon-battle/types';
 import { PokemonTeamSelectionFacade } from '../../../../data/facades/pokemon-team-selection.facade';
 
 @Component({
   selector: 'left-paw-pokemon-team-selection',
-  imports: [CommonModule],
+  imports: [CommonModule, TranslocoDirective],
   providers: [PokemonTeamSelectionFacade],
   templateUrl: './pokemon-team-selection.component.html',
   styleUrl: './pokemon-team-selection.component.scss',

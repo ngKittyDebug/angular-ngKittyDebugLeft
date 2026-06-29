@@ -1,0 +1,64 @@
+{
+  "page": {
+    "title": "Pokemon Battle (MVP)",
+    "subtitle": "Engine and CanvasRenderer integration outside Zone.js",
+    "sound": {
+      "on": "Turn sound on",
+      "off": "Turn sound off",
+      "volume": "Volume"
+    }
+  },
+  "selection": {
+    "title": "Select Your Team (2 Pokemon)",
+    "summary": "Selected:",
+    "loading": "Loading Pokemon from PokeAPI...",
+    "error": "Error:",
+    "retry": "Try again",
+    "stats": {
+      "hp": "HP",
+      "atk": "ATK",
+      "def": "DEF",
+      "spd": "SPD"
+    },
+    "pagination": {
+      "prev": "← Prev",
+      "page": "Page",
+      "next": "Next →"
+    },
+    "startBattle": "🔥 START BATTLE 🔥"
+  },
+  "arena": {
+    "controls": {
+      "turn": "Turn",
+      "of": "of",
+      "resetSelection": "Reset selection",
+      "selectAttack": "Select attack for",
+      "selectTarget": "Select target for",
+      "backToMoves": "Back to moves"
+    },
+    "result": {
+      "title": "Battle finished!",
+      "winner": "Winner:",
+      "player": "Player",
+      "bot": "Bot",
+      "restart": "Restart",
+      "newTeam": "Select new team"
+    },
+    "log": {
+      "title": "Battle Log",
+      "empty": "The battle hasn't started yet. Make your first move!"
+    },
+    "info": {
+      "title": "Battle Status",
+      "round": "Round:",
+      "status": "Status:",
+      "mode": "Mode:",
+      "modeValue": "2v2 (Doubles)",
+      "rules": "Rules and Information",
+      "rule1": "The scene and health bars are rendered using HTML5 Canvas.",
+      "rule2": "The animation loop (requestAnimationFrame) runs outside the Angular zone to prevent excessive Change Detection cycles.",
+      "rule3": "Battle format: 2v2 (Doubles) with the ability to choose targets for each move.",
+      "rule4": "Moves are redirected to the remaining active opponent in case the original target faints."
+    }
+  }
+}

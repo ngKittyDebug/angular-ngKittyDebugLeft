@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslocoDirective } from '@jsverse/transloco';
 import { PokemonBattleStore } from '../../../data/store/pokemon-battle.store';
 import { AudioManagerService } from '../../../data/services/audio-manager.service';
 import { PokemonTeamSelectionComponent } from './pokemon-team-selection/pokemon-team-selection.component';
@@ -7,7 +8,12 @@ import { PokemonBattleArenaComponent } from './pokemon-battle-arena/pokemon-batt
 
 @Component({
   selector: 'left-paw-pokemon-battle-page',
-  imports: [CommonModule, PokemonTeamSelectionComponent, PokemonBattleArenaComponent],
+  imports: [
+    CommonModule,
+    TranslocoDirective,
+    PokemonTeamSelectionComponent,
+    PokemonBattleArenaComponent,
+  ],
   templateUrl: './pokemon-battle-page.component.html',
   styleUrl: './pokemon-battle-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

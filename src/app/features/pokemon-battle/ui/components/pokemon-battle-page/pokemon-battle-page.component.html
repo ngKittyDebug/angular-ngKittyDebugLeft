@@ -1,15 +1,15 @@
-<div class="pokemon-battle-container">
+<div class="pokemon-battle-container" *transloco="let t; prefix: 'pokemonBattle.page'">
   <header class="battle-header">
     <div class="header-main">
-      <h1 class="battle-title">Битва Покемонов (MVP)</h1>
-      <p class="battle-subtitle">Интеграция Движка и CanvasRenderer вне Zone.js</p>
+      <h1 class="battle-title">{{ t('title') }}</h1>
+      <p class="battle-subtitle">{{ t('subtitle') }}</p>
     </div>
 
     <div class="sound-controls">
       <button
         class="sound-toggle-button"
         (click)="toggleMute()"
-        [attr.aria-label]="soundEnabled() ? 'Выключить звук' : 'Включить звук'"
+        [attr.aria-label]="soundEnabled() ? t('sound.off') : t('sound.on')"
       >
         <span class="sound-icon">{{ soundEnabled() ? '🔊' : '🔇' }}</span>
       </button>
@@ -21,7 +21,7 @@
         [value]="soundVolume()"
         (input)="onVolumeChange($event)"
         class="sound-slider"
-        title="Громкость"
+        [title]="t('sound.volume')"
       />
       <span class="volume-label">{{ soundVolumePercent() }}%</span>
     </div>

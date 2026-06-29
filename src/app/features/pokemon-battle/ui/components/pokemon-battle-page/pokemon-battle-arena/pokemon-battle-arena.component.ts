@@ -1,13 +1,14 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, inject, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { TranslocoDirective } from '@jsverse/transloco';
 import type { BattleEvent, BattlePokemon, PokemonMove } from '@game/pokemon-battle/types';
 import { CanvasRendererComponent } from '../canvas-renderer/canvas-renderer.component';
 import { PokemonBattleArenaFacade } from '../../../../data/facades/pokemon-battle-arena.facade';
 
 @Component({
   selector: 'left-paw-pokemon-battle-arena',
-  imports: [CommonModule, CanvasRendererComponent],
+  imports: [CommonModule, TranslocoDirective, CanvasRendererComponent],
   providers: [PokemonBattleArenaFacade],
   templateUrl: './pokemon-battle-arena.component.html',
   styleUrl: './pokemon-battle-arena.component.scss',

@@ -1,21 +1,21 @@
-<main class="team-selection-main">
+<main class="team-selection-main" *transloco="let t; prefix: 'pokemonBattle.selection'">
   <div class="selection-box">
     <div class="selection-header">
-      <h2>Выберите Вашу Команду (2 покемона)</h2>
+      <h2>{{ t('title') }}</h2>
       <div class="selected-summary">
-        Выбрано: <strong>{{ facade.selectedTeam().length }} / 2</strong>
+        {{ t('summary') }} <strong>{{ facade.selectedTeam().length }} / 2</strong>
       </div>
     </div>
 
     @if (facade.isLoading()) {
       <div class="loader-container">
         <div class="spinner"></div>
-        <p>Загрузка покемонов из PokeAPI...</p>
+        <p>{{ t('loading') }}</p>
       </div>
     } @else if (facade.error(); as err) {
       <div class="error-container">
-        <p class="error-message">Ошибка: {{ err }}</p>
-        <button class="retry-button" (click)="onPrevClick()">Попробовать снова</button>
+        <p class="error-message">{{ t('error') }} {{ err }}</p>
+        <button class="retry-button" (click)="onPrevClick()">{{ t('retry') }}</button>
       </div>
     } @else {
       <div class="pokemon-selection-grid">
@@ -45,16 +45,16 @@
             </div>
             <div class="pokemon-stats">
               <div class="stat-row">
-                <span>HP:</span> <strong>{{ pokemon.maxHp }}</strong>
+                <span>{{ t('stats.hp') }}:</span> <strong>{{ pokemon.maxHp }}</strong>
               </div>
               <div class="stat-row">
-                <span>ATK:</span> <strong>{{ pokemon.stats.attack }}</strong>
+                <span>{{ t('stats.atk') }}:</span> <strong>{{ pokemon.stats.attack }}</strong>
               </div>
               <div class="stat-row">
-                <span>DEF:</span> <strong>{{ pokemon.stats.defense }}</strong>
+                <span>{{ t('stats.def') }}:</span> <strong>{{ pokemon.stats.defense }}</strong>
               </div>
               <div class="stat-row">
-                <span>SPD:</span> <strong>{{ pokemon.stats.speed }}</strong>
+                <span>{{ t('stats.spd') }}:</span> <strong>{{ pokemon.stats.speed }}</strong>
               </div>
             </div>
           </button>
@@ -67,15 +67,17 @@
           [disabled]="facade.currentPage() === 0"
           (click)="onPrevClick()"
         >
-          ← Назад
+          {{ t('pagination.prev') }}
         </button>
-        <span class="page-indicator">Страница {{ facade.currentPage() + 1 }}</span>
+        <span class="page-indicator"
+          >{{ t('pagination.page') }} {{ facade.currentPage() + 1 }}</span
+        >
         <button
           class="pagination-button"
           [disabled]="(facade.currentPage() + 1) * facade.limit() >= facade.totalCount()"
           (click)="onNextClick()"
         >
-          Вперед →
+          {{ t('pagination.next') }}
         </button>
       </div>
 
@@ -85,7 +87,7 @@
           [disabled]="facade.selectedTeam().length !== 2"
           (click)="onStartBattleClick()"
         >
-          🔥 НАЧАТЬ БОЙ 🔥
+          {{ t('startBattle') }}
         </button>
       </div>
     }
