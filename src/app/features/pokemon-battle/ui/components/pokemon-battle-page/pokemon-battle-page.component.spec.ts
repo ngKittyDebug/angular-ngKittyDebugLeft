@@ -11,6 +11,8 @@ import {
   SQUIRTLE_FIXTURE,
 } from '../../../data/fixtures/pokemon.fixture';
 
+import { TranslocoTestingModule } from '@jsverse/transloco';
+
 describe('PokemonBattlePageComponent', () => {
   let mockStore: any;
 
@@ -38,7 +40,13 @@ describe('PokemonBattlePageComponent', () => {
     };
 
     TestBed.configureTestingModule({
-      imports: [PokemonBattlePageComponent],
+      imports: [
+        PokemonBattlePageComponent,
+        TranslocoTestingModule.forRoot({
+          langs: { en: {} },
+          translocoConfig: { availableLangs: ['en'], defaultLang: 'en' },
+        }),
+      ],
       providers: [{ provide: PokemonBattleStore, useValue: mockStore }],
     });
   });

@@ -13,6 +13,21 @@ import type { BattleEvent, BattlePokemon, BattleState } from '@game/pokemon-batt
 import { AudioManagerService } from '../../../../data/services/audio-manager.service';
 
 const CRY_STAGGER_MS = 400;
+const MOVE_EVENT_DURATION_MS = 1000;
+const DAMAGE_EVENT_DURATION_MS = 1000;
+const FAINT_EVENT_DURATION_MS = 1000;
+const DEFAULT_EVENT_DURATION_MS = 800;
+
+const CANVAS_WIDTH = 800;
+const CANVAS_HEIGHT = 400;
+
+const PLATFORM_PLAYER_X = 220;
+const PLATFORM_PLAYER_Y = 320;
+const PLATFORM_OPPONENT_X = 580;
+const PLATFORM_OPPONENT_Y = 200;
+
+const BREATH_SPEED = 0.003;
+const LUNGE_DISTANCE_PX = 40;
 
 @Component({
   selector: 'left-paw-canvas-renderer',
@@ -50,8 +65,8 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
     }
 
     // Set standard high resolution coordinates
-    canvas.width = 800;
-    canvas.height = 400;
+    canvas.width = CANVAS_WIDTH;
+    canvas.height = CANVAS_HEIGHT;
     this.ctx = canvas.getContext('2d')!;
 
     // Play initial cries at the start of battle
@@ -122,9 +137,9 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
 
     // Assign duration based on event type
     if (nextEvent.type === 'use-move') {
-      this.eventDuration = 1000;
+      this.eventDuration = MOVE_EVENT_DURATION_MS;
     } else if (nextEvent.type === 'damage') {
-      this.eventDuration = 1000;
+      this.eventDuration = DAMAGE_EVENT_DURATION_MS;
 
       const targetId = nextEvent.payload?.targetId;
 
@@ -132,9 +147,9 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
         this.audioManager.playCry(targetId);
       }
     } else if (nextEvent.type === 'faint') {
-      this.eventDuration = 1000;
+      this.eventDuration = FAINT_EVENT_DURATION_MS;
     } else {
-      this.eventDuration = 800;
+      this.eventDuration = DEFAULT_EVENT_DURATION_MS;
     }
 
     // Notify parent component within Angular's Zone to update text log
@@ -216,17 +231,17 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
     // Player side platform
     context.fillStyle = 'rgba(100, 180, 100, 0.6)';
     context.beginPath();
-    context.ellipse(220, 320, 120, 30, 0, 0, 2 * Math.PI);
+    context.ellipse(PLATFORM_PLAYER_X, PLATFORM_PLAYER_Y, 120, 30, 0, 0, 2 * Math.PI);
     context.fill();
 
     // Opponent side platform
     context.fillStyle = 'rgba(180, 100, 100, 0.6)';
     context.beginPath();
-    context.ellipse(580, 200, 100, 25, 0, 0, 2 * Math.PI);
+    context.ellipse(PLATFORM_OPPONENT_X, PLATFORM_OPPONENT_Y, 100, 25, 0, 0, 2 * Math.PI);
     context.fill();
 
     // Idle breathing animation based on timestamp
-    const wave = Math.sin(timestamp * 0.003) * 4;
+    const wave = Math.sin(timestamp * BREATH_SPEED) * 4;
 
     // Render player active pokemons
     const playerSide = this.state().playerSide;
@@ -250,7 +265,7 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
           this.currentEvent.type === 'use-move' &&
           this.currentEvent.payload?.attackerId === pokemon.id
         ) {
-          const lungeDistribution = 40;
+          const lungeDistribution = LUNGE_DISTANCE_PX;
           const factor = Math.sin(progress * Math.PI);
 
           offsetX = lungeDistribution * factor;
@@ -272,8 +287,8 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
       }
 
       // Base layout coordinates
-      const uiX = 220 - index * 60;
-      const uiY = 280 + index * 30 + wave;
+      const uiX = PLATFORM_PLAYER_X - index * 60;
+      const uiY = PLATFORM_PLAYER_Y - 40 + index * 30 + wave;
 
       this.drawPokemon(pokemon, uiX + offsetX, uiY + offsetY, 'back', alpha);
 
@@ -304,7 +319,7 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
           this.currentEvent.type === 'use-move' &&
           this.currentEvent.payload?.attackerId === pokemon.id
         ) {
-          const lungeDistribution = -40; // Lunge left
+          const lungeDistribution = -LUNGE_DISTANCE_PX; // Lunge left
           const factor = Math.sin(progress * Math.PI);
 
           offsetX = lungeDistribution * factor;
@@ -326,8 +341,8 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
       }
 
       // Base layout coordinates
-      const uiX = 580 + index * 50;
-      const uiY = 160 - index * 25 - wave;
+      const uiX = PLATFORM_OPPONENT_X + index * 50;
+      const uiY = PLATFORM_OPPONENT_Y - 40 - index * 25 - wave;
 
       this.drawPokemon(pokemon, uiX + offsetX, uiY + offsetY, 'front', alpha);
 
