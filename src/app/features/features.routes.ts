@@ -6,6 +6,7 @@ import { frenzyRoutes } from './frenzy/frenzy.routes';
 import { mainCatalogRoutes } from './main-catalog/main-catalog.routes';
 import { profileRoutes } from './profile/profile.routes';
 import { pokemonProfileRoutes } from './pokemon-profile/pokemon-profile.routes';
+import { pokemonBattleRoutes } from './pokemon-battle/pokemon-battle.routes';
 
 export const ChildrenRouts: Routes = [
   ...mainCatalogRoutes,
@@ -14,5 +15,6 @@ export const ChildrenRouts: Routes = [
   ...profileRoutes,
   ...pokemonProfileRoutes,
   ...frenzyRoutes,
+  ...pokemonBattleRoutes,
   ...notFoundRoutes,
 ];

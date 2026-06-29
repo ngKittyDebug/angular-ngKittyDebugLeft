@@ -1,0 +1,35 @@
+<div class="pokemon-battle-container" *transloco="let t; prefix: 'pokemonBattle.page'">
+  <header class="battle-header">
+    <div class="header-main">
+      <h1 class="battle-title">{{ t('title') }}</h1>
+      <p class="battle-subtitle">{{ t('subtitle') }}</p>
+    </div>
+
+    <div class="sound-controls">
+      <button
+        class="sound-toggle-button"
+        (click)="toggleMute()"
+        [attr.aria-label]="soundEnabled() ? t('sound.off') : t('sound.on')"
+      >
+        <span class="sound-icon">{{ soundEnabled() ? '🔊' : '🔇' }}</span>
+      </button>
+      <input
+        type="range"
+        min="0"
+        max="1"
+        step="0.05"
+        [value]="soundVolume()"
+        (input)="onVolumeChange($event)"
+        class="sound-slider"
+        [title]="t('sound.volume')"
+      />
+      <span class="volume-label">{{ soundVolumePercent() }}%</span>
+    </div>
+  </header>
+
+  @if (battleStarted()) {
+    <left-paw-pokemon-battle-arena />
+  } @else {
+    <left-paw-pokemon-team-selection />
+  }
+</div>

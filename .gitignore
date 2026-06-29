@@ -74,6 +74,7 @@ skills-lock.json
 
 # Gemini CLI — local config / sessions / skills stay local, EXCEPT the committed review
 # skills, settings.json
+.gemini
 .gemini/*
 !.gemini/skills/
 .gemini/skills/*

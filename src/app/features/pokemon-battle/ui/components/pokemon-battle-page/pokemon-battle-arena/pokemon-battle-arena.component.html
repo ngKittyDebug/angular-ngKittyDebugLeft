@@ -1,0 +1,136 @@
+@let state = facade.battleState();
+@let pokemon = facade.currentSelectingPokemon();
+@let textLog = facade.textLog();
+
+<main class="battle-main" *transloco="let t; prefix: 'pokemonBattle.arena'">
+  <div class="battle-arena">
+    <div class="canvas-wrapper">
+      @if (state) {
+        <left-paw-canvas-renderer
+          [state]="state"
+          (eventTriggered)="onEventTriggered($event)"
+          (animationFinished)="onAnimationFinished()"
+        />
+      }
+    </div>
+
+    @if (state?.status === 'waiting-for-commands' && !facade.isAnimating() && pokemon) {
+      <div class="battle-controls">
+        <div class="controls-header">
+          <h3 class="controls-title">
+            {{ t('controls.turn') }} {{ facade.currentSelectingPokemonIndex() + 1 }}
+            {{ t('controls.of') }}
+            {{ facade.activeAlivePlayerPokemons().length }}
+          </h3>
+          @if (facade.currentSelectingPokemonIndex() > 0) {
+            <button class="reset-selection-button" (click)="onResetSelection()">
+              {{ t('controls.resetSelection') }}
+            </button>
+          }
+        </div>
+
+        @if (facade.selectedMove() === null) {
+          <div class="selection-prompt">
+            {{ t('controls.selectAttack') }} <strong>{{ pokemon.name | uppercase }}</strong
+            >:
+          </div>
+          <div class="moves-grid">
+            @for (move of pokemon.moves; track move.name) {
+              <button class="move-button" (click)="onSelectMove(move)">
+                <span class="move-name">{{ move.name }}</span>
+                <span class="move-type" [attr.data-type]="move.type">{{ move.type }}</span>
+                <span class="move-power">{{ t('controls.power') }}: {{ move.power }}</span>
+              </button>
+            }
+          </div>
+        } @else {
+          <div class="selection-prompt">
+            {{ t('controls.selectTarget') }} <strong>{{ pokemon.name | uppercase }}</strong> ({{
+              facade.selectedMove()?.name
+            }}):
+          </div>
+          <div class="targets-grid">
+            @for (target of facade.activeAliveOpponentPokemons(); track target.id) {
+              <button class="target-button" (click)="onSelectTarget(target)">
+                <span class="target-name">{{ target.name | uppercase }}</span>
+                <span class="target-hp"
+                  >{{ t('controls.hp') }}: {{ target.hp }}/{{ target.maxHp }}</span
+                >
+              </button>
+            }
+          </div>
+          <div class="target-actions">
+            <button class="back-button" (click)="onCancelMoveSelection()">
+              {{ t('controls.backToMoves') }}
+            </button>
+          </div>
+        }
+      </div>
+    } @else if (state?.status === 'finished') {
+      <div class="battle-controls result-panel">
+        <h3 class="controls-title victory-title">{{ t('result.title') }}</h3>
+        <p class="winner-message">
+          {{ t('result.winner') }}
+          <span class="winner-name">{{
+            state?.winner === 'player' ? t('result.player') : t('result.bot')
+          }}</span>
+        </p>
+        <div class="result-actions">
+          <button class="restart-button" (click)="onResetBattle()">
+            {{ t('result.restart') }}
+          </button>
+          <button class="restart-button select-team-btn" (click)="onGoBackToSelection()">
+            {{ t('result.newTeam') }}
+          </button>
+        </div>
+      </div>
+    }
+
+    <div class="log-panel">
+      <h3 class="log-title">{{ t('log.title') }}</h3>
+      <div class="log-box">
+        @for (log of textLog; track $index) {
+          <p class="log-entry" [class.round-header]="log.key === 'roundHeader'">
+            @if (log.key === 'roundHeader') {
+              {{ t('log.' + log.key, log.params) }}
+            } @else {
+              {{ log.params?.['message'] || log.key }}
+            }
+          </p>
+        } @empty {
+          <p class="empty-log-message">{{ t('log.empty') }}</p>
+        }
+      </div>
+    </div>
+  </div>
+
+  <section class="battle-info">
+    <h2 class="info-title">{{ t('info.title') }}</h2>
+    @if (state) {
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="info-label">{{ t('info.round') }}</span>
+          <span class="info-value">{{ state.turn }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">{{ t('info.status') }}</span>
+          <span class="info-value status-badge">{{ t('status.' + state.status) }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">{{ t('info.mode') }}</span>
+          <span class="info-value">{{ t('info.modeValue') }}</span>
+        </div>
+      </div>
+    }
+
+    <div class="battle-rules">
+      <h3>{{ t('info.rules') }}</h3>
+      <ul>
+        <li>{{ t('info.rule1') }}</li>
+        <li>{{ t('info.rule2') }}</li>
+        <li>{{ t('info.rule3') }}</li>
+        <li>{{ t('info.rule4') }}</li>
+      </ul>
+    </div>
+  </section>
+</main>
