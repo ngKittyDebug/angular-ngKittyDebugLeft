@@ -3,7 +3,7 @@ import { of, throwError } from 'rxjs';
 import { describe, expect, it, type MockedObject, vi } from 'vitest';
 import { PokemonBattleStore } from './pokemon-battle.store';
 import { PokemonBattleApiService } from '../api/pokemon/services/pokemon-battle-api.service';
-import { mapToBattlePokemon } from '../api/pokemon/helpers/pokemon-mapper';
+import { convertPokemonDetailApiDataToBattlePokemon } from '../api/pokemon/helpers/pokemon-converter';
 import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
 
 const MOCK_RAW_POKEMON: PokemonDetailApiData = {
@@ -74,9 +74,9 @@ const MOCK_RAW_POKEMON: PokemonDetailApiData = {
   ],
 };
 
-describe('Pokemon mapper', () => {
-  it('should correctly map raw PokeAPI data to BattlePokemon', () => {
-    const result = mapToBattlePokemon(MOCK_RAW_POKEMON);
+describe('Pokemon converter', () => {
+  it('should correctly convert raw PokeAPI data to BattlePokemon', () => {
+    const result = convertPokemonDetailApiDataToBattlePokemon(MOCK_RAW_POKEMON);
 
     expect(result.id).toBe(25);
     expect(result.name).toBe('pikachu');
@@ -159,7 +159,7 @@ describe('PokemonBattleStore', () => {
 
   it('should toggle selection of pokemons and respect maximum limit of 2', () => {
     const store = TestBed.inject(PokemonBattleStore);
-    const p1 = mapToBattlePokemon(MOCK_RAW_POKEMON);
+    const p1 = convertPokemonDetailApiDataToBattlePokemon(MOCK_RAW_POKEMON);
     const p2 = { ...p1, id: 26, name: 'raichu' };
     const p3 = { ...p1, id: 1, name: 'bulbasaur' };
 
@@ -180,7 +180,7 @@ describe('PokemonBattleStore', () => {
 
   it('should clear selection', () => {
     const store = TestBed.inject(PokemonBattleStore);
-    const p1 = mapToBattlePokemon(MOCK_RAW_POKEMON);
+    const p1 = convertPokemonDetailApiDataToBattlePokemon(MOCK_RAW_POKEMON);
 
     store.selectPokemonForTeam(p1);
     store.startBattle([p1]);

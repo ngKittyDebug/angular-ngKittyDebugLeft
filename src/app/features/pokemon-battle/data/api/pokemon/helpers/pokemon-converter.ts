@@ -1,7 +1,9 @@
 import type { BattlePokemon, PokemonMove } from '@game/pokemon-battle/types';
 import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
 
-export function mapToBattlePokemon(raw: PokemonDetailApiData): BattlePokemon {
+export function convertPokemonDetailApiDataToBattlePokemon(
+  raw: PokemonDetailApiData,
+): BattlePokemon {
   const stats = {
     hp: raw.stats.find((s) => s.stat.name === 'hp')?.base_stat ?? 50,
     attack: raw.stats.find((s) => s.stat.name === 'attack')?.base_stat ?? 50,
@@ -21,7 +23,7 @@ export function mapToBattlePokemon(raw: PokemonDetailApiData): BattlePokemon {
   const backSprite =
     raw.sprites.other.showdown?.back_default || raw.sprites.back_default || frontSprite;
 
-  const moves = getMappedMoves(raw);
+  const moves = convertPokemonDetailApiDataToMoves(raw);
 
   return {
     id: raw.id,
@@ -38,7 +40,7 @@ export function mapToBattlePokemon(raw: PokemonDetailApiData): BattlePokemon {
   };
 }
 
-export function getMappedMoves(raw: PokemonDetailApiData): PokemonMove[] {
+export function convertPokemonDetailApiDataToMoves(raw: PokemonDetailApiData): PokemonMove[] {
   const pokemonTypes = raw.types.map((t) => t.type.name.toLowerCase());
   const primaryType = pokemonTypes[0] || 'normal';
 

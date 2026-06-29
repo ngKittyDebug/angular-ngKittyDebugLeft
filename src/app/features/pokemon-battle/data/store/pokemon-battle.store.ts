@@ -4,7 +4,7 @@ import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { EMPTY, pipe } from 'rxjs';
 import { catchError, switchMap, tap } from 'rxjs/operators';
 import { PokemonBattleApiService } from '../api/pokemon/services/pokemon-battle-api.service';
-import { mapToBattlePokemon } from '../api/pokemon/helpers/pokemon-mapper';
+import { convertPokemonDetailApiDataToBattlePokemon } from '../api/pokemon/helpers/pokemon-converter';
 import type { BattlePokemon } from '@game/pokemon-battle/types';
 
 export interface PokemonBattleStoreState {
@@ -45,7 +45,9 @@ export const PokemonBattleStore = signalStore(
 
           return api.getPokemonList(limit, offset).pipe(
             tap((data) => {
-              const mapped = data.results.map((raw) => mapToBattlePokemon(raw));
+              const mapped = data.results.map((raw) =>
+                convertPokemonDetailApiDataToBattlePokemon(raw),
+              );
 
               patchState(store, {
                 pokemonList: mapped,
