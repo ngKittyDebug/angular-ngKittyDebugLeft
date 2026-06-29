@@ -42,10 +42,7 @@ export class PokemonTeamSelectionFacade {
 
       opponents.push(shuffled[0], shuffled[1]);
     } else {
-      opponents.push(
-        JSON.parse(JSON.stringify(CHARMANDER_FIXTURE)),
-        JSON.parse(JSON.stringify(IVYSAUR_FIXTURE)),
-      );
+      opponents.push(structuredClone(CHARMANDER_FIXTURE), structuredClone(IVYSAUR_FIXTURE));
     }
 
     this.pokemonBattleStore.startBattle(opponents);

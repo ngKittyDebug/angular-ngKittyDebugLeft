@@ -174,12 +174,8 @@ export class PokemonBattleArenaFacade {
 
   public resetBattle(): void {
     if (this.pokemonBattleStore.battleStarted()) {
-      const playerTeam = JSON.parse(
-        JSON.stringify(this.pokemonBattleStore.selectedTeam()),
-      ) as BattlePokemon[];
-      const opponentTeam = JSON.parse(
-        JSON.stringify(this.pokemonBattleStore.opponentTeam()),
-      ) as BattlePokemon[];
+      const playerTeam = structuredClone(this.pokemonBattleStore.selectedTeam());
+      const opponentTeam = structuredClone(this.pokemonBattleStore.opponentTeam());
 
       this.engine = new BattleEngine(playerTeam, opponentTeam, true);
       this.battleState.set(this.engine.getState());
