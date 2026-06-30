@@ -1,5 +1,42 @@
 {
   "page": {
-    "title": "Покемон Тамагочи"
+    "title": "Покемон Тамагочи",
+    "levelBadge": "Ур. {{level}}",
+    "noSelectionTitle": "Покемон не выбран",
+    "noSelectionHint": "Выберите покемона первой стадии в профиле и вернитесь сюда.",
+    "goToProfile": "Открыть профиль",
+    "evolvedPokemonError": "В тамагочи можно взять только покемона первой стадии.",
+    "loadFailedError": "Не удалось загрузить выбранного покемона. Попробуйте снова из профиля.",
+    "ariaLabel": "Экран ухода за покемоном-тамагочи"
+  },
+  "status": {
+    "health": "Здоровье",
+    "hunger": "Сытость",
+    "mood": "Настроение",
+    "energy": "Энергия",
+    "hydration": "Гидратация",
+    "experience": "Опыт",
+    "tooltip": "{{label}}: {{value}} / {{max}}",
+    "levelTooltip": "Уровень {{level}} · {{experience}} опыта"
+  },
+  "actions": {
+    "feed": "Кормить",
+    "water": "Поить",
+    "care": "Ухаживать",
+    "play": "Играть",
+    "train": "Тренировать",
+    "sleep": "Спать",
+    "wakeUp": "Разбудить",
+    "cooldown": "Доступно через {{seconds}}с",
+    "disabledSleeping": "Покемон спит",
+    "disabledLowEnergy": "Мало энергии",
+    "disabledCooldown": "Перезарядка"
+  },
+  "miniGame": {
+    "title": "Тренировка реакции",
+    "instruction": "Нажимай на цели, пока они не исчезли!",
+    "score": "Счёт: {{score}}",
+    "timeLeft": "{{seconds}}с",
+    "finish": "Завершить"
   }
 }

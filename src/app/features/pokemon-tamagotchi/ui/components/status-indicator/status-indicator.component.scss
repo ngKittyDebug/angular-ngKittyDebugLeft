@@ -1,0 +1,42 @@
+.status-indicator {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.status-indicator__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.status-indicator__label {
+  font: var(--tui-font-text-s);
+  color: var(--tui-text-secondary);
+}
+
+.status-indicator__badge {
+  flex-shrink: 0;
+}
+
+.status-indicator__bar-wrap {
+  inline-size: 100%;
+}
+
+.status-indicator__value {
+  font: var(--tui-font-text-xs);
+  color: var(--tui-text-primary);
+}
+
+.status-indicator__bar {
+  inline-size: 100%;
+}
+
+.status-indicator--warning .status-indicator__label {
+  color: var(--tui-status-warning);
+}
+
+.status-indicator--critical .status-indicator__label {
+  color: var(--tui-status-negative);
+}

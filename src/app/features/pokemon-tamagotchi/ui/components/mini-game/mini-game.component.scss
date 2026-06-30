@@ -1,0 +1,41 @@
+.mini-game {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: var(--tui-radius-l);
+  background: var(--tui-background-neutral-1);
+}
+
+.mini-game__head {
+  inline-size: 100%;
+  text-align: center;
+}
+
+.mini-game__title {
+  margin: 0;
+  font: var(--tui-font-heading-5);
+}
+
+.mini-game__instruction {
+  margin: 0.25rem 0 0;
+  color: var(--tui-text-secondary);
+  font: var(--tui-font-text-s);
+}
+
+.mini-game__stats {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-block-start: 0.5rem;
+  font: var(--tui-font-text-m);
+}
+
+.mini-game__canvas {
+  inline-size: min(100%, 30rem);
+  block-size: auto;
+  border-radius: var(--tui-radius-m);
+  background: var(--tui-background-base-alt);
+  cursor: crosshair;
+}

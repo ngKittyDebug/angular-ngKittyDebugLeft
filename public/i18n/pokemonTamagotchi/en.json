@@ -1,5 +1,42 @@
 {
   "page": {
-    "title": "Pokemon Tamagotchi"
+    "title": "Pokémon Tamagotchi",
+    "levelBadge": "Lv. {{level}}",
+    "noSelectionTitle": "No Pokémon selected",
+    "noSelectionHint": "Choose a first-stage Pokémon in your profile, then come back here.",
+    "goToProfile": "Open profile",
+    "evolvedPokemonError": "Only first-stage Pokémon can join the tamagotchi.",
+    "loadFailedError": "Could not load your selected Pokémon. Try again from the profile.",
+    "ariaLabel": "Pokémon tamagotchi care screen"
+  },
+  "status": {
+    "health": "Health",
+    "hunger": "Hunger",
+    "mood": "Mood",
+    "energy": "Energy",
+    "hydration": "Hydration",
+    "experience": "Experience",
+    "tooltip": "{{label}}: {{value}} / {{max}}",
+    "levelTooltip": "Level {{level}} · {{experience}} XP"
+  },
+  "actions": {
+    "feed": "Feed",
+    "water": "Water",
+    "care": "Care",
+    "play": "Play",
+    "train": "Train",
+    "sleep": "Sleep",
+    "wakeUp": "Wake up",
+    "cooldown": "Available in {{seconds}}s",
+    "disabledSleeping": "Pokémon is sleeping",
+    "disabledLowEnergy": "Not enough energy",
+    "disabledCooldown": "On cooldown"
+  },
+  "miniGame": {
+    "title": "Reflex training",
+    "instruction": "Tap the targets before they fade!",
+    "score": "Score: {{score}}",
+    "timeLeft": "{{seconds}}s",
+    "finish": "Finish"
   }
 }

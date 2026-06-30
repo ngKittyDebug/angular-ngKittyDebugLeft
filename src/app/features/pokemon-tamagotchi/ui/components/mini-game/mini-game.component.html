@@ -1,0 +1,22 @@
+<section *transloco="let t; prefix: 'pokemonTamagotchi.miniGame'" class="mini-game">
+  <header class="mini-game__head">
+    <h2 class="mini-game__title">{{ t('title') }}</h2>
+    <p class="mini-game__instruction">{{ t('instruction') }}</p>
+    <div class="mini-game__stats">
+      <span>{{ t('score', { score }) }}</span>
+      <span>{{ t('timeLeft', { seconds: secondsLeft }) }}</span>
+    </div>
+  </header>
+
+  <canvas
+    #canvas
+    class="mini-game__canvas"
+    role="img"
+    [attr.aria-label]="t('title')"
+    (click)="onCanvasClick($event)"
+  ></canvas>
+
+  <button appearance="outline" size="s" tuiButton type="button" (click)="finishEarly()">
+    {{ t('finish') }}
+  </button>
+</section>

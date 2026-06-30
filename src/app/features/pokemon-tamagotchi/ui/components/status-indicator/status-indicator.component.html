@@ -1,0 +1,45 @@
+<div
+  *transloco="let t; prefix: 'pokemonTamagotchi.status'"
+  class="status-indicator"
+  [class.status-indicator--warning]="alertLevel() === 'warning'"
+  [class.status-indicator--critical]="alertLevel() === 'critical'"
+>
+  <div class="status-indicator__head">
+    <span class="status-indicator__label">{{ t(statusType()) }}</span>
+    @if (alertLevel() === 'warning') {
+      <span appearance="warning" size="s" tuiBadge tuiStatus class="status-indicator__badge">
+        !
+      </span>
+    }
+    @if (alertLevel() === 'critical') {
+      <span appearance="negative" size="s" tuiBadge tuiStatus class="status-indicator__badge">
+        !!
+      </span>
+    }
+  </div>
+
+  <label
+    tuiProgressLabel
+    class="status-indicator__bar-wrap"
+    [tuiHint]="hint"
+    tuiHintDirection="top"
+  >
+    <span class="status-indicator__value">{{ currentValue() }}</span>
+    <progress
+      tuiProgressBar
+      class="status-indicator__bar"
+      size="s"
+      [max]="maxValue()"
+      [value]="currentValue()"
+      [color]="progressColor()"
+    ></progress>
+  </label>
+
+  <ng-template #hint>
+    @if (statusType() === 'experience' && level() !== null) {
+      {{ t('levelTooltip', { experience: currentValue(), level: level() }) }}
+    } @else {
+      {{ t('tooltip', { label: t(statusType()), value: currentValue(), max: maxValue() }) }}
+    }
+  </ng-template>
+</div>

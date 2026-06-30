@@ -1,3 +1,97 @@
-<section *transloco="let t; prefix: 'pokemonTamagotchi.page'" class="tamagotchi-page">
-  <h1 class="tamagotchi-page__title">{{ t('title') }}</h1>
-</section>
+<main
+  *transloco="let t; prefix: 'pokemonTamagotchi.page'"
+  class="tamagotchi-page"
+  role="main"
+  [attr.aria-label]="t('ariaLabel')"
+>
+  <header class="tamagotchi-page__header">
+    <h1 class="tamagotchi-page__title">{{ t('title') }}</h1>
+    @if (pokemon(); as species) {
+      <span appearance="primary" size="m" tuiBadge class="tamagotchi-page__level">
+        {{ t('levelBadge', { level: status().level }) }}
+      </span>
+    }
+  </header>
+
+  @if (selectionBlocked()) {
+    <section class="tamagotchi-page__empty" role="status">
+      @if (error() === 'noSelection') {
+        <h2 class="tamagotchi-page__empty-title">{{ t('noSelectionTitle') }}</h2>
+        <p class="tamagotchi-page__empty-hint">{{ t('noSelectionHint') }}</p>
+        <a appearance="primary" routerLink="/profile" tuiButton type="button">
+          {{ t('goToProfile') }}
+        </a>
+      } @else if (error() === 'evolvedPokemon') {
+        <p class="tamagotchi-page__error">{{ t('evolvedPokemonError') }}</p>
+      } @else if (error() === 'loadFailed') {
+        <p class="tamagotchi-page__error">{{ t('loadFailedError') }}</p>
+      }
+    </section>
+  } @else if (pokemon(); as species) {
+    <div class="tamagotchi-page__layout">
+      <aside class="tamagotchi-page__status-panel" aria-label="Status indicators">
+        <left-paw-status-indicator
+          statusType="health"
+          [currentValue]="status().health"
+          [maxValue]="statusMax"
+        />
+        <left-paw-status-indicator
+          statusType="hunger"
+          [currentValue]="status().hunger"
+          [maxValue]="statusMax"
+        />
+        <left-paw-status-indicator
+          statusType="hydration"
+          [currentValue]="status().hydration"
+          [maxValue]="statusMax"
+        />
+        <left-paw-status-indicator
+          statusType="mood"
+          [currentValue]="status().mood"
+          [maxValue]="statusMax"
+        />
+        <left-paw-status-indicator
+          statusType="energy"
+          [currentValue]="status().energy"
+          [maxValue]="statusMax"
+        />
+        <left-paw-status-indicator
+          statusType="experience"
+          [currentValue]="status().experience"
+          [level]="status().level"
+          [maxValue]="experienceMax"
+        />
+      </aside>
+
+      <section class="tamagotchi-page__stage">
+        <left-paw-pokemon-sprite
+          [isEvolving]="isEvolving()"
+          [isSleeping]="isSleeping()"
+          [pokemon]="species"
+          [status]="status()"
+          (interacted)="onInteraction($event)"
+        />
+      </section>
+    </div>
+
+    <left-paw-action-buttons
+      class="tamagotchi-page__actions"
+      [canCare]="canCare()"
+      [canFeed]="canFeed()"
+      [canPlay]="canPlay()"
+      [canTrain]="canTrain()"
+      [canWater]="canWater()"
+      [cooldowns]="cooldowns()"
+      [isSleeping]="isSleeping()"
+      (actionSelected)="onAction($event)"
+    />
+
+    @if (activeMiniGame(); as gameType) {
+      <left-paw-mini-game
+        class="tamagotchi-page__mini-game"
+        [gameType]="gameType"
+        (gameCompleted)="onMiniGameCompleted($event)"
+      />
+    }
+  }
+</main>

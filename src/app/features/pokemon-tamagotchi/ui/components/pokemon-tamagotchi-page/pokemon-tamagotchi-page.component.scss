@@ -1,10 +1,88 @@
+@use 'screens-width';
+
 .tamagotchi-page {
   display: flex;
   flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  margin-inline: auto;
+  max-inline-size: 72rem;
+}
+
+.tamagotchi-page__header {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  padding: 2rem;
+  justify-content: space-between;
+  gap: 0.75rem;
 }
 
 .tamagotchi-page__title {
   margin: 0;
+  font: var(--tui-font-heading-4);
+}
+
+.tamagotchi-page__layout {
+  display: grid;
+  gap: 1.5rem;
+  align-items: start;
+
+  @media (min-width: screens-width.$screen-medium) {
+    grid-template-columns: minmax(12rem, 18rem) 1fr;
+  }
+}
+
+.tamagotchi-page__status-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: var(--tui-radius-l);
+  background: var(--tui-background-neutral-1);
+}
+
+.tamagotchi-page__stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: 18rem;
+  padding: 1rem;
+  border-radius: var(--tui-radius-l);
+  background: var(--tui-background-base-alt);
+}
+
+.tamagotchi-page__actions {
+  padding-block-start: 0.5rem;
+}
+
+.tamagotchi-page__mini-game {
+  margin-block-start: 0.5rem;
+}
+
+.tamagotchi-page__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem 1rem;
+  text-align: center;
+  border-radius: var(--tui-radius-l);
+  background: var(--tui-background-neutral-1);
+}
+
+.tamagotchi-page__empty-title {
+  margin: 0;
+  font: var(--tui-font-heading-5);
+}
+
+.tamagotchi-page__empty-hint {
+  margin: 0;
+  max-inline-size: 28rem;
+  color: var(--tui-text-secondary);
+}
+
+.tamagotchi-page__error {
+  margin: 0;
+  color: var(--tui-status-negative);
+  font: var(--tui-font-text-m);
 }

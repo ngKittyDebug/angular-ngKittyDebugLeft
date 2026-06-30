@@ -1,0 +1,18 @@
+<button
+  type="button"
+  class="pokemon-sprite"
+  [class.pokemon-sprite--sleeping]="isSleeping()"
+  [class.pokemon-sprite--evolving]="isEvolving()"
+  [attr.aria-label]="pokemon().name"
+  (click)="onClick()"
+  (pointerdown)="onPointerDown($event)"
+  (pointerup)="onPointerUp($event)"
+>
+  <img
+    class="pokemon-sprite__image"
+    [class]="'pokemon-sprite__image ' + animationClass()"
+    [src]="spriteUrl()"
+    [alt]="pokemon().name"
+    draggable="false"
+  />
+</button>
