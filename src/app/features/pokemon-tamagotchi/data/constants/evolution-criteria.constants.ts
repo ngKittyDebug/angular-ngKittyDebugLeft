@@ -5,6 +5,8 @@ export const EVOLUTION_CRITERIA = {
   ...GAME_BALANCE.EVOLUTION,
 } as const;
 
+export const EVOLUTION_ANIMATION_DURATION_MS = 3000;
+
 export const EVOLUTION_REQUIREMENTS: EvolutionRequirement[] = [
   {
     type: 'level',

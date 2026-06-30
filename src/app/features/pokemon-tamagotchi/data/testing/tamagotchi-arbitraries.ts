@@ -1,4 +1,7 @@
 import * as fc from 'fast-check';
+import type { EvolutionChainItemApiData } from '@shared/models/pokemon-evolution-chain-api-data-interface';
+import type { Achievement } from '../../models/achievement.model';
+import type { EvolutionRequirement } from '../../models/evolution.model';
 import type { InteractionEvent, InteractionType } from '../../models/interaction.model';
 import type { GameResult, MiniGameType } from '../../models/mini-game.model';
 import type { Pokemon } from '../../models/pokemon.model';
@@ -30,6 +33,78 @@ export const TEST_POKEMON: Pokemon = {
 
 const miniGameTypes: MiniGameType[] = ['memory', 'pattern', 'reflex', 'timing'];
 const interactionTypes: InteractionType[] = ['click', 'drag', 'multiTouch', 'pet'];
+const evolutionRequirementTypes = ['achievement', 'care', 'experience', 'level', 'time'] as const;
+
+export const arbitraryEvolutionRequirement = (): fc.Arbitrary<EvolutionRequirement> =>
+  fc.record({
+    description: fc.string({ maxLength: 40, minLength: 1 }),
+    type: fc.constantFrom(...evolutionRequirementTypes),
+    value: fc.integer({ max: 2_000, min: 1 }),
+  });
+
+export const arbitraryEvolutionRequirements = (): fc.Arbitrary<EvolutionRequirement[]> =>
+  fc.array(arbitraryEvolutionRequirement(), { maxLength: 5, minLength: 1 });
+
+export function buildLinearEvolutionChain(stageCount: number): EvolutionChainItemApiData {
+  const rootSpecies = 'species-0';
+  let node: EvolutionChainItemApiData = {
+    evolution_details: [],
+    evolves_to: [],
+    is_baby: false,
+    species: { name: `species-${stageCount - 1}`, url: '' },
+  };
+
+  for (let stage = stageCount - 2; stage >= 0; stage -= 1) {
+    node = {
+      evolution_details: [],
+      evolves_to: [node],
+      is_baby: false,
+      species: { name: `species-${stage}`, url: '' },
+    };
+  }
+
+  if (stageCount === 1) {
+    return {
+      evolution_details: [],
+      evolves_to: [],
+      is_baby: false,
+      species: { name: rootSpecies, url: '' },
+    };
+  }
+
+  return node;
+}
+
+export const arbitraryLinearEvolutionChain = (): fc.Arbitrary<{
+  chain: EvolutionChainItemApiData;
+  speciesIndex: number;
+  stageCount: number;
+}> =>
+  fc.integer({ max: 5, min: 1 }).chain((stageCount) =>
+    fc.integer({ max: stageCount - 1, min: 0 }).map((speciesIndex) => ({
+      chain: buildLinearEvolutionChain(stageCount),
+      speciesIndex,
+      stageCount,
+    })),
+  );
+
+export const arbitraryTrainingAchievements = (): fc.Arbitrary<Achievement[]> =>
+  fc.array(
+    fc.record({
+      category: fc.constant<'training'>('training'),
+      description: fc.string({ maxLength: 30, minLength: 1 }),
+      id: fc.uuid(),
+      name: fc.string({ maxLength: 20, minLength: 1 }),
+      requirements: fc.constant([]),
+      reward: fc.record({
+        experience: fc.integer({ max: 500, min: 0 }),
+        unlockables: fc.constant([] as string[]),
+      }),
+      unlocked: fc.boolean(),
+      unlockedAt: fc.option(fc.nat(), { nil: null }),
+    }),
+    { maxLength: 6, minLength: 0 },
+  );
 
 export const arbitraryPokemonStatus = (): fc.Arbitrary<PokemonStatus> =>
   fc.record({

@@ -1,3 +1,5 @@
+import type { Pokemon } from './pokemon.model';
+
 export interface EvolutionRequirement {
   type: 'experience' | 'level' | 'achievement' | 'care' | 'time';
   value: number;
@@ -30,4 +32,9 @@ export interface EvolutionCheckResult {
   isReady: boolean;
   progress: EvolutionProgress;
   missingRequirements: EvolutionRequirement[];
+}
+
+export interface EvolutionResult {
+  evolvedPokemon: Pokemon;
+  evolutionData: EvolutionData;
 }

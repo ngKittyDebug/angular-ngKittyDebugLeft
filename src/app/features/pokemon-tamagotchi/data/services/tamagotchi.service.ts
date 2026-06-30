@@ -1,0 +1,169 @@
+import { Injectable } from '@angular/core';
+import { MINI_GAME_CONFIGS } from '../constants/mini-game.constants';
+import { STATUS_THRESHOLDS } from '../constants/status-thresholds.constants';
+import {
+  calculateStatusUpdate,
+  getActionCooldownMs,
+  getActionEnergyCost,
+} from '../helpers/status-calculator.helper';
+import type { GameResult } from '../../models/mini-game.model';
+import type { PokemonStatus, StatusUpdate } from '../../models/pokemon-status.model';
+import type {
+  ActionCooldowns,
+  ActionType,
+  TamagotchiState,
+  ValidationResult,
+} from '../../models/tamagotchi-state.model';
+
+export interface TamagotchiActionContext {
+  hasPokemon: boolean;
+  isSleeping: boolean;
+  lastActionTime: number | null;
+  status: PokemonStatus;
+  now?: number;
+}
+
+const AWAKE_ONLY_ACTIONS = new Set<ActionType>(['feed', 'play', 'train']);
+const GAME_ACTIONS = new Set<ActionType>(['play', 'train']);
+
+@Injectable({ providedIn: 'root' })
+export class TamagotchiService {
+  public calculateStatusUpdate(currentStatus: PokemonStatus, action: ActionType): StatusUpdate {
+    return calculateStatusUpdate(currentStatus, action);
+  }
+
+  public validateAction(context: TamagotchiActionContext, action: ActionType): ValidationResult {
+    if (!context.hasPokemon) {
+      return { allowed: false, reason: 'noPokemon' };
+    }
+
+    if (context.isSleeping && AWAKE_ONLY_ACTIONS.has(action)) {
+      return { allowed: false, reason: 'sleeping' };
+    }
+
+    if (action === 'sleep' && context.isSleeping) {
+      return { allowed: false, reason: 'alreadySleeping' };
+    }
+
+    const energyCost = getActionEnergyCost(action);
+
+    if (energyCost > 0 && context.status.energy < energyCost) {
+      return { allowed: false, reason: 'insufficientEnergy' };
+    }
+
+    if (GAME_ACTIONS.has(action) && context.status.energy <= STATUS_THRESHOLDS.energyWarning) {
+      return { allowed: false, reason: 'lowEnergy' };
+    }
+
+    const cooldownRemaining = this.getCooldownRemaining(context, action);
+
+    if (cooldownRemaining > 0) {
+      return {
+        allowed: false,
+        cooldownRemaining,
+        reason: 'cooldown',
+      };
+    }
+
+    return { allowed: true };
+  }
+
+  public validateActionFromState(state: TamagotchiState, action: ActionType): ValidationResult {
+    return this.validateAction(
+      {
+        hasPokemon: state.pokemon !== null,
+        isSleeping: state.isSleeping,
+        lastActionTime: state.lastActionTime,
+        status: state.status,
+      },
+      action,
+    );
+  }
+
+  public getActionCooldowns(context: TamagotchiActionContext): ActionCooldowns {
+    return {
+      care: this.getCooldownRemaining(context, 'care') || null,
+      feed: this.getCooldownRemaining(context, 'feed') || null,
+      play: this.getCooldownRemaining(context, 'play') || null,
+      sleep: this.getCooldownRemaining(context, 'sleep') || null,
+      train: this.getCooldownRemaining(context, 'train') || null,
+      water: this.getCooldownRemaining(context, 'water') || null,
+    };
+  }
+
+  public calculateExperienceGain(gameResult: GameResult, currentLevel: number): number {
+    if (gameResult.performance <= 0) {
+      return 0;
+    }
+
+    const config = MINI_GAME_CONFIGS[gameResult.gameType];
+    const { base, multiplier } = config.experienceReward;
+    const rawReward = Math.round(base * gameResult.performance * multiplier);
+    const levelFactor = 1 + Math.max(0, currentLevel - 1) * 0.05;
+
+    return Math.max(0, Math.round(rawReward / levelFactor));
+  }
+
+  public buildGameResult(
+    gameType: GameResult['gameType'],
+    score: number,
+    maxScore: number,
+    timeTaken: number,
+    currentLevel: number,
+  ): GameResult {
+    const performance = maxScore > 0 ? Math.min(1, Math.max(0, score / maxScore)) : 0;
+    const partialResult: GameResult = {
+      experienceEarned: 0,
+      gameType,
+      maxScore,
+      performance,
+      score,
+      timeTaken,
+    };
+
+    return {
+      ...partialResult,
+      experienceEarned: this.calculateExperienceGain(partialResult, currentLevel),
+    };
+  }
+
+  private getCooldownRemaining(context: TamagotchiActionContext, action: ActionType): number {
+    const lastTimestamp = this.getLastActionTimestamp(context, action);
+
+    if (lastTimestamp === null) {
+      return 0;
+    }
+
+    const now = context.now ?? Date.now();
+    const elapsed = now - lastTimestamp;
+
+    return Math.max(0, getActionCooldownMs(action) - elapsed);
+  }
+
+  private getLastActionTimestamp(
+    context: TamagotchiActionContext,
+    action: ActionType,
+  ): number | null {
+    const { lastActionTime, status } = context;
+
+    switch (action) {
+      case 'feed':
+        return status.lastFeedTime;
+
+      case 'water':
+        return status.lastHydrationTime;
+
+      case 'play':
+        return status.lastPlayTime;
+
+      case 'sleep':
+        return status.lastSleepTime;
+
+      case 'care':
+        return lastActionTime;
+
+      case 'train':
+        return lastActionTime;
+    }
+  }
+}
