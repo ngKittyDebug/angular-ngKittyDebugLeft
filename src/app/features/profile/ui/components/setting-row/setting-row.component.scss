@@ -1,0 +1,44 @@
+:host {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--tui-border-normal);
+}
+
+.label {
+  font-weight: 500;
+  flex-shrink: 0;
+
+  &::after {
+    content: ':';
+  }
+}
+
+.value {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: end;
+}
+
+.inline-input {
+  flex: 1;
+  min-width: 0;
+  background: var(--tui-background-base);
+  border: 1px solid var(--tui-border-normal);
+  border-radius: 0.25rem;
+  outline: none;
+  font: inherit;
+  color: inherit;
+  padding: 1px 6px;
+
+  &:focus {
+    border-color: var(--tui-primary);
+  }
+
+  &.invalid {
+    border-color: var(--tui-status-negative);
+  }
+}

@@ -42,7 +42,7 @@ export class ProfileService {
 
   public updateAvatar(data: UpdateAvatar): Observable<UpdateAvatar> {
     return this.http.patch<UpdateAvatar>(
-      getFullUrl(this.baseUrl, `${USER_PATH.BASE}${USER_PATH.AVATAR}`),
+      getFullUrl(this.baseUrl, `${USER_PATH.BASE}/${USER_PATH.AVATAR}`),
       data,
     );
   }

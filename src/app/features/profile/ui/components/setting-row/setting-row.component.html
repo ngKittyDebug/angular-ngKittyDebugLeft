@@ -1,0 +1,30 @@
+<ng-container *transloco="let t; prefix: 'profile.settings'">
+  <span class="label">{{ label() }}</span>
+  @if (editing()) {
+    <input
+      class="inline-input"
+      [class.invalid]="control().invalid && control().touched"
+      [type]="inputType()"
+      [formControl]="control()"
+      [attr.aria-label]="label()"
+    />
+    <button
+      iconStart="@tui.check"
+      size="xs"
+      tuiIconButton
+      type="button"
+      [disabled]="control().invalid"
+      (click)="onSave()"
+    >
+      {{ t('save') }}
+    </button>
+    <button iconStart="@tui.x" size="xs" tuiIconButton type="button" (click)="onCancel()">
+      {{ t('cancel') }}
+    </button>
+  } @else {
+    <span class="value">{{ displayValue() }}</span>
+    <button iconStart="@tui.settings" size="xs" tuiIconButton type="button" (click)="startEdit()">
+      {{ t('edit') }}
+    </button>
+  }
+</ng-container>
