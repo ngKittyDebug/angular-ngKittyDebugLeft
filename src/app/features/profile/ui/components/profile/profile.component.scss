@@ -60,7 +60,6 @@ p {
   @include flex_container_function($gap: 1rem, $flex_wrap: nowrap, $justify_content: start);
 }
 
-.caught,
 .favorite {
   flex: 1;
   background: var(--gradient-bg);
@@ -107,6 +106,10 @@ p {
   }
 }
 @include respond_to($screen-small, max) {
+  :host {
+    padding: 0 1rem;
+  }
+
   .wrapper {
     flex-direction: column;
     align-items: stretch;

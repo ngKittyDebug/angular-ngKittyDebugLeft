@@ -1,8 +1,10 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import type { OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { TuiAvatar } from '@taiga-ui/kit';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { PokemonCardProfileComponent } from '../pokemon-card-profile/pokemon-card-profile.component';
 import { TuiIcon } from '@taiga-ui/core';
+import { UserProfileStore } from '../../../data/store/profile.store';
 
 @Component({
   selector: 'left-paw-profile',
@@ -11,16 +13,12 @@ import { TuiIcon } from '@taiga-ui/core';
   styleUrl: './profile.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ProfileComponent {
+export class ProfileComponent implements OnInit {
   public achievementsList: string[] = ['exempleLong', 'exemple', 'exemple', 'exempleLong'];
-  // TODO сейчас используется масив звтычка, чтобы посмотреть как будет отробатывать прорисовка
 
-  protected readonly favoritesList: { results: { name: string }[] } = {
-    results: [],
-  };
+  protected readonly store = inject(UserProfileStore);
 
-  protected readonly caughtList: { results: { name: string }[] } = {
-    results: [],
-  };
-  // TODO будет использоваться список любимых из юзера (наверное)
+  public ngOnInit(): void {
+    this.store.loadProfile();
+  }
 }

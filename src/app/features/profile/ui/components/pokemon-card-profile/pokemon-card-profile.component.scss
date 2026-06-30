@@ -20,6 +20,12 @@
   }
 }
 
+.card__link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
 .card__cover {
   @include flex_container_function($direction: column, $gap: 0.5rem);
   width: 100%;

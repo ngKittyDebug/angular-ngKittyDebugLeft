@@ -85,7 +85,7 @@ export const UserProfileStore = signalStore(
 
               if (currentProfile) {
                 patchState(store, {
-                  profile: { ...currentProfile, avatarUrl: resource.avatar },
+                  profile: { ...currentProfile, avatar: resource.avatar },
                   isLoading: false,
                 });
               }

@@ -1,9 +1,9 @@
 export interface UserProfile {
-  id?: string;
   username: string;
   email: string;
-  avatarUrl?: string;
-  favoritePokemonList: string[];
+  avatar?: string;
+  createdAt: string;
+  pokemonNameFavorite: string[];
 }
 
 export interface UpdateUserModel {
