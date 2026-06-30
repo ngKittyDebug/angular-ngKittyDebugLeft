@@ -164,6 +164,13 @@ p {
   width: 100%;
 }
 
+.password-success {
+  flex: 1;
+  font-size: 0.875rem;
+  color: var(--tui-status-positive);
+  text-align: end;
+}
+
 @include respond_to($screen-large, max) {
   .user {
     flex-direction: column;

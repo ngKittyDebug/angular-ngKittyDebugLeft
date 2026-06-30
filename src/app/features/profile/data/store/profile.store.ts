@@ -42,7 +42,12 @@ export const UserProfileStore = signalStore(
         switchMap((dto) =>
           api.updateUser(dto).pipe(
             tap((updatedProfile) => {
-              patchState(store, { profile: updatedProfile, isLoading: false });
+              const current = store.profile();
+
+              patchState(store, {
+                profile: current ? { ...current, ...updatedProfile } : updatedProfile,
+                isLoading: false,
+              });
             }),
             handleStoreError(store),
           ),

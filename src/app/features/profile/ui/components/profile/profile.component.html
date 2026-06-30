@@ -37,6 +37,8 @@
         [label]="t('profile.settings.username')"
         [displayValue]="facade.profile()?.username ?? ''"
         [control]="usernameFormControl"
+        [passwordControl]="usernamePasswordControl"
+        [passwordPlaceholder]="t('profile.settings.currentPassword')"
         (save)="onSaveUsername()"
       />
 
@@ -45,6 +47,8 @@
         [displayValue]="facade.profile()?.email ?? ''"
         [control]="emailFormControl"
         [inputType]="'email'"
+        [passwordControl]="emailPasswordControl"
+        [passwordPlaceholder]="t('profile.settings.currentPassword')"
         (save)="onSaveEmail()"
       />
 
@@ -93,12 +97,16 @@
             size="xs"
             tuiIconButton
             type="button"
-            (click)="passwordEditing.set(false)"
+            (click)="cancelPasswordEdit()"
           >
             {{ t('profile.settings.cancel') }}
           </button>
         } @else {
-          <span class="password-dots">••••••••</span>
+          @if (facade.isPasswordChangedSuccess()) {
+            <span class="password-success">{{ t('profile.settings.passwordChanged') }}</span>
+          } @else {
+            <span class="password-dots">••••••••</span>
+          }
           <button
             iconStart="@tui.settings"
             size="xs"

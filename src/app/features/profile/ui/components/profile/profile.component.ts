@@ -41,9 +41,19 @@ export class ProfileComponent implements OnInit {
     validators: [Validators.required, Validators.pattern(USER_PATTERN)],
   });
 
+  protected readonly usernamePasswordControl = new FormControl('', {
+    nonNullable: true,
+    validators: [Validators.required, Validators.pattern(PASSWORD_PATTERN)],
+  });
+
   protected readonly emailFormControl = new FormControl('', {
     nonNullable: true,
     validators: [Validators.required, Validators.pattern(EMAIL_PATTERN)],
+  });
+
+  protected readonly emailPasswordControl = new FormControl('', {
+    nonNullable: true,
+    validators: [Validators.required, Validators.pattern(PASSWORD_PATTERN)],
   });
 
   protected readonly passwordForm = new FormGroup({
@@ -68,6 +78,21 @@ export class ProfileComponent implements OnInit {
       this.usernameFormControl.setValue(profile.username, { emitEvent: false });
       this.emailFormControl.setValue(profile.email, { emitEvent: false });
     });
+
+    effect(() => {
+      if (!this.facade.error()) {
+        return;
+      }
+
+      const profile = this.facade.profile();
+
+      if (!profile) {
+        return;
+      }
+
+      this.usernameFormControl.setValue(profile.username, { emitEvent: false });
+      this.emailFormControl.setValue(profile.email, { emitEvent: false });
+    });
   }
 
   public ngOnInit(): void {
@@ -75,11 +100,19 @@ export class ProfileComponent implements OnInit {
   }
 
   protected onSaveUsername(): void {
-    this.facade.updateProfile({ username: this.usernameFormControl.value });
+    this.facade.updateProfile({
+      username: this.usernameFormControl.value,
+      password: this.usernamePasswordControl.value,
+    });
+    this.usernamePasswordControl.reset();
   }
 
   protected onSaveEmail(): void {
-    this.facade.updateProfile({ email: this.emailFormControl.value });
+    this.facade.updateProfile({
+      email: this.emailFormControl.value,
+      password: this.emailPasswordControl.value,
+    });
+    this.emailPasswordControl.reset();
   }
 
   protected onFileSelected(event: Event): void {
@@ -103,6 +136,8 @@ export class ProfileComponent implements OnInit {
   }
 
   protected onSavePassword(): void {
+    this.passwordForm.markAllAsTouched();
+
     if (this.passwordForm.invalid) {
       return;
     }
@@ -114,6 +149,11 @@ export class ProfileComponent implements OnInit {
     }
 
     this.facade.changePassword({ currentPassword: currentPassword || undefined, newPassword });
+    this.passwordEditing.set(false);
+    this.passwordForm.reset();
+  }
+
+  protected cancelPasswordEdit(): void {
     this.passwordEditing.set(false);
     this.passwordForm.reset();
   }

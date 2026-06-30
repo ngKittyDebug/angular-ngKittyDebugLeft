@@ -24,6 +24,8 @@
       "email": "Enter a valid email",
       "password": "At least 8 characters, one uppercase letter and one digit"
     },
+    "saveError": "Failed to save. Please try again.",
+    "passwordChanged": "Password changed successfully",
     "delete": {
       "button": "Delete account",
       "confirm": "Are you sure? This action is irreversible.",

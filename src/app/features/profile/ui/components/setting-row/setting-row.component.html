@@ -1,19 +1,31 @@
 <ng-container *transloco="let t; prefix: 'profile.settings'">
   <span class="label">{{ label() }}</span>
   @if (editing()) {
-    <input
-      class="inline-input"
-      [class.invalid]="control().invalid && control().touched"
-      [type]="inputType()"
-      [formControl]="control()"
-      [attr.aria-label]="label()"
-    />
+    <div class="input-wrap">
+      <input
+        class="inline-input"
+        [class.invalid]="control().invalid && control().touched"
+        [type]="inputType()"
+        [formControl]="control()"
+        [attr.aria-label]="label()"
+      />
+      @if (passwordControl()) {
+        <input
+          class="inline-input"
+          type="password"
+          autocomplete="current-password"
+          [class.invalid]="passwordControl()!.invalid && passwordControl()!.touched"
+          [formControl]="passwordControl()!"
+          [placeholder]="passwordPlaceholder()"
+        />
+      }
+    </div>
     <button
       iconStart="@tui.check"
       size="xs"
       tuiIconButton
       type="button"
-      [disabled]="control().invalid"
+      [disabled]="control().invalid || !!passwordControl()?.invalid"
       (click)="onSave()"
     >
       {{ t('save') }}

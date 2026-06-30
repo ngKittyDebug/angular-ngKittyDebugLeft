@@ -12,23 +12,29 @@ import { TuiButton } from '@taiga-ui/core';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SettingRowComponent {
+  private originalValue = '';
+
   public readonly label = input.required<string>();
   public readonly displayValue = input('');
   public readonly control = input.required<FormControl<string>>();
   public readonly inputType = input('text');
+  public readonly passwordControl = input<FormControl<string> | null>(null);
+  public readonly passwordPlaceholder = input('');
 
   public readonly save = output<void>();
 
   protected readonly editing = signal(false);
 
   protected startEdit(): void {
+    this.originalValue = this.control().value;
     this.editing.set(true);
   }
 
   protected onSave(): void {
-    if (this.control().invalid) {
-      this.control().markAsTouched();
+    this.control().markAsTouched();
+    this.passwordControl()?.markAsTouched();
 
+    if (this.control().invalid || this.passwordControl()?.invalid) {
       return;
     }
 
@@ -37,6 +43,10 @@ export class SettingRowComponent {
   }
 
   protected onCancel(): void {
+    this.control().setValue(this.originalValue, { emitEvent: false });
+    this.control().markAsUntouched();
+    this.passwordControl()?.setValue('', { emitEvent: false });
+    this.passwordControl()?.markAsUntouched();
     this.editing.set(false);
   }
 }

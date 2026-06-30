@@ -23,9 +23,16 @@
   text-align: end;
 }
 
-.inline-input {
+.input-wrap {
+  display: flex;
+  flex-direction: column;
   flex: 1;
   min-width: 0;
+  gap: 0.25rem;
+}
+
+.inline-input {
+  width: 100%;
   background: var(--tui-background-base);
   border: 1px solid var(--tui-border-normal);
   border-radius: 0.25rem;
