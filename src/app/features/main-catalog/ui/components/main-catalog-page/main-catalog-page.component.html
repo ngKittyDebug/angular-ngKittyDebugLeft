@@ -1,7 +1,7 @@
 <left-paw-catalog-filter />
-<div class="catalog-container">
+<div class="catalog-container" *transloco="let t; prefix: 'main'">
   @if (!catalogFacade.isLoadingPokemonPaginationData()) {
-    @for (item of catalogFacade.paginatedPokemonList(); track item.name) {
+    @for (item of catalogFacade.paginatedPokemonList() ?? []; track item.name) {
       @defer (on viewport) {
         <left-paw-pokemon-card [pokemonName]="item.name" />
       } @placeholder {
@@ -9,6 +9,8 @@
           <tui-loader />
         </div>
       }
+    } @empty {
+      <p class="empty-state">{{ t('noResults') }}</p>
     }
   }
 </div>
