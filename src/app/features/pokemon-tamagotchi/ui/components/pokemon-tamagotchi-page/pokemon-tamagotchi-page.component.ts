@@ -1,25 +1,38 @@
-import type { OnInit } from '@angular/core';
-import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { Store } from '@ngrx/store';
-import { TuiButton } from '@taiga-ui/core';
+import { TuiButton, TuiLoader, tuiLoaderOptionsProvider } from '@taiga-ui/core';
 import { TuiBadge } from '@taiga-ui/kit';
-import { catchError, map, of, switchMap } from 'rxjs';
-import { environment } from '@environments/environment';
+import { TAMAGOTCHI_SYSTEM_ERRORS } from '../../../data/constants/system-errors.constants';
 import { GAME_BALANCE } from '../../../data/constants/game-balance.constants';
-import {
-  PokemonProfileIntegrationService,
-  type PokemonSelectionValidation,
-} from '../../../data/services/pokemon-profile-integration.service';
+import { isTamagotchiSelectionError } from '../../../data/constants/selection-errors.constants';
+import { EvolutionService } from '../../../data/services/evolution.service';
+import { TamagotchiInitService } from '../../../data/services/tamagotchi-init.service';
 import { TamagotchiService } from '../../../data/services/tamagotchi.service';
+import {
+  type TamagotchiTimerContext,
+  TimerService,
+  type TimerTickResult,
+} from '../../../data/services/timer.service';
 import * as TamagotchiActions from '../../../data/store/tamagotchi.actions';
 import {
   selectActiveMiniGame,
+  selectCanEvolve,
   selectHasPokemon,
   selectIsEvolving,
+  selectIsInitialized,
   selectIsSleeping,
+  selectNotifications,
   selectPokemon,
   selectStatus,
   selectTamagotchiError,
@@ -28,9 +41,13 @@ import {
 import { createInitialTamagotchiState } from '../../../data/store/tamagotchi.state';
 import type { InteractionEvent } from '../../../models/interaction.model';
 import type { GameResult } from '../../../models/mini-game.model';
+import type { Pokemon } from '../../../models/pokemon.model';
 import type { ActionType, TamagotchiState } from '../../../models/tamagotchi-state.model';
+import { TamagotchiNotificationService } from '../../services/notification.service';
 import { ActionButtonsComponent } from '../action-buttons/action-buttons.component';
+import { EvolutionAnimationComponent } from '../evolution-animation/evolution-animation.component';
 import { MiniGameComponent } from '../mini-game/mini-game.component';
+import { NotificationComponent } from '../notifications/notification.component';
 import { PokemonSpriteComponent } from '../pokemon-sprite/pokemon-sprite.component';
 import { StatusIndicatorComponent } from '../status-indicator/status-indicator.component';
 
@@ -38,23 +55,31 @@ import { StatusIndicatorComponent } from '../status-indicator/status-indicator.c
   selector: 'left-paw-pokemon-tamagotchi-page',
   imports: [
     ActionButtonsComponent,
+    EvolutionAnimationComponent,
     MiniGameComponent,
+    NotificationComponent,
     PokemonSpriteComponent,
     RouterLink,
     StatusIndicatorComponent,
     TranslocoDirective,
     TuiBadge,
     TuiButton,
+    TuiLoader,
   ],
   templateUrl: './pokemon-tamagotchi-page.component.html',
   styleUrl: './pokemon-tamagotchi-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [tuiLoaderOptionsProvider({ size: 'l' })],
 })
-export class PokemonTamagotchiPageComponent implements OnInit {
+export class PokemonTamagotchiPageComponent {
   private readonly destroyRef = inject(DestroyRef);
-  private readonly profileIntegration = inject(PokemonProfileIntegrationService);
+  private readonly evolutionService = inject(EvolutionService);
+  private readonly initService = inject(TamagotchiInitService);
+  private readonly notificationService = inject(TamagotchiNotificationService);
   private readonly store = inject(Store);
   private readonly tamagotchiService = inject(TamagotchiService);
+  private readonly timerService = inject(TimerService);
+  private readonly wasEvolutionReady = signal(false);
   private readonly state = toSignal(this.store.select(selectTamagotchiState), {
     initialValue: createInitialTamagotchiState(),
   });
@@ -65,6 +90,9 @@ export class PokemonTamagotchiPageComponent implements OnInit {
   protected readonly activeMiniGame = toSignal(this.store.select(selectActiveMiniGame), {
     initialValue: null,
   });
+  protected readonly canEvolve = toSignal(this.store.select(selectCanEvolve), {
+    initialValue: false,
+  });
   protected readonly error = toSignal(this.store.select(selectTamagotchiError), {
     initialValue: null,
   });
@@ -74,15 +102,49 @@ export class PokemonTamagotchiPageComponent implements OnInit {
   protected readonly isEvolving = toSignal(this.store.select(selectIsEvolving), {
     initialValue: false,
   });
+  protected readonly isInitialized = toSignal(this.store.select(selectIsInitialized), {
+    initialValue: false,
+  });
   protected readonly isSleeping = toSignal(this.store.select(selectIsSleeping), {
     initialValue: false,
+  });
+  protected readonly notifications = toSignal(this.store.select(selectNotifications), {
+    initialValue: [],
   });
   protected readonly pokemon = toSignal(this.store.select(selectPokemon), { initialValue: null });
   protected readonly status = toSignal(this.store.select(selectStatus), {
     initialValue: createInitialTamagotchiState().status,
   });
 
-  protected readonly selectionBlocked = computed(() => !this.hasPokemon() && this.error() !== null);
+  protected readonly evolvedPokemon = computed(() => this.resolveEvolvedPokemon(this.pokemon()));
+
+  protected readonly isLoading = computed(() => !this.isInitialized());
+
+  protected readonly selectionBlocked = computed(
+    () => !this.hasPokemon() && isTamagotchiSelectionError(this.error()),
+  );
+
+  protected readonly systemErrorMessageKey = computed(() => {
+    const currentError = this.error();
+
+    if (currentError === null || isTamagotchiSelectionError(currentError)) {
+      return null;
+    }
+
+    if (currentError === TAMAGOTCHI_SYSTEM_ERRORS.LOAD_FAILED) {
+      return 'stateLoadFailedError';
+    }
+
+    if (currentError === TAMAGOTCHI_SYSTEM_ERRORS.SAVE_FAILED) {
+      return 'saveFailedError';
+    }
+
+    if (currentError === TAMAGOTCHI_SYSTEM_ERRORS.RECOVERED_FROM_BACKUP) {
+      return 'stateRecoveredWarning';
+    }
+
+    return null;
+  });
 
   protected readonly cooldowns = computed(() => {
     const current = this.state();
@@ -96,49 +158,45 @@ export class PokemonTamagotchiPageComponent implements OnInit {
   protected readonly canTrain = computed(() => this.isActionAllowed('train'));
   protected readonly canWater = computed(() => this.isActionAllowed('water'));
 
-  public ngOnInit(): void {
-    this.profileIntegration
-      .validateSelectedPokemon()
-      .pipe(
-        switchMap((validation: PokemonSelectionValidation) => {
-          if (validation.valid && validation.pokemon) {
-            return of(validation);
-          }
+  protected readonly showRecoveryActions = computed(
+    () => this.error() === TAMAGOTCHI_SYSTEM_ERRORS.SAVE_FAILED,
+  );
 
-          const previewPokemon = environment.tamagotchiPreviewPokemon;
+  public constructor() {
+    this.initService.bootstrapFromProfile().pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
 
-          if (previewPokemon && validation.error === 'noSelection') {
-            return this.profileIntegration.loadPokemonByName(previewPokemon).pipe(
-              map((pokemon) => ({ pokemon, valid: true as const })),
-              catchError(() => of(validation)),
-            );
-          }
+    effect((onCleanup) => {
+      if (!this.isInitialized() || !this.hasPokemon()) {
+        return;
+      }
 
-          return of(validation);
-        }),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe((validation: PokemonSelectionValidation) => {
-        if (validation.valid && validation.pokemon && !this.hasPokemon()) {
-          this.store.dispatch(TamagotchiActions.selectPokemon({ pokemon: validation.pokemon }));
-          this.profileIntegration.saveSelectedPokemon(validation.pokemon);
+      const handle = this.timerService.startTimer(
+        () => this.buildTimerContext(),
+        (result) => this.handleTimerTick(result),
+      );
 
-          return;
-        }
-
-        if (!validation.valid && validation.error) {
-          this.store.dispatch(
-            TamagotchiActions.setError({
-              error: validation.error,
-            }),
-          );
-        }
+      onCleanup(() => {
+        this.timerService.stopTimer(handle);
       });
+    });
+
+    effect(() => {
+      const ready = this.canEvolve();
+      const species = this.pokemon();
+
+      if (ready && !this.wasEvolutionReady() && species) {
+        this.notificationService.notifyEvolutionReady(species.name);
+        this.store.dispatch(TamagotchiActions.startEvolution());
+      }
+
+      this.wasEvolutionReady.set(ready);
+    });
   }
 
   protected onAction(action: ActionType): void {
     if (this.isSleeping() && action === 'sleep') {
       this.store.dispatch(TamagotchiActions.wakeUp());
+      this.store.dispatch(TamagotchiActions.checkEvolution());
 
       return;
     }
@@ -174,10 +232,18 @@ export class PokemonTamagotchiPageComponent implements OnInit {
         this.store.dispatch(TamagotchiActions.waterPokemon());
         break;
     }
+
+    this.store.dispatch(TamagotchiActions.checkEvolution());
+  }
+
+  protected onEvolutionComplete(evolvedPokemon: Pokemon): void {
+    this.store.dispatch(TamagotchiActions.completeEvolution({ evolvedPokemon }));
+    this.wasEvolutionReady.set(false);
   }
 
   protected onInteraction(interaction: InteractionEvent): void {
     this.store.dispatch(TamagotchiActions.interactWithPokemon({ interaction }));
+    this.store.dispatch(TamagotchiActions.checkEvolution());
   }
 
   protected onMiniGameCompleted(result: GameResult): void {
@@ -192,10 +258,71 @@ export class PokemonTamagotchiPageComponent implements OnInit {
 
     this.store.dispatch(TamagotchiActions.trainPokemon({ gameResult }));
     this.store.dispatch(TamagotchiActions.closeMiniGame());
+    this.store.dispatch(TamagotchiActions.checkEvolution());
+  }
+
+  protected onNotificationAction(action: ActionType): void {
+    this.onAction(action);
+  }
+
+  protected onNotificationDismiss(id: string): void {
+    this.store.dispatch(TamagotchiActions.dismissNotification({ id }));
+  }
+
+  protected onSystemErrorDismiss(): void {
+    this.store.dispatch(TamagotchiActions.clearError());
+  }
+
+  protected onResetProgress(): void {
+    this.store.dispatch(TamagotchiActions.resetState());
+    this.store.dispatch(TamagotchiActions.clearError());
+    this.initService.bootstrapFromProfile().subscribe();
+  }
+
+  private buildTimerContext(): TamagotchiTimerContext {
+    const current = this.state();
+
+    return {
+      dailyRoutine: current.dailyRoutine,
+      isSleeping: current.isSleeping,
+      lastActionTime: current.lastActionTime,
+      lastDecayTime: current.lastDecayTime,
+      sleepStartedAt: current.isSleeping ? current.status.lastSleepTime : null,
+      status: current.status,
+    };
+  }
+
+  private handleTimerTick(result: TimerTickResult): void {
+    this.store.dispatch(TamagotchiActions.applyStatusDecay({ decay: result.decay }));
+
+    if (result.routineBonusApplied > 0) {
+      this.store.dispatch(
+        TamagotchiActions.updateStatus({
+          statusUpdate: { mood: result.routineBonusApplied },
+        }),
+      );
+    }
+
+    this.notificationService.notifyStatusAlerts(result.alerts, result.decay.timestamp);
+    this.store.dispatch(TamagotchiActions.checkEvolution());
   }
 
   private isActionAllowed(action: ActionType): boolean {
     return this.tamagotchiService.validateActionFromState(this.state(), action).allowed;
+  }
+
+  private resolveEvolvedPokemon(species: Pokemon | null): Pokemon | null {
+    if (!species) {
+      return null;
+    }
+
+    const evolutionData = this.evolutionService.buildEvolutionData(species);
+
+    if (!evolutionData) {
+      return null;
+    }
+
+    return this.evolutionService.triggerEvolution(species, evolutionData)?.evolvedPokemon ?? null;
   }
 
   private toActionContext(state: TamagotchiState) {

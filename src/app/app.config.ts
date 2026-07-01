@@ -9,6 +9,7 @@ import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideSignalFormsConfig } from '@angular/forms/signals';
 import { routes } from './app.routes';
 import { provideStore } from '@ngrx/store';
+import { provideEffects } from '@ngrx/effects';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { TranslocoHttpLoader } from './transloco-loader';
 import { provideTransloco } from '@jsverse/transloco';
@@ -21,6 +22,7 @@ export const appConfig = {
     provideZoneChangeDetection(),
     provideRouter(routes, withComponentInputBinding()),
     provideStore(),
+    provideEffects(),
     provideHttpClient(withInterceptors([authBearerInterceptor])),
     provideTaiga(),
     provideTransloco({

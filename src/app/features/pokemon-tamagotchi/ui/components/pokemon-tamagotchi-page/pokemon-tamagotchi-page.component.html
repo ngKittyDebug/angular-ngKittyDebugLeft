@@ -3,6 +3,7 @@
   class="tamagotchi-page"
   role="main"
   [attr.aria-label]="t('ariaLabel')"
+  [attr.aria-busy]="isLoading()"
 >
   <header class="tamagotchi-page__header">
     <h1 class="tamagotchi-page__title">{{ t('title') }}</h1>
@@ -13,7 +14,12 @@
     }
   </header>
 
-  @if (selectionBlocked()) {
+  @if (isLoading()) {
+    <section class="tamagotchi-page__loading" role="status" aria-live="polite">
+      <tui-loader size="l" />
+      <p class="tamagotchi-page__loading-text">{{ t('loading') }}</p>
+    </section>
+  } @else if (selectionBlocked()) {
     <section class="tamagotchi-page__empty" role="status">
       @if (error() === 'noSelection') {
         <h2 class="tamagotchi-page__empty-title">{{ t('noSelectionTitle') }}</h2>
@@ -28,8 +34,40 @@
       }
     </section>
   } @else if (pokemon(); as species) {
+    @if (systemErrorMessageKey(); as messageKey) {
+      <div
+        class="tamagotchi-page__system-notice"
+        role="alert"
+        [class.tamagotchi-page__system-notice--warning]="messageKey === 'stateRecoveredWarning'"
+      >
+        <p>{{ t(messageKey) }}</p>
+        <div class="tamagotchi-page__system-notice-actions">
+          @if (showRecoveryActions()) {
+            <button
+              appearance="outline"
+              size="s"
+              tuiButton
+              type="button"
+              (click)="onResetProgress()"
+            >
+              {{ t('resetProgress') }}
+            </button>
+          }
+          <button
+            appearance="flat"
+            size="s"
+            tuiButton
+            type="button"
+            (click)="onSystemErrorDismiss()"
+          >
+            {{ t('dismissNotice') }}
+          </button>
+        </div>
+      </div>
+    }
+
     <div class="tamagotchi-page__layout">
-      <aside class="tamagotchi-page__status-panel" aria-label="Status indicators">
+      <aside class="tamagotchi-page__status-panel" [attr.aria-label]="t('statusPanelAria')">
         <left-paw-status-indicator
           statusType="health"
           [currentValue]="status().health"
@@ -71,6 +109,16 @@
           [status]="status()"
           (interacted)="onInteraction($event)"
         />
+
+        @if (isEvolving() && evolvedPokemon(); as target) {
+          <left-paw-evolution-animation
+            class="tamagotchi-page__evolution"
+            [active]="isEvolving()"
+            [fromPokemon]="species"
+            [toPokemon]="target"
+            (animationComplete)="onEvolutionComplete($event)"
+          />
+        }
       </section>
     </div>
 
@@ -84,6 +132,13 @@
       [cooldowns]="cooldowns()"
       [isSleeping]="isSleeping()"
       (actionSelected)="onAction($event)"
+    />
+
+    <left-paw-tamagotchi-notifications
+      class="tamagotchi-page__notifications"
+      [notifications]="notifications()"
+      (actionSelected)="onNotificationAction($event)"
+      (dismissed)="onNotificationDismiss($event)"
     />
 
     @if (activeMiniGame(); as gameType) {

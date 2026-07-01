@@ -1,6 +1,7 @@
 <ng-container *transloco="let t">
   @if (pokemonProfile.profileData(); as pokemonData) {
     <left-paw-pokemon-profile-info [pokemonProfileData]="pokemonData" />
+    <left-paw-pokemon-tamagotchi-selection [pokemonName]="pokemonData.name" />
     <left-paw-pokemon-profile-stats [pokemonProfileData]="pokemonData" />
   }
   <section class="pokemon__profile_evolution">

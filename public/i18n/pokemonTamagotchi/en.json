@@ -7,7 +7,22 @@
     "goToProfile": "Open profile",
     "evolvedPokemonError": "Only first-stage Pokémon can join the tamagotchi.",
     "loadFailedError": "Could not load your selected Pokémon. Try again from the profile.",
+    "loading": "Loading your tamagotchi…",
+    "saveFailedError": "Could not save progress. Your session is still active.",
+    "stateLoadFailedError": "Could not load saved progress. Starting fresh.",
+    "stateRecoveredWarning": "Progress was recovered from a backup.",
+    "dismissNotice": "Dismiss",
+    "resetProgress": "Reset progress",
+    "statusPanelAria": "Pokémon status indicators",
     "ariaLabel": "Pokémon tamagotchi care screen"
+  },
+  "selection": {
+    "selectButton": "Use in Tamagotchi",
+    "alreadySelected": "Selected for Tamagotchi",
+    "openTamagotchi": "Open Tamagotchi",
+    "savedMessage": "{{name}} is ready for Tamagotchi care!",
+    "evolvedPokemonError": "Only first-stage Pokémon can join the tamagotchi.",
+    "loadFailedError": "Could not prepare this Pokémon for Tamagotchi."
   },
   "status": {
     "health": "Health",

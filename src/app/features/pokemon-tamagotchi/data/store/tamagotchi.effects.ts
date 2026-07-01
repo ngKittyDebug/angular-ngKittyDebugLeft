@@ -2,7 +2,9 @@ import { inject, Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { catchError, debounceTime, filter, map, of, switchMap, tap, withLatestFrom } from 'rxjs';
+import { TAMAGOTCHI_SYSTEM_ERRORS } from '../constants/system-errors.constants';
 import { TamagotchiCloudSyncService } from '../services/tamagotchi-cloud-sync.service';
+import { TamagotchiErrorRecoveryService } from '../services/tamagotchi-error-recovery.service';
 import { TamagotchiPersistenceService } from '../services/tamagotchi-persistence.service';
 import * as TamagotchiActions from './tamagotchi.actions';
 import { selectIsInitialized, selectTamagotchiState } from './tamagotchi.selectors';
@@ -32,6 +34,7 @@ const persistTriggerActions = [
 export class TamagotchiEffects {
   private readonly actions$ = inject(Actions);
   private readonly cloudSync = inject(TamagotchiCloudSyncService);
+  private readonly errorRecovery = inject(TamagotchiErrorRecoveryService);
   private readonly persistence = inject(TamagotchiPersistenceService);
   private readonly store = inject(Store);
 
@@ -50,16 +53,20 @@ export class TamagotchiEffects {
         return TamagotchiActions.loadStateSuccess({
           state: {
             ...loaded.state,
-            error: loaded.recoveredFromBackup ? 'State recovered from backup' : loaded.state.error,
+            error: loaded.recoveredFromBackup
+              ? TAMAGOTCHI_SYSTEM_ERRORS.RECOVERED_FROM_BACKUP
+              : loaded.state.error,
           },
         });
       }),
-      catchError(() =>
-        of(
-          TamagotchiActions.setError({ error: 'Failed to load tamagotchi state' }),
+      catchError((error) => {
+        this.errorRecovery.logError('loadState', error);
+
+        return of(
+          TamagotchiActions.setError({ error: TAMAGOTCHI_SYSTEM_ERRORS.LOAD_FAILED }),
           TamagotchiActions.initializeTamagotchi(),
-        ),
-      ),
+        );
+      }),
     ),
   );
 
@@ -78,8 +85,10 @@ export class TamagotchiEffects {
               of(TamagotchiActions.saveStateSuccess({ cloudSynced: false, savedAt })),
             ),
           );
-        } catch {
-          return of(TamagotchiActions.setError({ error: 'Failed to save tamagotchi state' }));
+        } catch (error) {
+          this.errorRecovery.logError('saveState', error);
+
+          return of(TamagotchiActions.setError({ error: TAMAGOTCHI_SYSTEM_ERRORS.SAVE_FAILED }));
         }
       }),
     ),

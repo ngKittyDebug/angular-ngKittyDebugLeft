@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input } from '@an
 import { TuiProgress } from '@taiga-ui/kit';
 import { TuiCard } from '@taiga-ui/layout';
 import { EvolutionChainItemComponent } from './evolution-chain-item/evolution-chain-item.component';
+import { PokemonTamagotchiSelectionComponent } from '@features/pokemon-tamagotchi/ui/components/pokemon-tamagotchi-selection/pokemon-tamagotchi-selection.component';
 import { PokemonProfileInfoComponent } from './pokemon-profile-info/pokemon-profile-info.component';
 import { PokemonProfileStatsComponent } from './pokemon-profile-stats/pokemon-profile-stats.component';
 import { PokemonProfileSpeciesBreedingComponent } from './pokemon-profile-species-breeding/pokemon-profile-species-breeding.component';
@@ -12,6 +13,7 @@ import { convertEvolutionChainToNodeModel } from '@features/pokemon-profile/data
 @Component({
   selector: 'left-paw-pokemon-profile-page',
   imports: [
+    PokemonTamagotchiSelectionComponent,
     TuiProgress,
     TuiCard,
     EvolutionChainItemComponent,

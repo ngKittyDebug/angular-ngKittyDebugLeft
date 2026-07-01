@@ -42,6 +42,7 @@
 }
 
 .tamagotchi-page__stage {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -85,4 +86,59 @@
   margin: 0;
   color: var(--tui-status-negative);
   font: var(--tui-font-text-m);
+}
+
+.tamagotchi-page__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  min-block-size: 12rem;
+  padding: 2rem 1rem;
+  border-radius: var(--tui-radius-l);
+  background: var(--tui-background-neutral-1);
+}
+
+.tamagotchi-page__loading-text {
+  margin: 0;
+  color: var(--tui-text-secondary);
+  font: var(--tui-font-text-m);
+}
+
+.tamagotchi-page__system-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--tui-radius-m);
+  background: var(--tui-status-negative-pale);
+  color: var(--tui-text-primary);
+  font: var(--tui-font-text-m);
+
+  &--warning {
+    background: var(--tui-status-warning-pale);
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
+.tamagotchi-page__system-notice-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tamagotchi-page__evolution {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.tamagotchi-page__notifications {
+  margin-block-start: 0.5rem;
 }

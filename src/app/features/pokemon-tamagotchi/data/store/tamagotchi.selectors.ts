@@ -58,7 +58,7 @@ export const selectDailyRoutine = createSelector(
 
 export const selectIsInitialized = createSelector(
   selectTamagotchiState,
-  (state) => state.initialized,
+  (state) => state?.initialized ?? false,
 );
 
 export const selectLastSaveTime = createSelector(
