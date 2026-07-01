@@ -11,6 +11,7 @@ import {
   USER_PATTERN,
 } from '@shared/constants/patterns-constants';
 import { ProfileFacade } from '../../../data/facades/profile.facade';
+import { AvatarPickerComponent } from '../avatar-picker/avatar-picker.component';
 import { PokemonCardProfileComponent } from '../pokemon-card-profile/pokemon-card-profile.component';
 import { SettingRowComponent } from '../setting-row/setting-row.component';
 
@@ -19,6 +20,7 @@ import { SettingRowComponent } from '../setting-row/setting-row.component';
   imports: [
     ReactiveFormsModule,
     TranslocoDirective,
+    AvatarPickerComponent,
     PokemonCardProfileComponent,
     SettingRowComponent,
     TuiAvatar,
@@ -35,6 +37,7 @@ export class ProfileComponent implements OnInit {
   protected readonly facade = inject(ProfileFacade);
   protected readonly passwordEditing = signal(false);
   protected readonly showDeleteConfirm = signal(false);
+  protected readonly showAvatarPicker = signal(false);
 
   protected readonly usernameFormControl = new FormControl('', {
     nonNullable: true,
@@ -115,24 +118,8 @@ export class ProfileComponent implements OnInit {
     this.emailPasswordControl.reset();
   }
 
-  protected onFileSelected(event: Event): void {
-    const file = (event.target as HTMLInputElement).files?.[0];
-
-    if (!file) {
-      return;
-    }
-
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      if (typeof reader.result !== 'string') {
-        return;
-      }
-
-      this.facade.updateAvatar({ avatar: reader.result });
-    };
-
-    reader.readAsDataURL(file);
+  protected onAvatarSelected(avatarUrl: string): void {
+    this.facade.updateAvatar({ avatar: avatarUrl });
   }
 
   protected onSavePassword(): void {

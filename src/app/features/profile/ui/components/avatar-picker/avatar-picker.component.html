@@ -1,0 +1,56 @@
+<div
+  *transloco="let t"
+  class="overlay"
+  role="button"
+  tabindex="0"
+  [attr.aria-label]="t('profile.avatarPicker.close')"
+  (click)="onOverlayClick($event)"
+  (keydown.enter)="onOverlayClick($event)"
+  (keydown.escape)="closed.emit()"
+>
+  <div class="dialog" role="dialog" [attr.aria-label]="t('profile.avatarPicker.title')">
+    <div class="dialog-header">
+      <h3 class="dialog-title">{{ t('profile.avatarPicker.title') }}</h3>
+      <button iconStart="@tui.x" size="s" tuiIconButton type="button" (click)="closed.emit()">
+        {{ t('profile.avatarPicker.close') }}
+      </button>
+    </div>
+    <div class="grid">
+      @for (item of items(); track $index) {
+        @if (item) {
+          <left-paw-avatar-picker-card [pokemonName]="item.name" (selected)="onSelect($event)" />
+        } @else {
+          <div class="skeleton-card">
+            <div class="skeleton-card__image"></div>
+            <div class="skeleton-card__line">
+              <div class="skeleton-card__text"></div>
+            </div>
+          </div>
+        }
+      }
+    </div>
+    <div class="pagination">
+      <button
+        iconStart="@tui.chevron-left"
+        size="s"
+        tuiIconButton
+        type="button"
+        [disabled]="!hasPrev()"
+        (click)="prevPage()"
+      >
+        {{ t('profile.avatarPicker.prev') }}
+      </button>
+      <span class="page-number">{{ currentPage() + 1 }}</span>
+      <button
+        iconStart="@tui.chevron-right"
+        size="s"
+        tuiIconButton
+        type="button"
+        [disabled]="!hasNext()"
+        (click)="nextPage()"
+      >
+        {{ t('profile.avatarPicker.next') }}
+      </button>
+    </div>
+  </div>
+</div>

@@ -15,17 +15,10 @@
             appearance="secondary"
             class="avatar-upload-btn"
             [loading]="facade.isLoading()"
-            (click)="fileInput.click()"
+            (click)="showAvatarPicker.set(true)"
           >
             {{ t('profile.settings.uploadAvatar') }}
           </button>
-          <input
-            #fileInput
-            type="file"
-            accept="image/*"
-            class="visually-hidden"
-            (change)="onFileSelected($event)"
-          />
         </div>
       </div>
     </div>
@@ -178,4 +171,11 @@
       }
     </div>
   </div>
+
+  @if (showAvatarPicker()) {
+    <left-paw-avatar-picker
+      (closed)="showAvatarPicker.set(false)"
+      (avatarSelected)="onAvatarSelected($event)"
+    />
+  }
 </div>

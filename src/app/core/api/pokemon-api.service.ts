@@ -18,6 +18,10 @@ export class PokemonApiService {
     return `${POKEMON_BASE_API}pokemon?limit=${options.limitPokemon}`;
   }
 
+  public getPokemonPageUrl(limit: number, offset: number): string {
+    return `${POKEMON_BASE_API}pokemon?limit=${limit}&offset=${offset}`;
+  }
+
   public getPokemonData(pokemonEndpoint: string): string {
     return `${POKEMON_BASE_API}pokemon/${pokemonEndpoint}`;
   }

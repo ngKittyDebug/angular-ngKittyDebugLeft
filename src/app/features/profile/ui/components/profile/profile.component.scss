@@ -143,15 +143,6 @@ p {
   color: var(--tui-status-negative);
 }
 
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-}
-
 .logout-btn {
   color: var(--popover-foreground);
   border-color: var(--tui-status-negative);

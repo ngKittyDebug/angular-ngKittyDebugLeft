@@ -14,7 +14,13 @@
     "username": "Name",
     "email": "Email",
     "avatar": "Avatar",
-    "uploadAvatar": "Upload photo",
+    "uploadAvatar": "Choose avatar",
+    "avatarPicker": {
+      "title": "Choose your avatar",
+      "close": "Close",
+      "prev": "Previous",
+      "next": "Next"
+    },
     "logout": "Log out",
     "password": "Password",
     "currentPassword": "Current password",

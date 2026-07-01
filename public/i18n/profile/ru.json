@@ -14,7 +14,13 @@
     "username": "Имя",
     "email": "Email",
     "avatar": "Аватар",
-    "uploadAvatar": "Загрузить фото",
+    "uploadAvatar": "Выбрать аватар",
+    "avatarPicker": {
+      "title": "Выберите аватар",
+      "close": "Закрыть",
+      "prev": "Назад",
+      "next": "Вперёд"
+    },
     "logout": "Выйти",
     "password": "Пароль",
     "currentPassword": "Текущий пароль",
