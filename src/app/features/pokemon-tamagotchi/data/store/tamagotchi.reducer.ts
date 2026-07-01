@@ -299,6 +299,20 @@ export const tamagotchiReducer = createReducer(
     notifications: [notification, ...state.notifications].slice(0, NOTIFICATION_HISTORY_LIMIT),
   })),
 
+  on(TamagotchiActions.dismissNotification, (state, { id }) => ({
+    ...state,
+    notifications: state.notifications.map((notification) =>
+      notification.id === id ? { ...notification, read: true } : notification,
+    ),
+  })),
+
+  on(TamagotchiActions.markNotificationRead, (state, { id }) => ({
+    ...state,
+    notifications: state.notifications.map((notification) =>
+      notification.id === id ? { ...notification, read: true } : notification,
+    ),
+  })),
+
   on(TamagotchiActions.initializeTamagotchi, (state) => ({
     ...state,
     initialized: true,

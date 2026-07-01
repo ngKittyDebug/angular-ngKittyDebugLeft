@@ -1,4 +1,5 @@
 import { feedPokemon, selectPokemon, updateStatus, waterPokemon } from './tamagotchi.actions';
+import * as TamagotchiActions from './tamagotchi.actions';
 import { tamagotchiReducer } from './tamagotchi.reducer';
 import { initialTamagotchiState } from './tamagotchi.state';
 import { GAME_BALANCE } from '../constants/game-balance.constants';
@@ -59,5 +60,28 @@ describe('tamagotchiReducer', () => {
 
     expect(watered.status.hydration).toBe(prepared.status.hydration + hydrationIncrease);
     expect(watered.status.energy).toBe(prepared.status.energy - energyCost);
+  });
+
+  it('should mark notification as read on dismiss', () => {
+    const notification = {
+      id: 'alert-1',
+      message: 'test',
+      priority: 'warning' as const,
+      read: false,
+      timestamp: 1,
+      title: 'test',
+    };
+    const withNotification = tamagotchiReducer(
+      initialTamagotchiState,
+      TamagotchiActions.addNotification({ notification }),
+    );
+
+    const dismissed = tamagotchiReducer(
+      withNotification,
+      TamagotchiActions.dismissNotification({ id: 'alert-1' }),
+    );
+
+    expect(dismissed.notifications).toHaveLength(1);
+    expect(dismissed.notifications[0]?.read).toBe(true);
   });
 });

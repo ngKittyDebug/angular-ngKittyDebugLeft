@@ -35,6 +35,22 @@
   filter: brightness(1.2);
 }
 
+.sprite-pop {
+  animation: sprite-pop 0.45s ease-out;
+}
+
+.sprite-wiggle {
+  animation: sprite-wiggle 0.55s ease-in-out;
+}
+
+.sprite-pet {
+  animation: sprite-pet 0.65s ease-in-out;
+}
+
+.sprite-sparkle {
+  animation: sprite-sparkle 0.65s ease-in-out;
+}
+
 .pokemon-sprite--sleeping {
   cursor: default;
 }
@@ -86,5 +102,58 @@
   50% {
     transform: scale(1.08);
     filter: brightness(1.5);
+  }
+}
+
+@keyframes sprite-pop {
+  0% {
+    transform: scale(1);
+  }
+
+  40% {
+    transform: scale(1.1);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes sprite-wiggle {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  25% {
+    transform: rotate(-6deg);
+  }
+
+  75% {
+    transform: rotate(6deg);
+  }
+}
+
+@keyframes sprite-pet {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  50% {
+    transform: translateX(0.35rem);
+  }
+}
+
+@keyframes sprite-sparkle {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+
+  50% {
+    transform: scale(1.12);
+    filter: brightness(1.35) drop-shadow(0 0 0.4rem var(--tui-status-positive));
   }
 }

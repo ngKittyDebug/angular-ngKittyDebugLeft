@@ -38,5 +38,56 @@
     "score": "Счёт: {{score}}",
     "timeLeft": "{{seconds}}с",
     "finish": "Завершить"
+  },
+  "notifications": {
+    "dismiss": "Закрыть уведомление",
+    "empty": "Уведомлений пока нет",
+    "hideHistory": "Скрыть историю",
+    "showHistory": "Показать историю",
+    "alerts": {
+      "hungerLow": {
+        "title": "Покемон голоден",
+        "message": "Сытость низкая. Покормите покемона."
+      },
+      "hungerCritical": {
+        "title": "Очень голоден!",
+        "message": "Покемону срочно нужна еда."
+      },
+      "hydrationLow": {
+        "title": "Хочет пить",
+        "message": "Гидратация низкая. Дайте покемону воды."
+      },
+      "hydrationCritical": {
+        "title": "Обезвожен!",
+        "message": "Покемону срочно нужна вода."
+      },
+      "moodLow": {
+        "title": "Грустит",
+        "message": "Настроение низкое. Уделите покемону внимание."
+      },
+      "moodCritical": {
+        "title": "Очень грустный",
+        "message": "Покемону нужна забота как можно скорее."
+      },
+      "energyLow": {
+        "title": "Мало энергии",
+        "message": "Покемон устал. Дайте ему отдохнуть."
+      },
+      "energyCritical": {
+        "title": "Истощён!",
+        "message": "У покемона почти не осталось энергии."
+      },
+      "evolutionReady": {
+        "title": "Готов к эволюции!",
+        "message": "Все условия эволюции выполнены."
+      }
+    },
+    "evolution": {
+      "readyTitle": "Пора эволюционировать!"
+    }
+  },
+  "evolution": {
+    "evolving": "Эволюция…",
+    "evolvingAria": "{{name}} эволюционирует"
   }
 }

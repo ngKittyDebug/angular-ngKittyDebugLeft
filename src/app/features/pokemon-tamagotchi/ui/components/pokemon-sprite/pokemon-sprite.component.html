@@ -5,7 +5,9 @@
   [class.pokemon-sprite--evolving]="isEvolving()"
   [attr.aria-label]="pokemon().name"
   (click)="onClick()"
+  (pointercancel)="onPointerCancel($event)"
   (pointerdown)="onPointerDown($event)"
+  (pointermove)="onPointerMove($event)"
   (pointerup)="onPointerUp($event)"
 >
   <img

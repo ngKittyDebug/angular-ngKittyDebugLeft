@@ -38,5 +38,56 @@
     "score": "Score: {{score}}",
     "timeLeft": "{{seconds}}s",
     "finish": "Finish"
+  },
+  "notifications": {
+    "dismiss": "Dismiss notification",
+    "empty": "No notifications yet",
+    "hideHistory": "Hide history",
+    "showHistory": "Show history",
+    "alerts": {
+      "hungerLow": {
+        "title": "Getting hungry",
+        "message": "Your Pokémon's hunger is low. Try feeding it."
+      },
+      "hungerCritical": {
+        "title": "Starving!",
+        "message": "Your Pokémon is very hungry and needs food right away."
+      },
+      "hydrationLow": {
+        "title": "Getting thirsty",
+        "message": "Hydration is low. Give your Pokémon some water."
+      },
+      "hydrationCritical": {
+        "title": "Dehydrated!",
+        "message": "Your Pokémon urgently needs water."
+      },
+      "moodLow": {
+        "title": "Feeling down",
+        "message": "Your Pokémon's mood is low. Spend some time caring for it."
+      },
+      "moodCritical": {
+        "title": "Very unhappy",
+        "message": "Your Pokémon needs attention soon."
+      },
+      "energyLow": {
+        "title": "Low energy",
+        "message": "Your Pokémon is tired. Consider letting it rest."
+      },
+      "energyCritical": {
+        "title": "Exhausted!",
+        "message": "Your Pokémon has almost no energy left."
+      },
+      "evolutionReady": {
+        "title": "Evolution ready!",
+        "message": "All evolution criteria are met."
+      }
+    },
+    "evolution": {
+      "readyTitle": "Ready to evolve!"
+    }
+  },
+  "evolution": {
+    "evolving": "Evolving…",
+    "evolvingAria": "{{name}} is evolving"
   }
 }

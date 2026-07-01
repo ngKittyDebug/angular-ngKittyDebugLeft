@@ -66,6 +66,16 @@ export const addNotification = createAction(
   props<{ notification: Notification }>(),
 );
 
+export const dismissNotification = createAction(
+  '[Tamagotchi] Dismiss Notification',
+  props<{ id: string }>(),
+);
+
+export const markNotificationRead = createAction(
+  '[Tamagotchi] Mark Notification Read',
+  props<{ id: string }>(),
+);
+
 export const initializeTamagotchi = createAction('[Tamagotchi] Initialize');
 
 export const loadState = createAction('[Tamagotchi] Load State');

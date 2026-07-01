@@ -1,4 +1,6 @@
 import { createFeatureSelector, createSelector } from '@ngrx/store';
+import { calculateBondLevel } from '../helpers/gesture.helper';
+import { sortNotificationsByPriority } from '../helpers/notification-factory.helper';
 import type { TamagotchiState } from '../../models/tamagotchi-state.model';
 import { TAMAGOTCHI_FEATURE_KEY } from './tamagotchi.state';
 
@@ -32,9 +34,21 @@ export const selectNotifications = createSelector(
   (state) => state.notifications,
 );
 
+export const selectUnreadNotifications = createSelector(selectNotifications, (notifications) =>
+  sortNotificationsByPriority(notifications.filter((notification) => !notification.read)),
+);
+
+export const selectNotificationHistory = createSelector(selectNotifications, (notifications) =>
+  [...notifications].sort((left, right) => right.timestamp - left.timestamp),
+);
+
 export const selectInteractionHistory = createSelector(
   selectTamagotchiState,
   (state) => state.interactionHistory,
+);
+
+export const selectBondLevel = createSelector(selectInteractionHistory, (history) =>
+  calculateBondLevel(history),
 );
 
 export const selectDailyRoutine = createSelector(

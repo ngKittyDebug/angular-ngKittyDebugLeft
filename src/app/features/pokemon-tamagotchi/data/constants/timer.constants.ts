@@ -1,0 +1,12 @@
+export const TIMER_CONFIG = {
+  DECAY_INTERVAL_MS: 60_000,
+  ROUTINE: {
+    BONUS_MOOD: 5,
+    CONSECUTIVE_DAYS_FOR_BONUS: 3,
+    MIN_DAILY_ACTIONS: 3,
+  },
+  SLEEP: {
+    BONUS_ENERGY: 15,
+    MIN_DURATION_MS: 2 * 60 * 60 * 1000,
+  },
+} as const;
