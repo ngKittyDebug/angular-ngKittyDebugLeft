@@ -79,30 +79,11 @@ export class ProfileComponent implements OnInit {
   });
 
   constructor() {
+    effect(() => this.syncFormFromProfile());
     effect(() => {
-      const profile = this.facade.profile();
-
-      if (!profile) {
-        return;
+      if (this.facade.error()) {
+        this.syncFormFromProfile();
       }
-
-      this.usernameFormControl.setValue(profile.username, { emitEvent: false });
-      this.emailFormControl.setValue(profile.email, { emitEvent: false });
-    });
-
-    effect(() => {
-      if (!this.facade.error()) {
-        return;
-      }
-
-      const profile = this.facade.profile();
-
-      if (!profile) {
-        return;
-      }
-
-      this.usernameFormControl.setValue(profile.username, { emitEvent: false });
-      this.emailFormControl.setValue(profile.email, { emitEvent: false });
     });
   }
 
@@ -164,5 +145,16 @@ export class ProfileComponent implements OnInit {
 
   protected onDeleteAccount(): void {
     this.facade.deleteAccount();
+  }
+
+  private syncFormFromProfile(): void {
+    const profile = this.facade.profile();
+
+    if (!profile) {
+      return;
+    }
+
+    this.usernameFormControl.setValue(profile.username, { emitEvent: false });
+    this.emailFormControl.setValue(profile.email, { emitEvent: false });
   }
 }
