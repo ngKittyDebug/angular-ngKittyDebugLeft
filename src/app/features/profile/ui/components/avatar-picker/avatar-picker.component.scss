@@ -81,7 +81,6 @@
   text-align: center;
 }
 
-// ≤550px: 3 колонки × 2 строки (6 карточек), диалог ограничен 80vh
 @include respond_to($screen-small, max) {
   .dialog {
     max-height: 80vh;
