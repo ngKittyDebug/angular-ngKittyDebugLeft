@@ -20,6 +20,8 @@ import type {
 import { AvatarPickerCardComponent } from './avatar-picker-card/avatar-picker-card.component';
 
 const MOBILE_BREAKPOINT = '(max-width: 550px)';
+const MOBILE_PAGE_SIZE = 4;
+const DESKTOP_PAGE_SIZE = 8;
 
 @Component({
   selector: 'left-paw-avatar-picker',
@@ -36,8 +38,8 @@ export class AvatarPickerComponent {
   protected readonly pageSize = toSignal(
     inject(BreakpointObserver)
       .observe(MOBILE_BREAKPOINT)
-      .pipe(map((result) => (result.matches ? 4 : 8))),
-    { initialValue: 8 },
+      .pipe(map((result) => (result.matches ? MOBILE_PAGE_SIZE : DESKTOP_PAGE_SIZE))),
+    { initialValue: DESKTOP_PAGE_SIZE },
   );
 
   protected readonly currentPage = linkedSignal(() => {
