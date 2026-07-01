@@ -18,7 +18,7 @@ import type {
   PokemonListApiData,
   PokemonListItemApiData,
 } from '@shared/models/pokemon-list-api-data-interface';
-import { AvatarPickerCardComponent } from './avatar-picker-card.component';
+import { AvatarPickerCardComponent } from './avatar-picker-card/avatar-picker-card.component';
 
 const MOBILE_BREAKPOINT = '(max-width: 550px)';
 
