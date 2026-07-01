@@ -13,7 +13,6 @@
     "cancel": "Cancel",
     "username": "Name",
     "email": "Email",
-    "avatar": "Avatar",
     "uploadAvatar": "Choose avatar",
     "avatarPicker": {
       "title": "Choose your avatar",
@@ -26,11 +25,8 @@
     "currentPassword": "Current password",
     "newPassword": "New password",
     "errors": {
-      "username": "3–20 characters: letters, digits, _ or -",
-      "email": "Enter a valid email",
       "password": "At least 8 characters, one uppercase letter and one digit"
     },
-    "saveError": "Failed to save. Please try again.",
     "passwordChanged": "Password changed successfully",
     "delete": {
       "button": "Delete account",

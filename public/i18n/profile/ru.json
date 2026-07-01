@@ -13,7 +13,6 @@
     "cancel": "Отмена",
     "username": "Имя",
     "email": "Email",
-    "avatar": "Аватар",
     "uploadAvatar": "Выбрать аватар",
     "avatarPicker": {
       "title": "Выберите аватар",
@@ -26,11 +25,8 @@
     "currentPassword": "Текущий пароль",
     "newPassword": "Новый пароль",
     "errors": {
-      "username": "3–20 символов: буквы, цифры, _ или -",
-      "email": "Введите корректный email",
       "password": "Минимум 8 символов, заглавная буква и цифра"
     },
-    "saveError": "Не удалось сохранить. Попробуйте ещё раз.",
     "passwordChanged": "Пароль успешно изменён",
     "delete": {
       "button": "Удалить аккаунт",
