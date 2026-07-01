@@ -4,10 +4,9 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  effect,
   inject,
+  linkedSignal,
   output,
-  signal,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { TranslocoDirective } from '@jsverse/transloco';
@@ -41,7 +40,11 @@ export class AvatarPickerComponent {
     { initialValue: 8 },
   );
 
-  protected readonly currentPage = signal(0);
+  protected readonly currentPage = linkedSignal(() => {
+    this.pageSize();
+
+    return 0;
+  });
 
   protected readonly pokemonList = httpResource<PokemonListApiData>(() =>
     this.pokemonApiService.getPokemonPageUrl(this.pageSize(), this.currentPage() * this.pageSize()),
@@ -55,13 +58,6 @@ export class AvatarPickerComponent {
 
   protected readonly hasNext = computed(() => !!this.pokemonList.value()?.next);
   protected readonly hasPrev = computed(() => this.currentPage() > 0);
-
-  constructor() {
-    effect(() => {
-      this.pageSize();
-      this.currentPage.set(0);
-    });
-  }
 
   protected onSelect(avatarUrl: string): void {
     this.avatarSelected.emit(avatarUrl);
