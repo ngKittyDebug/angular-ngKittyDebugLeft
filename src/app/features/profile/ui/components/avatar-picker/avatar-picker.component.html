@@ -3,16 +3,16 @@
   class="overlay"
   role="button"
   tabindex="0"
-  [attr.aria-label]="t('profile.avatarPicker.close')"
+  [attr.aria-label]="t('profile.settings.avatarPicker.close')"
   (click)="onOverlayClick($event)"
   (keydown.enter)="onOverlayClick($event)"
   (keydown.escape)="closed.emit()"
 >
-  <div class="dialog" role="dialog" [attr.aria-label]="t('profile.avatarPicker.title')">
+  <div class="dialog" role="dialog" [attr.aria-label]="t('profile.settings.avatarPicker.title')">
     <div class="dialog-header">
-      <h3 class="dialog-title">{{ t('profile.avatarPicker.title') }}</h3>
+      <h3 class="dialog-title">{{ t('profile.settings.avatarPicker.title') }}</h3>
       <button iconStart="@tui.x" size="s" tuiIconButton type="button" (click)="closed.emit()">
-        {{ t('profile.avatarPicker.close') }}
+        {{ t('profile.settings.avatarPicker.close') }}
       </button>
     </div>
     <div class="grid">
@@ -38,7 +38,7 @@
         [disabled]="!hasPrev()"
         (click)="prevPage()"
       >
-        {{ t('profile.avatarPicker.prev') }}
+        {{ t('profile.settings.avatarPicker.prev') }}
       </button>
       <span class="page-number">{{ currentPage() + 1 }}</span>
       <button
@@ -49,7 +49,7 @@
         [disabled]="!hasNext()"
         (click)="nextPage()"
       >
-        {{ t('profile.avatarPicker.next') }}
+        {{ t('profile.settings.avatarPicker.next') }}
       </button>
     </div>
   </div>
