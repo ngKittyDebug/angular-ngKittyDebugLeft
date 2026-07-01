@@ -1,18 +1,14 @@
-import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { PokemonDataService } from '@shared/services/pokemon-data.service';
+import { PokemonCardMiniComponent } from '../pokemon-card-mini/pokemon-card-mini.component';
 
 @Component({
   selector: 'left-paw-pokemon-card-profile',
-  imports: [RouterLink],
+  imports: [PokemonCardMiniComponent, RouterLink],
   templateUrl: './pokemon-card-profile.component.html',
   styleUrl: './pokemon-card-profile.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PokemonCardProfileComponent {
   public readonly pokemonName = input.required<string>();
-
-  protected readonly pokemon = inject(PokemonDataService).createPokemonCardData(() =>
-    this.pokemonName(),
-  );
 }

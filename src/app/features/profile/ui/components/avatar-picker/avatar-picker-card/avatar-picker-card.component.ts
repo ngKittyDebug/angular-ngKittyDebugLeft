@@ -1,25 +1,24 @@
-import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
-import { PokemonDataService } from '@shared/services/pokemon-data.service';
+import { ChangeDetectionStrategy, Component, input, output, viewChild } from '@angular/core';
+import { PokemonCardMiniComponent } from '../../pokemon-card-mini/pokemon-card-mini.component';
 
 @Component({
   selector: 'left-paw-avatar-picker-card',
+  imports: [PokemonCardMiniComponent],
   templateUrl: './avatar-picker-card.component.html',
   styleUrl: './avatar-picker-card.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AvatarPickerCardComponent {
+  private readonly cardSprite = viewChild.required(PokemonCardMiniComponent);
+
   public readonly pokemonName = input.required<string>();
   public readonly selected = output<string>();
 
-  protected readonly pokemon = inject(PokemonDataService).createPokemonCardData(() =>
-    this.pokemonName(),
-  );
-
   protected onSelect(): void {
-    const artworkUrl = this.pokemon.cardData()?.sprites?.other?.['official-artwork']?.front_default;
+    const url = this.cardSprite().artworkUrl();
 
-    if (artworkUrl) {
-      this.selected.emit(artworkUrl);
+    if (url) {
+      this.selected.emit(url);
     }
   }
 }

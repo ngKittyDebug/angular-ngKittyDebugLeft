@@ -3,21 +3,7 @@
 
 :host {
   display: block;
-  background: var(--gradient-bg);
   width: 10rem;
-  border-radius: 1.6rem;
-  border: 1px solid var(--border);
-  transition: all 0.3s;
-  padding: 0.75rem 0 1rem;
-  * {
-    margin: 0;
-    @include font_function($size: 0.75rem);
-  }
-  &:hover {
-    border: 1px solid var(--sidebar-primary);
-    transform: scale(1.05);
-    box-shadow: 10px 10px 10px 0px var(--sidebar-ring);
-  }
 }
 
 .card__link {
@@ -26,33 +12,8 @@
   text-decoration: none;
 }
 
-.card__cover {
-  @include flex_container_function($direction: column, $gap: 0.5rem);
-  width: 100%;
-}
-
-.card__image {
-  width: 8rem;
-  border-radius: 1rem;
-  background: var(--gradient-card);
-}
-
-.card__line {
-  @include flex_container_function($justify_content: space-between, $gap: 0.5rem);
-  width: 100%;
-}
-.card__name {
-  @include font_function($weight: bold, $size: 1rem);
-  &::first-letter {
-    text-transform: uppercase;
-  }
-}
-
 @include respond_to($screen-large, max) {
   :host {
     width: 14rem;
-  }
-  .card__image {
-    width: 12rem;
   }
 }
