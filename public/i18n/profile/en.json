@@ -16,7 +16,6 @@
     "uploadAvatar": "Choose avatar",
     "avatarPicker": {
       "title": "Choose your avatar",
-      "close": "Close",
       "prev": "Previous",
       "next": "Next"
     },

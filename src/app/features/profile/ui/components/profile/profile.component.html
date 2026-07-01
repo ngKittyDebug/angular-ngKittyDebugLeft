@@ -15,7 +15,7 @@
             appearance="secondary"
             class="avatar-upload-btn"
             [loading]="facade.isLoading()"
-            (click)="showAvatarPicker.set(true)"
+            (click)="openAvatarPicker(t('profile.settings.avatarPicker.title'))"
           >
             {{ t('profile.settings.uploadAvatar') }}
           </button>
@@ -172,10 +172,7 @@
     </div>
   </div>
 
-  @if (showAvatarPicker()) {
-    <left-paw-avatar-picker
-      (closed)="showAvatarPicker.set(false)"
-      (avatarSelected)="onAvatarSelected($event)"
-    />
-  }
+  <ng-template #pickerTemplate let-observer>
+    <left-paw-avatar-picker (avatarSelected)="observer.next($event); observer.complete()" />
+  </ng-template>
 </div>

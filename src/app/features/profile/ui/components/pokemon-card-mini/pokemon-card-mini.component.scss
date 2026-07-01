@@ -6,12 +6,12 @@
   border-radius: 1.6rem;
   border: 1px solid var(--border);
   transition: all 0.3s;
-  padding: 0.75rem 0 1rem;
+  padding: var(--card-mini-padding, 0.75rem 0 1rem);
 
   * {
     margin: 0;
 
-    @include font_function($size: 0.75rem);
+    @include font_function($size: var(--card-mini-font-size, 0.75rem));
   }
 
   &:hover {
@@ -48,7 +48,7 @@
 }
 
 .card__name {
-  @include font_function($weight: bold, $size: 0.85rem);
+  @include font_function($weight: bold, $size: var(--card-mini-name-size, 0.85rem));
 
   &::first-letter {
     text-transform: uppercase;

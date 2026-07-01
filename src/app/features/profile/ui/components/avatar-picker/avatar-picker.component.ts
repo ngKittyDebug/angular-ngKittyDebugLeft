@@ -32,13 +32,12 @@ const MOBILE_BREAKPOINT = '(max-width: 550px)';
 export class AvatarPickerComponent {
   private readonly pokemonApiService = inject(PokemonApiService);
 
-  public readonly closed = output<void>();
   public readonly avatarSelected = output<string>();
 
   protected readonly pageSize = toSignal(
     inject(BreakpointObserver)
       .observe(MOBILE_BREAKPOINT)
-      .pipe(map((result) => (result.matches ? 6 : 8))),
+      .pipe(map((result) => (result.matches ? 4 : 8))),
     { initialValue: 8 },
   );
 
@@ -64,15 +63,8 @@ export class AvatarPickerComponent {
     });
   }
 
-  protected onOverlayClick(event: Event): void {
-    if (event.target === event.currentTarget) {
-      this.closed.emit();
-    }
-  }
-
   protected onSelect(avatarUrl: string): void {
     this.avatarSelected.emit(avatarUrl);
-    this.closed.emit();
   }
 
   protected nextPage(): void {

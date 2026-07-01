@@ -1,9 +1,16 @@
-import type { OnInit } from '@angular/core';
-import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
+import type { OnInit, TemplateRef } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  effect,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { TuiButton } from '@taiga-ui/core';
+import { TuiButton, TuiDialogService } from '@taiga-ui/core';
 import { TuiAvatar, TuiButtonLoading } from '@taiga-ui/kit';
 import {
   EMAIL_PATTERN,
@@ -33,11 +40,12 @@ import { SettingRowComponent } from '../setting-row/setting-row.component';
 })
 export class ProfileComponent implements OnInit {
   private readonly router = inject(Router);
+  private readonly dialogs = inject(TuiDialogService);
+  private readonly pickerTemplate = viewChild.required<TemplateRef<unknown>>('pickerTemplate');
 
   protected readonly facade = inject(ProfileFacade);
   protected readonly passwordEditing = signal(false);
   protected readonly showDeleteConfirm = signal(false);
-  protected readonly showAvatarPicker = signal(false);
 
   protected readonly usernameFormControl = new FormControl('', {
     nonNullable: true,
@@ -118,8 +126,12 @@ export class ProfileComponent implements OnInit {
     this.emailPasswordControl.reset();
   }
 
-  protected onAvatarSelected(avatarUrl: string): void {
-    this.facade.updateAvatar({ avatar: avatarUrl });
+  protected openAvatarPicker(label: string): void {
+    this.dialogs
+      .open<string>(this.pickerTemplate(), { label, size: 'l' })
+      .subscribe((avatarUrl) => {
+        this.facade.updateAvatar({ avatar: avatarUrl });
+      });
   }
 
   protected onSavePassword(): void {
