@@ -8,6 +8,7 @@ import type {
 } from '@shared/models/pokemon-detail-api-data-interface';
 import { EVOLUTION_REQUIREMENTS } from '../constants/evolution-criteria.constants';
 import type { EvolutionChain } from '../../models/evolution.model';
+import type { SpriteVariation } from '../../models/customization.model';
 import type { Pokemon, PokemonSpriteUrls } from '../../models/pokemon.model';
 
 export function isFirstStageInEvolutionChain(
@@ -64,10 +65,7 @@ export function findEvolutionStageIndex(
   return null;
 }
 
-export function mapSprites(sprites: PokemonSpritesApiData): PokemonSpriteUrls {
-  const artwork = sprites.other?.['official-artwork']?.front_default;
-  const primary = artwork ?? sprites.front_default ?? '';
-
+export function buildSpriteSet(primary: string): PokemonSpriteUrls {
   return {
     eating: primary,
     evolving: primary,
@@ -76,6 +74,31 @@ export function mapSprites(sprites: PokemonSpritesApiData): PokemonSpriteUrls {
     sad: primary,
     sleeping: primary,
   };
+}
+
+export function mapSpriteVariations(
+  sprites: PokemonSpritesApiData,
+): Record<SpriteVariation, PokemonSpriteUrls> {
+  const pixelFront = sprites.front_default ?? '';
+  const artwork = sprites.other?.['official-artwork']?.front_default;
+  const primary = artwork ?? pixelFront;
+  const shinyArtwork = sprites.other?.['official-artwork']?.front_shiny;
+  const shinyPixel = sprites.front_shiny ?? '';
+  const shinyPrimary = shinyArtwork ?? (shinyPixel || primary);
+  const retroPrimary =
+    artwork && pixelFront && pixelFront !== artwork
+      ? pixelFront
+      : (sprites.back_default ?? (pixelFront || primary));
+
+  return {
+    default: buildSpriteSet(primary),
+    retro: buildSpriteSet(retroPrimary),
+    shiny: buildSpriteSet(shinyPrimary),
+  };
+}
+
+export function mapSprites(sprites: PokemonSpritesApiData): PokemonSpriteUrls {
+  return mapSpriteVariations(sprites).default;
 }
 
 export function buildEvolutionChain(
@@ -107,6 +130,8 @@ export function mapApiToTamagotchiPokemon(
     findEvolutionChainNode(evolutionResponse.chain, detail.species.name) ?? evolutionResponse.chain;
   const speciesName = detail.species.name;
 
+  const spriteVariations = mapSpriteVariations(detail.sprites);
+
   return {
     baseStats: {
       energyRestorationRate: 1,
@@ -119,6 +144,7 @@ export function mapApiToTamagotchiPokemon(
     isFirstStage: isFirstStageInEvolutionChain(speciesName, evolutionResponse.chain),
     name: detail.name,
     species: speciesName,
-    spriteUrls: mapSprites(detail.sprites),
+    spriteUrls: spriteVariations.default,
+    spriteVariations,
   };
 }

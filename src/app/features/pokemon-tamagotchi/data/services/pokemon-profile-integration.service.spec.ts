@@ -5,10 +5,33 @@ import { POKEMON_BASE_API } from '@core/constants/pokemon-constants';
 import type { EvolutionChainApiResponse } from '@shared/models/pokemon-evolution-chain-api-data-interface';
 import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
 import type { PokemonSpeciesApiData } from '@shared/models/pokemon-species-api-data-interface';
+import type { Pokemon, PokemonSpriteUrls } from '../../models/pokemon.model';
 import {
   PokemonProfileIntegrationService,
   TAMAGOTCHI_SELECTED_POKEMON_KEY,
 } from './pokemon-profile-integration.service';
+
+function buildPokemon(spriteUrls: PokemonSpriteUrls): Pokemon {
+  return {
+    baseStats: {
+      energyRestorationRate: 1,
+      experienceMultiplier: 1,
+      hungerDecayRate: 1,
+      moodDecayRate: 1,
+    },
+    evolutionChain: { currentStage: 1, totalStages: 3 },
+    id: '4',
+    isFirstStage: true,
+    name: 'charmander',
+    species: 'charmander',
+    spriteUrls,
+    spriteVariations: {
+      default: spriteUrls,
+      retro: spriteUrls,
+      shiny: spriteUrls,
+    },
+  };
+}
 
 describe('PokemonProfileIntegrationService', () => {
   let service: PokemonProfileIntegrationService;
@@ -126,27 +149,16 @@ describe('PokemonProfileIntegrationService', () => {
   });
 
   it('should persist and read selected pokemon reference', () => {
-    service.saveSelectedPokemon({
-      baseStats: {
-        energyRestorationRate: 1,
-        experienceMultiplier: 1,
-        hungerDecayRate: 1,
-        moodDecayRate: 1,
-      },
-      evolutionChain: { currentStage: 1, totalStages: 3 },
-      id: '4',
-      isFirstStage: true,
-      name: 'charmander',
-      species: 'charmander',
-      spriteUrls: {
+    service.saveSelectedPokemon(
+      buildPokemon({
         eating: '',
         evolving: '',
         happy: '',
         normal: '',
         sad: '',
         sleeping: '',
-      },
-    });
+      }),
+    );
 
     expect(service.getSelectedPokemonReference()).toEqual({
       id: '4',
@@ -157,27 +169,16 @@ describe('PokemonProfileIntegrationService', () => {
   });
 
   it('should load first-stage pokemon from profile selection', () => {
-    service.saveSelectedPokemon({
-      baseStats: {
-        energyRestorationRate: 1,
-        experienceMultiplier: 1,
-        hungerDecayRate: 1,
-        moodDecayRate: 1,
-      },
-      evolutionChain: { currentStage: 1, totalStages: 3 },
-      id: '4',
-      isFirstStage: true,
-      name: 'charmander',
-      species: 'charmander',
-      spriteUrls: {
+    service.saveSelectedPokemon(
+      buildPokemon({
         eating: '',
         evolving: '',
         happy: '',
         normal: '',
         sad: '',
         sleeping: '',
-      },
-    });
+      }),
+    );
 
     let loaded: unknown;
 

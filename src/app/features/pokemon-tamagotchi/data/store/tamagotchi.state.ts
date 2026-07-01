@@ -1,4 +1,5 @@
 import { EVOLUTION_REQUIREMENTS } from '../constants/evolution-criteria.constants';
+import { DEFAULT_CUSTOMIZATION } from '../constants/customization.constants';
 import { GAME_BALANCE } from '../constants/game-balance.constants';
 import type { EvolutionProgress } from '../../models/evolution.model';
 import type { PokemonStatus } from '../../models/pokemon-status.model';
@@ -60,6 +61,7 @@ export function createInitialTamagotchiState(): TamagotchiState {
     lastDecayTime: null,
     dailyRoutine: createInitialDailyRoutine(),
     interactionHistory: [],
+    customization: { ...DEFAULT_CUSTOMIZATION },
     isSleeping: false,
     isEvolving: false,
     activeMiniGame: null,

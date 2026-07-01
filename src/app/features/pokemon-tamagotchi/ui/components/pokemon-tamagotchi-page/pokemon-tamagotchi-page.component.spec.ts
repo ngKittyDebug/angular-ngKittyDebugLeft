@@ -29,6 +29,15 @@ const PAGE_TRANSLATIONS = {
   statusPanelAria: 'Status panel',
   dismissNotice: 'Dismiss',
   resetProgress: 'Reset',
+  performanceLabel: 'Performance',
+  performanceAria: 'Performance mode',
+  performanceEffective: 'Using {{mode}} profile',
+  performanceModes: {
+    auto: 'Auto',
+    balanced: 'Balanced',
+    high: 'High',
+    low: 'Low power',
+  },
   title: 'Pokémon Tamagotchi',
 };
 
@@ -43,6 +52,22 @@ describe('PokemonTamagotchiPageComponent', () => {
           langs: {
             en: {
               pokemonTamagotchi: {
+                appearance: {
+                  ariaLabel: 'Appearance',
+                  spriteVariationLabel: 'Sprite',
+                  spriteVariations: {
+                    default: 'Default',
+                    retro: 'Retro',
+                    shiny: 'Shiny',
+                  },
+                  stageThemeLabel: 'Theme',
+                  stageThemes: {
+                    classic: 'Classic',
+                    meadow: 'Meadow',
+                    night: 'Night',
+                  },
+                  title: 'Appearance',
+                },
                 actions: {
                   care: 'Care',
                   cooldown: '{{seconds}}s',
@@ -136,8 +161,19 @@ describe('PokemonTamagotchiPageComponent', () => {
 
   it('should render status indicators when pokemon is loaded', () => {
     const indicators = fixture.nativeElement.querySelectorAll('left-paw-status-indicator');
+    const labels = fixture.nativeElement.querySelectorAll(
+      '.status-indicator__label',
+    ) as NodeListOf<Element>;
+    const bars = fixture.nativeElement.querySelectorAll('progress[tuiProgressBar]');
 
     expect(indicators.length).toBe(6);
+    expect(labels.length).toBe(6);
+    expect(bars.length).toBe(6);
+    const labelTexts = [...labels].map((node) => node.textContent?.trim() ?? '');
+
+    expect(labelTexts).toEqual(
+      expect.arrayContaining(['Health', 'Hunger', 'Hydration', 'Mood', 'Energy', 'Experience']),
+    );
   });
 
   it('should render notifications panel', () => {

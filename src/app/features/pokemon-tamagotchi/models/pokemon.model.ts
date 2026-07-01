@@ -1,4 +1,5 @@
 import type { EvolutionChain } from './evolution.model';
+import type { SpriteVariation } from './customization.model';
 
 export interface PokemonSpriteUrls {
   normal: string;
@@ -23,5 +24,6 @@ export interface Pokemon {
   isFirstStage: boolean;
   evolutionChain: EvolutionChain;
   spriteUrls: PokemonSpriteUrls;
+  spriteVariations: Record<SpriteVariation, PokemonSpriteUrls>;
   baseStats: PokemonBaseStats;
 }

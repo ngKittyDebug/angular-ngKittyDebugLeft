@@ -14,7 +14,32 @@
     "dismissNotice": "Закрыть",
     "resetProgress": "Сбросить прогресс",
     "statusPanelAria": "Индикаторы состояния покемона",
-    "ariaLabel": "Экран ухода за покемоном-тамагочи"
+    "ariaLabel": "Экран ухода за покемоном-тамагочи",
+    "performanceLabel": "Производительность",
+    "performanceAria": "Режим производительности",
+    "performanceEffective": "Используется профиль «{{mode}}»",
+    "performanceModes": {
+      "auto": "Авто",
+      "high": "Высокая",
+      "balanced": "Сбалансированная",
+      "low": "Экономия"
+    }
+  },
+  "appearance": {
+    "ariaLabel": "Настройки внешнего вида",
+    "title": "Внешний вид",
+    "spriteVariationLabel": "Стиль спрайта",
+    "stageThemeLabel": "Тема сцены",
+    "spriteVariations": {
+      "default": "Обычный",
+      "shiny": "Шини",
+      "retro": "Ретро"
+    },
+    "stageThemes": {
+      "classic": "Классика",
+      "meadow": "Луг",
+      "night": "Ночь"
+    }
   },
   "selection": {
     "selectButton": "Выбрать для тамагочи",

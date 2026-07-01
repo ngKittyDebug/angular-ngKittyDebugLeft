@@ -29,6 +29,32 @@ export const TEST_POKEMON: Pokemon = {
     sad: '/sprites/sad.png',
     sleeping: '/sprites/sleeping.png',
   },
+  spriteVariations: {
+    default: {
+      eating: '/sprites/eating.png',
+      evolving: '/sprites/evolving.png',
+      happy: '/sprites/happy.png',
+      normal: '/sprites/normal.png',
+      sad: '/sprites/sad.png',
+      sleeping: '/sprites/sleeping.png',
+    },
+    retro: {
+      eating: '/sprites/retro-eating.png',
+      evolving: '/sprites/retro-evolving.png',
+      happy: '/sprites/retro-happy.png',
+      normal: '/sprites/retro-normal.png',
+      sad: '/sprites/retro-sad.png',
+      sleeping: '/sprites/retro-sleeping.png',
+    },
+    shiny: {
+      eating: '/sprites/shiny-eating.png',
+      evolving: '/sprites/shiny-evolving.png',
+      happy: '/sprites/shiny-happy.png',
+      normal: '/sprites/shiny-normal.png',
+      sad: '/sprites/shiny-sad.png',
+      sleeping: '/sprites/shiny-sleeping.png',
+    },
+  },
 };
 
 const miniGameTypes: MiniGameType[] = ['memory', 'pattern', 'reflex', 'timing'];

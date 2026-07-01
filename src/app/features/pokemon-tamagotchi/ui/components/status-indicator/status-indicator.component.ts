@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { TuiHint } from '@taiga-ui/core';
-import { TuiBadge, TuiProgressBar } from '@taiga-ui/kit';
+import { TuiBadge, TuiProgress } from '@taiga-ui/kit';
 import { STATUS_THRESHOLDS } from '../../../data/constants/status-thresholds.constants';
 import {
   getStatusIndicatorLevel,
@@ -12,7 +12,7 @@ import type { StatusThresholds, StatusType } from '../../../models/pokemon-statu
 
 @Component({
   selector: 'left-paw-status-indicator',
-  imports: [TranslocoDirective, TuiBadge, TuiHint, TuiProgressBar],
+  imports: [TranslocoDirective, TuiBadge, TuiHint, TuiProgress],
   templateUrl: './status-indicator.component.html',
   styleUrl: './status-indicator.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -24,8 +24,10 @@ export class StatusIndicatorComponent {
   public readonly thresholds = input<StatusThresholds>(STATUS_THRESHOLDS);
   public readonly level = input<number | null>(null);
 
+  protected readonly displayValue = computed(() => Math.round(this.currentValue()));
+
   protected readonly progressColor = computed(() =>
-    resolveStatusIndicatorColor(this.statusType(), this.currentValue(), this.thresholds()),
+    resolveStatusIndicatorColor(this.statusType(), this.displayValue(), this.thresholds()),
   );
 
   protected readonly alertLevel = computed(() => {
@@ -35,7 +37,7 @@ export class StatusIndicatorComponent {
       return null;
     }
 
-    return getStatusIndicatorLevel(this.currentValue(), bounds.warning, bounds.critical);
+    return getStatusIndicatorLevel(this.displayValue(), bounds.warning, bounds.critical);
   });
 
   protected readonly percentage = computed(() => {
@@ -45,6 +47,6 @@ export class StatusIndicatorComponent {
       return 0;
     }
 
-    return Math.min(100, Math.max(0, (this.currentValue() / max) * 100));
+    return Math.min(100, Math.max(0, (this.displayValue() / max) * 100));
   });
 }

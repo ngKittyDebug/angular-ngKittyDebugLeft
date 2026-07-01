@@ -1,10 +1,13 @@
 import { Injectable } from '@angular/core';
+import { DEFAULT_CUSTOMIZATION } from '../constants/customization.constants';
+import { normalizePokemonStatus } from '../helpers/status-bounds.helper';
+import { ensurePokemonSpriteVariations } from '../helpers/sprite-variation.helper';
 import type { TamagotchiState } from '../../models/tamagotchi-state.model';
 import { createInitialTamagotchiState } from '../store/tamagotchi.state';
 
 export const TAMAGOTCHI_STORAGE_KEY = 'pokemon-tamagotchi-state';
 export const TAMAGOTCHI_BACKUP_KEY = 'pokemon-tamagotchi-state-backup';
-export const TAMAGOTCHI_STATE_VERSION = 1;
+export const TAMAGOTCHI_STATE_VERSION = 2;
 
 export interface PersistedTamagotchiPayload {
   version: number;
@@ -106,11 +109,13 @@ export class TamagotchiPersistenceService {
       ...createInitialTamagotchiState(),
       ...state,
       achievements: state.achievements ?? [],
+      customization: state.customization ?? { ...DEFAULT_CUSTOMIZATION },
       dailyRoutine: state.dailyRoutine ?? createInitialTamagotchiState().dailyRoutine,
       evolutionProgress:
         state.evolutionProgress ?? createInitialTamagotchiState().evolutionProgress,
       interactionHistory: state.interactionHistory ?? [],
       notifications: state.notifications ?? [],
+      pokemon: state.pokemon ? ensurePokemonSpriteVariations(state.pokemon) : null,
     };
   }
 
@@ -140,8 +145,11 @@ export class TamagotchiPersistenceService {
     return {
       ...state,
       achievements: state.achievements ?? [],
+      customization: state.customization ?? { ...DEFAULT_CUSTOMIZATION },
       interactionHistory: state.interactionHistory ?? [],
       notifications: state.notifications ?? [],
+      pokemon: state.pokemon ? ensurePokemonSpriteVariations(state.pokemon) : null,
+      status: normalizePokemonStatus(state.status),
     };
   }
 

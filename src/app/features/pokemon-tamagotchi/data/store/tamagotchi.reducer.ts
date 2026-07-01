@@ -1,14 +1,16 @@
 import { createReducer, on } from '@ngrx/store';
 import { applyStatusDelta } from '../helpers/status-bounds.helper';
 import { GAME_BALANCE } from '../constants/game-balance.constants';
+import { MEMORY_LIMITS } from '../constants/performance-mode.constants';
+import { garbageCollectTamagotchiState } from '../helpers/memory-management.helper';
 import type { EvolutionProgress } from '../../models/evolution.model';
 import type { PokemonStatus } from '../../models/pokemon-status.model';
 import type { TamagotchiState } from '../../models/tamagotchi-state.model';
 import * as TamagotchiActions from './tamagotchi.actions';
 import { initialTamagotchiState } from './tamagotchi.state';
 
-const INTERACTION_HISTORY_LIMIT = 50;
-const NOTIFICATION_HISTORY_LIMIT = 20;
+const INTERACTION_HISTORY_LIMIT = MEMORY_LIMITS.INTERACTION_HISTORY_MAX;
+const NOTIFICATION_HISTORY_LIMIT = MEMORY_LIMITS.NOTIFICATION_HISTORY_MAX;
 
 function withPokemon(
   state: TamagotchiState,
@@ -231,11 +233,11 @@ export const tamagotchiReducer = createReducer(
     }
 
     if (statusUpdate.experience !== undefined) {
-      status.experience = Math.max(0, status.experience + statusUpdate.experience);
+      status.experience = Math.max(0, Math.round(status.experience + statusUpdate.experience));
     }
 
     if (statusUpdate.level !== undefined) {
-      status.level = Math.max(1, status.level + statusUpdate.level);
+      status.level = Math.max(1, Math.round(status.level + statusUpdate.level));
     }
 
     return { ...state, status };
@@ -351,5 +353,14 @@ export const tamagotchiReducer = createReducer(
   on(TamagotchiActions.clearError, (state) => ({
     ...state,
     error: null,
+  })),
+
+  on(TamagotchiActions.garbageCollect, (state, { limits }) =>
+    garbageCollectTamagotchiState(state, limits),
+  ),
+
+  on(TamagotchiActions.setCustomization, (state, { customization }) => ({
+    ...state,
+    customization,
   })),
 );

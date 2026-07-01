@@ -14,7 +14,32 @@
     "dismissNotice": "Dismiss",
     "resetProgress": "Reset progress",
     "statusPanelAria": "Pokémon status indicators",
-    "ariaLabel": "Pokémon tamagotchi care screen"
+    "ariaLabel": "Pokémon tamagotchi care screen",
+    "performanceLabel": "Performance",
+    "performanceAria": "Performance mode",
+    "performanceEffective": "Using {{mode}} profile",
+    "performanceModes": {
+      "auto": "Auto",
+      "high": "High",
+      "balanced": "Balanced",
+      "low": "Low power"
+    }
+  },
+  "appearance": {
+    "ariaLabel": "Appearance settings",
+    "title": "Appearance",
+    "spriteVariationLabel": "Sprite style",
+    "stageThemeLabel": "Stage theme",
+    "spriteVariations": {
+      "default": "Default",
+      "shiny": "Shiny",
+      "retro": "Retro"
+    },
+    "stageThemes": {
+      "classic": "Classic",
+      "meadow": "Meadow",
+      "night": "Night"
+    }
   },
   "selection": {
     "selectButton": "Use in Tamagotchi",

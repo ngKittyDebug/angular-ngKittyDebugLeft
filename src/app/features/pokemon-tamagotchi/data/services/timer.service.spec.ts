@@ -10,6 +10,7 @@ describe('TimerService', () => {
   let service: TimerService;
 
   beforeEach(() => {
+    vi.restoreAllMocks();
     TestBed.configureTestingModule({
       providers: [TimerService, StatusDecayService],
     });
@@ -61,6 +62,12 @@ describe('TimerService', () => {
       return 1 as unknown as ReturnType<typeof setInterval>;
     });
     const clearSpy = vi.spyOn(globalThis, 'clearInterval').mockImplementation(() => undefined);
+    const addListenerSpy = vi
+      .spyOn(document, 'addEventListener')
+      .mockImplementation(() => undefined);
+    const removeListenerSpy = vi
+      .spyOn(document, 'removeEventListener')
+      .mockImplementation(() => undefined);
 
     const handle = service.startTimer(
       () => ({
@@ -72,12 +79,57 @@ describe('TimerService', () => {
         status: createInitialPokemonStatus(),
       }),
       callback,
-      1000,
+      { intervalMs: 1000, pauseWhenHidden: true },
     );
 
     service.stopTimer(handle);
 
     expect(intervalSpy).toHaveBeenCalled();
     expect(clearSpy).toHaveBeenCalledWith(1);
+    expect(addListenerSpy).toHaveBeenCalledWith('visibilitychange', expect.any(Function));
+    expect(removeListenerSpy).toHaveBeenCalledWith('visibilitychange', expect.any(Function));
+  });
+
+  it('pauses timer while document is hidden and catches up on resume', () => {
+    const callback = vi.fn();
+    let visibilityState: DocumentVisibilityState = 'visible';
+    const intervalSpy = vi.spyOn(globalThis, 'setInterval');
+    const clearSpy = vi.spyOn(globalThis, 'clearInterval').mockImplementation(() => undefined);
+
+    vi.spyOn(document, 'visibilityState', 'get').mockImplementation(() => visibilityState);
+
+    const listeners = new Map<string, EventListener>();
+
+    vi.spyOn(document, 'addEventListener').mockImplementation((type, listener) => {
+      listeners.set(type, listener as EventListener);
+    });
+    vi.spyOn(document, 'removeEventListener').mockImplementation((type) => {
+      listeners.delete(type);
+    });
+
+    service.startTimer(
+      () => ({
+        dailyRoutine: createInitialDailyRoutine(),
+        isSleeping: false,
+        lastActionTime: Date.now() - TIMER_CONFIG.DECAY_INTERVAL_MS - 1000,
+        lastDecayTime: null,
+        sleepStartedAt: null,
+        status: createInitialPokemonStatus(),
+      }),
+      callback,
+      { intervalMs: 1000, pauseWhenHidden: true },
+    );
+
+    visibilityState = 'hidden';
+    listeners.get('visibilitychange')?.(new Event('visibilitychange'));
+
+    expect(clearSpy).toHaveBeenCalled();
+    expect(intervalSpy).toHaveBeenCalledTimes(1);
+
+    visibilityState = 'visible';
+    listeners.get('visibilitychange')?.(new Event('visibilitychange'));
+
+    expect(callback).toHaveBeenCalled();
+    expect(intervalSpy).toHaveBeenCalledTimes(2);
   });
 });

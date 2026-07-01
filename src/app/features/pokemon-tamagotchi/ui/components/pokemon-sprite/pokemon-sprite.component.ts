@@ -1,18 +1,28 @@
+import type { ElementRef } from '@angular/core';
 import {
+  afterNextRender,
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   inject,
   input,
   output,
   signal,
+  viewChild,
 } from '@angular/core';
+import { ANIMATION_PERFORMANCE } from '../../../data/constants/animation-performance.constants';
+import {
+  resolveSpriteUrl,
+  resolveStatusSpriteKey,
+  spriteVariationClass,
+} from '../../../data/helpers/sprite-variation.helper';
+import type { TamagotchiCustomization } from '../../../models/customization.model';
 import type { InteractionEvent } from '../../../models/interaction.model';
 import type { Pokemon } from '../../../models/pokemon.model';
 import type { PokemonStatus } from '../../../models/pokemon-status.model';
+import { AnimationService } from '../../services/animation.service';
 import { GestureService } from '../../services/gesture.service';
-
-const FEEDBACK_ANIMATION_MS = 650;
 
 @Component({
   selector: 'left-paw-pokemon-sprite',
@@ -23,10 +33,14 @@ const FEEDBACK_ANIMATION_MS = 650;
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PokemonSpriteComponent {
+  private readonly animationService = inject(AnimationService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly gestureService = inject(GestureService);
+  private readonly spriteImage = viewChild<ElementRef<HTMLImageElement>>('spriteImage');
   private feedbackTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private pointerHandledInteraction = false;
 
+  public readonly customization = input.required<TamagotchiCustomization>();
   public readonly interacted = output<InteractionEvent>();
   public readonly isEvolving = input<boolean>(false);
   public readonly isSleeping = input<boolean>(false);
@@ -34,29 +48,20 @@ export class PokemonSpriteComponent {
   public readonly status = input.required<PokemonStatus>();
 
   protected readonly feedbackAnimation = signal<string | null>(null);
+  protected readonly useComplexAnimations = computed(() =>
+    this.animationService.shouldUseComplexAnimations(),
+  );
+
+  protected readonly variationClass = computed(() =>
+    spriteVariationClass(this.customization().spriteVariation),
+  );
 
   protected readonly spriteUrl = computed(() => {
     const species = this.pokemon();
+    const customization = this.customization();
+    const statusKey = resolveStatusSpriteKey(this.isEvolving(), this.isSleeping(), this.status());
 
-    if (this.isEvolving()) {
-      return species.spriteUrls.evolving;
-    }
-
-    if (this.isSleeping()) {
-      return species.spriteUrls.sleeping;
-    }
-
-    const current = this.status();
-
-    if (current.mood >= 70) {
-      return species.spriteUrls.happy;
-    }
-
-    if (current.mood <= 25 || current.hunger <= 25) {
-      return species.spriteUrls.sad;
-    }
-
-    return species.spriteUrls.normal;
+    return resolveSpriteUrl(species, customization, statusKey);
   });
 
   protected readonly animationClass = computed(() => {
@@ -82,6 +87,22 @@ export class PokemonSpriteComponent {
 
     return 'pokemon-sprite__image--idle';
   });
+
+  public constructor() {
+    afterNextRender(() => {
+      const image = this.spriteImage()?.nativeElement;
+
+      if (!image || !this.useComplexAnimations()) {
+        return;
+      }
+
+      this.animationService.enableGpuCompositing(image);
+
+      this.destroyRef.onDestroy(() => {
+        this.animationService.releaseGpuCompositing(image);
+      });
+    });
+  }
 
   protected onClick(): void {
     if (this.pointerHandledInteraction) {
@@ -153,6 +174,6 @@ export class PokemonSpriteComponent {
     this.feedbackTimeoutId = setTimeout(() => {
       this.feedbackAnimation.set(null);
       this.feedbackTimeoutId = null;
-    }, FEEDBACK_ANIMATION_MS);
+    }, ANIMATION_PERFORMANCE.FEEDBACK_ANIMATION_MS);
   }
 }

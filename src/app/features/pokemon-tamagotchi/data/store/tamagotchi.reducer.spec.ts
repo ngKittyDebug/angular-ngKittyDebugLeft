@@ -1,3 +1,4 @@
+import { TEST_POKEMON } from '../testing/tamagotchi-arbitraries';
 import { feedPokemon, selectPokemon, updateStatus, waterPokemon } from './tamagotchi.actions';
 import * as TamagotchiActions from './tamagotchi.actions';
 import { tamagotchiReducer } from './tamagotchi.reducer';
@@ -5,27 +6,7 @@ import { initialTamagotchiState } from './tamagotchi.state';
 import { GAME_BALANCE } from '../constants/game-balance.constants';
 
 describe('tamagotchiReducer', () => {
-  const pokemon = {
-    baseStats: {
-      energyRestorationRate: 1,
-      experienceMultiplier: 1,
-      hungerDecayRate: 1,
-      moodDecayRate: 1,
-    },
-    evolutionChain: { currentStage: 1, totalStages: 3 },
-    id: '25',
-    isFirstStage: true,
-    name: 'Pikachu',
-    species: 'pikachu',
-    spriteUrls: {
-      eating: '',
-      evolving: '',
-      happy: '',
-      normal: '',
-      sad: '',
-      sleeping: '',
-    },
-  };
+  const pokemon = TEST_POKEMON;
 
   const stateWithPokemon = tamagotchiReducer(initialTamagotchiState, feedPokemon());
 

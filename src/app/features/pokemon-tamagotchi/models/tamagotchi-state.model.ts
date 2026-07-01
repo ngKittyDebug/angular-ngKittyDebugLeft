@@ -5,6 +5,7 @@ import type { MiniGameType } from './mini-game.model';
 import type { Notification } from './notification.model';
 import type { Pokemon } from './pokemon.model';
 import type { PokemonStatus } from './pokemon-status.model';
+import type { TamagotchiCustomization } from './customization.model';
 
 export type ActionType = 'feed' | 'water' | 'care' | 'play' | 'train' | 'sleep';
 
@@ -39,6 +40,7 @@ export interface TamagotchiState {
   lastDecayTime: number | null;
   dailyRoutine: DailyRoutine;
   interactionHistory: InteractionEvent[];
+  customization: TamagotchiCustomization;
   isSleeping: boolean;
   isEvolving: boolean;
   activeMiniGame: MiniGameType | null;

@@ -23,8 +23,13 @@ export interface TimerTickResult {
   sleepBonusEnergy: number;
 }
 
+export interface TimerStartOptions {
+  intervalMs?: number;
+  pauseWhenHidden?: boolean;
+}
+
 export interface TimerHandle {
-  intervalId: ReturnType<typeof setInterval>;
+  cleanup: () => void;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -62,21 +67,71 @@ export class TimerService {
   public startTimer(
     contextProvider: () => TamagotchiTimerContext,
     updateCallback: (result: TimerTickResult) => void,
-    intervalMs: number = TIMER_CONFIG.DECAY_INTERVAL_MS,
+    options: TimerStartOptions = {},
   ): TimerHandle {
-    const intervalId = setInterval(() => {
+    const intervalMs = options.intervalMs ?? TIMER_CONFIG.DECAY_INTERVAL_MS;
+    const pauseWhenHidden = options.pauseWhenHidden ?? true;
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+
+    const runTick = (): void => {
       const result = this.processTick(contextProvider());
 
       if (this.shouldEmitTick(result)) {
         updateCallback(result);
       }
-    }, intervalMs);
+    };
 
-    return { intervalId };
+    const startInterval = (): void => {
+      if (intervalId !== null) {
+        return;
+      }
+
+      intervalId = setInterval(runTick, intervalMs);
+    };
+
+    const stopInterval = (): void => {
+      if (intervalId === null) {
+        return;
+      }
+
+      clearInterval(intervalId);
+      intervalId = null;
+    };
+
+    const onVisibilityChange = (): void => {
+      if (typeof document === 'undefined') {
+        return;
+      }
+
+      if (document.visibilityState === 'hidden') {
+        stopInterval();
+
+        return;
+      }
+
+      runTick();
+      startInterval();
+    };
+
+    startInterval();
+
+    if (pauseWhenHidden && typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', onVisibilityChange);
+    }
+
+    return {
+      cleanup: () => {
+        stopInterval();
+
+        if (pauseWhenHidden && typeof document !== 'undefined') {
+          document.removeEventListener('visibilitychange', onVisibilityChange);
+        }
+      },
+    };
   }
 
   public stopTimer(timerHandle: TimerHandle): void {
-    clearInterval(timerHandle.intervalId);
+    timerHandle.cleanup();
   }
 
   public createDecayContextFromTimer(context: TamagotchiTimerContext): StatusDecayContext {

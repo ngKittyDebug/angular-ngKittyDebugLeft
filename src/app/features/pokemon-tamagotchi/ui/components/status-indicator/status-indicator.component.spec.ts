@@ -61,7 +61,17 @@ describe('StatusIndicatorComponent', () => {
       .nativeElement as HTMLElement;
 
     expect(element.querySelector('.status-indicator__label')?.textContent?.trim()).toBe('Mood');
-    expect(element.querySelector('.status-indicator__value')?.textContent?.trim()).toBe('72');
+    expect(element.querySelector('.status-indicator__value')?.textContent?.trim()).toBe('72 / 100');
+  });
+
+  it('renders a visible progress bar', () => {
+    const element = createFixture({ currentValue: 72, statusType: 'hunger' })
+      .nativeElement as HTMLElement;
+    const bar = element.querySelector('progress[tuiProgressBar]') as HTMLProgressElement | null;
+
+    expect(bar).toBeTruthy();
+    expect(bar?.value).toBe(72);
+    expect(bar?.max).toBe(100);
   });
 
   it('does not apply alert classes when the value is above warning threshold', () => {

@@ -1,7 +1,11 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
+
+import { DEFAULT_CUSTOMIZATION } from '../constants/customization.constants';
 import { TAMAGOTCHI_SYSTEM_ERRORS } from '../constants/system-errors.constants';
+import { clampStatusValue } from '../helpers/status-bounds.helper';
 import { createInitialTamagotchiState } from '../store/tamagotchi.state';
 import type { TamagotchiState } from '../../models/tamagotchi-state.model';
+import { TamagotchiLoggerService } from './tamagotchi-logger.service';
 
 export interface TamagotchiRecoveryResult {
   message: string;
@@ -11,10 +15,14 @@ export interface TamagotchiRecoveryResult {
 
 @Injectable({ providedIn: 'root' })
 export class TamagotchiErrorRecoveryService {
+  private readonly logger = inject(TamagotchiLoggerService);
+
   public attemptStateRecovery(state: TamagotchiState): TamagotchiRecoveryResult {
     const repaired = this.repairState(state);
 
     if (repaired !== null) {
+      this.logger.info('recovery', 'State repaired from corrupted payload');
+
       return {
         message: TAMAGOTCHI_SYSTEM_ERRORS.RECOVERED_FROM_BACKUP,
         recovered: true,
@@ -30,9 +38,7 @@ export class TamagotchiErrorRecoveryService {
   }
 
   public logError(context: string, error: unknown): void {
-    const message = error instanceof Error ? error.message : String(error);
-
-    console.error(`[Tamagotchi] ${context}: ${message}`);
+    this.logger.logError(context, error);
   }
 
   public repairState(state: TamagotchiState): TamagotchiState | null {
@@ -62,6 +68,7 @@ export class TamagotchiErrorRecoveryService {
       ...createInitialTamagotchiState(),
       ...state,
       achievements: state.achievements ?? [],
+      customization: state.customization ?? { ...DEFAULT_CUSTOMIZATION },
       dailyRoutine: state.dailyRoutine ?? createInitialTamagotchiState().dailyRoutine,
       error: null,
       evolutionProgress:
@@ -71,18 +78,14 @@ export class TamagotchiErrorRecoveryService {
       notifications: state.notifications ?? [],
       status: {
         ...state.status,
-        energy: this.clampStatus(state.status.energy),
-        experience: Math.max(0, state.status.experience),
-        health: this.clampStatus(state.status.health),
-        hunger: this.clampStatus(state.status.hunger),
-        hydration: this.clampStatus(state.status.hydration),
-        level: Math.max(1, state.status.level),
-        mood: this.clampStatus(state.status.mood),
+        energy: clampStatusValue(state.status.energy),
+        experience: Math.max(0, Math.round(state.status.experience)),
+        health: clampStatusValue(state.status.health),
+        hunger: clampStatusValue(state.status.hunger),
+        hydration: clampStatusValue(state.status.hydration),
+        level: Math.max(1, Math.round(state.status.level)),
+        mood: clampStatusValue(state.status.mood),
       },
     };
-  }
-
-  private clampStatus(value: number): number {
-    return Math.min(100, Math.max(0, value));
   }
 }

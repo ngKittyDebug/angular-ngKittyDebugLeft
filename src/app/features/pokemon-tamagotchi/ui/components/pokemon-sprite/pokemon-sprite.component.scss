@@ -15,6 +15,35 @@
   block-size: min(16rem, 40vw);
   object-fit: contain;
   image-rendering: pixelated;
+  contain: layout style paint;
+  backface-visibility: hidden;
+}
+
+.pokemon-sprite__image.tamagotchi-gpu-layer {
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+}
+
+.pokemon-sprite__image--reduced {
+  animation: none !important;
+  filter: none;
+  opacity: 1;
+}
+
+.pokemon-sprite__image--variation-default {
+  filter: none;
+}
+
+.pokemon-sprite__image--variation-shiny:not(.pokemon-sprite__image--reduced):not(
+    .pokemon-sprite__image--evolving
+  ) {
+  filter: saturate(1.45) brightness(1.14) hue-rotate(-12deg)
+    drop-shadow(0 0 0.45rem color-mix(in srgb, gold 55%, transparent));
+}
+
+.pokemon-sprite__image--variation-retro:not(.pokemon-sprite__image--reduced) {
+  image-rendering: pixelated;
+  filter: contrast(1.12) saturate(0.82);
 }
 
 .pokemon-sprite__image--idle {
@@ -59,101 +88,107 @@
   cursor: wait;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .pokemon-sprite__image {
+    animation: none !important;
+    filter: none;
+    opacity: 1;
+  }
+}
+
 @keyframes sprite-bob {
   0%,
   100% {
-    transform: translateY(0);
+    transform: translate3d(0, 0, 0);
   }
 
   50% {
-    transform: translateY(-0.35rem);
+    transform: translate3d(0, -0.35rem, 0);
   }
 }
 
 @keyframes sprite-bounce {
   0%,
   100% {
-    transform: translateY(0) scale(1);
+    transform: translate3d(0, 0, 0) scale(1);
   }
 
   50% {
-    transform: translateY(-0.6rem) scale(1.04);
+    transform: translate3d(0, -0.6rem, 0) scale(1.04);
   }
 }
 
 @keyframes sprite-sway {
   0%,
   100% {
-    transform: rotate(-2deg);
+    transform: rotate(-2deg) translate3d(0, 0, 0);
   }
 
   50% {
-    transform: rotate(2deg);
+    transform: rotate(2deg) translate3d(0, 0, 0);
   }
 }
 
 @keyframes sprite-evolve {
   0%,
   100% {
-    transform: scale(1);
-    filter: brightness(1.2);
+    transform: translate3d(0, 0, 0) scale(1);
   }
 
   50% {
-    transform: scale(1.08);
-    filter: brightness(1.5);
+    transform: translate3d(0, 0, 0) scale(1.08);
   }
 }
 
 @keyframes sprite-pop {
   0% {
-    transform: scale(1);
+    transform: translate3d(0, 0, 0) scale(1);
   }
 
   40% {
-    transform: scale(1.1);
+    transform: translate3d(0, 0, 0) scale(1.1);
   }
 
   100% {
-    transform: scale(1);
+    transform: translate3d(0, 0, 0) scale(1);
   }
 }
 
 @keyframes sprite-wiggle {
   0%,
   100% {
-    transform: rotate(0deg);
+    transform: rotate(0deg) translate3d(0, 0, 0);
   }
 
   25% {
-    transform: rotate(-6deg);
+    transform: rotate(-6deg) translate3d(0, 0, 0);
   }
 
   75% {
-    transform: rotate(6deg);
+    transform: rotate(6deg) translate3d(0, 0, 0);
   }
 }
 
 @keyframes sprite-pet {
   0%,
   100% {
-    transform: translateX(0);
+    transform: translate3d(0, 0, 0);
   }
 
   50% {
-    transform: translateX(0.35rem);
+    transform: translate3d(0.35rem, 0, 0);
   }
 }
 
 @keyframes sprite-sparkle {
   0%,
   100% {
-    transform: scale(1);
-    filter: brightness(1);
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 1;
   }
 
   50% {
-    transform: scale(1.12);
-    filter: brightness(1.35) drop-shadow(0 0 0.4rem var(--tui-status-positive));
+    transform: translate3d(0, 0, 0) scale(1.12);
+    opacity: 0.92;
   }
 }

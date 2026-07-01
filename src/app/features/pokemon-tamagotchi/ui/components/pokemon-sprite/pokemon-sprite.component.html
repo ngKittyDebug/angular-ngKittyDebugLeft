@@ -11,8 +11,9 @@
   (pointerup)="onPointerUp($event)"
 >
   <img
-    class="pokemon-sprite__image"
-    [class]="'pokemon-sprite__image ' + animationClass()"
+    #spriteImage
+    [class]="'pokemon-sprite__image ' + animationClass() + ' ' + variationClass()"
+    [class.pokemon-sprite__image--reduced]="!useComplexAnimations()"
     [src]="spriteUrl()"
     [alt]="pokemon().name"
     draggable="false"

@@ -1,17 +1,23 @@
+:host {
+  display: block;
+  inline-size: 100%;
+}
+
 .status-indicator {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.35rem;
 }
 
 .status-indicator__head {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
+  gap: 0.35rem 0.5rem;
 }
 
 .status-indicator__label {
+  flex: 1 1 auto;
   font: var(--tui-font-text-s);
   color: var(--tui-text-secondary);
 }
@@ -20,17 +26,16 @@
   flex-shrink: 0;
 }
 
-.status-indicator__bar-wrap {
-  inline-size: 100%;
-}
-
 .status-indicator__value {
+  flex-shrink: 0;
   font: var(--tui-font-text-xs);
   color: var(--tui-text-primary);
 }
 
 .status-indicator__bar {
+  display: block;
   inline-size: 100%;
+  min-block-size: 0.5rem;
 }
 
 .status-indicator--warning .status-indicator__label {

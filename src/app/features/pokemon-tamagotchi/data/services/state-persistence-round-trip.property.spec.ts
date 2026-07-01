@@ -40,6 +40,10 @@ function assertPersistedEquivalence(original: TamagotchiState, loaded: Tamagotch
     return false;
   }
 
+  if (JSON.stringify(loaded.customization) !== JSON.stringify(original.customization)) {
+    return false;
+  }
+
   if (loaded.isSleeping !== original.isSleeping) {
     return false;
   }

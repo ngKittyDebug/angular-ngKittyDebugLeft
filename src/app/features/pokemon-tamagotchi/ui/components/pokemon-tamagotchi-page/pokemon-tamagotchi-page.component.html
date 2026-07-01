@@ -5,14 +5,40 @@
   [attr.aria-label]="t('ariaLabel')"
   [attr.aria-busy]="isLoading()"
 >
-  <header class="tamagotchi-page__header">
+  <div class="tamagotchi-page__header">
     <h1 class="tamagotchi-page__title">{{ t('title') }}</h1>
-    @if (pokemon(); as species) {
-      <span appearance="primary" size="m" tuiBadge class="tamagotchi-page__level">
-        {{ t('levelBadge', { level: status().level }) }}
-      </span>
-    }
-  </header>
+    <div class="tamagotchi-page__header-controls">
+      @if (pokemon(); as species) {
+        <span appearance="primary" size="m" tuiBadge class="tamagotchi-page__level">
+          {{ t('levelBadge', { level: status().level }) }}
+        </span>
+      }
+      <fieldset class="tamagotchi-page__performance" [attr.aria-label]="t('performanceAria')">
+        <legend class="tamagotchi-page__performance-legend">{{ t('performanceLabel') }}</legend>
+        @for (mode of performanceModes; track mode) {
+          <button
+            appearance="flat"
+            size="s"
+            tuiButton
+            type="button"
+            [class.tamagotchi-page__performance-option--active]="performanceMode() === mode"
+            (click)="onPerformanceModeChange(mode)"
+          >
+            {{ t('performanceModes.' + mode) }}
+          </button>
+        }
+        @if (performanceMode() === 'auto') {
+          <span class="tamagotchi-page__performance-effective">
+            {{
+              t('performanceEffective', {
+                mode: t('performanceModes.' + effectivePerformanceMode()),
+              })
+            }}
+          </span>
+        }
+      </fieldset>
+    </div>
+  </div>
 
   @if (isLoading()) {
     <section class="tamagotchi-page__loading" role="status" aria-live="polite">
@@ -68,41 +94,23 @@
 
     <div class="tamagotchi-page__layout">
       <aside class="tamagotchi-page__status-panel" [attr.aria-label]="t('statusPanelAria')">
-        <left-paw-status-indicator
-          statusType="health"
-          [currentValue]="status().health"
-          [maxValue]="statusMax"
-        />
-        <left-paw-status-indicator
-          statusType="hunger"
-          [currentValue]="status().hunger"
-          [maxValue]="statusMax"
-        />
-        <left-paw-status-indicator
-          statusType="hydration"
-          [currentValue]="status().hydration"
-          [maxValue]="statusMax"
-        />
-        <left-paw-status-indicator
-          statusType="mood"
-          [currentValue]="status().mood"
-          [maxValue]="statusMax"
-        />
-        <left-paw-status-indicator
-          statusType="energy"
-          [currentValue]="status().energy"
-          [maxValue]="statusMax"
-        />
-        <left-paw-status-indicator
-          statusType="experience"
-          [currentValue]="status().experience"
-          [level]="status().level"
-          [maxValue]="experienceMax"
+        @for (statusType of displayedStatusTypes; track statusType) {
+          <left-paw-status-indicator
+            [currentValue]="statusValueFor(statusType)"
+            [level]="statusType === 'experience' ? status().level : null"
+            [maxValue]="maxValueForStatus(statusType)"
+            [statusType]="statusType"
+          />
+        }
+        <left-paw-tamagotchi-appearance-settings
+          [customization]="customization()"
+          (customizationChange)="onCustomizationChange($event)"
         />
       </aside>
 
-      <section class="tamagotchi-page__stage">
+      <section [class]="'tamagotchi-page__stage ' + stageThemeClass()">
         <left-paw-pokemon-sprite
+          [customization]="customization()"
           [isEvolving]="isEvolving()"
           [isSleeping]="isSleeping()"
           [pokemon]="species"
@@ -142,7 +150,7 @@
     />
 
     @if (activeMiniGame(); as gameType) {
-      <left-paw-mini-game
+      <left-paw-mini-game-container
         class="tamagotchi-page__mini-game"
         [gameType]="gameType"
         (gameCompleted)="onMiniGameCompleted($event)"

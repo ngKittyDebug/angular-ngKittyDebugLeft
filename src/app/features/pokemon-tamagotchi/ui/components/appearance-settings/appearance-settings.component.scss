@@ -1,0 +1,36 @@
+.appearance-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: var(--tui-radius-l);
+  background: var(--tui-background-neutral-1);
+}
+
+.appearance-settings__title {
+  margin: 0;
+  font: var(--tui-font-heading-6);
+}
+
+.appearance-settings__group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.appearance-settings__label {
+  margin: 0;
+  color: var(--tui-text-secondary);
+  font: var(--tui-font-text-s);
+}
+
+.appearance-settings__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.appearance-settings__option--active {
+  color: var(--tui-text-primary);
+  font-weight: 600;
+}

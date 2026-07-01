@@ -1,4 +1,5 @@
 import { GAME_BALANCE } from '../constants/game-balance.constants';
+import type { PokemonStatus } from '../../models/pokemon-status.model';
 
 export function clampStatusValue(value: number): number {
   return Math.min(
@@ -9,4 +10,17 @@ export function clampStatusValue(value: number): number {
 
 export function applyStatusDelta(current: number, delta: number): number {
   return clampStatusValue(current + delta);
+}
+
+export function normalizePokemonStatus(status: PokemonStatus): PokemonStatus {
+  return {
+    ...status,
+    energy: clampStatusValue(status.energy),
+    experience: Math.max(0, Math.round(status.experience)),
+    health: clampStatusValue(status.health),
+    hunger: clampStatusValue(status.hunger),
+    hydration: clampStatusValue(status.hydration),
+    level: Math.max(1, Math.round(status.level)),
+    mood: clampStatusValue(status.mood),
+  };
 }

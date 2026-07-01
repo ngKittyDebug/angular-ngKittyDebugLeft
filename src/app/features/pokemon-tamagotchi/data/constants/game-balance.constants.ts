@@ -1,9 +1,9 @@
 export const GAME_BALANCE = {
   STATUS_DECAY: {
-    HUNGER: 10,
-    MOOD: 8,
-    ENERGY: 5,
-    HYDRATION: 12,
+    HUNGER: 20,
+    MOOD: 16,
+    ENERGY: 10,
+    HYDRATION: 24,
   },
   ACTION_EFFECTS: {
     FEED: {
@@ -31,7 +31,7 @@ export const GAME_BALANCE = {
     TRAIN: {
       experienceGain: 10,
       energyCost: 15,
-      cooldown: 60 * 60 * 1000,
+      cooldown: 30 * 60 * 1000,
     },
     SLEEP: {
       energyRestore: 40,

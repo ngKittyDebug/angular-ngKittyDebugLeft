@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { TIMER_CONFIG } from '../constants/timer.constants';
 import {
   applyDecayToStatus,
   calculateDecay,
@@ -26,7 +27,7 @@ export interface StatusDecayTickResult {
   nextStatus: PokemonStatus;
 }
 
-const DEFAULT_DECAY_INTERVAL_MS = 60_000;
+const DEFAULT_DECAY_INTERVAL_MS = TIMER_CONFIG.DECAY_INTERVAL_MS;
 
 @Injectable({ providedIn: 'root' })
 export class StatusDecayService {

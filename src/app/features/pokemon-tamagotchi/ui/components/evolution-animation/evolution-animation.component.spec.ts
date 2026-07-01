@@ -6,27 +6,36 @@ import { EVOLUTION_ANIMATION_DURATION_MS } from '../../../data/constants/evoluti
 import type { Pokemon } from '../../../models/pokemon.model';
 import { EvolutionAnimationComponent } from './evolution-animation.component';
 
-const basePokemon = (id: string, name: string): Pokemon => ({
-  baseStats: {
-    energyRestorationRate: 1,
-    experienceMultiplier: 1,
-    hungerDecayRate: 1,
-    moodDecayRate: 1,
-  },
-  evolutionChain: { currentStage: 1, totalStages: 3 },
-  id,
-  isFirstStage: true,
-  name,
-  species: name.toLowerCase(),
-  spriteUrls: {
+const basePokemon = (id: string, name: string): Pokemon => {
+  const spriteUrls = {
     eating: '',
     evolving: `/sprites/${id}-evo.gif`,
     happy: '',
     normal: `/sprites/${id}.gif`,
     sad: '',
     sleeping: '',
-  },
-});
+  };
+
+  return {
+    baseStats: {
+      energyRestorationRate: 1,
+      experienceMultiplier: 1,
+      hungerDecayRate: 1,
+      moodDecayRate: 1,
+    },
+    evolutionChain: { currentStage: 1, totalStages: 3 },
+    id,
+    isFirstStage: true,
+    name,
+    species: name.toLowerCase(),
+    spriteUrls,
+    spriteVariations: {
+      default: spriteUrls,
+      retro: spriteUrls,
+      shiny: spriteUrls,
+    },
+  };
+};
 
 function createFixture(
   inputs: {

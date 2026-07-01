@@ -10,13 +10,13 @@
   align-items: center;
   justify-content: center;
   pointer-events: none;
+  isolation: isolate;
 }
 
 .evolution-animation__backdrop {
   position: absolute;
   inset: 0;
-  background: color-mix(in srgb, var(--tui-background-base) 55%, transparent);
-  backdrop-filter: blur(2px);
+  background: color-mix(in srgb, var(--tui-background-base) 72%, transparent);
 }
 
 .evolution-animation__content {
@@ -25,6 +25,7 @@
   flex-direction: column;
   align-items: center;
   gap: 1rem;
+  contain: layout style;
 }
 
 .evolution-animation__sprite {
@@ -32,7 +33,14 @@
   block-size: min(14rem, 36vw);
   object-fit: contain;
   image-rendering: pixelated;
+  contain: layout style paint;
+  backface-visibility: hidden;
   animation: evolution-pulse 0.9s ease-in-out infinite;
+}
+
+.evolution-animation__sprite.tamagotchi-gpu-layer {
+  will-change: transform, opacity;
+  transform: translate3d(0, 0, 0);
 }
 
 .evolution-animation__sprite--flash {
@@ -52,14 +60,23 @@
   text-align: center;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .evolution-animation__sprite {
+    animation: none !important;
+    filter: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @keyframes evolution-pulse {
   0%,
   100% {
-    transform: scale(1);
+    transform: translate3d(0, 0, 0) scale(1);
   }
 
   50% {
-    transform: scale(1.06);
+    transform: translate3d(0, 0, 0) scale(1.06);
   }
 }
 
@@ -67,23 +84,23 @@
   0%,
   100% {
     opacity: 1;
-    transform: scale(1.05);
+    transform: translate3d(0, 0, 0) scale(1.05);
   }
 
   50% {
     opacity: 0.65;
-    transform: scale(1.12);
+    transform: translate3d(0, 0, 0) scale(1.12);
   }
 }
 
 @keyframes evolution-reveal {
   from {
     opacity: 0.4;
-    transform: scale(0.85);
+    transform: translate3d(0, 0, 0) scale(0.85);
   }
 
   to {
     opacity: 1;
-    transform: scale(1);
+    transform: translate3d(0, 0, 0) scale(1);
   }
 }

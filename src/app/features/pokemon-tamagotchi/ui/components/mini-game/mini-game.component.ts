@@ -25,6 +25,7 @@ export class MiniGameComponent implements OnInit, OnDestroy {
   private readonly canvasRef = viewChild.required<ElementRef<HTMLCanvasElement>>('canvas');
 
   private animationFrame = 0;
+  private context: CanvasRenderingContext2D | null = null;
   private ended = false;
   private nextSpawnAt = 0;
   private nextTargetId = 1;
@@ -45,6 +46,10 @@ export class MiniGameComponent implements OnInit, OnDestroy {
     this.startedAt = Date.now();
     this.nextSpawnAt = this.startedAt + 300;
     this.resizeCanvas();
+    this.context = this.canvasRef().nativeElement.getContext('2d', {
+      alpha: false,
+      desynchronized: true,
+    });
     this.tickTimer = setInterval(() => this.onTick(), 250);
     this.animationFrame = requestAnimationFrame(() => this.gameLoop());
   }
@@ -117,12 +122,13 @@ export class MiniGameComponent implements OnInit, OnDestroy {
   }
 
   private draw(): void {
-    const canvas = this.canvasRef().nativeElement;
-    const context = canvas.getContext('2d');
+    const context = this.context;
 
     if (!context) {
       return;
     }
+
+    const canvas = this.canvasRef().nativeElement;
 
     context.clearRect(0, 0, canvas.width, canvas.height);
 
