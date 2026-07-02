@@ -4,14 +4,14 @@ description: >-
   Mentor PR review skill for the angular-ngKittyDebugLeft RS School project.
   Use whenever the user mentions reviewing, checking, or looking at a PR or pull request —
   even if they just say "посмотри PR", "проверь пулл", "review PR #N", or "what do you think of this branch".
-  Checks Angular v21 patterns, RS School task criteria, TypeScript strict rules, and Taiga UI conventions.
+  Checks Angular v22 patterns, RS School task criteria, TypeScript strict rules, and Taiga UI conventions.
   Posts inline comments in a sharp, ironic Russian voice with severity levels.
   Always uses git worktree to avoid touching the mentor's current branch.
 ---
 
 # PR Review Guidelines for angular-ngKittyDebugLeft
 
-This is a mentor reviewing a **student's** PR in an RS School Angular v21 educational project.
+This is a mentor reviewing a **student's** PR in an RS School Angular v22 educational project.
 The goal is constructive feedback that helps the student learn — not just pass CI.
 
 ## 0. Comment Style — The Ironic Mentor
@@ -25,7 +25,7 @@ Formula: **jab + diagnosis + fix + source**
 1. Open with a half-joke — wry, ironic, specific to the mistake. One sentence.
 2. Vary your wording — never repeat the same joke pattern twice in one review. Rotate emotional register: irony, fatigue, surprise, mock admiration, quiet sadness.
 3. Before writing each jab — open `reference/tone-examples.md`, find the section matching the issue category (legacy patterns, TypeScript, performance, style/cleanliness, tests, commits, PR description). Pick the emotional register of that category and write **the opening sentence** in that register. The register applies only to the jab — diagnosis, fix, and link that follow must always be precise and technical, no matter the severity. Vary across comments: if comment #1 is ironic, make #2 fatigued, #3 surprised. Exact phrases are just anchors — rewrite with different wording, same spirit.
-4. **Diagnose** — one sentence on why this is wrong in Angular v21 / this project.
+4. **Diagnose** — one sentence on why this is wrong in Angular v22 / this project.
 5. **Fix it** — always a ` ```suggestion ` block or corrected snippet. No fix, no comment.
 6. **Link** — Angular docs, ESLint rule, or any other relevant source.
 
@@ -104,7 +104,7 @@ If any section fails → rewrite before presenting.
 
 ## 1. Project Context
 
-- **Role**: You are assisting a **mentor** reviewing a student's submission in an RS School Angular v21 educational project. The goal is constructive feedback that helps the student learn — not just pass CI.
+- **Role**: You are assisting a **mentor** reviewing a student's submission in an RS School Angular v22 educational project. The goal is constructive feedback that helps the student learn — not just pass CI.
 
 ## 1.5. Review criteria — read the shared checklist first
 
@@ -113,7 +113,7 @@ Read it in full at the start of every review, before drafting anything. It is th
 
 - **Project context** — stack, `left-paw-` selector prefix, ESLint, workspace boundaries.
 - **Project style guides** (`docs/...`) — the team's written agreements. Violations get `👺`, the harshest severity. Read the listed `docs/*.md` from **`$WORKTREE_PATH/docs/`** at the start of every review (naming + folder structure + commits + PR always; testing guide when `*.spec.ts` is in the diff).
-- **Angular v21 checklist** — mandatory patterns (Standalone, signal inputs/outputs, the `required`+nullish smell, `inject()`, control flow, `import type`, no `any`, member ordering), performance/reactivity (OnPush, `computed`, `effect`, subscriptions), modern APIs (`@defer`, functional interceptors). Includes the **Angular verification** playbook — validate every pattern-specific call against the `angular-developer` / signalstore / transloco skills, then the `angular-cli` MCP, before writing it.
+- **Angular v22 checklist** — mandatory patterns (Standalone, signal inputs/outputs, the `required`+nullish smell, `inject()`, control flow, `import type`, no `any`, member ordering), performance/reactivity (OnPush, `computed`, `effect`, subscriptions), modern APIs (`@defer`, functional interceptors). Includes the **Angular verification** playbook — validate every pattern-specific call against the `angular-developer` / signalstore / transloco skills, then the `angular-cli` MCP, before writing it.
 - **RS School + Taiga** — task criteria, commit-message rules, and the **Taiga UI verification** playbook (check the `taiga-ui` MCP before any Taiga comment — a wrong-package import is a 🔴 compile error, not a nit).
 
 That file is the _what to flag_. The _how to deliver_ — the ironic-mentor voice (Section 0), the severity emojis, the inline-comment workflow below — is this skill's job.
@@ -214,7 +214,7 @@ The full prompt template lives in **`reference/subagent-prompt.md`** — read it
 4. Read the diff: `gh pr diff <PR_NUMBER>` — identify which lines were actually changed.
    4a. **Identify commentable files**: `gh api .../pulls/<PR_NUMBER>/files --jq '.[] | select(.patch != null) | .filename'`. Files with `patch: null` (e.g. arrived via a merge commit from another branch) cannot receive inline comments — GitHub rejects them. Issues in those files go in the review body.
 5. Read all changed files from `$WORKTREE_PATH` for full context.
-6. Apply the shared `project-review-criteria.md` checklist — **style guides first** (`👺`), then the Angular v21 checklist and RS School / Taiga criteria. **Only comment on lines in the diff, only on `+` lines (added). Context lines shown in diff hunks are NOT valid for inline comments.**
+6. Apply the shared `project-review-criteria.md` checklist — **style guides first** (`👺`), then the Angular v22 checklist and RS School / Taiga criteria. **Only comment on lines in the diff, only on `+` lines (added). Context lines shown in diff hunks are NOT valid for inline comments.**
 7. Draft replies (Mode C) to existing comments first.
 8. Draft inline comments (Mode A/B) with severity levels — only for issues NOT already covered by existing comments, only in commentable files on `+` lines. Issues in non-commentable files → review body.
    For each negative comment, write in this order: **jab first** (pick register from `tone-examples.md`) → diagnosis → fix → link. The jab is not optional.
@@ -477,8 +477,8 @@ All scripts: `.claude/skills/pr-review/scripts/`. Require `gh` CLI authenticated
 
 ## 5. Reference Files
 
-- **`.claude/skills/_shared/project-review-criteria.md`** — **the review criteria** (style guides, Angular v21 checklist, RS School + Taiga, plus the Angular/Taiga verification playbooks). Read in full before drafting. Shared with the `codebase-audit` skill.
-- `reference/router.md` — Angular Router v21 patterns for this project.
+- **`.claude/skills/_shared/project-review-criteria.md`** — **the review criteria** (style guides, Angular v22 checklist, RS School + Taiga, plus the Angular/Taiga verification playbooks). Read in full before drafting. Shared with the `codebase-audit` skill.
+- `reference/router.md` — Angular Router v22 patterns for this project.
 - `reference/subagent-prompt.md` — full analysis-subagent prompt template for Step 1.5 (subagent mode only).
 - `reference/taiga-mcp.md` — how to use the `taiga-ui` MCP to verify Taiga component/directive/package usage before writing a Taiga comment. Consult whenever the diff touches Taiga or you're about to recommend a Taiga component.
 - `reference/tone-examples.md` — **Read BEFORE drafting any comment** (mandatory in both inline and subagent modes). Contains jab openers grouped by issue category and severity. Use as the active emotional register when writing, not as background reading. Vary phrasing — same spirit, different words.

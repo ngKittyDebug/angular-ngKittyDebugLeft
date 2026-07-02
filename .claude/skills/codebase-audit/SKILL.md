@@ -57,7 +57,7 @@ Same taxonomy as `pr-review`, used only as a marker:
 
 **The "what to flag" lives in one shared file:** `.claude/skills/_shared/project-review-criteria.md`.
 Read it in full before scanning. It is shared with `pr-review` and covers project context, the
-`docs/` style guides (👺 violations), the Angular v21 checklist (incl. the `required`+nullish smell),
+`docs/` style guides (👺 violations), the Angular v22 checklist (incl. the `required`+nullish smell),
 RS School criteria, and the Angular + Taiga verification playbooks. **Apply the same verification
 discipline:** validate every Angular-pattern finding against the `angular-developer` /
 signalstore / transloco skills then the `angular-cli` MCP, and every Taiga finding against the
@@ -512,5 +512,5 @@ from the **project root**, never via a path that could be stale.
 
 ## 4. Reference Files
 
-- **`.claude/skills/_shared/project-review-criteria.md`** — the review criteria (style guides, Angular v21 checklist, RS School + Taiga, plus the Angular/Taiga verification playbooks). Read in full before scanning. Shared with `pr-review`.
+- **`.claude/skills/_shared/project-review-criteria.md`** — the review criteria (style guides, Angular v22 checklist, RS School + Taiga, plus the Angular/Taiga verification playbooks). Read in full before scanning. Shared with `pr-review`.
 - The `pr-review` skill's `reference/taiga-mcp.md` — the full Taiga MCP playbook, if you need depth on verifying a Taiga symbol/package before recommending a fix.
