@@ -54,7 +54,6 @@ Read them from `docs/` (in the checkout being reviewed) at the start of every re
 
 **Testing (`Стайлгайд тестирование.md`):**
 
-- `describe`/`it` text not in Russian
 - `it` description doesn't start lowercase
 - AAA blocks not separated by blank lines
 - `toHaveBeenCalled()` instead of `toHaveBeenCalledTimes(1)`
