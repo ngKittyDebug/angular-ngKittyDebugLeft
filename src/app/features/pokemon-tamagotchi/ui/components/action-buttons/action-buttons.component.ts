@@ -56,6 +56,7 @@ export class ActionButtonsComponent {
     },
   };
 
+  public readonly actionsLocked = input<boolean>(false);
   public readonly canCare = input<boolean>(true);
   public readonly canFeed = input<boolean>(true);
   public readonly canPlay = input<boolean>(true);
@@ -68,16 +69,31 @@ export class ActionButtonsComponent {
 
   protected readonly buttons = computed<ActionButtonViewModel[]>(() => {
     const sleeping = this.isSleeping();
+    const locked = this.actionsLocked();
     const cooldowns = this.cooldowns();
     const awakeActions: ActionType[] = ['feed', 'water', 'care', 'play', 'train'];
 
     if (sleeping) {
-      return [this.buildButton('sleep', cooldowns.sleep, false, null, 'wakeUp')];
+      return [
+        this.buildButton(
+          'sleep',
+          cooldowns.sleep,
+          locked,
+          locked ? 'disabledTraining' : null,
+          'wakeUp',
+        ),
+      ];
     }
 
     return [
-      ...awakeActions.map((action) => this.buildAwakeButton(action, cooldowns)),
-      this.buildButton('sleep', cooldowns.sleep, false, null, 'sleep'),
+      ...awakeActions.map((action) => this.buildAwakeButton(action, cooldowns, locked)),
+      this.buildButton(
+        'sleep',
+        cooldowns.sleep,
+        locked,
+        locked ? 'disabledTraining' : null,
+        'sleep',
+      ),
     ];
   });
 
@@ -85,16 +101,22 @@ export class ActionButtonsComponent {
     this.actionSelected.emit(action);
   }
 
-  private buildAwakeButton(action: ActionType, cooldowns: ActionCooldowns): ActionButtonViewModel {
+  private buildAwakeButton(
+    action: ActionType,
+    cooldowns: ActionCooldowns,
+    actionsLocked: boolean,
+  ): ActionButtonViewModel {
     const meta = this.actionMeta[action];
     const cooldownMs = cooldowns[action];
     const cooldownSeconds = cooldownMs ? Math.ceil(cooldownMs / 1000) : null;
     const onCooldown = cooldownSeconds !== null && cooldownSeconds > 0;
-    const allowed = meta.canInput() && !onCooldown;
+    const allowed = meta.canInput() && !onCooldown && !actionsLocked;
 
     let disabledReasonKey: string | null = null;
 
-    if (onCooldown) {
+    if (actionsLocked) {
+      disabledReasonKey = 'disabledTraining';
+    } else if (onCooldown) {
       disabledReasonKey = 'disabledCooldown';
     } else if (!meta.canInput()) {
       disabledReasonKey = 'disabledLowEnergy';

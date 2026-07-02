@@ -13,6 +13,7 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import { Store } from '@ngrx/store';
 import { TuiButton, TuiLoader, tuiLoaderOptionsProvider } from '@taiga-ui/core';
 import { TuiBadge } from '@taiga-ui/kit';
+import { GAME_BALANCE } from '../../../data/constants/game-balance.constants';
 import { TAMAGOTCHI_SYSTEM_ERRORS } from '../../../data/constants/system-errors.constants';
 import { isTamagotchiSelectionError } from '../../../data/constants/selection-errors.constants';
 import { EvolutionService } from '../../../data/services/evolution.service';
@@ -34,21 +35,21 @@ import {
 } from '../../../data/services/timer.service';
 import * as TamagotchiActions from '../../../data/store/tamagotchi.actions';
 import {
-  selectActiveMiniGame,
   selectCanEvolve,
   selectHasPokemon,
   selectIsEvolving,
   selectIsInitialized,
   selectIsSleeping,
+  selectIsTraining,
   selectNotifications,
   selectPokemon,
   selectStatus,
   selectTamagotchiError,
   selectTamagotchiState,
+  selectTrainingStartedAt,
 } from '../../../data/store/tamagotchi.selectors';
 import { createInitialTamagotchiState } from '../../../data/store/tamagotchi.state';
 import type { InteractionEvent } from '../../../models/interaction.model';
-import type { GameResult } from '../../../models/mini-game.model';
 import type { Pokemon } from '../../../models/pokemon.model';
 import type { ActionType, TamagotchiState } from '../../../models/tamagotchi-state.model';
 import type { PerformanceMode } from '../../../models/performance-mode.model';
@@ -56,7 +57,6 @@ import type { StatusType } from '../../../models/pokemon-status.model';
 import { TamagotchiNotificationService } from '../../services/notification.service';
 import { ActionButtonsComponent } from '../action-buttons/action-buttons.component';
 import { EvolutionAnimationComponent } from '../evolution-animation/evolution-animation.component';
-import { MiniGameContainerComponent } from '../mini-game-container/mini-game-container.component';
 import { NotificationComponent } from '../notifications/notification.component';
 import { PokemonSpriteComponent } from '../pokemon-sprite/pokemon-sprite.component';
 import { StatusIndicatorComponent } from '../status-indicator/status-indicator.component';
@@ -66,7 +66,6 @@ import { StatusIndicatorComponent } from '../status-indicator/status-indicator.c
   imports: [
     ActionButtonsComponent,
     EvolutionAnimationComponent,
-    MiniGameContainerComponent,
     NotificationComponent,
     PokemonSpriteComponent,
     RouterLink,
@@ -100,8 +99,11 @@ export class PokemonTamagotchiPageComponent {
 
   protected readonly displayedStatusTypes = DISPLAYED_STATUS_TYPES;
 
-  protected readonly activeMiniGame = toSignal(this.store.select(selectActiveMiniGame), {
+  protected readonly trainingStartedAt = toSignal(this.store.select(selectTrainingStartedAt), {
     initialValue: null,
+  });
+  protected readonly isTraining = toSignal(this.store.select(selectIsTraining), {
+    initialValue: false,
   });
   protected readonly canEvolve = toSignal(this.store.select(selectCanEvolve), {
     initialValue: false,
@@ -218,10 +220,35 @@ export class PokemonTamagotchiPageComponent {
 
       this.wasEvolutionReady.set(ready);
     });
+
+    effect((onCleanup) => {
+      const startedAt = this.trainingStartedAt();
+
+      if (startedAt === null) {
+        return;
+      }
+
+      const remaining = GAME_BALANCE.ACTION_EFFECTS.TRAIN.durationMs - (Date.now() - startedAt);
+      const delay = Math.max(0, remaining);
+
+      const timeoutId = setTimeout(() => {
+        this.store.dispatch(TamagotchiActions.completeTraining());
+        this.store.dispatch(TamagotchiActions.checkEvolution());
+      }, delay);
+
+      onCleanup(() => {
+        clearTimeout(timeoutId);
+      });
+    });
   }
 
   protected onAction(action: ActionType): void {
     this.analyticsService.track(action);
+
+    if (this.isTraining()) {
+      return;
+    }
+
     if (this.isSleeping() && action === 'sleep') {
       this.store.dispatch(TamagotchiActions.wakeUp());
       this.store.dispatch(TamagotchiActions.checkEvolution());
@@ -253,7 +280,7 @@ export class PokemonTamagotchiPageComponent {
         break;
 
       case 'train':
-        this.store.dispatch(TamagotchiActions.openMiniGame({ gameType: 'reflex' }));
+        this.store.dispatch(TamagotchiActions.startTraining());
         break;
 
       case 'water':
@@ -270,23 +297,12 @@ export class PokemonTamagotchiPageComponent {
   }
 
   protected onInteraction(interaction: InteractionEvent): void {
+    if (this.isTraining()) {
+      return;
+    }
+
     this.analyticsService.track(interaction.type);
     this.store.dispatch(TamagotchiActions.interactWithPokemon({ interaction }));
-    this.store.dispatch(TamagotchiActions.checkEvolution());
-  }
-
-  protected onMiniGameCompleted(result: GameResult): void {
-    const level = this.status().level;
-    const gameResult = this.tamagotchiService.buildGameResult(
-      result.gameType,
-      result.score,
-      result.maxScore,
-      result.timeTaken,
-      level,
-    );
-
-    this.store.dispatch(TamagotchiActions.trainPokemon({ gameResult }));
-    this.store.dispatch(TamagotchiActions.closeMiniGame());
     this.store.dispatch(TamagotchiActions.checkEvolution());
   }
 
@@ -377,6 +393,7 @@ export class PokemonTamagotchiPageComponent {
     return {
       hasPokemon: state.pokemon !== null,
       isSleeping: state.isSleeping,
+      isTraining: state.trainingStartedAt !== null,
       lastActionTime: state.lastActionTime,
       status: state.status,
     };

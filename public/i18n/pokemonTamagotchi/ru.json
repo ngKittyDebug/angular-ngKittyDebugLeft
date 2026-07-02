@@ -54,7 +54,8 @@
     "cooldown": "Доступно через {{seconds}}с",
     "disabledSleeping": "Покемон спит",
     "disabledLowEnergy": "Мало энергии",
-    "disabledCooldown": "Перезарядка"
+    "disabledCooldown": "Перезарядка",
+    "disabledTraining": "Идёт тренировка"
   },
   "miniGame": {
     "title": "Тренировка реакции",

@@ -67,6 +67,7 @@ describe('Tamagotchi Remaining Property Tests', () => {
             {
               hasPokemon: true,
               isSleeping: false,
+              isTraining: false,
               lastActionTime: null,
               status: { ...baseStatus, energy: 50 },
             },
@@ -76,6 +77,7 @@ describe('Tamagotchi Remaining Property Tests', () => {
             {
               hasPokemon: true,
               isSleeping: false,
+              isTraining: false,
               lastActionTime: null,
               status: { ...baseStatus, energy: 15 },
             },
@@ -304,6 +306,7 @@ describe('Tamagotchi Remaining Property Tests', () => {
               {
                 hasPokemon: true,
                 isSleeping: true,
+                isTraining: false,
                 lastActionTime: Date.now(),
                 status,
               },

@@ -29,9 +29,13 @@ export const GAME_BALANCE = {
       cooldown: 15 * 60 * 1000,
     },
     TRAIN: {
-      experienceGain: 10,
+      durationMs: 60 * 1000,
       energyCost: 15,
       cooldown: 30 * 60 * 1000,
+      experienceReward: {
+        min: 20,
+        max: 100,
+      },
     },
     SLEEP: {
       energyRestore: 40,

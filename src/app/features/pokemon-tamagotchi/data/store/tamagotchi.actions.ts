@@ -1,6 +1,5 @@
 import { createAction, props } from '@ngrx/store';
 import type { InteractionEvent } from '../../models/interaction.model';
-import type { GameResult, MiniGameType } from '../../models/mini-game.model';
 import type { Notification } from '../../models/notification.model';
 import type { Pokemon } from '../../models/pokemon.model';
 import type { StatusDecay, StatusUpdate } from '../../models/pokemon-status.model';
@@ -22,10 +21,9 @@ export const careForPokemon = createAction('[Tamagotchi] Care For Pokemon');
 
 export const playWithPokemon = createAction('[Tamagotchi] Play With Pokemon');
 
-export const trainPokemon = createAction(
-  '[Tamagotchi] Train Pokemon',
-  props<{ gameResult: GameResult }>(),
-);
+export const startTraining = createAction('[Tamagotchi] Start Training');
+
+export const completeTraining = createAction('[Tamagotchi] Complete Training');
 
 export const putToSleep = createAction('[Tamagotchi] Put To Sleep');
 
@@ -45,13 +43,6 @@ export const applyStatusDecay = createAction(
   '[Tamagotchi] Apply Status Decay',
   props<{ decay: StatusDecay }>(),
 );
-
-export const openMiniGame = createAction(
-  '[Tamagotchi] Open Mini Game',
-  props<{ gameType: MiniGameType }>(),
-);
-
-export const closeMiniGame = createAction('[Tamagotchi] Close Mini Game');
 
 export const checkEvolution = createAction('[Tamagotchi] Check Evolution');
 

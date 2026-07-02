@@ -71,7 +71,15 @@ function assertPersistedEquivalence(original: TamagotchiState, loaded: Tamagotch
     return false;
   }
 
-  if (loaded.activeMiniGame !== null || loaded.isEvolving !== false) {
+  if (loaded.isEvolving !== false) {
+    return false;
+  }
+
+  if (loaded.trainingStartedAt !== original.trainingStartedAt) {
+    return false;
+  }
+
+  if (loaded.trainingExperienceReward !== original.trainingExperienceReward) {
     return false;
   }
 

@@ -3,7 +3,6 @@ import type { EvolutionChainItemApiData } from '@shared/models/pokemon-evolution
 import type { Achievement } from '../../models/achievement.model';
 import type { EvolutionRequirement } from '../../models/evolution.model';
 import type { InteractionEvent, InteractionType } from '../../models/interaction.model';
-import type { GameResult, MiniGameType } from '../../models/mini-game.model';
 import type { Pokemon } from '../../models/pokemon.model';
 import type { PokemonStatus, StatusDecay, StatusUpdate } from '../../models/pokemon-status.model';
 import type { TamagotchiState } from '../../models/tamagotchi-state.model';
@@ -57,7 +56,6 @@ export const TEST_POKEMON: Pokemon = {
   },
 };
 
-const miniGameTypes: MiniGameType[] = ['memory', 'pattern', 'reflex', 'timing'];
 const interactionTypes: InteractionType[] = ['click', 'drag', 'multiTouch', 'pet'];
 const evolutionRequirementTypes = ['achievement', 'care', 'experience', 'level', 'time'] as const;
 
@@ -168,16 +166,6 @@ export const arbitraryStatusDecay = (): fc.Arbitrary<StatusDecay> =>
     timestamp: fc.nat(),
   });
 
-export const arbitraryGameResult = (): fc.Arbitrary<GameResult> =>
-  fc.record({
-    experienceEarned: fc.nat({ max: 500 }),
-    gameType: fc.constantFrom(...miniGameTypes),
-    maxScore: fc.integer({ max: 1000, min: 1 }),
-    performance: fc.float({ max: 1, min: 0 }),
-    score: fc.nat({ max: 1000 }),
-    timeTaken: fc.nat({ max: 120_000 }),
-  });
-
 export const arbitraryInteractionEvent = (): fc.Arbitrary<InteractionEvent> =>
   fc.record({
     intensity: fc.float({ max: 1, min: 0 }),
@@ -198,7 +186,6 @@ export type CareActionKind =
 
 export interface CareAction {
   decay?: StatusDecay;
-  gameResult?: GameResult;
   interaction?: InteractionEvent;
   kind: CareActionKind;
   statusUpdate?: StatusUpdate;
@@ -210,10 +197,7 @@ export const arbitraryCareAction = (): fc.Arbitrary<CareAction> =>
     fc.record({ kind: fc.constant<CareActionKind>('water') }),
     fc.record({ kind: fc.constant<CareActionKind>('care') }),
     fc.record({ kind: fc.constant<CareActionKind>('play') }),
-    fc.record({
-      gameResult: arbitraryGameResult(),
-      kind: fc.constant<CareActionKind>('train'),
-    }),
+    fc.record({ kind: fc.constant<CareActionKind>('train') }),
     fc.record({
       interaction: arbitraryInteractionEvent(),
       kind: fc.constant<CareActionKind>('interact'),
@@ -246,7 +230,8 @@ export const arbitraryTamagotchiState = (): fc.Arbitrary<TamagotchiState> =>
       return {
         ...base,
         ...fields,
-        activeMiniGame: null,
+        trainingExperienceReward: null,
+        trainingStartedAt: null,
         evolutionProgress: base.evolutionProgress,
         isEvolving: false,
         status: { ...fields.status },

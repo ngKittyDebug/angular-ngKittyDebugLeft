@@ -1,12 +1,11 @@
 import { Injectable } from '@angular/core';
-import { MINI_GAME_CONFIGS } from '../constants/mini-game.constants';
 import { STATUS_THRESHOLDS } from '../constants/status-thresholds.constants';
+import { rollTrainingExperienceGain } from '../helpers/training-reward.helper';
 import {
   calculateStatusUpdate,
   getActionCooldownMs,
   getActionEnergyCost,
 } from '../helpers/status-calculator.helper';
-import type { GameResult } from '../../models/mini-game.model';
 import type { PokemonStatus, StatusUpdate } from '../../models/pokemon-status.model';
 import type {
   ActionCooldowns,
@@ -18,6 +17,7 @@ import type {
 export interface TamagotchiActionContext {
   hasPokemon: boolean;
   isSleeping: boolean;
+  isTraining: boolean;
   lastActionTime: number | null;
   status: PokemonStatus;
   now?: number;
@@ -35,6 +35,10 @@ export class TamagotchiService {
   public validateAction(context: TamagotchiActionContext, action: ActionType): ValidationResult {
     if (!context.hasPokemon) {
       return { allowed: false, reason: 'noPokemon' };
+    }
+
+    if (context.isTraining) {
+      return { allowed: false, reason: 'training' };
     }
 
     if (context.isSleeping && AWAKE_ONLY_ACTIONS.has(action)) {
@@ -73,6 +77,7 @@ export class TamagotchiService {
       {
         hasPokemon: state.pokemon !== null,
         isSleeping: state.isSleeping,
+        isTraining: state.trainingStartedAt !== null,
         lastActionTime: state.lastActionTime,
         status: state.status,
       },
@@ -91,40 +96,8 @@ export class TamagotchiService {
     };
   }
 
-  public calculateExperienceGain(gameResult: GameResult, currentLevel: number): number {
-    if (gameResult.performance <= 0) {
-      return 0;
-    }
-
-    const config = MINI_GAME_CONFIGS[gameResult.gameType];
-    const { base, multiplier } = config.experienceReward;
-    const rawReward = Math.round(base * gameResult.performance * multiplier);
-    const levelFactor = 1 + Math.max(0, currentLevel - 1) * 0.05;
-
-    return Math.max(0, Math.round(rawReward / levelFactor));
-  }
-
-  public buildGameResult(
-    gameType: GameResult['gameType'],
-    score: number,
-    maxScore: number,
-    timeTaken: number,
-    currentLevel: number,
-  ): GameResult {
-    const performance = maxScore > 0 ? Math.min(1, Math.max(0, score / maxScore)) : 0;
-    const partialResult: GameResult = {
-      experienceEarned: 0,
-      gameType,
-      maxScore,
-      performance,
-      score,
-      timeTaken,
-    };
-
-    return {
-      ...partialResult,
-      experienceEarned: this.calculateExperienceGain(partialResult, currentLevel),
-    };
+  public rollTrainingExperienceGain(random?: number): number {
+    return rollTrainingExperienceGain(random);
   }
 
   private getCooldownRemaining(context: TamagotchiActionContext, action: ActionType): number {

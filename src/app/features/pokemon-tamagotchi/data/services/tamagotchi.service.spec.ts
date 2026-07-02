@@ -56,6 +56,7 @@ describe('TamagotchiService', () => {
         {
           hasPokemon: false,
           isSleeping: false,
+          isTraining: false,
           lastActionTime: null,
           status: createInitialPokemonStatus(),
           now,
@@ -72,6 +73,7 @@ describe('TamagotchiService', () => {
         {
           hasPokemon: true,
           isSleeping: true,
+          isTraining: false,
           lastActionTime: null,
           status: createInitialPokemonStatus(),
           now,
@@ -81,6 +83,23 @@ describe('TamagotchiService', () => {
 
       expect(result.allowed).toBe(false);
       expect(result.reason).toBe('sleeping');
+    });
+
+    it('should reject all actions while training', () => {
+      const result = service.validateAction(
+        {
+          hasPokemon: true,
+          isSleeping: false,
+          isTraining: true,
+          lastActionTime: now,
+          status: createInitialPokemonStatus(),
+          now,
+        },
+        'water',
+      );
+
+      expect(result.allowed).toBe(false);
+      expect(result.reason).toBe('training');
     });
 
     it('should reject play and train when energy is at or below warning threshold', () => {
@@ -93,6 +112,7 @@ describe('TamagotchiService', () => {
         {
           hasPokemon: true,
           isSleeping: false,
+          isTraining: false,
           lastActionTime: null,
           status: lowEnergyStatus,
           now,
@@ -114,6 +134,7 @@ describe('TamagotchiService', () => {
         {
           hasPokemon: true,
           isSleeping: false,
+          isTraining: false,
           lastActionTime: null,
           status,
           now,
@@ -131,6 +152,7 @@ describe('TamagotchiService', () => {
         {
           hasPokemon: true,
           isSleeping: true,
+          isTraining: false,
           lastActionTime: null,
           status: createInitialPokemonStatus(),
           now,
@@ -142,55 +164,19 @@ describe('TamagotchiService', () => {
     });
   });
 
-  describe('calculateExperienceGain', () => {
-    it('should return zero experience for zero performance', () => {
-      const gain = service.calculateExperienceGain(
-        {
-          experienceEarned: 0,
-          gameType: 'reflex',
-          maxScore: 100,
-          performance: 0,
-          score: 0,
-          timeTaken: 30_000,
-        },
-        1,
-      );
+  describe('rollTrainingExperienceGain', () => {
+    it('should return a value between 20 and 100 inclusive', () => {
+      for (let index = 0; index < 50; index += 1) {
+        const gain = service.rollTrainingExperienceGain();
 
-      expect(gain).toBe(0);
+        expect(gain).toBeGreaterThanOrEqual(20);
+        expect(gain).toBeLessThanOrEqual(100);
+      }
     });
 
-    it('should scale experience monotonically with performance', () => {
-      const low = service.calculateExperienceGain(
-        {
-          experienceEarned: 0,
-          gameType: 'reflex',
-          maxScore: 100,
-          performance: 0.4,
-          score: 40,
-          timeTaken: 30_000,
-        },
-        1,
-      );
-      const high = service.calculateExperienceGain(
-        {
-          experienceEarned: 0,
-          gameType: 'reflex',
-          maxScore: 100,
-          performance: 0.9,
-          score: 90,
-          timeTaken: 30_000,
-        },
-        1,
-      );
-
-      expect(high).toBeGreaterThan(low);
-    });
-
-    it('should build a game result with computed experience', () => {
-      const result = service.buildGameResult('memory', 80, 100, 45_000, 3);
-
-      expect(result.performance).toBe(0.8);
-      expect(result.experienceEarned).toBeGreaterThan(0);
+    it('should map boundary random inputs to min and max', () => {
+      expect(service.rollTrainingExperienceGain(0)).toBe(20);
+      expect(service.rollTrainingExperienceGain(0.999_999)).toBe(100);
     });
   });
 });

@@ -108,6 +108,7 @@
         <left-paw-pokemon-sprite
           [isEvolving]="isEvolving()"
           [isSleeping]="isSleeping()"
+          [isTraining]="isTraining()"
           [pokemon]="species"
           [status]="status()"
           (interacted)="onInteraction($event)"
@@ -127,6 +128,7 @@
 
     <left-paw-action-buttons
       class="tamagotchi-page__actions"
+      [actionsLocked]="isTraining()"
       [canCare]="canCare()"
       [canFeed]="canFeed()"
       [canPlay]="canPlay()"
@@ -136,20 +138,11 @@
       [isSleeping]="isSleeping()"
       (actionSelected)="onAction($event)"
     />
-
     <left-paw-tamagotchi-notifications
       class="tamagotchi-page__notifications"
       [notifications]="notifications()"
       (actionSelected)="onNotificationAction($event)"
       (dismissed)="onNotificationDismiss($event)"
     />
-
-    @if (activeMiniGame(); as gameType) {
-      <left-paw-mini-game-container
-        class="tamagotchi-page__mini-game"
-        [gameType]="gameType"
-        (gameCompleted)="onMiniGameCompleted($event)"
-      />
-    }
   }
 </main>

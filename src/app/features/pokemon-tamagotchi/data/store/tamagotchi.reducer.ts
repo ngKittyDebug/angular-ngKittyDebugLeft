@@ -1,5 +1,6 @@
 import { createReducer, on } from '@ngrx/store';
 import { applyStatusDelta } from '../helpers/status-bounds.helper';
+import { rollTrainingExperienceGain } from '../helpers/training-reward.helper';
 import { GAME_BALANCE } from '../constants/game-balance.constants';
 import { MEMORY_LIMITS } from '../constants/performance-mode.constants';
 import { garbageCollectTamagotchiState } from '../helpers/memory-management.helper';
@@ -151,18 +152,44 @@ export const tamagotchiReducer = createReducer(
     ),
   ),
 
-  on(TamagotchiActions.trainPokemon, (state, { gameResult }) =>
+  on(TamagotchiActions.startTraining, (state) =>
     withPokemon(state, (current) =>
       whenAwake(current, (awake) => {
+        if (awake.trainingStartedAt !== null) {
+          return awake;
+        }
+
         const { energyCost } = GAME_BALANCE.ACTION_EFFECTS.TRAIN;
+        const now = Date.now();
 
         return {
           ...touchAction(awake, {
             ...awake.status,
             energy: applyStatusDelta(awake.status.energy, -energyCost),
-            experience: awake.status.experience + gameResult.experienceEarned,
           }),
-          activeMiniGame: null,
+          trainingExperienceReward: rollTrainingExperienceGain(),
+          trainingStartedAt: now,
+        };
+      }),
+    ),
+  ),
+
+  on(TamagotchiActions.completeTraining, (state) =>
+    withPokemon(state, (current) =>
+      whenAwake(current, (awake) => {
+        if (awake.trainingStartedAt === null) {
+          return awake;
+        }
+
+        const experienceGain = awake.trainingExperienceReward ?? rollTrainingExperienceGain();
+
+        return {
+          ...touchAction(awake, {
+            ...awake.status,
+            experience: awake.status.experience + experienceGain,
+          }),
+          trainingExperienceReward: null,
+          trainingStartedAt: null,
         };
       }),
     ),
@@ -258,16 +285,6 @@ export const tamagotchiReducer = createReducer(
       status,
     };
   }),
-
-  on(TamagotchiActions.openMiniGame, (state, { gameType }) => ({
-    ...state,
-    activeMiniGame: gameType,
-  })),
-
-  on(TamagotchiActions.closeMiniGame, (state) => ({
-    ...state,
-    activeMiniGame: null,
-  })),
 
   on(TamagotchiActions.checkEvolution, (state) => ({
     ...state,

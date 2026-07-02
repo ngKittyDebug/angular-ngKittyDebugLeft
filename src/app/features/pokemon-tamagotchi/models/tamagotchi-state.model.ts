@@ -1,7 +1,6 @@
 import type { Achievement } from './achievement.model';
 import type { EvolutionProgress } from './evolution.model';
 import type { InteractionEvent } from './interaction.model';
-import type { MiniGameType } from './mini-game.model';
 import type { Notification } from './notification.model';
 import type { Pokemon } from './pokemon.model';
 import type { PokemonStatus } from './pokemon-status.model';
@@ -41,7 +40,8 @@ export interface TamagotchiState {
   interactionHistory: InteractionEvent[];
   isSleeping: boolean;
   isEvolving: boolean;
-  activeMiniGame: MiniGameType | null;
+  trainingStartedAt: number | null;
+  trainingExperienceReward: number | null;
   notifications: Notification[];
   initialized: boolean;
   lastSaveTime: number | null;

@@ -80,6 +80,15 @@
   animation: sprite-sparkle 0.65s ease-in-out;
 }
 
+.pokemon-sprite__image--training {
+  animation: sprite-train 3s ease-in-out infinite;
+  opacity: 0.92;
+}
+
+.pokemon-sprite--training {
+  cursor: default;
+}
+
 .pokemon-sprite--sleeping {
   cursor: default;
 }
@@ -126,6 +135,17 @@
 
   50% {
     transform: rotate(2deg) translate3d(0, 0, 0);
+  }
+}
+
+@keyframes sprite-train {
+  0%,
+  100% {
+    transform: rotate(-1deg) translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: rotate(1deg) translate3d(0, -0.18rem, 0);
   }
 }
 

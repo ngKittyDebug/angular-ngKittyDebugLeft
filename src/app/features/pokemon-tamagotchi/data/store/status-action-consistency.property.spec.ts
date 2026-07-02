@@ -5,11 +5,12 @@ import type { TamagotchiState } from '../../models/tamagotchi-state.model';
 import {
   applyStatusDecay,
   careForPokemon,
+  completeTraining,
   feedPokemon,
   interactWithPokemon,
   playWithPokemon,
   selectPokemon,
-  trainPokemon,
+  startTraining,
   updateStatus,
   waterPokemon,
 } from './tamagotchi.actions';
@@ -58,8 +59,15 @@ function applyCareAction(state: TamagotchiState, action: CareAction): Tamagotchi
     case 'play':
       return tamagotchiReducer(state, playWithPokemon());
 
-    case 'train':
-      return tamagotchiReducer(state, trainPokemon({ gameResult: action.gameResult! }));
+    case 'train': {
+      const started = tamagotchiReducer(state, startTraining());
+
+      if (started.trainingStartedAt === null) {
+        return started;
+      }
+
+      return tamagotchiReducer(started, completeTraining());
+    }
 
     case 'updateStatus':
       return tamagotchiReducer(state, updateStatus({ statusUpdate: action.statusUpdate! }));

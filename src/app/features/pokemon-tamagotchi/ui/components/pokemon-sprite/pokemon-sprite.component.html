@@ -3,6 +3,7 @@
   class="pokemon-sprite"
   [class.pokemon-sprite--sleeping]="isSleeping()"
   [class.pokemon-sprite--evolving]="isEvolving()"
+  [class.pokemon-sprite--training]="isTraining()"
   [attr.aria-label]="pokemon().name"
   (click)="onClick()"
   (pointercancel)="onPointerCancel($event)"

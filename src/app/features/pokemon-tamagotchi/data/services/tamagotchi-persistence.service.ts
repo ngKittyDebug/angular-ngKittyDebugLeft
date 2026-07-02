@@ -6,7 +6,7 @@ import { createInitialTamagotchiState } from '../store/tamagotchi.state';
 
 export const TAMAGOTCHI_STORAGE_KEY = 'pokemon-tamagotchi-state';
 export const TAMAGOTCHI_BACKUP_KEY = 'pokemon-tamagotchi-state-backup';
-export const TAMAGOTCHI_STATE_VERSION = 3;
+export const TAMAGOTCHI_STATE_VERSION = 4;
 
 export interface PersistedTamagotchiPayload {
   version: number;
@@ -47,7 +47,6 @@ export class TamagotchiPersistenceService {
     const payload: PersistedTamagotchiPayload = {
       state: {
         ...state,
-        activeMiniGame: null,
         isEvolving: false,
         lastSaveTime: savedAt,
         status: {
@@ -100,11 +99,8 @@ export class TamagotchiPersistenceService {
   }
 
   private migrateState(state: TamagotchiState, version: number): TamagotchiState {
-    if (version >= TAMAGOTCHI_STATE_VERSION) {
-      return state;
-    }
-
-    return {
+    const legacy = state as TamagotchiState & { activeMiniGame?: unknown };
+    const migrated: TamagotchiState = {
       ...createInitialTamagotchiState(),
       ...state,
       achievements: state.achievements ?? [],
@@ -114,7 +110,15 @@ export class TamagotchiPersistenceService {
       interactionHistory: state.interactionHistory ?? [],
       notifications: state.notifications ?? [],
       pokemon: state.pokemon ? ensurePokemonSpriteVariations(state.pokemon) : null,
+      trainingExperienceReward:
+        version >= TAMAGOTCHI_STATE_VERSION ? (state.trainingExperienceReward ?? null) : null,
+      trainingStartedAt:
+        version >= TAMAGOTCHI_STATE_VERSION ? (state.trainingStartedAt ?? null) : null,
     };
+
+    void legacy.activeMiniGame;
+
+    return migrated;
   }
 
   private validateState(state: TamagotchiState): TamagotchiState {

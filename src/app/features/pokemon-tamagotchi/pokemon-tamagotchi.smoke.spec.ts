@@ -28,7 +28,6 @@ import { TEST_POKEMON } from './data/testing/tamagotchi-arbitraries';
 import { pokemonTamagotchiRoutes, TAMAGOTCHI_PATH } from './pokemon-tamagotchi.routes';
 import { ActionButtonsComponent } from './ui/components/action-buttons/action-buttons.component';
 import { EvolutionAnimationComponent } from './ui/components/evolution-animation/evolution-animation.component';
-import { MiniGameContainerComponent } from './ui/components/mini-game-container/mini-game-container.component';
 import { NotificationComponent } from './ui/components/notifications/notification.component';
 import { PokemonTamagotchiPageComponent } from './ui/components/pokemon-tamagotchi-page/pokemon-tamagotchi-page.component';
 import { PokemonSpriteComponent } from './ui/components/pokemon-sprite/pokemon-sprite.component';
@@ -44,7 +43,6 @@ const REQUIRED_TRANSLATION_PATHS = [
   'actions.sleep',
   'status.health',
   'status.hunger',
-  'miniGame.title',
   'notifications.empty',
 ] as const;
 
@@ -53,7 +51,6 @@ const STANDALONE_COMPONENTS: Type<unknown>[] = [
   StatusIndicatorComponent,
   ActionButtonsComponent,
   PokemonSpriteComponent,
-  MiniGameContainerComponent,
   NotificationComponent,
   EvolutionAnimationComponent,
 ];

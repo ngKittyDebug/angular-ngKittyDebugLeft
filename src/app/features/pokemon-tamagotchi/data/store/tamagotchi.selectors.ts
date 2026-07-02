@@ -24,9 +24,14 @@ export const selectIsSleeping = createSelector(selectTamagotchiState, (state) =>
 
 export const selectIsEvolving = createSelector(selectTamagotchiState, (state) => state.isEvolving);
 
-export const selectActiveMiniGame = createSelector(
+export const selectIsTraining = createSelector(
   selectTamagotchiState,
-  (state) => state.activeMiniGame,
+  (state) => state.trainingStartedAt !== null,
+);
+
+export const selectTrainingStartedAt = createSelector(
+  selectTamagotchiState,
+  (state) => state.trainingStartedAt,
 );
 
 export const selectNotifications = createSelector(

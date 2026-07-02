@@ -41,6 +41,7 @@ export class PokemonSpriteComponent {
   public readonly interacted = output<InteractionEvent>();
   public readonly isEvolving = input<boolean>(false);
   public readonly isSleeping = input<boolean>(false);
+  public readonly isTraining = input<boolean>(false);
   public readonly pokemon = input.required<Pokemon>();
   public readonly status = input.required<PokemonStatus>();
 
@@ -65,6 +66,10 @@ export class PokemonSpriteComponent {
 
     if (this.isEvolving()) {
       return 'pokemon-sprite__image--evolving';
+    }
+
+    if (this.isTraining()) {
+      return 'pokemon-sprite__image--training';
     }
 
     if (this.isSleeping()) {
@@ -144,7 +149,7 @@ export class PokemonSpriteComponent {
   }
 
   private canInteract(): boolean {
-    return !this.isSleeping() && !this.isEvolving();
+    return !this.isSleeping() && !this.isEvolving() && !this.isTraining();
   }
 
   private applyGestureResult(result: { animationTrigger: string; event: InteractionEvent }): void {

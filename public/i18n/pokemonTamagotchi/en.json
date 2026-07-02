@@ -54,7 +54,8 @@
     "cooldown": "Available in {{seconds}}s",
     "disabledSleeping": "Pokémon is sleeping",
     "disabledLowEnergy": "Not enough energy",
-    "disabledCooldown": "On cooldown"
+    "disabledCooldown": "On cooldown",
+    "disabledTraining": "Training in progress"
   },
   "miniGame": {
     "title": "Reflex training",
