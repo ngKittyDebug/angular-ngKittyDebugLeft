@@ -190,7 +190,7 @@ The repo is a `pnpm-workspace.yaml` monorepo: the root Angular app + `partykit-s
 
 ## Common pitfalls (learned the hard way)
 
-- **Gitignore boundaries:** `.planning/`, `docs/agents/`, `docs/adr/`, `CONTEXT.md` and the local part of `.claude/` (settings, worktrees) are gitignored — edits there live only locally. **Committed:** `CLAUDE.md`, `docs/`, `.agents/skills/`, `skills-lock.json`, `.claude/commands/`, `.claude/skills/` (cloud routines only see what's in the repo). Committed paths go through the normal flow: commit → PR → push.
+- **Gitignore boundaries:** `.planning/`, `docs/agents/`, `docs/adr/`, `CONTEXT.md` and the personal part of `.claude/` (`settings.local.json`, worktrees) are gitignored — edits there live only locally. **Committed:** `CLAUDE.md`, `docs/`, `.agents/skills/`, `skills-lock.json`, `.claude/commands/`, `.claude/skills/`, `.claude/settings.json` (shared permissions allowlist + prettier PostToolUse hook; cloud routines only see what's in the repo). Committed paths go through the normal flow: commit → PR → push.
 - **Relative path counting:** deep `../../../../../` chains are fragile — use a path alias (`@environments/*`, `@game/frenzy/*`). If you count a relative path anyway and doubt it — `pnpm typecheck` first.
 - **Husky `pre-commit`** runs `lint-staged + typecheck`. lint-staged includes `format:fix` on staged JSON/MD, which **modifies** them. If the commit fails (e.g. typecheck) — re-stage the modified files before retrying.
 - **Husky `pre-push`** runs `pnpm lint + pnpm test` — full lint + full test suite. Don't bypass with `--no-verify` unless explicitly authorized.

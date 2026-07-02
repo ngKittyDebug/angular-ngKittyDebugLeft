@@ -66,6 +66,7 @@ docs/adr/
 .claude/*
 !.claude/commands/
 !.claude/skills/
+!.claude/settings.json
 
 # Gemini CLI — local config / sessions / skills stay local, EXCEPT the committed review
 # skills, settings.json
