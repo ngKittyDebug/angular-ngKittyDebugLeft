@@ -102,15 +102,10 @@
             [statusType]="statusType"
           />
         }
-        <left-paw-tamagotchi-appearance-settings
-          [customization]="customization()"
-          (customizationChange)="onCustomizationChange($event)"
-        />
       </aside>
 
-      <section [class]="'tamagotchi-page__stage ' + stageThemeClass()">
+      <section class="tamagotchi-page__stage tamagotchi-stage--classic">
         <left-paw-pokemon-sprite
-          [customization]="customization()"
           [isEvolving]="isEvolving()"
           [isSleeping]="isSleeping()"
           [pokemon]="species"

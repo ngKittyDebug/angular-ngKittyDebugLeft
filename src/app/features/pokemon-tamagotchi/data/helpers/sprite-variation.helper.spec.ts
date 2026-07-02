@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 
-import { DEFAULT_CUSTOMIZATION } from '../constants/customization.constants';
 import { STATUS_THRESHOLDS } from '../constants/status-thresholds.constants';
 import { createInteractionEvent } from './gesture.helper';
 import { isRoutineBonusEligible } from './routine.helper';
@@ -27,17 +26,10 @@ describe('sprite-variation.helper', () => {
     ).toBe('sleeping');
   });
 
-  it('uses selected sprite variation when resolving url', () => {
-    const url = resolveSpriteUrl(
-      TEST_POKEMON,
-      {
-        ...DEFAULT_CUSTOMIZATION,
-        spriteVariation: 'shiny',
-      },
-      'normal',
-    );
+  it('uses default sprite variation when resolving url', () => {
+    const url = resolveSpriteUrl(TEST_POKEMON, 'normal');
 
-    expect(url).toBe(TEST_POKEMON.spriteVariations.shiny.normal);
+    expect(url).toBe(TEST_POKEMON.spriteVariations.default.normal);
   });
 });
 

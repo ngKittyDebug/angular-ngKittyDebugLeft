@@ -16,7 +16,6 @@ import { TuiBadge } from '@taiga-ui/kit';
 import { TAMAGOTCHI_SYSTEM_ERRORS } from '../../../data/constants/system-errors.constants';
 import { isTamagotchiSelectionError } from '../../../data/constants/selection-errors.constants';
 import { EvolutionService } from '../../../data/services/evolution.service';
-import { STAGE_THEME_CLASS } from '../../../data/constants/customization.constants';
 import {
   DISPLAYED_STATUS_TYPES,
   maxValueForStatusType,
@@ -37,7 +36,6 @@ import * as TamagotchiActions from '../../../data/store/tamagotchi.actions';
 import {
   selectActiveMiniGame,
   selectCanEvolve,
-  selectCustomization,
   selectHasPokemon,
   selectIsEvolving,
   selectIsInitialized,
@@ -54,10 +52,8 @@ import type { GameResult } from '../../../models/mini-game.model';
 import type { Pokemon } from '../../../models/pokemon.model';
 import type { ActionType, TamagotchiState } from '../../../models/tamagotchi-state.model';
 import type { PerformanceMode } from '../../../models/performance-mode.model';
-import type { TamagotchiCustomization } from '../../../models/customization.model';
 import type { StatusType } from '../../../models/pokemon-status.model';
 import { TamagotchiNotificationService } from '../../services/notification.service';
-import { AppearanceSettingsComponent } from '../appearance-settings/appearance-settings.component';
 import { ActionButtonsComponent } from '../action-buttons/action-buttons.component';
 import { EvolutionAnimationComponent } from '../evolution-animation/evolution-animation.component';
 import { MiniGameContainerComponent } from '../mini-game-container/mini-game-container.component';
@@ -69,7 +65,6 @@ import { StatusIndicatorComponent } from '../status-indicator/status-indicator.c
   selector: 'left-paw-pokemon-tamagotchi-page',
   imports: [
     ActionButtonsComponent,
-    AppearanceSettingsComponent,
     EvolutionAnimationComponent,
     MiniGameContainerComponent,
     NotificationComponent,
@@ -175,9 +170,6 @@ export class PokemonTamagotchiPageComponent {
   protected readonly canPlay = computed(() => this.isActionAllowed('play'));
   protected readonly canTrain = computed(() => this.isActionAllowed('train'));
   protected readonly canWater = computed(() => this.isActionAllowed('water'));
-  protected readonly customization = toSignal(this.store.select(selectCustomization), {
-    initialValue: createInitialTamagotchiState().customization,
-  });
 
   protected readonly showRecoveryActions = computed(
     () => this.error() === TAMAGOTCHI_SYSTEM_ERRORS.SAVE_FAILED,
@@ -188,9 +180,6 @@ export class PokemonTamagotchiPageComponent {
     this.performanceService.resolveEffectiveMode(),
   );
   protected readonly performanceModes: PerformanceMode[] = ['auto', 'high', 'balanced', 'low'];
-  protected readonly stageThemeClass = computed(
-    () => STAGE_THEME_CLASS[this.customization().stageTheme],
-  );
 
   public constructor() {
     this.analyticsService.track('pageView');
@@ -316,10 +305,6 @@ export class PokemonTamagotchiPageComponent {
   protected onPerformanceModeChange(mode: PerformanceMode): void {
     this.performanceService.setMode(mode);
     this.memoryManagementService.runGarbageCollection();
-  }
-
-  protected onCustomizationChange(customization: TamagotchiCustomization): void {
-    this.store.dispatch(TamagotchiActions.setCustomization({ customization }));
   }
 
   protected onResetProgress(): void {

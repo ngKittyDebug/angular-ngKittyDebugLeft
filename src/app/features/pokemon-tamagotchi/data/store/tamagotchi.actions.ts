@@ -5,7 +5,6 @@ import type { Notification } from '../../models/notification.model';
 import type { Pokemon } from '../../models/pokemon.model';
 import type { StatusDecay, StatusUpdate } from '../../models/pokemon-status.model';
 import type { TamagotchiState } from '../../models/tamagotchi-state.model';
-import type { TamagotchiCustomization } from '../../models/customization.model';
 import type { GarbageCollectLimits } from '../helpers/memory-management.helper';
 
 export const selectPokemon = createAction(
@@ -103,9 +102,4 @@ export const clearError = createAction('[Tamagotchi] Clear Error');
 export const garbageCollect = createAction(
   '[Tamagotchi] Garbage Collect',
   props<{ limits: GarbageCollectLimits }>(),
-);
-
-export const setCustomization = createAction(
-  '[Tamagotchi] Set Customization',
-  props<{ customization: TamagotchiCustomization }>(),
 );

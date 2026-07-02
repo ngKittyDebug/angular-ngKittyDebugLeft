@@ -24,7 +24,6 @@ const persistTriggerActions = [
   TamagotchiActions.playWithPokemon,
   TamagotchiActions.putToSleep,
   TamagotchiActions.selectPokemon,
-  TamagotchiActions.setCustomization,
   TamagotchiActions.startEvolution,
   TamagotchiActions.trainPokemon,
   TamagotchiActions.updateStatus,

@@ -103,26 +103,6 @@
   );
 }
 
-.tamagotchi-page__stage.tamagotchi-stage--meadow {
-  background: linear-gradient(
-    165deg,
-    color-mix(in srgb, var(--tui-status-positive) 28%, var(--tui-background-base-alt)) 0%,
-    color-mix(in srgb, var(--tui-status-positive) 12%, var(--tui-background-base-alt)) 100%
-  );
-  border-color: color-mix(in srgb, var(--tui-status-positive) 45%, transparent);
-  box-shadow: inset 0 0 2.5rem color-mix(in srgb, var(--tui-status-positive) 18%, transparent);
-}
-
-.tamagotchi-page__stage.tamagotchi-stage--night {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--tui-background-accent-1) 55%, #0f172a) 0%,
-    color-mix(in srgb, var(--tui-background-accent-1) 30%, var(--tui-background-base-alt)) 100%
-  );
-  border-color: color-mix(in srgb, var(--tui-text-action) 35%, transparent);
-  box-shadow: inset 0 0 2rem color-mix(in srgb, var(--tui-background-accent-1) 25%, transparent);
-}
-
 .tamagotchi-page__actions {
   padding-block-start: 0.5rem;
 }

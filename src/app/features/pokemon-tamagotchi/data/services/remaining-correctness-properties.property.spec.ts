@@ -6,16 +6,11 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import enTranslations from '../../../../../../public/i18n/pokemonTamagotchi/en.json';
 // eslint-disable-next-line import/extensions -- JSON fixtures must be imported with their extension.
 import ruTranslations from '../../../../../../public/i18n/pokemonTamagotchi/ru.json';
-import {
-  DEFAULT_CUSTOMIZATION,
-  SPRITE_VARIATIONS,
-  STAGE_THEMES,
-} from '../constants/customization.constants';
 import { TIMER_CONFIG } from '../constants/timer.constants';
 import { createInteractionEvent } from '../helpers/gesture.helper';
 import { compareNotificationsByPriority } from '../helpers/notification-factory.helper';
 import { isRoutineBonusEligible, recordRoutineActivity } from '../helpers/routine.helper';
-import { resolveSpriteUrl, resolveStatusSpriteKey } from '../helpers/sprite-variation.helper';
+import { resolveStatusSpriteKey } from '../helpers/sprite-variation.helper';
 import { calculateSleepRestorationBonus } from '../helpers/sleep-restoration.helper';
 import {
   arbitraryInteractionEvent,
@@ -25,14 +20,9 @@ import {
 import { TamagotchiErrorRecoveryService } from '../services/tamagotchi-error-recovery.service';
 import { TamagotchiPersistenceService } from '../services/tamagotchi-persistence.service';
 import { TamagotchiService } from '../services/tamagotchi.service';
-import {
-  interactWithPokemon,
-  selectPokemon,
-  setCustomization,
-  updateStatus,
-} from '../store/tamagotchi.actions';
+import { interactWithPokemon, selectPokemon, updateStatus } from '../store/tamagotchi.actions';
 import { tamagotchiReducer } from '../store/tamagotchi.reducer';
-import { createInitialTamagotchiState, initialTamagotchiState } from '../store/tamagotchi.state';
+import { createInitialTamagotchiState } from '../store/tamagotchi.state';
 import type { NotificationPriority } from '../../models/notification.model';
 
 const PROPERTY_RUNS = 100;
@@ -193,49 +183,6 @@ describe('Tamagotchi Remaining Property Tests', () => {
     });
   });
 
-  describe('Property 13: Customization Persistence', () => {
-    it('should round-trip customization through persistence', () => {
-      const persistence = new TamagotchiPersistenceService();
-
-      fc.assert(
-        fc.property(
-          fc.constantFrom(...SPRITE_VARIATIONS),
-          fc.constantFrom(...STAGE_THEMES),
-          (spriteVariation, stageTheme) => {
-            const state = tamagotchiReducer(
-              tamagotchiReducer(initialTamagotchiState, selectPokemon({ pokemon: TEST_POKEMON })),
-              setCustomization({ customization: { spriteVariation, stageTheme } }),
-            );
-
-            persistence.save(state);
-            const loaded = persistence.load();
-
-            return (
-              loaded?.state.customization.spriteVariation === spriteVariation &&
-              loaded.state.customization.stageTheme === stageTheme
-            );
-          },
-        ),
-        { numRuns: PROPERTY_RUNS },
-      );
-    });
-
-    it('should switch sprite url when variation changes', () => {
-      fc.assert(
-        fc.property(fc.constantFrom(...SPRITE_VARIATIONS), (spriteVariation) => {
-          const url = resolveSpriteUrl(
-            TEST_POKEMON,
-            { ...DEFAULT_CUSTOMIZATION, spriteVariation },
-            'normal',
-          );
-
-          return url === TEST_POKEMON.spriteVariations[spriteVariation].normal;
-        }),
-        { numRuns: PROPERTY_RUNS },
-      );
-    });
-  });
-
   describe('Property 14: Internationalization Consistency', () => {
     it('should keep matching translation keys between English and Russian locales', () => {
       const englishKeys = loadLocaleKeys('en');
@@ -298,18 +245,16 @@ describe('Tamagotchi Remaining Property Tests', () => {
       expect(result.state.status.mood).toBe(100);
     });
 
-    it('should repair valid state while preserving customization', () => {
+    it('should repair valid state while preserving pokemon', () => {
       const recovery = TestBed.inject(TamagotchiErrorRecoveryService);
       const customized = tamagotchiReducer(
         createInitialTamagotchiState(),
-        setCustomization({
-          customization: { spriteVariation: 'shiny', stageTheme: 'night' },
-        }),
+        selectPokemon({ pokemon: TEST_POKEMON }),
       );
 
       const repaired = recovery.repairState(customized);
 
-      expect(repaired?.customization).toEqual(customized.customization);
+      expect(repaired?.pokemon?.id).toBe(TEST_POKEMON.id);
     });
   });
 

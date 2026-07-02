@@ -15,9 +15,7 @@ import { ANIMATION_PERFORMANCE } from '../../../data/constants/animation-perform
 import {
   resolveSpriteUrl,
   resolveStatusSpriteKey,
-  spriteVariationClass,
 } from '../../../data/helpers/sprite-variation.helper';
-import type { TamagotchiCustomization } from '../../../models/customization.model';
 import type { InteractionEvent } from '../../../models/interaction.model';
 import type { Pokemon } from '../../../models/pokemon.model';
 import type { PokemonStatus } from '../../../models/pokemon-status.model';
@@ -40,7 +38,6 @@ export class PokemonSpriteComponent {
   private feedbackTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private pointerHandledInteraction = false;
 
-  public readonly customization = input.required<TamagotchiCustomization>();
   public readonly interacted = output<InteractionEvent>();
   public readonly isEvolving = input<boolean>(false);
   public readonly isSleeping = input<boolean>(false);
@@ -52,16 +49,11 @@ export class PokemonSpriteComponent {
     this.animationService.shouldUseComplexAnimations(),
   );
 
-  protected readonly variationClass = computed(() =>
-    spriteVariationClass(this.customization().spriteVariation),
-  );
-
   protected readonly spriteUrl = computed(() => {
     const species = this.pokemon();
-    const customization = this.customization();
     const statusKey = resolveStatusSpriteKey(this.isEvolving(), this.isSleeping(), this.status());
 
-    return resolveSpriteUrl(species, customization, statusKey);
+    return resolveSpriteUrl(species, statusKey);
   });
 
   protected readonly animationClass = computed(() => {

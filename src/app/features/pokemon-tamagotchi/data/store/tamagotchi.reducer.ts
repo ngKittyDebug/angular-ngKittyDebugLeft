@@ -358,9 +358,4 @@ export const tamagotchiReducer = createReducer(
   on(TamagotchiActions.garbageCollect, (state, { limits }) =>
     garbageCollectTamagotchiState(state, limits),
   ),
-
-  on(TamagotchiActions.setCustomization, (state, { customization }) => ({
-    ...state,
-    customization,
-  })),
 );

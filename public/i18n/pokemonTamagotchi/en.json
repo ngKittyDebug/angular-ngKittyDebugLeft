@@ -25,22 +25,6 @@
       "low": "Low power"
     }
   },
-  "appearance": {
-    "ariaLabel": "Appearance settings",
-    "title": "Appearance",
-    "spriteVariationLabel": "Sprite style",
-    "stageThemeLabel": "Stage theme",
-    "spriteVariations": {
-      "default": "Default",
-      "shiny": "Shiny",
-      "retro": "Retro"
-    },
-    "stageThemes": {
-      "classic": "Classic",
-      "meadow": "Meadow",
-      "night": "Night"
-    }
-  },
   "selection": {
     "selectButton": "Use in Tamagotchi",
     "alreadySelected": "Selected for Tamagotchi",

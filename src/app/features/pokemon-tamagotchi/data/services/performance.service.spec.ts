@@ -30,19 +30,26 @@ describe('PerformanceService', () => {
   });
 
   it('falls back to low profile when reduced motion is preferred', () => {
-    globalThis.matchMedia = vi.fn().mockReturnValue({
-      matches: true,
-      media: '(prefers-reduced-motion: reduce)',
-      onchange: null,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    } as MediaQueryList);
+    const previous = globalThis.matchMedia;
+
+    Object.defineProperty(globalThis, 'matchMedia', {
+      configurable: true,
+      value: vi.fn().mockReturnValue({
+        matches: true,
+        media: '(prefers-reduced-motion: reduce)',
+        onchange: null,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      } as MediaQueryList),
+    });
 
     service.setMode('auto');
 
     expect(service.resolveEffectiveMode()).toBe('low');
+
+    Object.defineProperty(globalThis, 'matchMedia', { configurable: true, value: previous });
   });
 });

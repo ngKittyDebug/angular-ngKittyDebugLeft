@@ -1,4 +1,4 @@
-import type { ElementRef, OnDestroy, OnInit } from '@angular/core';
+import type { AfterViewInit, ElementRef, OnDestroy } from '@angular/core';
 import { ChangeDetectionStrategy, Component, input, output, viewChild } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { TuiButton } from '@taiga-ui/core';
@@ -21,7 +21,7 @@ const TARGET_LIFETIME_MS = 1_400;
   styleUrl: './mini-game.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MiniGameComponent implements OnInit, OnDestroy {
+export class MiniGameComponent implements AfterViewInit, OnDestroy {
   private readonly canvasRef = viewChild.required<ElementRef<HTMLCanvasElement>>('canvas');
 
   private animationFrame = 0;
@@ -39,7 +39,7 @@ export class MiniGameComponent implements OnInit, OnDestroy {
   protected score = 0;
   protected secondsLeft = 0;
 
-  public ngOnInit(): void {
+  public ngAfterViewInit(): void {
     const config = MINI_GAME_CONFIGS[this.gameType()];
 
     this.secondsLeft = config.duration;

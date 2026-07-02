@@ -8,8 +8,7 @@ import type {
 } from '@shared/models/pokemon-detail-api-data-interface';
 import { EVOLUTION_REQUIREMENTS } from '../constants/evolution-criteria.constants';
 import type { EvolutionChain } from '../../models/evolution.model';
-import type { SpriteVariation } from '../../models/customization.model';
-import type { Pokemon, PokemonSpriteUrls } from '../../models/pokemon.model';
+import type { Pokemon, PokemonSpriteUrls, SpriteVariation } from '../../models/pokemon.model';
 
 export function isFirstStageInEvolutionChain(
   speciesName: string,

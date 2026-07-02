@@ -75,8 +75,3 @@ export const selectCanEvolve = createSelector(
   selectIsEvolving,
   (progress, isEvolving) => progress.isReady && !isEvolving,
 );
-
-export const selectCustomization = createSelector(
-  selectTamagotchiState,
-  (state) => state.customization,
-);

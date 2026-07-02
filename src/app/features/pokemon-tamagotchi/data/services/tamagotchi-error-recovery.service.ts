@@ -1,6 +1,5 @@
 import { inject, Injectable } from '@angular/core';
 
-import { DEFAULT_CUSTOMIZATION } from '../constants/customization.constants';
 import { TAMAGOTCHI_SYSTEM_ERRORS } from '../constants/system-errors.constants';
 import { clampStatusValue } from '../helpers/status-bounds.helper';
 import { createInitialTamagotchiState } from '../store/tamagotchi.state';
@@ -68,7 +67,6 @@ export class TamagotchiErrorRecoveryService {
       ...createInitialTamagotchiState(),
       ...state,
       achievements: state.achievements ?? [],
-      customization: state.customization ?? { ...DEFAULT_CUSTOMIZATION },
       dailyRoutine: state.dailyRoutine ?? createInitialTamagotchiState().dailyRoutine,
       error: null,
       evolutionProgress:

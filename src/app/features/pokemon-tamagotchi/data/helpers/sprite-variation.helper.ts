@@ -1,8 +1,9 @@
-import type { SpriteVariation, TamagotchiCustomization } from '../../models/customization.model';
-import type { Pokemon, PokemonSpriteUrls } from '../../models/pokemon.model';
+import type { Pokemon, PokemonSpriteUrls, SpriteVariation } from '../../models/pokemon.model';
 import type { PokemonStatus } from '../../models/pokemon-status.model';
 
 export type StatusSpriteKey = keyof PokemonSpriteUrls;
+
+export const DEFAULT_SPRITE_VARIATION: SpriteVariation = 'default';
 
 export function resolveStatusSpriteKey(
   isEvolving: boolean,
@@ -43,11 +44,11 @@ export function spriteSetForVariation(
 
 export function resolveSpriteUrl(
   pokemon: Pokemon,
-  customization: TamagotchiCustomization,
   statusKey: StatusSpriteKey,
+  variation: SpriteVariation = DEFAULT_SPRITE_VARIATION,
 ): string {
   const normalized = ensurePokemonSpriteVariations(pokemon);
-  const spriteSet = spriteSetForVariation(normalized, customization.spriteVariation);
+  const spriteSet = spriteSetForVariation(normalized, variation);
 
   return spriteSet[statusKey] || spriteSet.normal;
 }
@@ -67,8 +68,4 @@ export function ensurePokemonSpriteVariations(pokemon: Pokemon): Pokemon {
       shiny: urls,
     },
   };
-}
-
-export function spriteVariationClass(variation: SpriteVariation): string {
-  return `pokemon-sprite__image--variation-${variation}`;
 }

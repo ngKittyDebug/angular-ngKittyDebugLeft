@@ -1,5 +1,6 @@
 import type { EvolutionChain } from './evolution.model';
-import type { SpriteVariation } from './customization.model';
+
+export type SpriteVariation = 'default' | 'retro' | 'shiny';
 
 export interface PokemonSpriteUrls {
   normal: string;

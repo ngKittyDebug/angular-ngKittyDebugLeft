@@ -52,22 +52,6 @@ describe('PokemonTamagotchiPageComponent', () => {
           langs: {
             en: {
               pokemonTamagotchi: {
-                appearance: {
-                  ariaLabel: 'Appearance',
-                  spriteVariationLabel: 'Sprite',
-                  spriteVariations: {
-                    default: 'Default',
-                    retro: 'Retro',
-                    shiny: 'Shiny',
-                  },
-                  stageThemeLabel: 'Theme',
-                  stageThemes: {
-                    classic: 'Classic',
-                    meadow: 'Meadow',
-                    night: 'Night',
-                  },
-                  title: 'Appearance',
-                },
                 actions: {
                   care: 'Care',
                   cooldown: '{{seconds}}s',
