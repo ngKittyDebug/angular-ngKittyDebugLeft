@@ -200,7 +200,7 @@ Loader (`src/app/transloco-loader.ts`) дергает `/i18n/<lang>.json`. Дл�
 
 - **Selector prefix:** `left-paw-`
 - **Change detection:** Always `ChangeDetectionStrategy.OnPush` (enforced by ESLint)
-- **Standalone components only** (Angular 21, no NgModules)
+- **Standalone components only** (Angular 22, no NgModules)
 - **Signals preferred** over observables for local state (`@angular-eslint/prefer-signals` warn)
 - **File suffixes:** `.component.ts`, `.service.ts`, `.directive.ts`, `.pipe.ts`, `.resolver.ts`
 - **Styles:** SCSS per component; global style preprocessor includes `src/styles` so partials are importable without relative paths
@@ -240,9 +240,9 @@ Loader (`src/app/transloco-loader.ts`) дергает `/i18n/<lang>.json`. Дл�
 
 ## Angular skills (project-scoped)
 
-Three Angular-specific Claude skills are installed under `.claude/skills/`. Each has a `SKILL.md` with frontmatter (`name:`, `description:`) and reference material. Loaded automatically by Claude Code when the project is opened — invoke by topic match in conversation. These three are **local-only** (gitignored, unlike the committed `pr-review`/`codebase-audit`/`_shared` folders) — in a fresh clone or cloud environment they are absent; fall back to the `angular-cli`/`taiga-ui` MCPs.
+Three Angular-specific Claude skills live **committed** in `.agents/skills/` (`angular-developer`, `angular-best-practices-signalstore`, `angular-best-practices-transloco`), so fresh clones and cloud environments get them out of the box. Each has a `SKILL.md` with frontmatter (`name:`, `description:`) and reference material. Loaded automatically by Claude Code when the project is opened — invoke by topic match in conversation. The `.claude/skills/angular-*` entries are local gitignored symlinks into `.agents/skills/`, maintained by the `skills` CLI.
 
-**When writing or reviewing Angular/Taiga code, consult these first, in this order:** the matching skill below for the pattern (read the `angular-developer/references/*.md` file the umbrella points to for depth) → the `angular-cli` MCP for version-correct Angular APIs the skill doesn't settle → the `taiga-ui` MCP for any `Tui*` symbol/package/snippet (see "MCP servers" below). Don't assert a v21 Angular or Taiga v5 API from memory — both drift from training data.
+**When writing or reviewing Angular/Taiga code, consult these first, in this order:** the matching skill below for the pattern (read the `angular-developer/references/*.md` file the umbrella points to for depth) → the `angular-cli` MCP for version-correct Angular APIs the skill doesn't settle → the `taiga-ui` MCP for any `Tui*` symbol/package/snippet (see "MCP servers" below). Don't assert a v22 Angular or Taiga v5 API from memory — both drift from training data.
 
 Available skills:
 
@@ -254,11 +254,11 @@ Available skills:
 
 > The earlier sprawl of ~19 overlapping third-party Angular skills was removed in favour of the official `angular-developer` umbrella (from `github.com/angular/skills`, ships its full `references/` folder) plus the two project-specific add-ons that the umbrella does **not** cover (NgRx SignalStore + Transloco — both used here). Don't re-add granular per-topic skills (`angular-component`, `angular-signals`, `angular-routing`, …); their content lives inside `angular-developer/references/`.
 
-**Lockfile:** `skills-lock.json` tracks source repo + path + content hash for the three skills above. To upgrade a skill, fetch the latest `SKILL.md` from its source and update `computedHash`.
+**Upgrading:** run `npx skills update -p` in the repo root — it refreshes the three skills above from their source repos (`angular/skills`, `alfredoperez/angular-best-practices`). It rewrites the **committed** copies in `.agents/skills/`, so land the result through the normal commit → PR flow. (The old `skills-lock.json` scheme is retired.)
 
 ## MCP servers (`.mcp.json`)
 
-Two MCP servers are configured for this project in `.mcp.json` — prefer them over memory for library-version-sensitive questions, since both Taiga v5 and Angular v21+ APIs drift from training data.
+Two MCP servers are configured for this project in `.mcp.json` — prefer them over memory for library-version-sensitive questions, since both Taiga v5 and Angular v22+ APIs drift from training data.
 
 | Server        | Command                           | Use it for                                                                                                                                                                                                                                                                                                                                                           |
 | ------------- | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -329,7 +329,7 @@ When an MCP server is unavailable, fall back to the conventions in this file (Ta
 
 ## Common pitfalls (learned the hard way)
 
-- **Gitignore границы `.claude/`**: `.planning/` и почти весь `.claude/` (Angular-скиллы, `skills-lock.json`, локальные настройки) — gitignored, их правки живут только локально. **Исключения — обычные коммитящиеся файлы репо**: `CLAUDE.md` и три папки скиллов — `.claude/skills/pr-review/`, `.claude/skills/codebase-audit/`, `.claude/skills/_shared/` (закоммичены, чтобы облачные routines видели их в свежем клоне). Правки в исключениях проходят обычный flow: commit → PR → push.
+- **Gitignore границы `.claude/`**: `.planning/` и почти весь `.claude/` (симлинки `skills/angular-*`, локальные настройки) — gitignored, их правки живут только локально. **Исключения — обычные коммитящиеся файлы репо**: `CLAUDE.md`, папка `.agents/skills/` (Angular-скиллы + matt-набор) и три папки скиллов — `.claude/skills/pr-review/`, `.claude/skills/codebase-audit/`, `.claude/skills/_shared/` (закоммичены, чтобы облачные routines видели их в свежем клоне). Правки в исключениях проходят обычный flow: commit → PR → push.
 - **Relative path counting**: глубокие `../../../../../` хрупкие — используй path alias. Для environments есть `@environments/*` (`@environments/environment`), для общей логики — `@game/frenzy/*`. Если всё же считаешь относительный путь и сомневаешься — сперва `pnpm typecheck`.
 - **Husky `pre-commit`** runs `lint-staged + typecheck`. `lint-staged` includes `format:fix` on staged JSON/MD which **modifies** them. If commit fails (e.g. typecheck) — re-stage modified files before retry.
 - **Husky `pre-push`** runs `pnpm lint + pnpm test`. Full lint over whole project + full test suite. Don't bypass with `--no-verify` unless explicitly authorized.

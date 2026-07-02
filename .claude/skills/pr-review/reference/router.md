@@ -1,4 +1,4 @@
-# Angular Router v21 — Review Patterns for this Project
+# Angular Router v22 — Review Patterns for this Project
 
 When reviewing PR changes that involve routing (`src/app/app.routes.ts` or feature route files):
 

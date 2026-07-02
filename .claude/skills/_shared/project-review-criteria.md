@@ -10,7 +10,7 @@ calling skill; this file maps findings to those severities.
 
 ## 1. Project Context
 
-- **Stack**: Angular v21, Standalone components, Taiga UI, Transloco, TypeScript strict mode.
+- **Stack**: Angular v22, Standalone components, Taiga UI, Transloco, TypeScript strict mode.
 - **Selector prefix**: `left-paw-` — flag components/directives/pipes that don't use it.
 - **ESLint**: Strictly enforced — lint errors block approval. See `CLAUDE.md` ("Key ESLint rules to know") for the full set.
 - **Workspaces**: root Angular app + `partykit-server/` (realtime). Shared contract lives in `shared-game/` under `@game/*`. See `CLAUDE.md` ("Workspace structure") for the boundary rules.
@@ -73,11 +73,11 @@ Read them from `docs/` (in the checkout being reviewed) at the start of every re
 
 ---
 
-## 3. Angular v21 Code Quality Checklist
+## 3. Angular v22 Code Quality Checklist
 
 ### Angular verification — skills first, then the `angular-cli` MCP
 
-Angular v21+ APIs drift from training data, so a v21 verdict written from memory is a liability — the same trap as a wrong-package Taiga import. Two layers of ground truth, both available during review:
+Angular v22+ APIs drift from training data, so a v22 verdict written from memory is a liability — the same trap as a wrong-package Taiga import. Two layers of ground truth, both available during review:
 
 1. **Project skills** (`.claude/skills/`) — `angular-developer` (umbrella; read the matching `angular-developer/references/*.md` for the deep version), `angular-best-practices-signalstore` (NgRx SignalStore), `angular-best-practices-transloco` (Transloco). Consult the matching one before any pattern-specific finding.
 2. **`angular-cli` MCP** — version-correct source of truth when the skills don't settle it. `mcp__angular-cli__search_documentation` for API/concept lookups, `mcp__angular-cli__get_best_practices` for the version-pinned standards, `mcp__angular-cli__list_projects` to discover the workspace. Prefer it over asserting an API from memory.
@@ -88,7 +88,7 @@ If the MCP is unavailable, fall back to the skills + this checklist and say in t
 
 These are real traps a past audit hit. Each looks like a violation from memory but is correct **in this repo** — check before flagging, and when the MCP is unavailable, the installed type defs in `node_modules/@angular/core` are the authoritative fallback (grep them; that's how `@Service` below was confirmed).
 
-- **Angular is v22, not v21.** `CLAUDE.md` and this file say "v21", but `node_modules/@angular/core` is `22.x`. Verify version-sensitive verdicts against the installed version, not the doc label.
+- **Angular majors drift — trust the install, not the doc label.** Docs here say "v22" and `node_modules/@angular/core` is `22.x` today, but after the next upgrade they may diverge again. Verify version-sensitive verdicts against the installed version.
 - **`@Service()` is a real decorator.** Angular v22 ships `@Service()` (a root-provided, tree-shakable sibling of `@Injectable({providedIn:'root'})`). `ThemeSwitcherService`/`LanguageSwitcherService` use it deliberately — **not** a "should be `@Injectable`" finding.
 - **Private fields first is the project's order.** `eslint.config.js` `member-ordering.classes` lists `private-field` **before** `public-field`. So `private readonly x = inject(...)` ahead of public fields is _required_ here, not a violation. (The `default` order is public-first, but `classes` overrides it.)
 - **`unicorn/prevent-abbreviations` only flags its built-in dictionary.** Short names it doesn't know (`fb`, `bp`, `lang`) pass lint. If lint is green, don't re-flag an abbreviation as an ESLint violation — at most a 🫥 naming nit tied to the team's word, never a 🔴.
