@@ -62,12 +62,10 @@ CONTEXT.md
 docs/adr/
 
 # Claude Code — local config / sessions stay local; committed: .claude/commands/,
-# .claude/skills/ (minus the local audit workspace), CLAUDE.md and .mcp.json —
-# cloud routines only see what's in the repo.
+# .claude/skills/, CLAUDE.md and .mcp.json — cloud routines only see what's in the repo.
 .claude/*
 !.claude/commands/
 !.claude/skills/
-.claude/skills/codebase-audit-workspace/
 
 # Gemini CLI — local config / sessions / skills stay local, EXCEPT the committed review
 # skills, settings.json
