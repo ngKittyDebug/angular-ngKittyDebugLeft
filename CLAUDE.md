@@ -141,7 +141,7 @@ Test structure/naming rules live in `docs/Стайлгайд тестирова�
 
 ## Angular skills (project-scoped)
 
-Three Angular-specific Claude skills live **committed** in `.agents/skills/` (`angular-developer`, `angular-best-practices-signalstore`, `angular-best-practices-transloco`), so fresh clones and cloud environments get them out of the box. Loaded automatically by Claude Code — invoke by topic match. The `.claude/skills/angular-*` entries are committed symlinks into `.agents/skills/`, maintained by the `skills` CLI.
+Three Angular-specific Claude skills live **committed** in `.agents/skills/` (`angular-developer`, `angular-best-practices-signalstore`, `angular-best-practices-transloco`) and load automatically — fresh clones and cloud environments get them out of the box.
 
 **When writing or reviewing Angular/Taiga code, consult in this order:** the matching skill (read the `angular-developer/references/*.md` file the umbrella points to) → the `angular-cli` MCP for version-correct Angular APIs the skill doesn't settle → the `taiga-ui` MCP for any `Tui*` symbol/package/snippet. Don't assert a v22 Angular or Taiga v5 API from memory — both drift from training data.
 
@@ -190,7 +190,7 @@ The repo is a `pnpm-workspace.yaml` monorepo: the root Angular app + `partykit-s
 
 ## Common pitfalls (learned the hard way)
 
-- **Gitignore boundaries:** `.planning/`, `docs/agents/`, `docs/adr/`, `CONTEXT.md` and the personal part of `.claude/` (`settings.local.json`, worktrees) are gitignored — edits there live only locally. **Committed:** `CLAUDE.md`, `docs/`, `.agents/skills/`, `skills-lock.json`, `.claude/commands/`, `.claude/skills/`, `.claude/settings.json` (shared permissions allowlist + prettier PostToolUse hook; cloud routines only see what's in the repo). Committed paths go through the normal flow: commit → PR → push.
+- **Not every config path is tracked:** `.planning/`, `docs/agents/`, `docs/adr/`, `CONTEXT.md` and `.claude/settings.local.json` are gitignored — check `.gitignore` before assuming an edit lands in the repo (cloud routines only see what's committed). Tracked config changes go through the normal commit → PR flow.
 - **Relative path counting:** deep `../../../../../` chains are fragile — use a path alias (`@environments/*`, `@game/frenzy/*`). If you count a relative path anyway and doubt it — `pnpm typecheck` first.
 - **Husky `pre-commit`** runs `lint-staged + typecheck`. lint-staged includes `format:fix` on staged JSON/MD, which **modifies** them. If the commit fails (e.g. typecheck) — re-stage the modified files before retrying.
 - **Husky `pre-push`** runs `pnpm lint + pnpm test` — full lint + full test suite. Don't bypass with `--no-verify` unless explicitly authorized.
