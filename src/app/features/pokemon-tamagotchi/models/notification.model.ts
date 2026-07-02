@@ -1,5 +1,3 @@
-import type { ActionType } from './tamagotchi-state.model';
-
 export type NotificationPriority = 'info' | 'warning' | 'critical' | 'achievement';
 
 export interface Notification {
@@ -9,10 +7,6 @@ export interface Notification {
   priority: NotificationPriority;
   timestamp: number;
   read: boolean;
-  action?: {
-    type: ActionType;
-    label: string;
-  };
 }
 
 export type StatusAlertType =

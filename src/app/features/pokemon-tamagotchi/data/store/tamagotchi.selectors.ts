@@ -43,10 +43,6 @@ export const selectUnreadNotifications = createSelector(selectNotifications, (no
   sortNotificationsByPriority(notifications.filter((notification) => !notification.read)),
 );
 
-export const selectNotificationHistory = createSelector(selectNotifications, (notifications) =>
-  [...notifications].sort((left, right) => right.timestamp - left.timestamp),
-);
-
 export const selectInteractionHistory = createSelector(
   selectTamagotchiState,
   (state) => state.interactionHistory,

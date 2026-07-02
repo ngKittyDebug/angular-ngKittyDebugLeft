@@ -306,14 +306,6 @@ export class PokemonTamagotchiPageComponent {
     this.store.dispatch(TamagotchiActions.checkEvolution());
   }
 
-  protected onNotificationAction(action: ActionType): void {
-    this.onAction(action);
-  }
-
-  protected onNotificationDismiss(id: string): void {
-    this.store.dispatch(TamagotchiActions.dismissNotification({ id }));
-  }
-
   protected onSystemErrorDismiss(): void {
     this.store.dispatch(TamagotchiActions.clearError());
   }
@@ -361,7 +353,11 @@ export class PokemonTamagotchiPageComponent {
       );
     }
 
-    this.notificationService.notifyStatusAlerts(result.alerts, result.decay.timestamp);
+    this.notificationService.processStatusAlerts({
+      status: result.nextStatus,
+      thresholdAlerts: result.alerts,
+      timestamp: result.decay.timestamp,
+    });
     this.store.dispatch(TamagotchiActions.checkEvolution());
 
     this.timerTickCount += 1;

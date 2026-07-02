@@ -329,17 +329,6 @@ export const tamagotchiReducer = createReducer(
     }),
   })),
 
-  on(TamagotchiActions.markNotificationRead, (state, { id }) => ({
-    ...state,
-    notifications: state.notifications.map((notification) => {
-      if (notification.id === id) {
-        return { ...notification, read: true };
-      }
-
-      return notification;
-    }),
-  })),
-
   on(TamagotchiActions.initializeTamagotchi, (state) => ({
     ...state,
     initialized: true,

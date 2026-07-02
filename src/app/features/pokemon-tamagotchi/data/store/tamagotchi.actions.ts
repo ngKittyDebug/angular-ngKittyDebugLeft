@@ -63,11 +63,6 @@ export const dismissNotification = createAction(
   props<{ id: string }>(),
 );
 
-export const markNotificationRead = createAction(
-  '[Tamagotchi] Mark Notification Read',
-  props<{ id: string }>(),
-);
-
 export const initializeTamagotchi = createAction('[Tamagotchi] Initialize');
 
 export const loadState = createAction('[Tamagotchi] Load State');

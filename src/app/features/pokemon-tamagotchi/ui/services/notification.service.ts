@@ -1,42 +1,113 @@
 import { inject, Injectable } from '@angular/core';
+import { TranslocoService } from '@jsverse/transloco';
 import { Store } from '@ngrx/store';
+import { AppNotificationService } from '@core/services/app-notification.service';
 import {
   notificationFromAchievement,
   notificationFromEvolutionReady,
   notificationFromStatusAlert,
 } from '../../data/helpers/notification-factory.helper';
+import { detectPeriodicCriticalAlerts } from '../../data/helpers/status-decay.helper';
 import * as TamagotchiActions from '../../data/store/tamagotchi.actions';
 import type { Achievement } from '../../models/achievement.model';
-import type { Notification } from '../../models/notification.model';
-import type { StatusAlertType } from '../../models/notification.model';
+import type {
+  Notification,
+  NotificationPriority,
+  StatusAlertType,
+} from '../../models/notification.model';
+import type { PokemonStatus } from '../../models/pokemon-status.model';
+
+const NOTIFICATION_SCOPE = 'pokemonTamagotchi.notifications';
+
+export interface StatusAlertNotificationContext {
+  status: PokemonStatus;
+  thresholdAlerts: StatusAlertType[];
+  timestamp?: number;
+}
 
 @Injectable({ providedIn: 'root' })
 export class TamagotchiNotificationService {
+  private readonly appNotifications = inject(AppNotificationService);
   private readonly store = inject(Store);
+  private readonly transloco = inject(TranslocoService);
+  private readonly lastCriticalAlertAt: Partial<Record<StatusAlertType, number>> = {};
 
-  public add(notification: Notification): void {
-    this.store.dispatch(TamagotchiActions.addNotification({ notification }));
+  public processStatusAlerts(context: StatusAlertNotificationContext): void {
+    const timestamp = context.timestamp ?? Date.now();
+    const periodicAlerts = detectPeriodicCriticalAlerts(
+      context.status,
+      this.lastCriticalAlertAt,
+      timestamp,
+    );
+    const alerts = [...new Set([...context.thresholdAlerts, ...periodicAlerts])];
+
+    for (const alertType of alerts) {
+      this.notifyStatusAlert(alertType, timestamp);
+    }
+  }
+
+  public notifyStatusAlerts(alerts: StatusAlertType[], timestamp?: number): void {
+    for (const alertType of alerts) {
+      this.notifyStatusAlert(alertType, timestamp);
+    }
   }
 
   public dismiss(id: string): void {
     this.store.dispatch(TamagotchiActions.dismissNotification({ id }));
   }
 
-  public markAsRead(id: string): void {
-    this.store.dispatch(TamagotchiActions.markNotificationRead({ id }));
-  }
-
-  public notifyStatusAlerts(alerts: StatusAlertType[], timestamp?: number): void {
-    for (const alertType of alerts) {
-      this.add(notificationFromStatusAlert(alertType, timestamp));
-    }
-  }
-
   public notifyEvolutionReady(pokemonName: string, timestamp?: number): void {
-    this.add(notificationFromEvolutionReady(pokemonName, timestamp));
+    this.publish(notificationFromEvolutionReady(pokemonName, timestamp));
   }
 
   public notifyAchievementUnlocked(achievement: Achievement, timestamp?: number): void {
-    this.add(notificationFromAchievement(achievement, timestamp));
+    this.publish(notificationFromAchievement(achievement, timestamp));
+  }
+
+  private notifyStatusAlert(alertType: StatusAlertType, timestamp?: number): void {
+    const notification = notificationFromStatusAlert(alertType, timestamp);
+
+    if (notification.priority === 'critical') {
+      this.lastCriticalAlertAt[alertType] = notification.timestamp;
+    }
+
+    this.publish(notification);
+  }
+
+  private publish(notification: Notification): void {
+    this.store.dispatch(TamagotchiActions.addNotification({ notification }));
+
+    const label = this.resolveText(notification.title);
+    const message = this.resolveText(notification.message);
+
+    this.showByPriority(notification.priority, message, label);
+  }
+
+  private resolveText(value: string): string {
+    if (!value.includes('.')) {
+      return value;
+    }
+
+    return this.translate(value);
+  }
+
+  private translate(key: string): string {
+    return this.transloco.translate(`${NOTIFICATION_SCOPE}.${key}`);
+  }
+
+  private showByPriority(priority: NotificationPriority, message: string, label: string): void {
+    if (priority === 'critical') {
+      this.appNotifications.showErrorNotification(message, label);
+
+      return;
+    }
+
+    if (priority === 'warning' || priority === 'info') {
+      this.appNotifications.showWarningNotification(message, label);
+
+      return;
+    }
+
+    this.appNotifications.showPositiveNotification(message, label);
   }
 }

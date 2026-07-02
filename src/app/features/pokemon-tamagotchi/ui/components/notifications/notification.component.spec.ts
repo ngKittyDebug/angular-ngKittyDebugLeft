@@ -1,17 +1,16 @@
 import { TestBed } from '@angular/core/testing';
 import type { ComponentFixture } from '@angular/core/testing';
 import { TranslocoTestingModule } from '@jsverse/transloco';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import type { Notification } from '../../../models/notification.model';
 import { NotificationComponent } from './notification.component';
 
 const SAMPLE_NOTIFICATION: Notification = {
-  action: { label: 'feed', type: 'feed' },
-  id: 'n-1',
+  id: 'notification-1',
   message: 'alerts.hungerLow.message',
   priority: 'warning',
   read: false,
-  timestamp: 1,
+  timestamp: Date.now(),
   title: 'alerts.hungerLow.title',
 };
 
@@ -25,7 +24,6 @@ function createFixture(
         langs: {
           en: {
             pokemonTamagotchi: {
-              actions: { feed: 'Feed' },
               notifications: {
                 alerts: {
                   hungerLow: {
@@ -33,7 +31,6 @@ function createFixture(
                     title: 'Getting hungry',
                   },
                 },
-                dismiss: 'Dismiss',
                 empty: 'No notifications yet',
                 hideHistory: 'Hide history',
                 showHistory: 'Show history',
@@ -41,7 +38,10 @@ function createFixture(
             },
           },
         },
-        translocoConfig: { availableLangs: ['en'], defaultLang: 'en' },
+        translocoConfig: {
+          availableLangs: ['en'],
+          defaultLang: 'en',
+        },
       }),
     ],
   });
@@ -55,45 +55,29 @@ function createFixture(
 }
 
 describe('NotificationComponent', () => {
-  it('should create', () => {
-    expect(createFixture().componentInstance).toBeTruthy();
+  it('renders show history toggle with notification count', () => {
+    const fixture = createFixture();
+    const element = fixture.nativeElement as HTMLElement;
+
+    expect(element.textContent).toContain('Show history');
+    expect(element.textContent).toContain('(1)');
   });
 
-  it('renders unread notifications with translated title', () => {
-    const element = createFixture().nativeElement as HTMLElement;
+  it('shows history entries when expanded', () => {
+    const fixture = createFixture();
+    const element = fixture.nativeElement as HTMLElement;
+    const toggle = element.querySelector('button');
+
+    toggle?.dispatchEvent(new Event('click'));
+    fixture.detectChanges();
 
     expect(element.textContent).toContain('Getting hungry');
     expect(element.textContent).toContain('Your Pokémon is hungry.');
   });
 
-  it('emits dismissed when close button is clicked', () => {
-    const fixture = createFixture();
-    const dismissed = vi.fn();
-
-    fixture.componentInstance.dismissed.subscribe(dismissed);
-    (fixture.nativeElement as HTMLElement)
-      .querySelector('button[aria-label="Dismiss"]')
-      ?.dispatchEvent(new Event('click'));
-    fixture.detectChanges();
-
-    expect(dismissed).toHaveBeenCalledWith('n-1');
-  });
-
-  it('emits actionSelected when action button is clicked', () => {
-    const fixture = createFixture();
-    const actionSelected = vi.fn();
-
-    fixture.componentInstance.actionSelected.subscribe(actionSelected);
-    (fixture.nativeElement as HTMLElement)
-      .querySelector('.tamagotchi-notifications__actions button')
-      ?.dispatchEvent(new Event('click'));
-    fixture.detectChanges();
-
-    expect(actionSelected).toHaveBeenCalledWith('feed');
-  });
-
   it('shows empty state when there are no notifications', () => {
-    const element = createFixture([]).nativeElement as HTMLElement;
+    const fixture = createFixture([]);
+    const element = fixture.nativeElement as HTMLElement;
 
     expect(element.textContent).toContain('No notifications yet');
   });

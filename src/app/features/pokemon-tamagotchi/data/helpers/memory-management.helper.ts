@@ -1,5 +1,5 @@
-import type { Notification } from '../../models/notification.model';
 import type { InteractionEvent } from '../../models/interaction.model';
+import type { Notification } from '../../models/notification.model';
 import type { PerformanceProfile } from '../../models/performance-mode.model';
 import type { TamagotchiState } from '../../models/tamagotchi-state.model';
 

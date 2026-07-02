@@ -11,7 +11,6 @@ import { createInitialTamagotchiState } from '../store/tamagotchi.state';
 
 function createNotification(id: string, read: boolean, timestamp: number): Notification {
   return {
-    action: undefined,
     id,
     message: `Message ${id}`,
     priority: 'info',

@@ -1,8 +1,10 @@
 import { GAME_BALANCE } from '../constants/game-balance.constants';
 import { STATUS_THRESHOLDS } from '../constants/status-thresholds.constants';
+import { TIMER_CONFIG } from '../constants/timer.constants';
 import type { StatusAlertType } from '../../models/notification.model';
 import type { PokemonStatus, StatusDecay } from '../../models/pokemon-status.model';
 import { applyStatusDelta } from './status-bounds.helper';
+import { getStatusIndicatorLevel } from './status-indicator.helper';
 
 const MS_PER_HOUR = 60 * 60 * 1000;
 
@@ -52,8 +54,54 @@ interface ThresholdPair {
   warning: number;
 }
 
-function crossedDownward(before: number, after: number, threshold: number): boolean {
-  return before > threshold && after <= threshold;
+interface StatAlertConfig {
+  criticalType: StatusAlertType;
+  getValue: (status: PokemonStatus) => number;
+  lowType: StatusAlertType;
+  thresholds: ThresholdPair;
+}
+
+const STAT_ALERT_CONFIG: StatAlertConfig[] = [
+  {
+    criticalType: 'hungerCritical',
+    getValue: (status) => status.hunger,
+    lowType: 'hungerLow',
+    thresholds: {
+      critical: STATUS_THRESHOLDS.hungerCritical,
+      warning: STATUS_THRESHOLDS.hungerWarning,
+    },
+  },
+  {
+    criticalType: 'moodCritical',
+    getValue: (status) => status.mood,
+    lowType: 'moodLow',
+    thresholds: {
+      critical: STATUS_THRESHOLDS.moodCritical,
+      warning: STATUS_THRESHOLDS.moodWarning,
+    },
+  },
+  {
+    criticalType: 'energyCritical',
+    getValue: (status) => status.energy,
+    lowType: 'energyLow',
+    thresholds: {
+      critical: STATUS_THRESHOLDS.energyCritical,
+      warning: STATUS_THRESHOLDS.energyWarning,
+    },
+  },
+  {
+    criticalType: 'hydrationCritical',
+    getValue: (status) => status.hydration,
+    lowType: 'hydrationLow',
+    thresholds: {
+      critical: STATUS_THRESHOLDS.hydrationCritical,
+      warning: STATUS_THRESHOLDS.hydrationWarning,
+    },
+  },
+];
+
+function decreasedByWholeUnit(before: number, after: number): boolean {
+  return Math.floor(before) - Math.floor(after) === 1;
 }
 
 function detectStatAlerts(
@@ -63,60 +111,63 @@ function detectStatAlerts(
   lowType: StatusAlertType,
   criticalType: StatusAlertType,
 ): StatusAlertType[] {
-  const alerts: StatusAlertType[] = [];
-
-  if (crossedDownward(before, after, thresholds.critical)) {
-    alerts.push(criticalType);
-  } else if (crossedDownward(before, after, thresholds.warning)) {
-    alerts.push(lowType);
+  if (!decreasedByWholeUnit(before, after)) {
+    return [];
   }
 
-  return alerts;
+  const afterLevel = getStatusIndicatorLevel(after, thresholds.warning, thresholds.critical);
+
+  if (afterLevel === 'critical') {
+    return [criticalType];
+  }
+
+  if (afterLevel === 'warning') {
+    return [lowType];
+  }
+
+  return [];
 }
 
 export function detectStatusAlerts(before: PokemonStatus, after: PokemonStatus): StatusAlertType[] {
-  return [
-    ...detectStatAlerts(
-      before.hunger,
-      after.hunger,
-      {
-        critical: STATUS_THRESHOLDS.hungerCritical,
-        warning: STATUS_THRESHOLDS.hungerWarning,
-      },
-      'hungerLow',
-      'hungerCritical',
+  return STAT_ALERT_CONFIG.flatMap((config) =>
+    detectStatAlerts(
+      config.getValue(before),
+      config.getValue(after),
+      config.thresholds,
+      config.lowType,
+      config.criticalType,
     ),
-    ...detectStatAlerts(
-      before.mood,
-      after.mood,
-      {
-        critical: STATUS_THRESHOLDS.moodCritical,
-        warning: STATUS_THRESHOLDS.moodWarning,
-      },
-      'moodLow',
-      'moodCritical',
-    ),
-    ...detectStatAlerts(
-      before.energy,
-      after.energy,
-      {
-        critical: STATUS_THRESHOLDS.energyCritical,
-        warning: STATUS_THRESHOLDS.energyWarning,
-      },
-      'energyLow',
-      'energyCritical',
-    ),
-    ...detectStatAlerts(
-      before.hydration,
-      after.hydration,
-      {
-        critical: STATUS_THRESHOLDS.hydrationCritical,
-        warning: STATUS_THRESHOLDS.hydrationWarning,
-      },
-      'hydrationLow',
-      'hydrationCritical',
-    ),
-  ];
+  );
+}
+
+export function detectPeriodicCriticalAlerts(
+  status: PokemonStatus,
+  lastShownAt: Readonly<Partial<Record<StatusAlertType, number>>>,
+  now: number = Date.now(),
+  repeatIntervalMs: number = TIMER_CONFIG.CRITICAL_ALERT_REPEAT_MS,
+): StatusAlertType[] {
+  const alerts: StatusAlertType[] = [];
+
+  for (const config of STAT_ALERT_CONFIG) {
+    const value = config.getValue(status);
+    const level = getStatusIndicatorLevel(
+      value,
+      config.thresholds.warning,
+      config.thresholds.critical,
+    );
+
+    if (level !== 'critical') {
+      continue;
+    }
+
+    const lastShown = lastShownAt[config.criticalType];
+
+    if (lastShown === undefined || now - lastShown >= repeatIntervalMs) {
+      alerts.push(config.criticalType);
+    }
+  }
+
+  return alerts;
 }
 
 export function getElapsedDecayMs(
