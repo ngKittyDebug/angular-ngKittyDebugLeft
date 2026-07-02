@@ -31,6 +31,7 @@ export interface UserState {
   isLoading: boolean;
   error: string | null;
   isPasswordChangedSuccess: boolean;
+  isAccountDeleted: boolean;
 }
 
 export interface UpdateAvatar {

@@ -85,6 +85,11 @@ export class ProfileComponent implements OnInit {
         this.syncFormFromProfile();
       }
     });
+    effect(() => {
+      if (this.facade.isAccountDeleted()) {
+        this.endSession();
+      }
+    });
   }
 
   public ngOnInit(): void {
@@ -139,12 +144,16 @@ export class ProfileComponent implements OnInit {
   }
 
   protected onLogout(): void {
-    this.facade.logout();
-    void this.router.navigate(['/auth']);
+    this.endSession();
   }
 
   protected onDeleteAccount(): void {
     this.facade.deleteAccount();
+  }
+
+  private endSession(): void {
+    this.facade.logout();
+    void this.router.navigate(['/auth']);
   }
 
   private syncFormFromProfile(): void {

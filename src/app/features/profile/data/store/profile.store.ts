@@ -17,6 +17,7 @@ const initialState: UserState = {
   isLoading: false,
   error: null,
   isPasswordChangedSuccess: false,
+  isAccountDeleted: false,
 };
 
 export const UserProfileStore = signalStore(
@@ -25,7 +26,7 @@ export const UserProfileStore = signalStore(
   withMethods((store, api = inject(ProfileService)) => ({
     loadProfile: rxMethod<void>(
       pipe(
-        tap(() => patchState(store, { isLoading: true, error: null })),
+        tap(() => patchState(store, { isLoading: true, error: null, isAccountDeleted: false })),
         switchMap(() =>
           api.getUser().pipe(
             tap((profile) => {
@@ -74,7 +75,7 @@ export const UserProfileStore = signalStore(
         tap(() => patchState(store, { isLoading: true, error: null })),
         switchMap(() =>
           api.deleteAccount().pipe(
-            tap(() => patchState(store, initialState)),
+            tap(() => patchState(store, { ...initialState, isAccountDeleted: true })),
             handleStoreError(store),
           ),
         ),
