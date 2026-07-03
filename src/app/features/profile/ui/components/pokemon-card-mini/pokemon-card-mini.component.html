@@ -1,0 +1,17 @@
+<figure class="card__cover">
+  @if (pokemon.cardData(); as data) {
+    <img
+      class="card__image"
+      [src]="data.sprites.other['official-artwork'].front_default"
+      [alt]="data.name"
+    />
+  } @else {
+    <div class="card__image card__image--skeleton"></div>
+  }
+  <figcaption>
+    <div class="card__line">
+      <h3 class="card__name">{{ pokemon.cardData()?.name ?? '···' }}</h3>
+      <p class="card__id">{{ pokemon.cardData()?.id ? '#' + pokemon.cardData()?.id : '' }}</p>
+    </div>
+  </figcaption>
+</figure>

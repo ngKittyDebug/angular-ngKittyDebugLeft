@@ -47,6 +47,27 @@
     @content;
   }
 }
+@mixin shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--border) 25%,
+    var(--sidebar-accent) 50%,
+    var(--border) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+
+  @keyframes shimmer {
+    0% {
+      background-position: 200% 0;
+    }
+
+    100% {
+      background-position: -200% 0;
+    }
+  }
+}
+
 @mixin font_function($style: normal, $weight: normal, $size: 1rem, $height: 100%, $align: start) {
   font-style: $style;
   font-weight: $weight;

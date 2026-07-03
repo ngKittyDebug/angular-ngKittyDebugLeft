@@ -1,8 +1,8 @@
 export const USER_PATH = {
-  BASE: '/user',
+  BASE: 'user',
   PROFILE: '/profile',
   PASSWORD: '/password',
   POKEMON_FAVORITE: '/pokemon',
   POKEMON_FAVORITE_DELETE: '/pokemon/delete',
-  AVATAR: '/avatar',
+  AVATAR: 'avatar',
 } as const;
