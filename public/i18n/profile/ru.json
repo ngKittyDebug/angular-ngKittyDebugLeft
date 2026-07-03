@@ -1,17 +1,30 @@
 {
-  "achievements": {
-    "heading": "Достижения",
-    "achievement": {
-      "exemple": "Первая игра",
-      "exempleLong": "Первая игра на проекте"
-    }
-  },
   "settings": {
-    "heading": "Настройки"
-  },
-  "caught": {
-    "heading": "Пойманные покемоны",
-    "empty": "Похоже, покемоны успешно проходят мимо вас 😅"
+    "heading": "Настройки",
+    "save": "Сохранить",
+    "edit": "Редактировать",
+    "cancel": "Отмена",
+    "username": "Имя",
+    "email": "Email",
+    "uploadAvatar": "Выбрать аватар",
+    "avatarPicker": {
+      "title": "Выберите аватар",
+      "prev": "Назад",
+      "next": "Вперёд"
+    },
+    "logout": "Выйти",
+    "password": "Пароль",
+    "currentPassword": "Текущий пароль",
+    "newPassword": "Новый пароль",
+    "errors": {
+      "password": "Минимум 8 символов, заглавная буква и цифра"
+    },
+    "passwordChanged": "Пароль успешно изменён",
+    "delete": {
+      "button": "Удалить аккаунт",
+      "confirm": "Вы уверены? Это действие необратимо.",
+      "cancel": "Отмена"
+    }
   },
   "favorite": {
     "heading": "Любимые покемоны",

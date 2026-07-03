@@ -1,0 +1,56 @@
+@use 'src/styles/utility/_mixins.scss' as *;
+
+:host {
+  display: block;
+  background: var(--gradient-bg);
+  border-radius: 1.6rem;
+  border: 1px solid var(--border);
+  transition: all 0.3s;
+  padding: var(--card-mini-padding, 0.75rem 0 1rem);
+
+  * {
+    margin: 0;
+
+    @include font_function($size: var(--card-mini-font-size, 0.75rem));
+  }
+
+  &:hover {
+    border: 1px solid var(--sidebar-primary);
+    transform: scale(1.05);
+    box-shadow: 10px 10px 10px 0 var(--sidebar-ring);
+  }
+}
+
+.card__cover {
+  @include flex_container_function($direction: column, $gap: 0.5rem);
+
+  width: 100%;
+}
+
+.card__image {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: contain;
+  border-radius: 1rem;
+  background: var(--gradient-card);
+
+  &--skeleton {
+    @include shimmer;
+  }
+}
+
+.card__line {
+  @include flex_container_function($justify_content: space-between, $gap: 0.5rem);
+
+  width: 100%;
+  padding: 0 0.5rem;
+  min-height: 1.25rem;
+}
+
+.card__name {
+  @include font_function($weight: bold, $size: var(--card-mini-name-size, 0.85rem));
+
+  &::first-letter {
+    text-transform: uppercase;
+  }
+}

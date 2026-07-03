@@ -1,0 +1,61 @@
+@use 'src/styles/utility/_mixins.scss' as *;
+@use 'src/styles/_screens-width.scss' as *;
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+}
+
+.skeleton-card {
+  border: 1px solid var(--border);
+  border-radius: 1.6rem;
+  padding: 0.75rem 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.skeleton-card__image {
+  aspect-ratio: 1;
+  border-radius: 1rem;
+  @include shimmer;
+}
+
+.skeleton-card__line {
+  display: flex;
+  padding: 0 0.5rem;
+  min-height: 1.25rem;
+  align-items: center;
+}
+
+.skeleton-card__text {
+  height: 0.75rem;
+  width: 60%;
+  border-radius: 0.5rem;
+  @include shimmer;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.page-number {
+  font-weight: bold;
+  min-width: 1.5rem;
+  text-align: center;
+}
+
+@include respond_to($screen-small, max) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    --card-mini-padding: 0.4rem 0 0.5rem;
+    --card-mini-font-size: 0.6rem;
+    --card-mini-name-size: 0.65rem;
+  }
+}

@@ -1,0 +1,23 @@
+[
+  { "query": "пройдись по src/app/features/frenzy и собери технический долг в issues на борде", "should_trigger": true },
+  { "query": "audit the auth feature for convention violations and file them as tickets, grouped by type", "should_trigger": true },
+  { "query": "у нас накопился техдолг в core, можешь просканировать и завести задачи на доску AI technical debt?", "should_trigger": true },
+  { "query": "go through the whole src/app and find everything that breaks our docs/ style guides, then open an issue per problem class with priority and size", "should_trigger": true },
+  { "query": "what tech debt is hiding in partykit-server/src? сделай ревизию и оформи находки задачами", "should_trigger": true },
+  { "query": "i want a backlog of all the OnPush / any / naming-convention violations across the features folder, one ticket per kind", "should_trigger": true },
+  { "query": "проверь кодовую базу фичи main-catalog на качество и накидай тикетов что переделать", "should_trigger": true },
+  { "query": "audit develop for anything that violates the team angular conventions and put the findings on the project board", "should_trigger": true },
+  { "query": "сделай аудит shared-game, особенно интересует мёртвый код и магические числа, заведи issue с оценкой размера", "should_trigger": true },
+  { "query": "scan the codebase for facade-bypass and business logic leaking into components, file them so the team can pick them up", "should_trigger": true },
+
+  { "query": "review PR #105, the one with the profile page layout", "should_trigger": false },
+  { "query": "посмотри пулл реквест по frenzy mvp next, что думаешь по коду?", "should_trigger": false },
+  { "query": "глянь мой бранч feat/pokemons-storage-service перед тем как я запушу", "should_trigger": false },
+  { "query": "review the changes I just made to login-form.component.ts", "should_trigger": false },
+  { "query": "заведи одну issue: нужно добавить auth guard на роут /profile", "should_trigger": false },
+  { "query": "почему signup-форма принимает разные password и passwordRepeat? пофикси это", "should_trigger": false },
+  { "query": "прогони pnpm lint по проекту и покажи мне ошибки", "should_trigger": false },
+  { "query": "добавь OnPush во все компоненты, где его не хватает", "should_trigger": false },
+  { "query": "покажи открытые issue на борде с лейблом AI TechDebt", "should_trigger": false },
+  { "query": "что вообще умеет скилл codebase-audit и чем он отличается от pr-review?", "should_trigger": false }
+]

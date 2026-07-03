@@ -1,17 +1,30 @@
 {
-  "achievements": {
-    "heading": "Achievements",
-    "achievement": {
-      "exemple": "first game",
-      "exempleLong": "first game in the project"
-    }
-  },
   "settings": {
-    "heading": "Settings"
-  },
-  "caught": {
-    "heading": "Caught pokemons",
-    "empty": "Looks like Pokémon keep successfully passing by you 😅"
+    "heading": "Settings",
+    "save": "Save",
+    "edit": "Edit",
+    "cancel": "Cancel",
+    "username": "Name",
+    "email": "Email",
+    "uploadAvatar": "Choose avatar",
+    "avatarPicker": {
+      "title": "Choose your avatar",
+      "prev": "Previous",
+      "next": "Next"
+    },
+    "logout": "Log out",
+    "password": "Password",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "errors": {
+      "password": "At least 8 characters, one uppercase letter and one digit"
+    },
+    "passwordChanged": "Password changed successfully",
+    "delete": {
+      "button": "Delete account",
+      "confirm": "Are you sure? This action is irreversible.",
+      "cancel": "Cancel"
+    }
   },
   "favorite": {
     "heading": "Favorite pokemons",
