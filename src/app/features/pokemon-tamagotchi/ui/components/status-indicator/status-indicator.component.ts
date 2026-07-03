@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { TuiHint } from '@taiga-ui/core';
-import { TuiBadge, TuiProgress } from '@taiga-ui/kit';
+import { TuiBadge, TuiProgress, TuiStatus } from '@taiga-ui/kit';
 import { STATUS_THRESHOLDS } from '../../../data/constants/status-thresholds.constants';
 import {
   getStatusIndicatorLevel,
@@ -12,7 +12,7 @@ import type { StatusThresholdsModel, StatusType } from '../../../data/models/pok
 
 @Component({
   selector: 'left-paw-status-indicator',
-  imports: [TranslocoDirective, TuiBadge, TuiHint, TuiProgress],
+  imports: [TranslocoDirective, TuiBadge, TuiHint, TuiProgress, TuiStatus],
   templateUrl: './status-indicator.component.html',
   styleUrl: './status-indicator.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

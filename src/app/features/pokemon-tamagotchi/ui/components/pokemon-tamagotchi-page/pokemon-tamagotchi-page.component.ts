@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { TuiButton, TuiLoader, tuiLoaderOptionsProvider } from '@taiga-ui/core';
-import { TuiBadge } from '@taiga-ui/kit';
+import { TuiBadge, TuiSegmented } from '@taiga-ui/kit';
 import { TamagotchiFacade } from '../../../data/facades/tamagotchi.facade';
 import { ActionButtonsComponent } from '../action-buttons/action-buttons.component';
 import { EvolutionAnimationComponent } from '../evolution-animation/evolution-animation.component';
@@ -23,6 +23,7 @@ import { StatusIndicatorComponent } from '../status-indicator/status-indicator.c
     TuiBadge,
     TuiButton,
     TuiLoader,
+    TuiSegmented,
   ],
   templateUrl: './pokemon-tamagotchi-page.component.html',
   styleUrl: './pokemon-tamagotchi-page.component.scss',

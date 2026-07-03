@@ -131,6 +131,9 @@ export class TamagotchiFacade {
     this.performanceService.resolveEffectiveMode(),
   );
   public readonly performanceModes: PerformanceMode[] = ['auto', 'high', 'balanced', 'low'];
+  public readonly performanceModeIndex = computed(() =>
+    this.performanceModes.indexOf(this.performanceMode()),
+  );
 
   public constructor() {
     this.analyticsService.track('pageView');
@@ -265,6 +268,14 @@ export class TamagotchiFacade {
   public onPerformanceModeChange(mode: PerformanceMode): void {
     this.performanceService.setMode(mode);
     this.memoryManagementService.runGarbageCollection();
+  }
+
+  public onPerformanceModeIndexChange(index: number): void {
+    const mode = this.performanceModes[index];
+
+    if (mode) {
+      this.onPerformanceModeChange(mode);
+    }
   }
 
   public onResetProgress(): void {

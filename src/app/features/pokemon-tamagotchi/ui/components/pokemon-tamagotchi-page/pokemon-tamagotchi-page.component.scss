@@ -29,21 +29,11 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.35rem;
-  margin: 0;
-  padding: 0;
-  border: none;
 }
 
-.tamagotchi-page__performance-legend {
-  margin: 0;
-  padding-inline-end: 0.35rem;
+.tamagotchi-page__performance-label {
   color: var(--tui-text-secondary);
   font: var(--tui-font-text-s);
-}
-
-.tamagotchi-page__performance-option--active {
-  color: var(--tui-text-primary);
-  font-weight: 600;
 }
 
 .tamagotchi-page__performance-effective {
