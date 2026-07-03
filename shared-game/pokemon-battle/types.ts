@@ -46,12 +46,7 @@ export interface BattleCommand {
 }
 
 export type BattleEventType =
-  | 'turn-start'
-  | 'use-move'
-  | 'damage'
-  | 'faint'
-  | 'text'
-  | 'battle-over';
+  'turn-start' | 'use-move' | 'damage' | 'faint' | 'text' | 'battle-over';
 
 export interface BattleEventPayload {
   attackerId?: number;
