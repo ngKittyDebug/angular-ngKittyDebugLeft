@@ -6,20 +6,20 @@ import {
   getActionCooldownMs,
   getActionEnergyCost,
 } from '../helpers/status-calculator.helper';
-import type { PokemonStatus, StatusUpdate } from '../../models/pokemon-status.model';
+import type { PokemonStatusModel, StatusUpdateModel } from '../models/pokemon-status.model';
 import type {
   ActionCooldowns,
   ActionType,
-  TamagotchiState,
+  TamagotchiStateModel,
   ValidationResult,
-} from '../../models/tamagotchi-state.model';
+} from '../models/tamagotchi-state.model';
 
 export interface TamagotchiActionContext {
   hasPokemon: boolean;
   isSleeping: boolean;
   isTraining: boolean;
   lastActionTime: number | null;
-  status: PokemonStatus;
+  status: PokemonStatusModel;
   now?: number;
 }
 
@@ -28,7 +28,10 @@ const GAME_ACTIONS = new Set<ActionType>(['play', 'train']);
 
 @Injectable({ providedIn: 'root' })
 export class TamagotchiService {
-  public calculateStatusUpdate(currentStatus: PokemonStatus, action: ActionType): StatusUpdate {
+  public calculateStatusUpdate(
+    currentStatus: PokemonStatusModel,
+    action: ActionType,
+  ): StatusUpdateModel {
     return calculateStatusUpdate(currentStatus, action);
   }
 
@@ -72,7 +75,10 @@ export class TamagotchiService {
     return { allowed: true };
   }
 
-  public validateActionFromState(state: TamagotchiState, action: ActionType): ValidationResult {
+  public validateActionFromState(
+    state: TamagotchiStateModel,
+    action: ActionType,
+  ): ValidationResult {
     return this.validateAction(
       {
         hasPokemon: state.pokemon !== null,

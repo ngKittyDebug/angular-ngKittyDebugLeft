@@ -7,7 +7,7 @@ import {
   resolveStatusIndicatorColor,
   type StatusIndicatorLevel,
 } from '../helpers/status-indicator.helper';
-import type { StatusThresholds, StatusType } from '../../models/pokemon-status.model';
+import type { StatusThresholdsModel, StatusType } from '../models/pokemon-status.model';
 
 const PROPERTY_RUNS = 100;
 
@@ -106,7 +106,7 @@ describe('Tamagotchi property tests', () => {
           arbitraryThresholdPair,
           arbitraryStatusValue,
           ({ critical, warning }, value) => {
-            const uniformThresholds: StatusThresholds = {
+            const uniformThresholds: StatusThresholdsModel = {
               energyCritical: critical,
               energyWarning: warning,
               healthCritical: critical,

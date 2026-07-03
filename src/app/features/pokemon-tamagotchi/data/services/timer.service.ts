@@ -5,9 +5,9 @@ import { calculateSleepRestorationBonus } from '../helpers/sleep-restoration.hel
 import type { StatusDecayContext, StatusDecayTickResult } from './status-decay.service';
 import { StatusDecayService } from './status-decay.service';
 import { applyStatusDelta } from '../helpers/status-bounds.helper';
-import type { StatusAlertType } from '../../models/notification.model';
-import type { PokemonStatus, StatusDecay } from '../../models/pokemon-status.model';
-import type { DailyRoutine } from '../../models/tamagotchi-state.model';
+import type { StatusAlertType } from '../models/notification.model';
+import type { PokemonStatusModel, StatusDecayModel } from '../models/pokemon-status.model';
+import type { DailyRoutine } from '../models/tamagotchi-state.model';
 
 export interface TamagotchiTimerContext extends StatusDecayContext {
   dailyRoutine: DailyRoutine;
@@ -17,8 +17,8 @@ export interface TamagotchiTimerContext extends StatusDecayContext {
 export interface TimerTickResult {
   alerts: StatusAlertType[];
   dailyRoutine: DailyRoutine;
-  decay: StatusDecay;
-  nextStatus: PokemonStatus;
+  decay: StatusDecayModel;
+  nextStatus: PokemonStatusModel;
   routineBonusApplied: number;
   sleepBonusEnergy: number;
 }

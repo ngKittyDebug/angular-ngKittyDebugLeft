@@ -1,9 +1,9 @@
-import type { Achievement } from '../../models/achievement.model';
+import type { AchievementModel } from '../models/achievement.model';
 import type {
-  Notification,
+  NotificationModel,
   NotificationPriority,
   StatusAlertType,
-} from '../../models/notification.model';
+} from '../models/notification.model';
 
 interface AlertNotificationTemplate {
   messageKey: string;
@@ -74,7 +74,10 @@ export function createNotificationId(): string {
   return `notification-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-export function compareNotificationsByPriority(left: Notification, right: Notification): number {
+export function compareNotificationsByPriority(
+  left: NotificationModel,
+  right: NotificationModel,
+): number {
   const priorityDelta = PRIORITY_RANK[left.priority] - PRIORITY_RANK[right.priority];
 
   if (priorityDelta !== 0) {
@@ -87,7 +90,7 @@ export function compareNotificationsByPriority(left: Notification, right: Notifi
 export function notificationFromStatusAlert(
   alertType: StatusAlertType,
   timestamp: number = Date.now(),
-): Notification {
+): NotificationModel {
   const template = ALERT_TEMPLATES[alertType];
 
   return {
@@ -103,7 +106,7 @@ export function notificationFromStatusAlert(
 export function notificationFromEvolutionReady(
   pokemonName: string,
   timestamp: number = Date.now(),
-): Notification {
+): NotificationModel {
   return {
     id: createNotificationId(),
     message: pokemonName,
@@ -115,9 +118,9 @@ export function notificationFromEvolutionReady(
 }
 
 export function notificationFromAchievement(
-  achievement: Achievement,
+  achievement: AchievementModel,
   timestamp: number = Date.now(),
-): Notification {
+): NotificationModel {
   return {
     id: createNotificationId(),
     message: achievement.description,
@@ -128,6 +131,8 @@ export function notificationFromAchievement(
   };
 }
 
-export function sortNotificationsByPriority(notifications: Notification[]): Notification[] {
+export function sortNotificationsByPriority(
+  notifications: NotificationModel[],
+): NotificationModel[] {
   return [...notifications].sort(compareNotificationsByPriority);
 }

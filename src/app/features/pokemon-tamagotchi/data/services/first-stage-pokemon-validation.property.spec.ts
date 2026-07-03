@@ -3,11 +3,11 @@ import { TestBed } from '@angular/core/testing';
 import type { EvolutionChainApiResponse } from '@shared/models/pokemon-evolution-chain-api-data-interface';
 import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
 import {
+  convertPokemonDetailApiDataToTamagotchiPokemon,
   isFirstStageInEvolutionChain,
-  mapApiToTamagotchiPokemon,
-} from '../helpers/pokemon-profile-mapper.helper';
+} from '../api/pokemon/helpers/pokemon-tamagotchi-converter';
 import { PokemonProfileIntegrationService } from './pokemon-profile-integration.service';
-import { arbitraryLinearEvolutionChain } from '../testing/tamagotchi-arbitraries';
+import { arbitraryLinearEvolutionChain } from '../fixtures/tamagotchi-arbitraries';
 
 const PROPERTY_RUNS = 100;
 
@@ -76,7 +76,7 @@ describe('Tamagotchi property tests', () => {
       integration = TestBed.inject(PokemonProfileIntegrationService);
     });
 
-    // Feature: pokemon-tamagotchi, Property 5: First-Stage Pokemon Validation
+    // Feature: pokemon-tamagotchi, Property 5: First-Stage PokemonModel Validation
     it('should classify only chain-root species as first stage', () => {
       fc.assert(
         fc.property(arbitraryLinearEvolutionChain(), ({ chain, speciesIndex, stageCount }) => {
@@ -99,7 +99,10 @@ describe('Tamagotchi property tests', () => {
         fc.property(arbitraryLinearEvolutionChain(), ({ chain, speciesIndex }) => {
           const speciesName = `species-${speciesIndex}`;
           const detail = detailForSpecies(speciesName, speciesIndex + 1);
-          const pokemon = mapApiToTamagotchiPokemon(detail, evolutionResponseFromChain(chain));
+          const pokemon = convertPokemonDetailApiDataToTamagotchiPokemon(
+            detail,
+            evolutionResponseFromChain(chain),
+          );
 
           return pokemon.isFirstStage === (speciesIndex === 0);
         }),
@@ -111,7 +114,7 @@ describe('Tamagotchi property tests', () => {
       fc.assert(
         fc.property(arbitraryLinearEvolutionChain(), ({ chain, speciesIndex }) => {
           const speciesName = `species-${speciesIndex}`;
-          const pokemon = mapApiToTamagotchiPokemon(
+          const pokemon = convertPokemonDetailApiDataToTamagotchiPokemon(
             detailForSpecies(speciesName, speciesIndex + 1),
             evolutionResponseFromChain(chain),
           );

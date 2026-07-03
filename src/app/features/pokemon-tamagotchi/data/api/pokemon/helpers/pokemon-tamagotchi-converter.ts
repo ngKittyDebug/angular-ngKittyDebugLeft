@@ -6,9 +6,13 @@ import type {
   PokemonDetailApiData,
   PokemonSpritesApiData,
 } from '@shared/models/pokemon-detail-api-data-interface';
-import { EVOLUTION_REQUIREMENTS } from '../constants/evolution-criteria.constants';
-import type { EvolutionChain } from '../../models/evolution.model';
-import type { Pokemon, PokemonSpriteUrls, SpriteVariation } from '../../models/pokemon.model';
+import { EVOLUTION_REQUIREMENTS } from '../../../constants/evolution-criteria.constants';
+import type { EvolutionChainModel } from '../../../models/evolution.model';
+import type {
+  PokemonModel,
+  PokemonSpriteUrlsModel,
+  SpriteVariation,
+} from '../../../models/pokemon.model';
 
 export function isFirstStageInEvolutionChain(
   speciesName: string,
@@ -64,7 +68,7 @@ export function findEvolutionStageIndex(
   return null;
 }
 
-export function buildSpriteSet(primary: string): PokemonSpriteUrls {
+export function buildSpriteSet(primary: string): PokemonSpriteUrlsModel {
   return {
     eating: primary,
     evolving: primary,
@@ -77,7 +81,7 @@ export function buildSpriteSet(primary: string): PokemonSpriteUrls {
 
 export function mapSpriteVariations(
   sprites: PokemonSpritesApiData,
-): Record<SpriteVariation, PokemonSpriteUrls> {
+): Record<SpriteVariation, PokemonSpriteUrlsModel> {
   const pixelFront = sprites.front_default ?? '';
   const artwork = sprites.other?.['official-artwork']?.front_default;
   const primary = artwork ?? pixelFront;
@@ -96,15 +100,11 @@ export function mapSpriteVariations(
   };
 }
 
-export function mapSprites(sprites: PokemonSpritesApiData): PokemonSpriteUrls {
-  return mapSpriteVariations(sprites).default;
-}
-
 export function buildEvolutionChain(
   detail: PokemonDetailApiData,
   evolutionResponse: EvolutionChainApiResponse,
   chainNode: EvolutionChainItemApiData,
-): EvolutionChain {
+): EvolutionChainModel {
   const speciesName = detail.species.name;
   const currentStage = findEvolutionStageIndex(evolutionResponse.chain, speciesName) ?? 1;
   const nextSpecies = chainNode.evolves_to?.[0]?.species;
@@ -121,10 +121,10 @@ export function buildEvolutionChain(
   };
 }
 
-export function mapApiToTamagotchiPokemon(
+export function convertPokemonDetailApiDataToTamagotchiPokemon(
   detail: PokemonDetailApiData,
   evolutionResponse: EvolutionChainApiResponse,
-): Pokemon {
+): PokemonModel {
   const chainNode =
     findEvolutionChainNode(evolutionResponse.chain, detail.species.name) ?? evolutionResponse.chain;
   const speciesName = detail.species.name;

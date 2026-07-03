@@ -1,11 +1,11 @@
 import { Injectable } from '@angular/core';
 import type { Observable } from 'rxjs';
 import { of, throwError } from 'rxjs';
-import type { TamagotchiState } from '../../models/tamagotchi-state.model';
+import type { TamagotchiStateModel } from '../models/tamagotchi-state.model';
 
 @Injectable({ providedIn: 'root' })
 export class TamagotchiCloudSyncService {
-  public sync(state: TamagotchiState): Observable<void> {
+  public sync(state: TamagotchiStateModel): Observable<void> {
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
       return throwError(() => new Error('Cloud sync unavailable while offline'));
     }

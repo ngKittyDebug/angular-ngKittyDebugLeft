@@ -7,8 +7,8 @@ import {
   projectStatusIndicator,
   statusValueForType,
 } from '../helpers/status-indicator-sync.helper';
-import type { PokemonStatus } from '../../models/pokemon-status.model';
-import type { TamagotchiState } from '../../models/tamagotchi-state.model';
+import type { PokemonStatusModel } from '../models/pokemon-status.model';
+import type { TamagotchiStateModel } from '../models/tamagotchi-state.model';
 import {
   applyStatusDecayState,
   careForPokemonState,
@@ -27,13 +27,13 @@ import {
   arbitraryPokemonStatus,
   type CareAction,
   TEST_POKEMON,
-} from '../testing/tamagotchi-arbitraries';
+} from '../fixtures/tamagotchi-arbitraries';
 
 const PROPERTY_RUNS = 100;
 const FIXED_NOW = 1_700_000_000_000;
 const FIXED_TRAINING_REWARD = 25;
 
-function applyCareAction(state: TamagotchiState, action: CareAction): TamagotchiState {
+function applyCareAction(state: TamagotchiStateModel, action: CareAction): TamagotchiStateModel {
   switch (action.kind) {
     case 'applyStatusDecay':
       return applyStatusDecayState(state, action.decay!);
@@ -68,7 +68,7 @@ function applyCareAction(state: TamagotchiState, action: CareAction): Tamagotchi
   }
 }
 
-function stateWithPokemon(status: PokemonStatus, isSleeping: boolean): TamagotchiState {
+function stateWithPokemon(status: PokemonStatusModel, isSleeping: boolean): TamagotchiStateModel {
   const selected = selectPokemonState(initialTamagotchiState, TEST_POKEMON);
 
   return {
@@ -177,7 +177,7 @@ describe('Tamagotchi property tests', () => {
           fc.integer({ max: 100, min: 0 }),
           fc.integer({ max: 100, min: 0 }),
           (before, after) => {
-            const statusBefore: PokemonStatus = {
+            const statusBefore: PokemonStatusModel = {
               energy: before,
               experience: before,
               health: before,
@@ -191,7 +191,7 @@ describe('Tamagotchi property tests', () => {
               level: 1,
               mood: before,
             };
-            const statusAfter: PokemonStatus = { ...statusBefore, hunger: after };
+            const statusAfter: PokemonStatusModel = { ...statusBefore, hunger: after };
             const indicatorBefore = projectStatusIndicator('hunger', statusBefore);
             const indicatorAfter = projectStatusIndicator('hunger', statusAfter);
 

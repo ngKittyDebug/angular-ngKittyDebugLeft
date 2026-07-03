@@ -5,13 +5,15 @@ import { POKEMON_BASE_API } from '@core/constants/pokemon-constants';
 import type { EvolutionChainApiResponse } from '@shared/models/pokemon-evolution-chain-api-data-interface';
 import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
 import type { PokemonSpeciesApiData } from '@shared/models/pokemon-species-api-data-interface';
-import type { Pokemon, PokemonSpriteUrls } from '../../models/pokemon.model';
+import type { PokemonModel, PokemonSpriteUrlsModel } from '../models/pokemon.model';
+import { createTamagotchiStorageMock } from '../fixtures/tamagotchi-storage.mock';
+import { TamagotchiStorageService } from './tamagotchi-storage.service';
 import {
   PokemonProfileIntegrationService,
   TAMAGOTCHI_SELECTED_POKEMON_KEY,
 } from './pokemon-profile-integration.service';
 
-function buildPokemon(spriteUrls: PokemonSpriteUrls): Pokemon {
+function buildPokemon(spriteUrls: PokemonSpriteUrlsModel): PokemonModel {
   return {
     baseStats: {
       energyRestorationRate: 1,
@@ -36,6 +38,7 @@ function buildPokemon(spriteUrls: PokemonSpriteUrls): Pokemon {
 describe('PokemonProfileIntegrationService', () => {
   let service: PokemonProfileIntegrationService;
   let httpMock: HttpTestingController;
+  let storageMock: ReturnType<typeof createTamagotchiStorageMock>;
 
   const charmanderDetail = {
     abilities: [],
@@ -136,9 +139,13 @@ describe('PokemonProfileIntegrationService', () => {
   } as unknown as PokemonDetailApiData;
 
   beforeEach(() => {
-    localStorage.clear();
+    storageMock = createTamagotchiStorageMock();
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: TamagotchiStorageService, useValue: storageMock },
+      ],
     });
     service = TestBed.inject(PokemonProfileIntegrationService);
     httpMock = TestBed.inject(HttpTestingController);
@@ -165,7 +172,7 @@ describe('PokemonProfileIntegrationService', () => {
       name: 'charmander',
       species: 'charmander',
     });
-    expect(localStorage.getItem(TAMAGOTCHI_SELECTED_POKEMON_KEY)).not.toBeNull();
+    expect(storageMock.getItem(TAMAGOTCHI_SELECTED_POKEMON_KEY)).not.toBeNull();
   });
 
   it('should load first-stage pokemon from profile selection', () => {

@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import type { ComponentFixture } from '@angular/core/testing';
 import { TranslocoTestingModule } from '@jsverse/transloco';
 import { describe, expect, it, vi } from 'vitest';
-import type { ActionCooldowns, ActionType } from '../../../models/tamagotchi-state.model';
+import type { ActionCooldowns, ActionType } from '../../../data/models/tamagotchi-state.model';
 import { ActionButtonsComponent } from './action-buttons.component';
 
 const EMPTY_COOLDOWNS: ActionCooldowns = {

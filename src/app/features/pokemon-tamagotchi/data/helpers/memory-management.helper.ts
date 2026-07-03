@@ -1,7 +1,7 @@
-import type { InteractionEvent } from '../../models/interaction.model';
-import type { Notification } from '../../models/notification.model';
-import type { PerformanceProfile } from '../../models/performance-mode.model';
-import type { TamagotchiState } from '../../models/tamagotchi-state.model';
+import type { InteractionEventModel } from '../models/interaction.model';
+import type { NotificationModel } from '../models/notification.model';
+import type { PerformanceProfileModel } from '../models/performance-mode.model';
+import type { TamagotchiStateModel } from '../models/tamagotchi-state.model';
 
 export function trimBoundedList<T>(items: readonly T[], limit: number): T[] {
   if (items.length <= limit) {
@@ -20,13 +20,13 @@ export function trimNewestFirst<T>(items: readonly T[], limit: number): T[] {
 }
 
 export function pruneReadNotifications(
-  notifications: readonly Notification[],
+  notificationList: readonly NotificationModel[],
   maxAgeMs: number,
   limit: number,
   now: number = Date.now(),
-): Notification[] {
+): NotificationModel[] {
   const cutoff = now - maxAgeMs;
-  const kept = notifications.filter(
+  const kept = notificationList.filter(
     (notification) => !notification.read || notification.timestamp >= cutoff,
   );
 
@@ -40,18 +40,18 @@ export interface GarbageCollectLimits {
 }
 
 export function garbageCollectTamagotchiState(
-  state: TamagotchiState,
+  state: TamagotchiStateModel,
   limits: GarbageCollectLimits,
   now: number = Date.now(),
-): TamagotchiState {
+): TamagotchiStateModel {
   return {
     ...state,
     interactionHistory: trimBoundedList(
       state.interactionHistory,
       limits.interactionHistoryLimit,
-    ) as InteractionEvent[],
-    notifications: pruneReadNotifications(
-      state.notifications,
+    ) as InteractionEventModel[],
+    notificationList: pruneReadNotifications(
+      state.notificationList,
       limits.readNotificationMaxAgeMs,
       limits.notificationHistoryLimit,
       now,
@@ -59,7 +59,9 @@ export function garbageCollectTamagotchiState(
   };
 }
 
-export function profileToGarbageCollectLimits(profile: PerformanceProfile): GarbageCollectLimits {
+export function profileToGarbageCollectLimits(
+  profile: PerformanceProfileModel,
+): GarbageCollectLimits {
   return {
     interactionHistoryLimit: profile.interactionHistoryLimit,
     notificationHistoryLimit: profile.notificationHistoryLimit,

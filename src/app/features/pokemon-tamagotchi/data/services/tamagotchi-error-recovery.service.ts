@@ -3,20 +3,20 @@ import { inject, Injectable } from '@angular/core';
 import { TAMAGOTCHI_SYSTEM_ERRORS } from '../constants/system-errors.constants';
 import { clampStatusValue } from '../helpers/status-bounds.helper';
 import { createInitialTamagotchiState } from '../store/tamagotchi-initial';
-import type { TamagotchiState } from '../../models/tamagotchi-state.model';
+import type { TamagotchiStateModel } from '../models/tamagotchi-state.model';
 import { TamagotchiLoggerService } from './tamagotchi-logger.service';
 
 export interface TamagotchiRecoveryResult {
   message: string;
   recovered: boolean;
-  state: TamagotchiState;
+  state: TamagotchiStateModel;
 }
 
 @Injectable({ providedIn: 'root' })
 export class TamagotchiErrorRecoveryService {
   private readonly logger = inject(TamagotchiLoggerService);
 
-  public attemptStateRecovery(state: TamagotchiState): TamagotchiRecoveryResult {
+  public attemptStateRecovery(state: TamagotchiStateModel): TamagotchiRecoveryResult {
     const repaired = this.repairState(state);
 
     if (repaired !== null) {
@@ -40,7 +40,7 @@ export class TamagotchiErrorRecoveryService {
     this.logger.logError(context, error);
   }
 
-  public repairState(state: TamagotchiState): TamagotchiState | null {
+  public repairState(state: TamagotchiStateModel): TamagotchiStateModel | null {
     if (!state.status || typeof state.status !== 'object') {
       return null;
     }
@@ -66,14 +66,14 @@ export class TamagotchiErrorRecoveryService {
     return {
       ...createInitialTamagotchiState(),
       ...state,
-      achievements: state.achievements ?? [],
+      achievementList: state.achievementList ?? [],
       dailyRoutine: state.dailyRoutine ?? createInitialTamagotchiState().dailyRoutine,
       error: null,
       evolutionProgress:
         state.evolutionProgress ?? createInitialTamagotchiState().evolutionProgress,
       initialized: true,
       interactionHistory: state.interactionHistory ?? [],
-      notifications: state.notifications ?? [],
+      notificationList: state.notificationList ?? [],
       status: {
         ...state.status,
         energy: clampStatusValue(state.status.energy),

@@ -1,7 +1,8 @@
 import type { Routes } from '@angular/router';
 import { provideTranslocoScope } from '@jsverse/transloco';
+import { TAMAGOTCHI_PATH } from '@shared/constants/tamagotchi-routes';
 
-export const TAMAGOTCHI_PATH = 'tamagotchi';
+export { TAMAGOTCHI_PATH };
 
 export const pokemonTamagotchiRoutes: Routes = [
   {

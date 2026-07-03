@@ -5,21 +5,25 @@ import {
   garbageCollectTamagotchiState,
 } from '../helpers/memory-management.helper';
 import { applyStatusDelta } from '../helpers/status-bounds.helper';
-import type { EvolutionProgress } from '../../models/evolution.model';
-import type { InteractionEvent } from '../../models/interaction.model';
-import type { Notification } from '../../models/notification.model';
-import type { Pokemon } from '../../models/pokemon.model';
-import type { PokemonStatus, StatusDecay, StatusUpdate } from '../../models/pokemon-status.model';
-import type { TamagotchiState } from '../../models/tamagotchi-state.model';
+import type { EvolutionProgressModel } from '../models/evolution.model';
+import type { InteractionEventModel } from '../models/interaction.model';
+import type { NotificationModel } from '../models/notification.model';
+import type { PokemonModel } from '../models/pokemon.model';
+import type {
+  PokemonStatusModel,
+  StatusDecayModel,
+  StatusUpdateModel,
+} from '../models/pokemon-status.model';
+import type { TamagotchiStateModel } from '../models/tamagotchi-state.model';
 import { initialTamagotchiState } from './tamagotchi-initial';
 
 const INTERACTION_HISTORY_LIMIT = MEMORY_LIMITS.INTERACTION_HISTORY_MAX;
 const NOTIFICATION_HISTORY_LIMIT = MEMORY_LIMITS.NOTIFICATION_HISTORY_MAX;
 
 function withPokemon(
-  state: TamagotchiState,
-  update: (current: TamagotchiState) => TamagotchiState,
-): TamagotchiState {
+  state: TamagotchiStateModel,
+  update: (current: TamagotchiStateModel) => TamagotchiStateModel,
+): TamagotchiStateModel {
   if (!state.pokemon) {
     return state;
   }
@@ -28,9 +32,9 @@ function withPokemon(
 }
 
 function whenAwake(
-  state: TamagotchiState,
-  update: (current: TamagotchiState) => TamagotchiState,
-): TamagotchiState {
+  state: TamagotchiStateModel,
+  update: (current: TamagotchiStateModel) => TamagotchiStateModel,
+): TamagotchiStateModel {
   if (state.isSleeping) {
     return state;
   }
@@ -38,15 +42,18 @@ function whenAwake(
   return update(state);
 }
 
-function updateStatusFields(status: PokemonStatus, changes: Partial<PokemonStatus>): PokemonStatus {
+function updateStatusFields(
+  status: PokemonStatusModel,
+  changes: Partial<PokemonStatusModel>,
+): PokemonStatusModel {
   return { ...status, ...changes };
 }
 
-export function computeEvolutionProgress(state: TamagotchiState): EvolutionProgress {
+export function computeEvolutionProgress(state: TamagotchiStateModel): EvolutionProgressModel {
   const careScore = Math.round(
     (state.status.health + state.status.hunger + state.status.mood + state.status.hydration) / 4,
   );
-  const trainingScore = state.achievements
+  const trainingScore = state.achievementList
     .filter((achievement) => achievement.category === 'training' && achievement.unlocked)
     .reduce((total, achievement) => total + achievement.reward.experience, 0);
 
@@ -69,7 +76,11 @@ export function computeEvolutionProgress(state: TamagotchiState): EvolutionProgr
   };
 }
 
-function touchAction(state: TamagotchiState, status: PokemonStatus, now: number): TamagotchiState {
+function touchAction(
+  state: TamagotchiStateModel,
+  status: PokemonStatusModel,
+  now: number,
+): TamagotchiStateModel {
   return {
     ...state,
     lastActionTime: now,
@@ -77,7 +88,10 @@ function touchAction(state: TamagotchiState, status: PokemonStatus, now: number)
   };
 }
 
-export function selectPokemonState(state: TamagotchiState, pokemon: Pokemon): TamagotchiState {
+export function selectPokemonState(
+  state: TamagotchiStateModel,
+  pokemon: PokemonModel,
+): TamagotchiStateModel {
   return {
     ...state,
     error: null,
@@ -86,7 +100,7 @@ export function selectPokemonState(state: TamagotchiState, pokemon: Pokemon): Ta
   };
 }
 
-export function clearPokemonState(state: TamagotchiState): TamagotchiState {
+export function clearPokemonState(state: TamagotchiStateModel): TamagotchiStateModel {
   return {
     ...initialTamagotchiState,
     initialized: state.initialized,
@@ -94,7 +108,7 @@ export function clearPokemonState(state: TamagotchiState): TamagotchiState {
   };
 }
 
-export function feedPokemonState(state: TamagotchiState, now: number): TamagotchiState {
+export function feedPokemonState(state: TamagotchiStateModel, now: number): TamagotchiStateModel {
   return withPokemon(state, (current) =>
     whenAwake(current, (awake) => {
       const { hungerIncrease, moodIncrease, energyCost } = GAME_BALANCE.ACTION_EFFECTS.FEED;
@@ -114,7 +128,7 @@ export function feedPokemonState(state: TamagotchiState, now: number): Tamagotch
   );
 }
 
-export function waterPokemonState(state: TamagotchiState, now: number): TamagotchiState {
+export function waterPokemonState(state: TamagotchiStateModel, now: number): TamagotchiStateModel {
   return withPokemon(state, (current) => {
     const { hydrationIncrease, energyCost } = GAME_BALANCE.ACTION_EFFECTS.WATER;
 
@@ -131,7 +145,10 @@ export function waterPokemonState(state: TamagotchiState, now: number): Tamagotc
   });
 }
 
-export function careForPokemonState(state: TamagotchiState, now: number): TamagotchiState {
+export function careForPokemonState(
+  state: TamagotchiStateModel,
+  now: number,
+): TamagotchiStateModel {
   return withPokemon(state, (current) => {
     const { healthIncrease, moodIncrease, energyCost } = GAME_BALANCE.ACTION_EFFECTS.CARE;
 
@@ -148,7 +165,10 @@ export function careForPokemonState(state: TamagotchiState, now: number): Tamago
   });
 }
 
-export function playWithPokemonState(state: TamagotchiState, now: number): TamagotchiState {
+export function playWithPokemonState(
+  state: TamagotchiStateModel,
+  now: number,
+): TamagotchiStateModel {
   return withPokemon(state, (current) =>
     whenAwake(current, (awake) => {
       const { moodIncrease, energyCost } = GAME_BALANCE.ACTION_EFFECTS.PLAY;
@@ -168,10 +188,10 @@ export function playWithPokemonState(state: TamagotchiState, now: number): Tamag
 }
 
 export function startTrainingState(
-  state: TamagotchiState,
+  state: TamagotchiStateModel,
   now: number,
   experienceReward: number,
-): TamagotchiState {
+): TamagotchiStateModel {
   return withPokemon(state, (current) =>
     whenAwake(current, (awake) => {
       if (awake.trainingStartedAt !== null) {
@@ -197,10 +217,10 @@ export function startTrainingState(
 }
 
 export function completeTrainingState(
-  state: TamagotchiState,
+  state: TamagotchiStateModel,
   now: number,
   experienceGain: number,
-): TamagotchiState {
+): TamagotchiStateModel {
   return withPokemon(state, (current) =>
     whenAwake(current, (awake) => {
       if (awake.trainingStartedAt === null) {
@@ -223,7 +243,7 @@ export function completeTrainingState(
   );
 }
 
-export function putToSleepState(state: TamagotchiState, now: number): TamagotchiState {
+export function putToSleepState(state: TamagotchiStateModel, now: number): TamagotchiStateModel {
   return withPokemon(state, (current) => {
     if (current.isSleeping) {
       return current;
@@ -238,7 +258,7 @@ export function putToSleepState(state: TamagotchiState, now: number): Tamagotchi
   });
 }
 
-export function wakeUpState(state: TamagotchiState, now: number): TamagotchiState {
+export function wakeUpState(state: TamagotchiStateModel, now: number): TamagotchiStateModel {
   if (!state.isSleeping) {
     return state;
   }
@@ -251,10 +271,10 @@ export function wakeUpState(state: TamagotchiState, now: number): TamagotchiStat
 }
 
 export function interactWithPokemonState(
-  state: TamagotchiState,
-  interaction: InteractionEvent,
+  state: TamagotchiStateModel,
+  interaction: InteractionEventModel,
   now: number,
-): TamagotchiState {
+): TamagotchiStateModel {
   return withPokemon(state, (current) => ({
     ...touchAction(
       current,
@@ -271,9 +291,9 @@ export function interactWithPokemonState(
 }
 
 export function updateStatusState(
-  state: TamagotchiState,
-  statusUpdate: StatusUpdate,
-): TamagotchiState {
+  state: TamagotchiStateModel,
+  statusUpdate: StatusUpdateModel,
+): TamagotchiStateModel {
   const status = { ...state.status };
 
   if (statusUpdate.health !== undefined) {
@@ -307,7 +327,10 @@ export function updateStatusState(
   return { ...state, status };
 }
 
-export function applyStatusDecayState(state: TamagotchiState, decay: StatusDecay): TamagotchiState {
+export function applyStatusDecayState(
+  state: TamagotchiStateModel,
+  decay: StatusDecayModel,
+): TamagotchiStateModel {
   const status = {
     ...state.status,
     energy: applyStatusDelta(state.status.energy, -decay.energy),
@@ -323,14 +346,14 @@ export function applyStatusDecayState(state: TamagotchiState, decay: StatusDecay
   };
 }
 
-export function checkEvolutionState(state: TamagotchiState): TamagotchiState {
+export function checkEvolutionState(state: TamagotchiStateModel): TamagotchiStateModel {
   return {
     ...state,
     evolutionProgress: computeEvolutionProgress(state),
   };
 }
 
-export function startEvolutionState(state: TamagotchiState): TamagotchiState {
+export function startEvolutionState(state: TamagotchiStateModel): TamagotchiStateModel {
   if (!state.evolutionProgress.isReady || state.isEvolving) {
     return state;
   }
@@ -342,9 +365,9 @@ export function startEvolutionState(state: TamagotchiState): TamagotchiState {
 }
 
 export function completeEvolutionState(
-  state: TamagotchiState,
-  evolvedPokemon: Pokemon,
-): TamagotchiState {
+  state: TamagotchiStateModel,
+  evolvedPokemon: PokemonModel,
+): TamagotchiStateModel {
   return {
     ...state,
     evolutionProgress: {
@@ -358,19 +381,25 @@ export function completeEvolutionState(
 }
 
 export function addNotificationState(
-  state: TamagotchiState,
-  notification: Notification,
-): TamagotchiState {
+  state: TamagotchiStateModel,
+  notification: NotificationModel,
+): TamagotchiStateModel {
   return {
     ...state,
-    notifications: [notification, ...state.notifications].slice(0, NOTIFICATION_HISTORY_LIMIT),
+    notificationList: [notification, ...state.notificationList].slice(
+      0,
+      NOTIFICATION_HISTORY_LIMIT,
+    ),
   };
 }
 
-export function dismissNotificationState(state: TamagotchiState, id: string): TamagotchiState {
+export function dismissNotificationState(
+  state: TamagotchiStateModel,
+  id: string,
+): TamagotchiStateModel {
   return {
     ...state,
-    notifications: state.notifications.map((notification) => {
+    notificationList: state.notificationList.map((notification) => {
       if (notification.id === id) {
         return { ...notification, read: true };
       }
@@ -380,7 +409,7 @@ export function dismissNotificationState(state: TamagotchiState, id: string): Ta
   };
 }
 
-export function initializeTamagotchiState(state: TamagotchiState): TamagotchiState {
+export function initializeTamagotchiState(state: TamagotchiStateModel): TamagotchiStateModel {
   return {
     ...state,
     initialized: true,
@@ -388,9 +417,9 @@ export function initializeTamagotchiState(state: TamagotchiState): TamagotchiSta
 }
 
 export function loadStateSuccessState(
-  state: TamagotchiState,
-  loadedState: TamagotchiState,
-): TamagotchiState {
+  state: TamagotchiStateModel,
+  loadedState: TamagotchiStateModel,
+): TamagotchiStateModel {
   return {
     ...loadedState,
     initialized: true,
@@ -398,7 +427,10 @@ export function loadStateSuccessState(
   };
 }
 
-export function saveStateSuccessState(state: TamagotchiState, savedAt: number): TamagotchiState {
+export function saveStateSuccessState(
+  state: TamagotchiStateModel,
+  savedAt: number,
+): TamagotchiStateModel {
   return {
     ...state,
     lastSaveTime: savedAt,
@@ -409,18 +441,18 @@ export function saveStateSuccessState(state: TamagotchiState, savedAt: number): 
   };
 }
 
-export function resetStateTransition(): TamagotchiState {
+export function resetStateTransition(): TamagotchiStateModel {
   return initialTamagotchiState;
 }
 
-export function setErrorState(state: TamagotchiState, error: string): TamagotchiState {
+export function setErrorState(state: TamagotchiStateModel, error: string): TamagotchiStateModel {
   return {
     ...state,
     error,
   };
 }
 
-export function clearErrorState(state: TamagotchiState): TamagotchiState {
+export function clearErrorState(state: TamagotchiStateModel): TamagotchiStateModel {
   return {
     ...state,
     error: null,
@@ -428,8 +460,8 @@ export function clearErrorState(state: TamagotchiState): TamagotchiState {
 }
 
 export function garbageCollectState(
-  state: TamagotchiState,
+  state: TamagotchiStateModel,
   limits: GarbageCollectLimits,
-): TamagotchiState {
+): TamagotchiStateModel {
   return garbageCollectTamagotchiState(state, limits);
 }

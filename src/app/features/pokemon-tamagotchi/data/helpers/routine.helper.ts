@@ -1,5 +1,5 @@
 import { TIMER_CONFIG } from '../constants/timer.constants';
-import type { DailyRoutine } from '../../models/tamagotchi-state.model';
+import type { DailyRoutine } from '../models/tamagotchi-state.model';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 

@@ -1,8 +1,8 @@
-import type { EvolutionChain } from './evolution.model';
+import type { EvolutionChainModel } from './evolution.model';
 
 export type SpriteVariation = 'default' | 'retro' | 'shiny';
 
-export interface PokemonSpriteUrls {
+export interface PokemonSpriteUrlsModel {
   normal: string;
   sleeping: string;
   happy: string;
@@ -11,20 +11,20 @@ export interface PokemonSpriteUrls {
   evolving: string;
 }
 
-export interface PokemonBaseStats {
+export interface PokemonBaseStatsModel {
   hungerDecayRate: number;
   moodDecayRate: number;
   energyRestorationRate: number;
   experienceMultiplier: number;
 }
 
-export interface Pokemon {
+export interface PokemonModel {
   id: string;
   name: string;
   species: string;
   isFirstStage: boolean;
-  evolutionChain: EvolutionChain;
-  spriteUrls: PokemonSpriteUrls;
-  spriteVariations: Record<SpriteVariation, PokemonSpriteUrls>;
-  baseStats: PokemonBaseStats;
+  evolutionChain: EvolutionChainModel;
+  spriteUrls: PokemonSpriteUrlsModel;
+  spriteVariations: Record<SpriteVariation, PokemonSpriteUrlsModel>;
+  baseStats: PokemonBaseStatsModel;
 }

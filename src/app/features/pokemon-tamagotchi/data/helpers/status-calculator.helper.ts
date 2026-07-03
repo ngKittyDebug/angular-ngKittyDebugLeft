@@ -1,12 +1,12 @@
 import { GAME_BALANCE } from '../constants/game-balance.constants';
-import type { ActionType } from '../../models/tamagotchi-state.model';
-import type { PokemonStatus, StatusUpdate } from '../../models/pokemon-status.model';
+import type { ActionType } from '../models/tamagotchi-state.model';
+import type { PokemonStatusModel, StatusUpdateModel } from '../models/pokemon-status.model';
 import { applyStatusDelta } from './status-bounds.helper';
 
 export function calculateStatusUpdate(
-  currentStatus: PokemonStatus,
+  currentStatus: PokemonStatusModel,
   action: ActionType,
-): StatusUpdate {
+): StatusUpdateModel {
   switch (action) {
     case 'feed': {
       const { energyCost, hungerIncrease, moodIncrease } = GAME_BALANCE.ACTION_EFFECTS.FEED;
@@ -58,9 +58,9 @@ export function calculateStatusUpdate(
 }
 
 export function applyStatusUpdate(
-  currentStatus: PokemonStatus,
-  statusUpdate: StatusUpdate,
-): PokemonStatus {
+  currentStatus: PokemonStatusModel,
+  statusUpdate: StatusUpdateModel,
+): PokemonStatusModel {
   const next = { ...currentStatus };
 
   if (statusUpdate.health !== undefined) {

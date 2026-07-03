@@ -1,14 +1,29 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TuiProgress } from '@taiga-ui/kit';
 import { TuiCard } from '@taiga-ui/layout';
+import { catchError, finalize, map, of } from 'rxjs';
 import { EvolutionChainItemComponent } from './evolution-chain-item/evolution-chain-item.component';
-import { PokemonTamagotchiSelectionComponent } from '@features/pokemon-tamagotchi/ui/components/pokemon-tamagotchi-selection/pokemon-tamagotchi-selection.component';
 import { PokemonProfileInfoComponent } from './pokemon-profile-info/pokemon-profile-info.component';
 import { PokemonProfileStatsComponent } from './pokemon-profile-stats/pokemon-profile-stats.component';
 import { PokemonProfileSpeciesBreedingComponent } from './pokemon-profile-species-breeding/pokemon-profile-species-breeding.component';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { PokemonDataService } from '@shared/services/pokemon-data.service';
 import { convertEvolutionChainToNodeModel } from '@features/pokemon-profile/data/helpers/convert-evolution-chain';
+import { PokemonProfileIntegrationService } from '@features/pokemon-tamagotchi/data/services/pokemon-profile-integration.service';
+import { TAMAGOTCHI_PATH } from '@shared/constants/tamagotchi-routes';
+import {
+  PokemonTamagotchiSelectionComponent,
+  type TamagotchiSelectionFeedback,
+} from '@shared/ui/components/pokemon-tamagotchi-selection/pokemon-tamagotchi-selection.component';
 
 @Component({
   selector: 'left-paw-pokemon-profile-page',
@@ -27,6 +42,8 @@ import { convertEvolutionChainToNodeModel } from '@features/pokemon-profile/data
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PokemonProfilePageComponent {
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly profileIntegration = inject(PokemonProfileIntegrationService);
   private readonly profileService = inject(PokemonDataService);
 
   public readonly pokemonEndpoint = input.required<string>();
@@ -40,4 +57,55 @@ export class PokemonProfilePageComponent {
 
     return data ? convertEvolutionChainToNodeModel(data) : null;
   });
+
+  protected readonly tamagotchiRoute = `/${TAMAGOTCHI_PATH}`;
+  protected readonly selectionFeedback = signal<TamagotchiSelectionFeedback>(null);
+  protected readonly selectionLoading = signal(false);
+  protected readonly selectedPokemonName = signal<string | null>(
+    this.profileIntegration.getSelectedPokemonReference()?.name ?? null,
+  );
+
+  protected readonly isCurrentTamagotchiSelection = computed(() => {
+    const selected = this.selectedPokemonName();
+    const currentName = this.pokemonProfile.profileData()?.name;
+
+    if (!selected || !currentName) {
+      return false;
+    }
+
+    return selected.toLowerCase() === currentName.toLowerCase();
+  });
+
+  protected onTamagotchiSelectRequested(): void {
+    const pokemonName = this.pokemonProfile.profileData()?.name;
+
+    if (!pokemonName || this.selectionLoading()) {
+      return;
+    }
+
+    this.selectionLoading.set(true);
+    this.selectionFeedback.set(null);
+
+    this.profileIntegration
+      .loadPokemonByName(pokemonName)
+      .pipe(
+        map((pokemon) => this.profileIntegration.validatePokemonSelection(pokemon)),
+        catchError(() => of({ error: 'loadFailed' as const, valid: false as const })),
+        finalize(() => this.selectionLoading.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((validation) => {
+        if (validation.valid && validation.pokemon) {
+          this.profileIntegration.saveSelectedPokemon(validation.pokemon);
+          this.selectedPokemonName.set(validation.pokemon.name);
+          this.selectionFeedback.set('saved');
+
+          return;
+        }
+
+        this.selectionFeedback.set(
+          validation.error === 'evolvedPokemon' ? 'evolvedPokemon' : 'loadFailed',
+        );
+      });
+  }
 }

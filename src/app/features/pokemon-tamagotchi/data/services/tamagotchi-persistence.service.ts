@@ -1,25 +1,28 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { normalizePokemonStatus } from '../helpers/status-bounds.helper';
 import { ensurePokemonSpriteVariations } from '../helpers/sprite-variation.helper';
-import type { TamagotchiState } from '../../models/tamagotchi-state.model';
+import type { TamagotchiStateModel } from '../models/tamagotchi-state.model';
 import { createInitialTamagotchiState } from '../store/tamagotchi-initial';
+import { TamagotchiStorageService } from './tamagotchi-storage.service';
 
 export const TAMAGOTCHI_STORAGE_KEY = 'pokemon-tamagotchi-state';
 export const TAMAGOTCHI_BACKUP_KEY = 'pokemon-tamagotchi-state-backup';
-export const TAMAGOTCHI_STATE_VERSION = 4;
+export const TAMAGOTCHI_STATE_VERSION = 5;
 
 export interface PersistedTamagotchiPayload {
   version: number;
-  state: TamagotchiState;
+  state: TamagotchiStateModel;
 }
 
 export interface TamagotchiLoadResult {
   recoveredFromBackup: boolean;
-  state: TamagotchiState;
+  state: TamagotchiStateModel;
 }
 
 @Injectable({ providedIn: 'root' })
 export class TamagotchiPersistenceService {
+  private readonly storage = inject(TamagotchiStorageService);
+
   public load(): TamagotchiLoadResult | null {
     const primary = this.readPayload(TAMAGOTCHI_STORAGE_KEY);
 
@@ -36,7 +39,7 @@ export class TamagotchiPersistenceService {
     return null;
   }
 
-  public save(state: TamagotchiState): void {
+  public save(state: TamagotchiStateModel): void {
     const existing = this.readRaw(TAMAGOTCHI_STORAGE_KEY);
 
     if (existing) {
@@ -65,7 +68,7 @@ export class TamagotchiPersistenceService {
     this.remove(TAMAGOTCHI_BACKUP_KEY);
   }
 
-  private readPayload(key: string): TamagotchiState | null {
+  private readPayload(key: string): TamagotchiStateModel | null {
     const raw = this.readRaw(key);
 
     if (!raw) {
@@ -79,7 +82,7 @@ export class TamagotchiPersistenceService {
     }
   }
 
-  private parsePayload(raw: string): TamagotchiState {
+  private parsePayload(raw: string): TamagotchiStateModel {
     const parsed: unknown = JSON.parse(raw);
 
     if (!parsed || typeof parsed !== 'object') {
@@ -98,17 +101,21 @@ export class TamagotchiPersistenceService {
     return this.validateState(migrated);
   }
 
-  private migrateState(state: TamagotchiState, version: number): TamagotchiState {
-    const legacy = state as TamagotchiState & { activeMiniGame?: unknown };
-    const migrated: TamagotchiState = {
+  private migrateState(state: TamagotchiStateModel, version: number): TamagotchiStateModel {
+    const legacy = state as TamagotchiStateModel & {
+      achievements?: TamagotchiStateModel['achievementList'];
+      activeMiniGame?: unknown;
+      notifications?: TamagotchiStateModel['notificationList'];
+    };
+    const migrated: TamagotchiStateModel = {
       ...createInitialTamagotchiState(),
       ...state,
-      achievements: state.achievements ?? [],
+      achievementList: state.achievementList ?? legacy.achievements ?? [],
       dailyRoutine: state.dailyRoutine ?? createInitialTamagotchiState().dailyRoutine,
       evolutionProgress:
         state.evolutionProgress ?? createInitialTamagotchiState().evolutionProgress,
       interactionHistory: state.interactionHistory ?? [],
-      notifications: state.notifications ?? [],
+      notificationList: state.notificationList ?? legacy.notifications ?? [],
       pokemon: state.pokemon ? ensurePokemonSpriteVariations(state.pokemon) : null,
       trainingExperienceReward:
         version >= TAMAGOTCHI_STATE_VERSION ? (state.trainingExperienceReward ?? null) : null,
@@ -121,7 +128,7 @@ export class TamagotchiPersistenceService {
     return migrated;
   }
 
-  private validateState(state: TamagotchiState): TamagotchiState {
+  private validateState(state: TamagotchiStateModel): TamagotchiStateModel {
     if (!state.status || typeof state.status !== 'object') {
       throw new Error('Invalid tamagotchi status');
     }
@@ -146,35 +153,23 @@ export class TamagotchiPersistenceService {
 
     return {
       ...state,
-      achievements: state.achievements ?? [],
+      achievementList: state.achievementList ?? [],
       interactionHistory: state.interactionHistory ?? [],
-      notifications: state.notifications ?? [],
+      notificationList: state.notificationList ?? [],
       pokemon: state.pokemon ? ensurePokemonSpriteVariations(state.pokemon) : null,
       status: normalizePokemonStatus(state.status),
     };
   }
 
   private readRaw(key: string): string | null {
-    if (typeof globalThis.localStorage === 'undefined') {
-      return null;
-    }
-
-    return globalThis.localStorage.getItem(key);
+    return this.storage.getItem(key);
   }
 
   private writeRaw(key: string, value: string): void {
-    if (typeof globalThis.localStorage === 'undefined') {
-      return;
-    }
-
-    globalThis.localStorage.setItem(key, value);
+    this.storage.setItem(key, value);
   }
 
   private remove(key: string): void {
-    if (typeof globalThis.localStorage === 'undefined') {
-      return;
-    }
-
-    globalThis.localStorage.removeItem(key);
+    this.storage.removeItem(key);
   }
 }

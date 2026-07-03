@@ -3,35 +3,35 @@
   class="tamagotchi-page"
   role="main"
   [attr.aria-label]="t('ariaLabel')"
-  [attr.aria-busy]="isLoading()"
+  [attr.aria-busy]="facade.isLoading()"
 >
   <div class="tamagotchi-page__header">
     <h1 class="tamagotchi-page__title">{{ t('title') }}</h1>
     <div class="tamagotchi-page__header-controls">
-      @if (pokemon(); as species) {
+      @if (facade.pokemon(); as species) {
         <span appearance="primary" size="m" tuiBadge class="tamagotchi-page__level">
-          {{ t('levelBadge', { level: status().level }) }}
+          {{ t('levelBadge', { level: facade.status().level }) }}
         </span>
       }
       <fieldset class="tamagotchi-page__performance" [attr.aria-label]="t('performanceAria')">
         <legend class="tamagotchi-page__performance-legend">{{ t('performanceLabel') }}</legend>
-        @for (mode of performanceModes; track mode) {
+        @for (mode of facade.performanceModes; track mode) {
           <button
             appearance="flat"
             size="s"
             tuiButton
             type="button"
-            [class.tamagotchi-page__performance-option--active]="performanceMode() === mode"
-            (click)="onPerformanceModeChange(mode)"
+            [class.tamagotchi-page__performance-option--active]="facade.performanceMode() === mode"
+            (click)="facade.onPerformanceModeChange(mode)"
           >
             {{ t('performanceModes.' + mode) }}
           </button>
         }
-        @if (performanceMode() === 'auto') {
+        @if (facade.performanceMode() === 'auto') {
           <span class="tamagotchi-page__performance-effective">
             {{
               t('performanceEffective', {
-                mode: t('performanceModes.' + effectivePerformanceMode()),
+                mode: t('performanceModes.' + facade.effectivePerformanceMode()),
               })
             }}
           </span>
@@ -40,27 +40,27 @@
     </div>
   </div>
 
-  @if (isLoading()) {
+  @if (facade.isLoading()) {
     <section class="tamagotchi-page__loading" role="status" aria-live="polite">
       <tui-loader size="l" />
       <p class="tamagotchi-page__loading-text">{{ t('loading') }}</p>
     </section>
-  } @else if (selectionBlocked()) {
+  } @else if (facade.selectionBlocked()) {
     <section class="tamagotchi-page__empty" role="status">
-      @if (error() === 'noSelection') {
+      @if (facade.error() === 'noSelection') {
         <h2 class="tamagotchi-page__empty-title">{{ t('noSelectionTitle') }}</h2>
         <p class="tamagotchi-page__empty-hint">{{ t('noSelectionHint') }}</p>
         <a appearance="primary" routerLink="/profile" tuiButton type="button">
           {{ t('goToProfile') }}
         </a>
-      } @else if (error() === 'evolvedPokemon') {
+      } @else if (facade.error() === 'evolvedPokemon') {
         <p class="tamagotchi-page__error">{{ t('evolvedPokemonError') }}</p>
-      } @else if (error() === 'loadFailed') {
+      } @else if (facade.error() === 'loadFailed') {
         <p class="tamagotchi-page__error">{{ t('loadFailedError') }}</p>
       }
     </section>
-  } @else if (pokemon(); as species) {
-    @if (systemErrorMessageKey(); as messageKey) {
+  } @else if (facade.pokemon(); as species) {
+    @if (facade.systemErrorMessageKey(); as messageKey) {
       <div
         class="tamagotchi-page__system-notice"
         role="alert"
@@ -68,13 +68,13 @@
       >
         <p>{{ t(messageKey) }}</p>
         <div class="tamagotchi-page__system-notice-actions">
-          @if (showRecoveryActions()) {
+          @if (facade.showRecoveryActions()) {
             <button
               appearance="outline"
               size="s"
               tuiButton
               type="button"
-              (click)="onResetProgress()"
+              (click)="facade.onResetProgress()"
             >
               {{ t('resetProgress') }}
             </button>
@@ -84,7 +84,7 @@
             size="s"
             tuiButton
             type="button"
-            (click)="onSystemErrorDismiss()"
+            (click)="facade.onSystemErrorDismiss()"
           >
             {{ t('dismissNotice') }}
           </button>
@@ -94,11 +94,11 @@
 
     <div class="tamagotchi-page__layout">
       <aside class="tamagotchi-page__status-panel" [attr.aria-label]="t('statusPanelAria')">
-        @for (statusType of displayedStatusTypes; track statusType) {
+        @for (statusType of facade.displayedStatusTypes; track statusType) {
           <left-paw-status-indicator
-            [currentValue]="statusValueFor(statusType)"
-            [level]="statusType === 'experience' ? status().level : null"
-            [maxValue]="maxValueForStatus(statusType)"
+            [currentValue]="facade.statusValueFor(statusType)"
+            [level]="statusType === 'experience' ? facade.status().level : null"
+            [maxValue]="facade.maxValueForStatus(statusType)"
             [statusType]="statusType"
           />
         }
@@ -106,21 +106,21 @@
 
       <section class="tamagotchi-page__stage tamagotchi-stage--classic">
         <left-paw-pokemon-sprite
-          [isEvolving]="isEvolving()"
-          [isSleeping]="isSleeping()"
-          [isTraining]="isTraining()"
+          [isEvolving]="facade.isEvolving()"
+          [isSleeping]="facade.isSleeping()"
+          [isTraining]="facade.isTraining()"
           [pokemon]="species"
-          [status]="status()"
-          (interacted)="onInteraction($event)"
+          [status]="facade.status()"
+          (interacted)="facade.onInteraction($event)"
         />
 
-        @if (isEvolving() && evolvedPokemon(); as target) {
+        @if (facade.isEvolving() && facade.evolvedPokemon(); as target) {
           <left-paw-evolution-animation
             class="tamagotchi-page__evolution"
-            [active]="isEvolving()"
+            [active]="facade.isEvolving()"
             [fromPokemon]="species"
             [toPokemon]="target"
-            (animationComplete)="onEvolutionComplete($event)"
+            (animationComplete)="facade.onEvolutionComplete($event)"
           />
         }
       </section>
@@ -128,19 +128,19 @@
 
     <left-paw-action-buttons
       class="tamagotchi-page__actions"
-      [actionsLocked]="isTraining()"
-      [canCare]="canCare()"
-      [canFeed]="canFeed()"
-      [canPlay]="canPlay()"
-      [canTrain]="canTrain()"
-      [canWater]="canWater()"
-      [cooldowns]="cooldowns()"
-      [isSleeping]="isSleeping()"
-      (actionSelected)="onAction($event)"
+      [actionsLocked]="facade.isTraining()"
+      [canCare]="facade.canCare()"
+      [canFeed]="facade.canFeed()"
+      [canPlay]="facade.canPlay()"
+      [canTrain]="facade.canTrain()"
+      [canWater]="facade.canWater()"
+      [cooldowns]="facade.cooldowns()"
+      [isSleeping]="facade.isSleeping()"
+      (actionSelected)="facade.onAction($event)"
     />
     <left-paw-tamagotchi-notifications
       class="tamagotchi-page__notifications"
-      [notifications]="notifications()"
+      [notifications]="facade.notifications()"
     />
   }
 </main>

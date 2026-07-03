@@ -6,7 +6,7 @@ import {
   type GestureResult,
   intensityForGesture,
 } from '../../data/helpers/gesture.helper';
-import type { InteractionEvent } from '../../models/interaction.model';
+import type { InteractionEventModel } from '../../data/models/interaction.model';
 
 interface PointerSession {
   lastX: number;
@@ -21,7 +21,7 @@ interface PointerSession {
 export class GestureService {
   private readonly activePointers = new Map<number, PointerSession>();
 
-  public calculateBondLevel(history: InteractionEvent[]): number {
+  public calculateBondLevel(history: InteractionEventModel[]): number {
     return calculateBondLevel(history);
   }
 

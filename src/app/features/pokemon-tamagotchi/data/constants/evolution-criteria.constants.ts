@@ -1,4 +1,4 @@
-import type { EvolutionRequirement } from '../../models/evolution.model';
+import type { EvolutionRequirementModel } from '../models/evolution.model';
 import { GAME_BALANCE } from './game-balance.constants';
 
 export const EVOLUTION_CRITERIA = {
@@ -7,7 +7,7 @@ export const EVOLUTION_CRITERIA = {
 
 export const EVOLUTION_ANIMATION_DURATION_MS = 3000;
 
-export const EVOLUTION_REQUIREMENTS: EvolutionRequirement[] = [
+export const EVOLUTION_REQUIREMENTS: EvolutionRequirementModel[] = [
   {
     type: 'level',
     value: GAME_BALANCE.EVOLUTION.MIN_LEVEL,

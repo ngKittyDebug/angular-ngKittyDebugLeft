@@ -1,7 +1,7 @@
 import * as fc from 'fast-check';
 import { GAME_BALANCE } from '../constants/game-balance.constants';
-import type { PokemonStatus } from '../../models/pokemon-status.model';
-import type { TamagotchiState } from '../../models/tamagotchi-state.model';
+import type { PokemonStatusModel } from '../models/pokemon-status.model';
+import type { TamagotchiStateModel } from '../models/tamagotchi-state.model';
 import {
   applyStatusDecayState,
   careForPokemonState,
@@ -20,13 +20,13 @@ import {
   arbitraryPokemonStatus,
   type CareAction,
   TEST_POKEMON,
-} from '../testing/tamagotchi-arbitraries';
+} from '../fixtures/tamagotchi-arbitraries';
 
 const PROPERTY_RUNS = 100;
 const FIXED_NOW = 1_700_000_000_000;
 const FIXED_TRAINING_REWARD = 25;
 
-function isBoundedStatus(status: PokemonStatus): boolean {
+function isBoundedStatus(status: PokemonStatusModel): boolean {
   const { MAXIMUM, MINIMUM } = GAME_BALANCE.THRESHOLDS;
 
   return (
@@ -43,7 +43,7 @@ function isBoundedStatus(status: PokemonStatus): boolean {
   );
 }
 
-function applyCareAction(state: TamagotchiState, action: CareAction): TamagotchiState {
+function applyCareAction(state: TamagotchiStateModel, action: CareAction): TamagotchiStateModel {
   switch (action.kind) {
     case 'applyStatusDecay':
       return applyStatusDecayState(state, action.decay!);
@@ -78,7 +78,7 @@ function applyCareAction(state: TamagotchiState, action: CareAction): Tamagotchi
   }
 }
 
-function stateWithPokemon(status: PokemonStatus, isSleeping: boolean): TamagotchiState {
+function stateWithPokemon(status: PokemonStatusModel, isSleeping: boolean): TamagotchiStateModel {
   const selected = selectPokemonState(initialTamagotchiState, TEST_POKEMON);
 
   return {

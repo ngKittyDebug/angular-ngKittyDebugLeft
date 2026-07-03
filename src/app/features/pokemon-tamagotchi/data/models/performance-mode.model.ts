@@ -2,7 +2,7 @@ export type PerformanceMode = 'auto' | 'balanced' | 'high' | 'low';
 
 export type EffectivePerformanceMode = 'balanced' | 'high' | 'low';
 
-export interface PerformanceProfile {
+export interface PerformanceProfileModel {
   complexAnimations: boolean;
   decayIntervalMs: number;
   interactionHistoryLimit: number;

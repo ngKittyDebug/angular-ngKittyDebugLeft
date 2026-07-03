@@ -1,6 +1,6 @@
 import { GAME_BALANCE } from '../constants/game-balance.constants';
 import { STATUS_THRESHOLDS } from '../constants/status-thresholds.constants';
-import type { PokemonStatus, StatusType } from '../../models/pokemon-status.model';
+import type { PokemonStatusModel, StatusType } from '../models/pokemon-status.model';
 import {
   getStatusIndicatorLevel,
   getThresholdsForStatusType,
@@ -25,7 +25,7 @@ export const DISPLAYED_STATUS_TYPES: StatusType[] = [
   'experience',
 ];
 
-export function statusValueForType(statusType: StatusType, status: PokemonStatus): number {
+export function statusValueForType(statusType: StatusType, status: PokemonStatusModel): number {
   switch (statusType) {
     case 'energy':
       return status.energy;
@@ -63,7 +63,7 @@ export function computeIndicatorPercentage(value: number, max: number): number {
 
 export function projectStatusIndicator(
   statusType: StatusType,
-  status: PokemonStatus,
+  status: PokemonStatusModel,
 ): StatusIndicatorSnapshot {
   const value = statusValueForType(statusType, status);
   const max = maxValueForStatusType(statusType);
@@ -78,12 +78,12 @@ export function projectStatusIndicator(
   };
 }
 
-export function projectAllStatusIndicators(status: PokemonStatus): StatusIndicatorSnapshot[] {
+export function projectAllStatusIndicators(status: PokemonStatusModel): StatusIndicatorSnapshot[] {
   return DISPLAYED_STATUS_TYPES.map((statusType) => projectStatusIndicator(statusType, status));
 }
 
 export function indicatorsMatchStatus(
-  status: PokemonStatus,
+  status: PokemonStatusModel,
   indicators: StatusIndicatorSnapshot[],
 ): boolean {
   return indicators.every(

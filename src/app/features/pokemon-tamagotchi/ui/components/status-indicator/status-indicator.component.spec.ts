@@ -3,7 +3,7 @@ import type { ComponentFixture } from '@angular/core/testing';
 import { TranslocoTestingModule } from '@jsverse/transloco';
 import { describe, expect, it } from 'vitest';
 import { STATUS_THRESHOLDS } from '../../../data/constants/status-thresholds.constants';
-import type { StatusType } from '../../../models/pokemon-status.model';
+import type { StatusType } from '../../../data/models/pokemon-status.model';
 import { StatusIndicatorComponent } from './status-indicator.component';
 
 function createFixture(

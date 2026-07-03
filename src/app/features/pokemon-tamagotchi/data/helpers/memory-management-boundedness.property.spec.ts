@@ -9,25 +9,25 @@ import {
   selectPokemonState,
 } from '../store/tamagotchi-state-transitions';
 import { initialTamagotchiState } from '../store/tamagotchi-initial';
-import { arbitraryInteractionEvent, TEST_POKEMON } from '../testing/tamagotchi-arbitraries';
-import type { TamagotchiState } from '../../models/tamagotchi-state.model';
+import { arbitraryInteractionEvent, TEST_POKEMON } from '../fixtures/tamagotchi-arbitraries';
+import type { TamagotchiStateModel } from '../models/tamagotchi-state.model';
 
 const PROPERTY_RUNS = 100;
 const FIXED_NOW = 1_700_000_000_000;
 
-function withPokemon(state: TamagotchiState): TamagotchiState {
+function withPokemon(state: TamagotchiStateModel): TamagotchiStateModel {
   return selectPokemonState(state, TEST_POKEMON);
 }
 
 function isWithinProfileLimits(
-  state: TamagotchiState,
+  state: TamagotchiStateModel,
   profileKey: keyof typeof PERFORMANCE_PROFILES,
 ): boolean {
   const profile = PERFORMANCE_PROFILES[profileKey];
 
   return (
     state.interactionHistory.length <= profile.interactionHistoryLimit &&
-    state.notifications.length <= profile.notificationHistoryLimit
+    state.notificationList.length <= profile.notificationHistoryLimit
   );
 }
 
@@ -69,7 +69,7 @@ describe('Tamagotchi Property Tests', () => {
               state = interactWithPokemonState(state, interaction, FIXED_NOW);
             }
 
-            return state.interactionHistory.length <= 50 && state.notifications.length <= 20;
+            return state.interactionHistory.length <= 50 && state.notificationList.length <= 20;
           },
         ),
         { numRuns: PROPERTY_RUNS },

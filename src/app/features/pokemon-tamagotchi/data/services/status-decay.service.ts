@@ -6,8 +6,8 @@ import {
   detectStatusAlerts,
   getElapsedDecayMs,
 } from '../helpers/status-decay.helper';
-import type { StatusAlertType } from '../../models/notification.model';
-import type { PokemonStatus, StatusDecay } from '../../models/pokemon-status.model';
+import type { StatusAlertType } from '../models/notification.model';
+import type { PokemonStatusModel, StatusDecayModel } from '../models/pokemon-status.model';
 
 export interface DecayTimerHandle {
   intervalId: ReturnType<typeof setInterval>;
@@ -18,13 +18,13 @@ export interface StatusDecayContext {
   lastActionTime: number | null;
   lastDecayTime: number | null;
   now?: number;
-  status: PokemonStatus;
+  status: PokemonStatusModel;
 }
 
 export interface StatusDecayTickResult {
   alerts: StatusAlertType[];
-  decay: StatusDecay;
-  nextStatus: PokemonStatus;
+  decay: StatusDecayModel;
+  nextStatus: PokemonStatusModel;
 }
 
 const DEFAULT_DECAY_INTERVAL_MS = TIMER_CONFIG.DECAY_INTERVAL_MS;
@@ -33,14 +33,14 @@ const DEFAULT_DECAY_INTERVAL_MS = TIMER_CONFIG.DECAY_INTERVAL_MS;
 export class StatusDecayService {
   public calculateDecay(
     elapsedMs: number,
-    currentStatus: PokemonStatus,
+    currentStatus: PokemonStatusModel,
     isSleeping: boolean,
     timestamp?: number,
-  ): StatusDecay {
+  ): StatusDecayModel {
     return calculateDecay(elapsedMs, currentStatus, isSleeping, timestamp);
   }
 
-  public calculateDecayFromContext(context: StatusDecayContext): StatusDecay {
+  public calculateDecayFromContext(context: StatusDecayContext): StatusDecayModel {
     const now = context.now ?? Date.now();
     const elapsedMs = getElapsedDecayMs(context.lastDecayTime, context.lastActionTime, now);
 
@@ -58,7 +58,10 @@ export class StatusDecayService {
     };
   }
 
-  public detectCriticalAlerts(before: PokemonStatus, after: PokemonStatus): StatusAlertType[] {
+  public detectCriticalAlerts(
+    before: PokemonStatusModel,
+    after: PokemonStatusModel,
+  ): StatusAlertType[] {
     return detectStatusAlerts(before, after);
   }
 

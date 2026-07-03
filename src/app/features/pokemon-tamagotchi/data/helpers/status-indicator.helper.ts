@@ -1,5 +1,5 @@
-import type { StatusThresholds } from '../../models/pokemon-status.model';
-import type { StatusType } from '../../models/pokemon-status.model';
+import type { StatusThresholdsModel } from '../models/pokemon-status.model';
+import type { StatusType } from '../models/pokemon-status.model';
 
 export type StatusIndicatorLevel = 'critical' | 'normal' | 'warning';
 
@@ -34,7 +34,7 @@ export function getStatusIndicatorColor(level: StatusIndicatorLevel): string {
 
 export function getThresholdsForStatusType(
   statusType: StatusType,
-  thresholds: StatusThresholds,
+  thresholds: StatusThresholdsModel,
 ): { critical: number; warning: number } | null {
   switch (statusType) {
     case 'health':
@@ -60,7 +60,7 @@ export function getThresholdsForStatusType(
 export function resolveStatusIndicatorColor(
   statusType: StatusType,
   value: number,
-  thresholds: StatusThresholds,
+  thresholds: StatusThresholdsModel,
 ): string {
   const bounds = getThresholdsForStatusType(statusType, thresholds);
 

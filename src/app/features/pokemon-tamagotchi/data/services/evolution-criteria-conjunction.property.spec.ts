@@ -1,5 +1,5 @@
 import * as fc from 'fast-check';
-import type { EvolutionRequirement } from '../../models/evolution.model';
+import type { EvolutionRequirementModel } from '../models/evolution.model';
 import {
   checkEvolutionCriteria,
   evaluateEvolutionRequirements,
@@ -9,12 +9,12 @@ import {
   arbitraryEvolutionRequirements,
   arbitraryPokemonStatus,
   arbitraryTrainingAchievements,
-} from '../testing/tamagotchi-arbitraries';
+} from '../fixtures/tamagotchi-arbitraries';
 
 const PROPERTY_RUNS = 100;
 
 function isRequirementSatisfied(
-  requirements: EvolutionRequirement[],
+  requirements: EvolutionRequirementModel[],
   progress: Record<string, number>,
 ): boolean {
   return requirements.every(
@@ -93,11 +93,11 @@ describe('Tamagotchi property tests', () => {
           arbitraryPokemonStatus(),
           arbitraryTrainingAchievements(),
           fc.nat({ max: 365 }),
-          (requirements, status, achievements, consecutiveDays) => {
+          (requirements, status, achievementList, consecutiveDays) => {
             const result = checkEvolutionCriteria(
               requirements,
               status,
-              achievements,
+              achievementList,
               consecutiveDays,
             );
 

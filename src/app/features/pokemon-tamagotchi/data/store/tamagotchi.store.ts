@@ -8,11 +8,11 @@ import { sortNotificationsByPriority } from '../helpers/notification-factory.hel
 import { TamagotchiCloudSyncService } from '../services/tamagotchi-cloud-sync.service';
 import { TamagotchiErrorRecoveryService } from '../services/tamagotchi-error-recovery.service';
 import { TamagotchiPersistenceService } from '../services/tamagotchi-persistence.service';
-import type { InteractionEvent } from '../../models/interaction.model';
-import type { Notification } from '../../models/notification.model';
-import type { Pokemon } from '../../models/pokemon.model';
-import type { StatusDecay, StatusUpdate } from '../../models/pokemon-status.model';
-import type { TamagotchiState } from '../../models/tamagotchi-state.model';
+import type { InteractionEventModel } from '../models/interaction.model';
+import type { NotificationModel } from '../models/notification.model';
+import type { PokemonModel } from '../models/pokemon.model';
+import type { StatusDecayModel, StatusUpdateModel } from '../models/pokemon-status.model';
+import type { TamagotchiStateModel } from '../models/tamagotchi-state.model';
 import {
   addNotificationState,
   applyStatusDecayState,
@@ -45,25 +45,25 @@ import { initialTamagotchiState } from './tamagotchi-initial';
 const SAVE_DEBOUNCE_MS = 300;
 
 function snapshotState(store: {
-  achievements: () => TamagotchiState['achievements'];
-  dailyRoutine: () => TamagotchiState['dailyRoutine'];
-  error: () => TamagotchiState['error'];
-  evolutionProgress: () => TamagotchiState['evolutionProgress'];
+  achievementList: () => TamagotchiStateModel['achievementList'];
+  dailyRoutine: () => TamagotchiStateModel['dailyRoutine'];
+  error: () => TamagotchiStateModel['error'];
+  evolutionProgress: () => TamagotchiStateModel['evolutionProgress'];
   initialized: () => boolean;
-  interactionHistory: () => TamagotchiState['interactionHistory'];
+  interactionHistory: () => TamagotchiStateModel['interactionHistory'];
   isEvolving: () => boolean;
   isSleeping: () => boolean;
-  lastActionTime: () => TamagotchiState['lastActionTime'];
-  lastDecayTime: () => TamagotchiState['lastDecayTime'];
-  lastSaveTime: () => TamagotchiState['lastSaveTime'];
-  notifications: () => TamagotchiState['notifications'];
-  pokemon: () => TamagotchiState['pokemon'];
-  status: () => TamagotchiState['status'];
-  trainingExperienceReward: () => TamagotchiState['trainingExperienceReward'];
-  trainingStartedAt: () => TamagotchiState['trainingStartedAt'];
-}): TamagotchiState {
+  lastActionTime: () => TamagotchiStateModel['lastActionTime'];
+  lastDecayTime: () => TamagotchiStateModel['lastDecayTime'];
+  lastSaveTime: () => TamagotchiStateModel['lastSaveTime'];
+  notificationList: () => TamagotchiStateModel['notificationList'];
+  pokemon: () => TamagotchiStateModel['pokemon'];
+  status: () => TamagotchiStateModel['status'];
+  trainingExperienceReward: () => TamagotchiStateModel['trainingExperienceReward'];
+  trainingStartedAt: () => TamagotchiStateModel['trainingStartedAt'];
+}): TamagotchiStateModel {
   return {
-    achievements: store.achievements(),
+    achievementList: store.achievementList(),
     dailyRoutine: store.dailyRoutine(),
     error: store.error(),
     evolutionProgress: store.evolutionProgress(),
@@ -74,7 +74,7 @@ function snapshotState(store: {
     lastActionTime: store.lastActionTime(),
     lastDecayTime: store.lastDecayTime(),
     lastSaveTime: store.lastSaveTime(),
-    notifications: store.notifications(),
+    notificationList: store.notificationList(),
     pokemon: store.pokemon(),
     status: store.status(),
     trainingExperienceReward: store.trainingExperienceReward(),
@@ -91,7 +91,7 @@ export const TamagotchiStore = signalStore(
     canEvolve: computed(() => store.evolutionProgress().isReady && !store.isEvolving()),
     unreadNotifications: computed(() =>
       sortNotificationsByPriority(
-        store.notifications().filter((notification) => !notification.read),
+        store.notificationList().filter((notification) => !notification.read),
       ),
     ),
     bondLevel: computed(() => calculateBondLevel(store.interactionHistory())),
@@ -147,7 +147,9 @@ export const TamagotchiStore = signalStore(
         }, SAVE_DEBOUNCE_MS);
       };
 
-      const mutateAndSave = (update: (state: TamagotchiState) => TamagotchiState): void => {
+      const mutateAndSave = (
+        update: (state: TamagotchiStateModel) => TamagotchiStateModel,
+      ): void => {
         patchState(store, update);
         scheduleSave();
       };
@@ -181,7 +183,7 @@ export const TamagotchiStore = signalStore(
           }
         },
 
-        selectPokemon(pokemon: Pokemon): void {
+        selectPokemon(pokemon: PokemonModel): void {
           mutateAndSave((state) => selectPokemonState(state, pokemon));
         },
 
@@ -223,15 +225,15 @@ export const TamagotchiStore = signalStore(
           mutateAndSave((state) => wakeUpState(state, now));
         },
 
-        interactWithPokemon(interaction: InteractionEvent, now: number): void {
+        interactWithPokemon(interaction: InteractionEventModel, now: number): void {
           mutateAndSave((state) => interactWithPokemonState(state, interaction, now));
         },
 
-        updateStatus(statusUpdate: StatusUpdate): void {
+        updateStatus(statusUpdate: StatusUpdateModel): void {
           mutateAndSave((state) => updateStatusState(state, statusUpdate));
         },
 
-        applyStatusDecay(decay: StatusDecay): void {
+        applyStatusDecay(decay: StatusDecayModel): void {
           mutateAndSave((state) => applyStatusDecayState(state, decay));
         },
 
@@ -243,11 +245,11 @@ export const TamagotchiStore = signalStore(
           patchState(store, startEvolutionState);
         },
 
-        completeEvolution(evolvedPokemon: Pokemon): void {
+        completeEvolution(evolvedPokemon: PokemonModel): void {
           mutateAndSave((state) => completeEvolutionState(state, evolvedPokemon));
         },
 
-        addNotification(notification: Notification): void {
+        addNotification(notification: NotificationModel): void {
           mutateAndSave((state) => addNotificationState(state, notification));
         },
 

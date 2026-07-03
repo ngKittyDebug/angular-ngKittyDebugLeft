@@ -1,6 +1,6 @@
 export type NotificationPriority = 'info' | 'warning' | 'critical' | 'achievement';
 
-export interface Notification {
+export interface NotificationModel {
   id: string;
   title: string;
   message: string;

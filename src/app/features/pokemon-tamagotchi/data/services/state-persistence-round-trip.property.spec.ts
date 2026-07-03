@@ -1,13 +1,15 @@
 import { TestBed } from '@angular/core/testing';
 import * as fc from 'fast-check';
-import type { PokemonStatus } from '../../models/pokemon-status.model';
-import type { TamagotchiState } from '../../models/tamagotchi-state.model';
-import { arbitraryTamagotchiState } from '../testing/tamagotchi-arbitraries';
+import type { PokemonStatusModel } from '../models/pokemon-status.model';
+import type { TamagotchiStateModel } from '../models/tamagotchi-state.model';
+import { arbitraryTamagotchiState } from '../fixtures/tamagotchi-arbitraries';
 import { TamagotchiPersistenceService } from './tamagotchi-persistence.service';
 
 const PROPERTY_RUNS = 100;
 
-function statusWithoutSaveTimestamp(status: PokemonStatus): Omit<PokemonStatus, 'lastSaveTime'> {
+function statusWithoutSaveTimestamp(
+  status: PokemonStatusModel,
+): Omit<PokemonStatusModel, 'lastSaveTime'> {
   const { lastSaveTime, ...rest } = status;
 
   void lastSaveTime;
@@ -15,12 +17,15 @@ function statusWithoutSaveTimestamp(status: PokemonStatus): Omit<PokemonStatus, 
   return rest;
 }
 
-function assertPersistedEquivalence(original: TamagotchiState, loaded: TamagotchiState): boolean {
+function assertPersistedEquivalence(
+  original: TamagotchiStateModel,
+  loaded: TamagotchiStateModel,
+): boolean {
   if (JSON.stringify(loaded.pokemon) !== JSON.stringify(original.pokemon)) {
     return false;
   }
 
-  if (JSON.stringify(loaded.achievements) !== JSON.stringify(original.achievements)) {
+  if (JSON.stringify(loaded.achievementList) !== JSON.stringify(original.achievementList)) {
     return false;
   }
 
@@ -36,7 +41,7 @@ function assertPersistedEquivalence(original: TamagotchiState, loaded: Tamagotch
     return false;
   }
 
-  if (JSON.stringify(loaded.notifications) !== JSON.stringify(original.notifications)) {
+  if (JSON.stringify(loaded.notificationList) !== JSON.stringify(original.notificationList)) {
     return false;
   }
 

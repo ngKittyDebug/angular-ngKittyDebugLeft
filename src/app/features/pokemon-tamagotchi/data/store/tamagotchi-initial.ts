@@ -1,10 +1,10 @@
 import { EVOLUTION_REQUIREMENTS } from '../constants/evolution-criteria.constants';
 import { GAME_BALANCE } from '../constants/game-balance.constants';
-import type { EvolutionProgress } from '../../models/evolution.model';
-import type { PokemonStatus } from '../../models/pokemon-status.model';
-import type { DailyRoutine, TamagotchiState } from '../../models/tamagotchi-state.model';
+import type { EvolutionProgressModel } from '../models/evolution.model';
+import type { PokemonStatusModel } from '../models/pokemon-status.model';
+import type { DailyRoutine, TamagotchiStateModel } from '../models/tamagotchi-state.model';
 
-export function createInitialPokemonStatus(): PokemonStatus {
+export function createInitialPokemonStatus(): PokemonStatusModel {
   return {
     health: GAME_BALANCE.THRESHOLDS.MAXIMUM,
     hunger: GAME_BALANCE.THRESHOLDS.MAXIMUM,
@@ -21,7 +21,7 @@ export function createInitialPokemonStatus(): PokemonStatus {
   };
 }
 
-export function createInitialEvolutionProgress(): EvolutionProgress {
+export function createInitialEvolutionProgress(): EvolutionProgressModel {
   const currentProgress: Record<string, number> = {};
 
   for (const requirement of EVOLUTION_REQUIREMENTS) {
@@ -44,11 +44,11 @@ export function createInitialDailyRoutine(): DailyRoutine {
   };
 }
 
-export function createInitialTamagotchiState(): TamagotchiState {
+export function createInitialTamagotchiState(): TamagotchiStateModel {
   return {
     pokemon: null,
     status: createInitialPokemonStatus(),
-    achievements: [],
+    achievementList: [],
     evolutionProgress: createInitialEvolutionProgress(),
     lastActionTime: null,
     lastDecayTime: null,
@@ -58,11 +58,11 @@ export function createInitialTamagotchiState(): TamagotchiState {
     isEvolving: false,
     trainingStartedAt: null,
     trainingExperienceReward: null,
-    notifications: [],
+    notificationList: [],
     initialized: false,
     lastSaveTime: null,
     error: null,
   };
 }
 
-export const initialTamagotchiState: TamagotchiState = createInitialTamagotchiState();
+export const initialTamagotchiState: TamagotchiStateModel = createInitialTamagotchiState();

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { Notification } from '../../models/notification.model';
+import type { NotificationModel } from '../models/notification.model';
 import {
   garbageCollectTamagotchiState,
   pruneReadNotifications,
@@ -9,7 +9,7 @@ import {
 } from './memory-management.helper';
 import { createInitialTamagotchiState } from '../store/tamagotchi-initial';
 
-function createNotification(id: string, read: boolean, timestamp: number): Notification {
+function createNotification(id: string, read: boolean, timestamp: number): NotificationModel {
   return {
     id,
     message: `Message ${id}`,
@@ -31,13 +31,13 @@ describe('memory-management.helper', () => {
 
   it('pruneReadNotifications removes stale read notifications', () => {
     const now = 1_000_000;
-    const notifications = [
+    const notificationList = [
       createNotification('fresh-unread', false, now - 1_000),
       createNotification('stale-read', true, now - 10_000),
       createNotification('fresh-read', true, now - 2_000),
     ];
 
-    const result = pruneReadNotifications(notifications, 5_000, 10, now);
+    const result = pruneReadNotifications(notificationList, 5_000, 10, now);
 
     expect(result.map((notification) => notification.id)).toEqual(['fresh-unread', 'fresh-read']);
   });
@@ -51,7 +51,7 @@ describe('memory-management.helper', () => {
         timestamp: index,
         type: 'click' as const,
       })),
-      notifications: Array.from({ length: 12 }, (_, index) =>
+      notificationList: Array.from({ length: 12 }, (_, index) =>
         createNotification(`n-${index}`, true, index),
       ),
     };
@@ -63,6 +63,6 @@ describe('memory-management.helper', () => {
     });
 
     expect(collected.interactionHistory).toHaveLength(10);
-    expect(collected.notifications).toHaveLength(5);
+    expect(collected.notificationList).toHaveLength(5);
   });
 });

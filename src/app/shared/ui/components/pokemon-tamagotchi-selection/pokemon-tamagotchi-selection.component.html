@@ -1,4 +1,7 @@
-<section *transloco="let t; prefix: 'pokemonTamagotchi.selection'" class="tamagotchi-selection">
+<section
+  *transloco="let t; prefix: 'pokemonProfile.tamagotchiSelection'"
+  class="tamagotchi-selection"
+>
   @if (feedback(); as status) {
     <div
       size="m"
@@ -23,13 +26,13 @@
       tuiButton
       type="button"
       [disabled]="loading() || isCurrentSelection()"
-      (click)="selectForTamagotchi()"
+      (click)="onSelectClick()"
     >
       {{ isCurrentSelection() ? t('alreadySelected') : t('selectButton') }}
     </button>
 
     @if (isCurrentSelection()) {
-      <a [routerLink]="tamagotchiRoute" appearance="outline" tuiButton type="button">
+      <a [routerLink]="tamagotchiRoute()" appearance="outline" tuiButton type="button">
         {{ t('openTamagotchi') }}
       </a>
     }

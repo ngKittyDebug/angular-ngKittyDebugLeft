@@ -2,16 +2,16 @@ import { TestBed } from '@angular/core/testing';
 import { GAME_BALANCE } from '../constants/game-balance.constants';
 import { EVOLUTION_REQUIREMENTS } from '../constants/evolution-criteria.constants';
 import { createInitialDailyRoutine } from '../store/tamagotchi-initial';
-import { TEST_POKEMON } from '../testing/tamagotchi-arbitraries';
-import type { Achievement } from '../../models/achievement.model';
-import type { Pokemon } from '../../models/pokemon.model';
-import type { PokemonStatus } from '../../models/pokemon-status.model';
+import { TEST_POKEMON } from '../fixtures/tamagotchi-arbitraries';
+import type { AchievementModel } from '../models/achievement.model';
+import type { PokemonModel } from '../models/pokemon.model';
+import type { PokemonStatusModel } from '../models/pokemon-status.model';
 import { EvolutionService } from './evolution.service';
 
 describe('EvolutionService', () => {
   let service: EvolutionService;
 
-  const basePokemon: Pokemon = {
+  const basePokemon: PokemonModel = {
     ...TEST_POKEMON,
     evolutionChain: {
       currentStage: 1,
@@ -23,7 +23,7 @@ describe('EvolutionService', () => {
     },
   };
 
-  const readyStatus: PokemonStatus = {
+  const readyStatus: PokemonStatusModel = {
     energy: 80,
     experience: GAME_BALANCE.EVOLUTION.MIN_EXPERIENCE,
     health: 90,
@@ -38,7 +38,7 @@ describe('EvolutionService', () => {
     mood: 90,
   };
 
-  const trainingAchievements: Achievement[] = [
+  const trainingAchievements: AchievementModel[] = [
     {
       category: 'training',
       description: 'Win a training mini-game',

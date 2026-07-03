@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { EVOLUTION_ANIMATION_DURATION_MS } from '../../../data/constants/evolution-criteria.constants';
-import type { Pokemon } from '../../../models/pokemon.model';
+import type { PokemonModel } from '../../../data/models/pokemon.model';
 
 type EvolutionPhase = 'flash' | 'reveal' | 'start';
 
@@ -27,10 +27,10 @@ export class EvolutionAnimationComponent {
   private completeTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   public readonly active = input<boolean>(false);
-  public readonly fromPokemon = input.required<Pokemon>();
-  public readonly toPokemon = input<Pokemon | null>(null);
+  public readonly fromPokemon = input.required<PokemonModel>();
+  public readonly toPokemon = input<PokemonModel | null>(null);
 
-  public readonly animationComplete = output<Pokemon>();
+  public readonly animationComplete = output<PokemonModel>();
 
   protected readonly visible = signal(false);
   protected readonly phase = signal<EvolutionPhase>('start');

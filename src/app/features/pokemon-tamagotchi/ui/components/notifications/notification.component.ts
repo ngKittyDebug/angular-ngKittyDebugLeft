@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { TuiButton } from '@taiga-ui/core';
-import type { Notification } from '../../../models/notification.model';
+import type { NotificationModel } from '../../../data/models/notification.model';
 
 @Component({
   selector: 'left-paw-tamagotchi-notifications',
@@ -11,7 +11,7 @@ import type { Notification } from '../../../models/notification.model';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NotificationComponent {
-  public readonly notifications = input.required<Notification[]>();
+  public readonly notifications = input.required<NotificationModel[]>();
 
   protected readonly historyOpen = signal(false);
 

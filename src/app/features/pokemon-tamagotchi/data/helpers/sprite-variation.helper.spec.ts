@@ -4,7 +4,7 @@ import { STATUS_THRESHOLDS } from '../constants/status-thresholds.constants';
 import { createInteractionEvent } from './gesture.helper';
 import { isRoutineBonusEligible } from './routine.helper';
 import { resolveSpriteUrl, resolveStatusSpriteKey } from './sprite-variation.helper';
-import { TEST_POKEMON } from '../testing/tamagotchi-arbitraries';
+import { TEST_POKEMON } from '../fixtures/tamagotchi-arbitraries';
 
 describe('sprite-variation.helper', () => {
   it('resolves sleeping sprite key when pokemon is sleeping', () => {

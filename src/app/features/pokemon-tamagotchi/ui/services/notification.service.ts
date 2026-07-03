@@ -8,18 +8,18 @@ import {
 } from '../../data/helpers/notification-factory.helper';
 import { detectPeriodicCriticalAlerts } from '../../data/helpers/status-decay.helper';
 import { TamagotchiStore } from '../../data/store/tamagotchi.store';
-import type { Achievement } from '../../models/achievement.model';
+import type { AchievementModel } from '../../data/models/achievement.model';
 import type {
-  Notification,
+  NotificationModel,
   NotificationPriority,
   StatusAlertType,
-} from '../../models/notification.model';
-import type { PokemonStatus } from '../../models/pokemon-status.model';
+} from '../../data/models/notification.model';
+import type { PokemonStatusModel } from '../../data/models/pokemon-status.model';
 
 const NOTIFICATION_SCOPE = 'pokemonTamagotchi.notifications';
 
 export interface StatusAlertNotificationContext {
-  status: PokemonStatus;
+  status: PokemonStatusModel;
   thresholdAlerts: StatusAlertType[];
   timestamp?: number;
 }
@@ -59,7 +59,7 @@ export class TamagotchiNotificationService {
     this.publish(notificationFromEvolutionReady(pokemonName, timestamp));
   }
 
-  public notifyAchievementUnlocked(achievement: Achievement, timestamp?: number): void {
+  public notifyAchievementUnlocked(achievement: AchievementModel, timestamp?: number): void {
     this.publish(notificationFromAchievement(achievement, timestamp));
   }
 
@@ -73,7 +73,7 @@ export class TamagotchiNotificationService {
     this.publish(notification);
   }
 
-  private publish(notification: Notification): void {
+  private publish(notification: NotificationModel): void {
     this.store.addNotification(notification);
 
     const label = this.resolveText(notification.title);

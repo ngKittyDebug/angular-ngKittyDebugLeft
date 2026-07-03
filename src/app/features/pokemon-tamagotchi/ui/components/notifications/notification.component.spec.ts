@@ -2,10 +2,10 @@ import { TestBed } from '@angular/core/testing';
 import type { ComponentFixture } from '@angular/core/testing';
 import { TranslocoTestingModule } from '@jsverse/transloco';
 import { describe, expect, it } from 'vitest';
-import type { Notification } from '../../../models/notification.model';
+import type { NotificationModel } from '../../../data/models/notification.model';
 import { NotificationComponent } from './notification.component';
 
-const SAMPLE_NOTIFICATION: Notification = {
+const SAMPLE_NOTIFICATION: NotificationModel = {
   id: 'notification-1',
   message: 'alerts.hungerLow.message',
   priority: 'warning',
@@ -15,7 +15,7 @@ const SAMPLE_NOTIFICATION: Notification = {
 };
 
 function createFixture(
-  notifications: Notification[] = [SAMPLE_NOTIFICATION],
+  notifications: NotificationModel[] = [SAMPLE_NOTIFICATION],
 ): ComponentFixture<NotificationComponent> {
   TestBed.configureTestingModule({
     imports: [

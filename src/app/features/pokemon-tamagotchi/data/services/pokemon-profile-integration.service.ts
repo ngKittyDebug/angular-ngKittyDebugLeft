@@ -1,14 +1,10 @@
-import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { PokemonApiService } from '@core/api/pokemon-api.service';
-import type { EvolutionChainApiResponse } from '@shared/models/pokemon-evolution-chain-api-data-interface';
-import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
-import type { PokemonSpeciesApiData } from '@shared/models/pokemon-species-api-data-interface';
 import type { Observable } from 'rxjs';
-import { catchError, map, of, switchMap } from 'rxjs';
-import { mapApiToTamagotchiPokemon } from '../helpers/pokemon-profile-mapper.helper';
-import type { Pokemon } from '../../models/pokemon.model';
-import type { PokemonStatus } from '../../models/pokemon-status.model';
+import { catchError, map, of } from 'rxjs';
+import { PokemonTamagotchiApiService } from '../api/pokemon/services/pokemon-tamagotchi-api.service';
+import type { PokemonModel } from '../models/pokemon.model';
+import type { PokemonStatusModel } from '../models/pokemon-status.model';
+import { TamagotchiStorageService } from './tamagotchi-storage.service';
 
 export const TAMAGOTCHI_SELECTED_POKEMON_KEY = 'pokemon-tamagotchi-selected-pokemon';
 
@@ -22,7 +18,7 @@ export type PokemonSelectionError = 'evolvedPokemon' | 'loadFailed' | 'noSelecti
 
 export interface PokemonSelectionValidation {
   error?: PokemonSelectionError;
-  pokemon?: Pokemon;
+  pokemon?: PokemonModel;
   valid: boolean;
 }
 
@@ -33,11 +29,11 @@ export interface SpriteData {
 
 @Injectable({ providedIn: 'root' })
 export class PokemonProfileIntegrationService {
-  private readonly http = inject(HttpClient);
-  private readonly pokemonApi = inject(PokemonApiService);
+  private readonly api = inject(PokemonTamagotchiApiService);
+  private readonly storage = inject(TamagotchiStorageService);
 
   public getSelectedPokemonReference(): SelectedPokemonReference | null {
-    const raw = this.readStorage();
+    const raw = this.storage.getItem(TAMAGOTCHI_SELECTED_POKEMON_KEY);
 
     if (!raw) {
       return null;
@@ -66,64 +62,39 @@ export class PokemonProfileIntegrationService {
     }
   }
 
-  public saveSelectedPokemon(pokemon: Pokemon): void {
+  public saveSelectedPokemon(pokemon: PokemonModel): void {
     const reference: SelectedPokemonReference = {
       id: pokemon.id,
       name: pokemon.name,
       species: pokemon.species,
     };
 
-    this.writeStorage(JSON.stringify(reference));
+    this.storage.setItem(TAMAGOTCHI_SELECTED_POKEMON_KEY, JSON.stringify(reference));
   }
 
   public clearSelectedPokemon(): void {
-    if (typeof globalThis.localStorage === 'undefined') {
-      return;
-    }
-
-    globalThis.localStorage.removeItem(TAMAGOTCHI_SELECTED_POKEMON_KEY);
+    this.storage.removeItem(TAMAGOTCHI_SELECTED_POKEMON_KEY);
   }
 
-  public getSelectedPokemon(): Observable<Pokemon | null> {
+  public getSelectedPokemon(): Observable<PokemonModel | null> {
     const reference = this.getSelectedPokemonReference();
 
     if (!reference) {
       return of(null);
     }
 
-    return this.loadPokemonByName(reference.name).pipe(catchError(() => of(null)));
+    return this.api.loadPokemonByName(reference.name).pipe(catchError(() => of(null)));
   }
 
-  public loadPokemonByName(nameOrId: string): Observable<Pokemon> {
-    return this.http.get<PokemonDetailApiData>(this.pokemonApi.getPokemonData(nameOrId)).pipe(
-      switchMap((detail) =>
-        this.http.get<PokemonSpeciesApiData>(this.pokemonApi.getPokemonSpecies(detail.name)).pipe(
-          switchMap((species) => {
-            const chainId = species.evolution_chain?.url.split('/').filter(Boolean).pop();
-
-            if (!chainId) {
-              return of(mapApiToTamagotchiPokemon(detail, this.fallbackEvolutionChain(detail)));
-            }
-
-            return this.http
-              .get<EvolutionChainApiResponse>(this.pokemonApi.getEvolutionChain(chainId))
-              .pipe(
-                map((chain) => mapApiToTamagotchiPokemon(detail, chain)),
-                catchError(() =>
-                  of(mapApiToTamagotchiPokemon(detail, this.fallbackEvolutionChain(detail))),
-                ),
-              );
-          }),
-        ),
-      ),
-    );
+  public loadPokemonByName(nameOrId: string): Observable<PokemonModel> {
+    return this.api.loadPokemonByName(nameOrId);
   }
 
-  public isFirstStagePokemon(pokemon: Pokemon): boolean {
+  public isFirstStagePokemon(pokemon: PokemonModel): boolean {
     return pokemon.isFirstStage;
   }
 
-  public validatePokemonSelection(pokemon: Pokemon): PokemonSelectionValidation {
+  public validatePokemonSelection(pokemon: PokemonModel): PokemonSelectionValidation {
     if (!this.isFirstStagePokemon(pokemon)) {
       return {
         error: 'evolvedPokemon',
@@ -150,7 +121,10 @@ export class PokemonProfileIntegrationService {
     );
   }
 
-  public getPokemonSprite(pokemon: Pokemon, status: PokemonStatus): Observable<SpriteData> {
+  public getPokemonSprite(
+    pokemon: PokemonModel,
+    status: PokemonStatusModel,
+  ): Observable<SpriteData> {
     const spriteStatus = this.resolveSpriteStatus(status);
 
     return of({
@@ -160,7 +134,7 @@ export class PokemonProfileIntegrationService {
   }
 
   private resolveSpriteStatus(
-    status: PokemonStatus,
+    status: PokemonStatusModel,
   ): 'eating' | 'evolving' | 'happy' | 'normal' | 'sad' | 'sleeping' {
     if (status.energy <= 10) {
       return 'sleeping';
@@ -175,34 +149,5 @@ export class PokemonProfileIntegrationService {
     }
 
     return 'normal';
-  }
-
-  private fallbackEvolutionChain(detail: PokemonDetailApiData): EvolutionChainApiResponse {
-    return {
-      baby_trigger_item: null,
-      chain: {
-        evolution_details: [],
-        evolves_to: [],
-        is_baby: false,
-        species: detail.species,
-      },
-      id: detail.id,
-    };
-  }
-
-  private readStorage(): string | null {
-    if (typeof globalThis.localStorage === 'undefined') {
-      return null;
-    }
-
-    return globalThis.localStorage.getItem(TAMAGOTCHI_SELECTED_POKEMON_KEY);
-  }
-
-  private writeStorage(value: string): void {
-    if (typeof globalThis.localStorage === 'undefined') {
-      return;
-    }
-
-    globalThis.localStorage.setItem(TAMAGOTCHI_SELECTED_POKEMON_KEY, value);
   }
 }

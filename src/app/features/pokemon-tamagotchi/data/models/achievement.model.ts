@@ -1,21 +1,21 @@
-export interface AchievementRequirement {
+export interface AchievementRequirementModel {
   type: 'totalActions' | 'consecutiveDays' | 'statusMaintained' | 'miniGameScore';
   target: number;
   current: number;
 }
 
-export interface AchievementReward {
+export interface AchievementRewardModel {
   experience: number;
   unlockables: string[];
 }
 
-export interface Achievement {
+export interface AchievementModel {
   id: string;
   name: string;
   description: string;
   category: 'care' | 'training' | 'evolution' | 'interaction' | 'routine';
-  requirements: AchievementRequirement[];
+  requirements: AchievementRequirementModel[];
   unlocked: boolean;
   unlockedAt: number | null;
-  reward: AchievementReward;
+  reward: AchievementRewardModel;
 }

@@ -1,5 +1,5 @@
 import { GAME_BALANCE } from '../constants/game-balance.constants';
-import { TEST_POKEMON } from '../testing/tamagotchi-arbitraries';
+import { TEST_POKEMON } from '../fixtures/tamagotchi-arbitraries';
 import {
   addNotificationState,
   dismissNotificationState,
@@ -65,7 +65,7 @@ describe('tamagotchiStateTransitions', () => {
     const withNotification = addNotificationState(initialTamagotchiState, notification);
     const dismissed = dismissNotificationState(withNotification, 'alert-1');
 
-    expect(dismissed.notifications).toHaveLength(1);
-    expect(dismissed.notifications[0]?.read).toBe(true);
+    expect(dismissed.notificationList).toHaveLength(1);
+    expect(dismissed.notificationList[0]?.read).toBe(true);
   });
 });

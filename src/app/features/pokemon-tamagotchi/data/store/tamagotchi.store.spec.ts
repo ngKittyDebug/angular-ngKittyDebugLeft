@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { TAMAGOTCHI_SYSTEM_ERRORS } from '../constants/system-errors.constants';
 import { TamagotchiErrorRecoveryService } from '../services/tamagotchi-error-recovery.service';
 import { TamagotchiPersistenceService } from '../services/tamagotchi-persistence.service';
-import { TEST_POKEMON } from '../testing/tamagotchi-arbitraries';
+import { TEST_POKEMON } from '../fixtures/tamagotchi-arbitraries';
 import { selectPokemonState, startTrainingState } from './tamagotchi-state-transitions';
 import { createInitialTamagotchiState, initialTamagotchiState } from './tamagotchi-initial';
 import { TamagotchiStore } from './tamagotchi.store';

@@ -16,10 +16,6 @@ export const pokemonProfileRoutes: Routes = [
       import('./ui/components/pokemon-profile-page/pokemon-profile-page.component').then(
         (m) => m.PokemonProfilePageComponent,
       ),
-    providers: [
-      provideTranslocoScope('pokemonProfile'),
-      provideTranslocoScope('pokemonTamagotchi'),
-      provideEchartsCore({ echarts }),
-    ],
+    providers: [provideTranslocoScope('pokemonProfile'), provideEchartsCore({ echarts })],
   },
 ];

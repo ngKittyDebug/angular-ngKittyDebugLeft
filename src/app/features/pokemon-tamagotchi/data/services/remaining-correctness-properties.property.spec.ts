@@ -16,7 +16,7 @@ import {
   arbitraryInteractionEvent,
   arbitraryPokemonStatus,
   TEST_POKEMON,
-} from '../testing/tamagotchi-arbitraries';
+} from '../fixtures/tamagotchi-arbitraries';
 import { TamagotchiErrorRecoveryService } from '../services/tamagotchi-error-recovery.service';
 import { TamagotchiPersistenceService } from '../services/tamagotchi-persistence.service';
 import { TamagotchiService } from '../services/tamagotchi.service';
@@ -26,7 +26,7 @@ import {
   updateStatusState,
 } from '../store/tamagotchi-state-transitions';
 import { createInitialTamagotchiState } from '../store/tamagotchi-initial';
-import type { NotificationPriority } from '../../models/notification.model';
+import type { NotificationPriority } from '../models/notification.model';
 
 const PROPERTY_RUNS = 100;
 const FIXED_NOW = 1_700_000_000_000;
@@ -204,7 +204,7 @@ describe('Tamagotchi Remaining Property Tests', () => {
             { minLength: 2 },
           ),
           (priorities) => {
-            const notifications = priorities.map((priority, index) => ({
+            const notificationList = priorities.map((priority, index) => ({
               id: `notification-${index}`,
               message: 'message',
               priority,
@@ -212,7 +212,7 @@ describe('Tamagotchi Remaining Property Tests', () => {
               timestamp: index,
               title: 'title',
             }));
-            const sorted = [...notifications].sort(compareNotificationsByPriority);
+            const sorted = [...notificationList].sort(compareNotificationsByPriority);
 
             for (let index = 1; index < sorted.length; index += 1) {
               const comparison = compareNotificationsByPriority(sorted[index - 1]!, sorted[index]!);

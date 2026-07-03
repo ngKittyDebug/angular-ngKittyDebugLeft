@@ -1,13 +1,13 @@
 export type InteractionType = 'click' | 'drag' | 'pet' | 'multiTouch';
 
-export interface InteractionEvent {
+export interface InteractionEventModel {
   type: InteractionType;
   timestamp: number;
   intensity: number;
   moodIncrease: number;
 }
 
-export interface GestureConfig {
+export interface GestureConfigModel {
   type: InteractionType;
   sensitivity: number;
   minDuration?: number;

@@ -16,9 +16,9 @@ import {
   resolveSpriteUrl,
   resolveStatusSpriteKey,
 } from '../../../data/helpers/sprite-variation.helper';
-import type { InteractionEvent } from '../../../models/interaction.model';
-import type { Pokemon } from '../../../models/pokemon.model';
-import type { PokemonStatus } from '../../../models/pokemon-status.model';
+import type { InteractionEventModel } from '../../../data/models/interaction.model';
+import type { PokemonModel } from '../../../data/models/pokemon.model';
+import type { PokemonStatusModel } from '../../../data/models/pokemon-status.model';
 import { AnimationService } from '../../services/animation.service';
 import { GestureService } from '../../services/gesture.service';
 
@@ -38,12 +38,12 @@ export class PokemonSpriteComponent {
   private feedbackTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private pointerHandledInteraction = false;
 
-  public readonly interacted = output<InteractionEvent>();
+  public readonly interacted = output<InteractionEventModel>();
   public readonly isEvolving = input<boolean>(false);
   public readonly isSleeping = input<boolean>(false);
   public readonly isTraining = input<boolean>(false);
-  public readonly pokemon = input.required<Pokemon>();
-  public readonly status = input.required<PokemonStatus>();
+  public readonly pokemon = input.required<PokemonModel>();
+  public readonly status = input.required<PokemonStatusModel>();
 
   protected readonly feedbackAnimation = signal<string | null>(null);
   protected readonly useComplexAnimations = computed(() =>
@@ -152,7 +152,10 @@ export class PokemonSpriteComponent {
     return !this.isSleeping() && !this.isEvolving() && !this.isTraining();
   }
 
-  private applyGestureResult(result: { animationTrigger: string; event: InteractionEvent }): void {
+  private applyGestureResult(result: {
+    animationTrigger: string;
+    event: InteractionEventModel;
+  }): void {
     if (!this.canInteract()) {
       return;
     }

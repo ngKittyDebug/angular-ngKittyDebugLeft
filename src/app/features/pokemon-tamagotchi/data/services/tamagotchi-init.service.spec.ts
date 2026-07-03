@@ -4,7 +4,7 @@ import { of } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TamagotchiStore } from '../store/tamagotchi.store';
 import { createInitialTamagotchiState } from '../store/tamagotchi-initial';
-import { TEST_POKEMON } from '../testing/tamagotchi-arbitraries';
+import { TEST_POKEMON } from '../fixtures/tamagotchi-arbitraries';
 import { TamagotchiErrorRecoveryService } from './tamagotchi-error-recovery.service';
 import { TamagotchiInitService } from './tamagotchi-init.service';
 import { PokemonProfileIntegrationService } from './pokemon-profile-integration.service';

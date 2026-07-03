@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 
-import type { InteractionType } from '../../models/interaction.model';
-import type { ActionType } from '../../models/tamagotchi-state.model';
+import type { InteractionType } from '../models/interaction.model';
+import type { ActionType } from '../models/tamagotchi-state.model';
 import { TamagotchiLoggerService } from './tamagotchi-logger.service';
 
 export type TamagotchiAnalyticsEvent = ActionType | InteractionType | 'pageView';

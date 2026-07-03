@@ -1,6 +1,6 @@
-import type { GestureConfig, InteractionType } from '../../models/interaction.model';
+import type { GestureConfigModel, InteractionType } from '../models/interaction.model';
 
-export const GESTURE_CONFIGS: Record<InteractionType, GestureConfig> = {
+export const GESTURE_CONFIGS: Record<InteractionType, GestureConfigModel> = {
   click: {
     animationTrigger: 'sprite-pop',
     moodReward: 3,

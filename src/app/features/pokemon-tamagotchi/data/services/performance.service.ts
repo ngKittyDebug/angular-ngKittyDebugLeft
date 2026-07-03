@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 
 import {
   DEFAULT_PERFORMANCE_MODE,
@@ -8,21 +8,20 @@ import {
 import type {
   EffectivePerformanceMode,
   PerformanceMode,
-  PerformanceProfile,
-} from '../../models/performance-mode.model';
+  PerformanceProfileModel,
+} from '../models/performance-mode.model';
+import { TamagotchiStorageService } from './tamagotchi-storage.service';
 
 @Injectable({ providedIn: 'root' })
 export class PerformanceService {
+  private readonly storage = inject(TamagotchiStorageService);
   private readonly selectedMode = signal<PerformanceMode>(this.readStoredMode());
 
   public readonly mode = this.selectedMode.asReadonly();
 
   public setMode(mode: PerformanceMode): void {
     this.selectedMode.set(mode);
-
-    if (typeof globalThis.localStorage !== 'undefined') {
-      globalThis.localStorage.setItem(PERFORMANCE_MODE_STORAGE_KEY, mode);
-    }
+    this.storage.setItem(PERFORMANCE_MODE_STORAGE_KEY, mode);
   }
 
   public resolveEffectiveMode(): EffectivePerformanceMode {
@@ -35,16 +34,12 @@ export class PerformanceService {
     return this.detectDeviceCapability();
   }
 
-  public getProfile(): PerformanceProfile {
+  public getProfile(): PerformanceProfileModel {
     return PERFORMANCE_PROFILES[this.resolveEffectiveMode()];
   }
 
   private readStoredMode(): PerformanceMode {
-    if (typeof globalThis.localStorage === 'undefined') {
-      return DEFAULT_PERFORMANCE_MODE;
-    }
-
-    const stored = globalThis.localStorage.getItem(PERFORMANCE_MODE_STORAGE_KEY);
+    const stored = this.storage.getItem(PERFORMANCE_MODE_STORAGE_KEY);
 
     if (stored === 'auto' || stored === 'balanced' || stored === 'high' || stored === 'low') {
       return stored;

@@ -1,6 +1,6 @@
-import type { StatusThresholds } from '../../models/pokemon-status.model';
+import type { StatusThresholdsModel } from '../models/pokemon-status.model';
 
-export const STATUS_THRESHOLDS: StatusThresholds = {
+export const STATUS_THRESHOLDS: StatusThresholdsModel = {
   healthWarning: 30,
   hungerWarning: 30,
   moodWarning: 30,

@@ -1,5 +1,5 @@
 import { GAME_BALANCE } from '../constants/game-balance.constants';
-import type { PokemonStatus } from '../../models/pokemon-status.model';
+import type { PokemonStatusModel } from '../models/pokemon-status.model';
 
 export function clampStatusValue(value: number): number {
   return Math.min(
@@ -12,7 +12,7 @@ export function applyStatusDelta(current: number, delta: number): number {
   return clampStatusValue(current + delta);
 }
 
-export function normalizePokemonStatus(status: PokemonStatus): PokemonStatus {
+export function normalizePokemonStatus(status: PokemonStatusModel): PokemonStatusModel {
   return {
     ...status,
     energy: clampStatusValue(status.energy),

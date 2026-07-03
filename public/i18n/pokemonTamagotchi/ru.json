@@ -25,14 +25,6 @@
       "low": "Экономия"
     }
   },
-  "selection": {
-    "selectButton": "Выбрать для тамагочи",
-    "alreadySelected": "Выбран для тамагочи",
-    "openTamagotchi": "Открыть тамагочи",
-    "savedMessage": "{{name}} готов к уходу в тамагочи!",
-    "evolvedPokemonError": "В тамагочи можно взять только покемона первой стадии.",
-    "loadFailedError": "Не удалось подготовить этого покемона для тамагочи."
-  },
   "status": {
     "health": "Здоровье",
     "hunger": "Сытость",

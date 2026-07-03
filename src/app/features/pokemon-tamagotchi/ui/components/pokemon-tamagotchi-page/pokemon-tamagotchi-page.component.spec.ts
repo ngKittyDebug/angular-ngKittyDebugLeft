@@ -7,7 +7,7 @@ import { of } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
 import { PokemonProfileIntegrationService } from '../../../data/services/pokemon-profile-integration.service';
 import { TamagotchiInitService } from '../../../data/services/tamagotchi-init.service';
-import { TEST_POKEMON } from '../../../data/testing/tamagotchi-arbitraries';
+import { TEST_POKEMON } from '../../../data/fixtures/tamagotchi-arbitraries';
 import {
   createInitialPokemonStatus,
   createInitialTamagotchiState,
@@ -52,7 +52,7 @@ function createStoreMock(
   const initial = createInitialTamagotchiState();
 
   return {
-    achievements: signal(initial.achievements),
+    achievementList: signal(initial.achievementList),
     applyStatusDecay: vi.fn(),
     canEvolve: signal(false),
     care: vi.fn(),
@@ -74,7 +74,7 @@ function createStoreMock(
     lastActionTime: signal(initial.lastActionTime),
     lastDecayTime: signal(initial.lastDecayTime),
     lastSaveTime: signal(initial.lastSaveTime),
-    notifications: signal(initial.notifications),
+    notificationList: signal(initial.notificationList),
     play: vi.fn(),
     pokemon: signal(overrides.pokemon ?? TEST_POKEMON),
     putToSleep: vi.fn(),
@@ -124,7 +124,7 @@ describe('PokemonTamagotchiPageComponent', () => {
                   timeLeft: '{{seconds}}s',
                   title: 'Training',
                 },
-                notifications: {
+                notificationList: {
                   dismiss: 'Dismiss',
                   empty: 'No notifications',
                   hideHistory: 'Hide history',
@@ -205,9 +205,11 @@ describe('PokemonTamagotchiPageComponent', () => {
   });
 
   it('should render notifications panel', () => {
-    const notifications = fixture.nativeElement.querySelector('left-paw-tamagotchi-notifications');
+    const notificationList = fixture.nativeElement.querySelector(
+      'left-paw-tamagotchi-notifications',
+    );
 
-    expect(notifications).toBeTruthy();
+    expect(notificationList).toBeTruthy();
   });
 });
 

@@ -5,7 +5,7 @@ import { AppNotificationService } from '@core/services/app-notification.service'
 import { TIMER_CONFIG } from '../../data/constants/timer.constants';
 import { TamagotchiStore } from '../../data/store/tamagotchi.store';
 import { createInitialPokemonStatus } from '../../data/store/tamagotchi-initial';
-import type { Achievement } from '../../models/achievement.model';
+import type { AchievementModel } from '../../data/models/achievement.model';
 import { TamagotchiNotificationService } from './notification.service';
 
 const TRANSLATIONS: Record<string, string> = {
@@ -125,7 +125,7 @@ describe('TamagotchiNotificationService', () => {
   });
 
   it('shows positive toast for achievements', () => {
-    const achievement: Achievement = {
+    const achievement: AchievementModel = {
       category: 'care',
       description: 'Fed your Pokémon 10 times',
       id: 'care-10',

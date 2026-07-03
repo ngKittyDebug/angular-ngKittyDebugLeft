@@ -8,7 +8,7 @@ import {
   getThresholdsForStatusType,
   resolveStatusIndicatorColor,
 } from '../../../data/helpers/status-indicator.helper';
-import type { StatusThresholds, StatusType } from '../../../models/pokemon-status.model';
+import type { StatusThresholdsModel, StatusType } from '../../../data/models/pokemon-status.model';
 
 @Component({
   selector: 'left-paw-status-indicator',
@@ -21,7 +21,7 @@ export class StatusIndicatorComponent {
   public readonly currentValue = input.required<number>();
   public readonly maxValue = input<number>(100);
   public readonly statusType = input.required<StatusType>();
-  public readonly thresholds = input<StatusThresholds>(STATUS_THRESHOLDS);
+  public readonly thresholds = input<StatusThresholdsModel>(STATUS_THRESHOLDS);
   public readonly level = input<number | null>(null);
 
   protected readonly displayValue = computed(() => Math.round(this.currentValue()));

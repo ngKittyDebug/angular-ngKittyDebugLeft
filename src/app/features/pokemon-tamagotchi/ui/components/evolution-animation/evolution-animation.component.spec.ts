@@ -3,10 +3,10 @@ import type { ComponentFixture } from '@angular/core/testing';
 import { TranslocoTestingModule } from '@jsverse/transloco';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { EVOLUTION_ANIMATION_DURATION_MS } from '../../../data/constants/evolution-criteria.constants';
-import type { Pokemon } from '../../../models/pokemon.model';
+import type { PokemonModel } from '../../../data/models/pokemon.model';
 import { EvolutionAnimationComponent } from './evolution-animation.component';
 
-const basePokemon = (id: string, name: string): Pokemon => {
+const basePokemon = (id: string, name: string): PokemonModel => {
   const spriteUrls = {
     eating: '',
     evolving: `/sprites/${id}-evo.gif`,
@@ -40,8 +40,8 @@ const basePokemon = (id: string, name: string): Pokemon => {
 function createFixture(
   inputs: {
     active?: boolean;
-    fromPokemon?: Pokemon;
-    toPokemon?: Pokemon | null;
+    fromPokemon?: PokemonModel;
+    toPokemon?: PokemonModel | null;
   } = {},
 ): ComponentFixture<EvolutionAnimationComponent> {
   TestBed.configureTestingModule({

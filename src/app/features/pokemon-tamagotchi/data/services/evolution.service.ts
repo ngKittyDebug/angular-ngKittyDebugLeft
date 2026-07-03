@@ -9,52 +9,57 @@ import {
   checkEvolutionCriteria,
   getRequirementCompletionRatio,
 } from '../helpers/evolution-checker.helper';
-import type { Achievement } from '../../models/achievement.model';
+import type { AchievementModel } from '../models/achievement.model';
 import type {
-  EvolutionChain,
-  EvolutionCheckResult,
-  EvolutionData,
-  EvolutionProgress,
-  EvolutionRequirement,
-  EvolutionResult,
-} from '../../models/evolution.model';
-import type { Pokemon } from '../../models/pokemon.model';
-import type { PokemonStatus } from '../../models/pokemon-status.model';
-import type { DailyRoutine } from '../../models/tamagotchi-state.model';
+  EvolutionChainModel,
+  EvolutionCheckResultModel,
+  EvolutionDataModel,
+  EvolutionProgressModel,
+  EvolutionRequirementModel,
+  EvolutionResultModel,
+} from '../models/evolution.model';
+import type { PokemonModel } from '../models/pokemon.model';
+import type { PokemonStatusModel } from '../models/pokemon-status.model';
+import type { DailyRoutine } from '../models/tamagotchi-state.model';
 
 @Injectable({ providedIn: 'root' })
 export class EvolutionService {
   public checkEvolutionCriteria(
-    pokemon: Pokemon,
-    status: PokemonStatus,
-    achievements: Achievement[],
+    pokemon: PokemonModel,
+    status: PokemonStatusModel,
+    achievementList: AchievementModel[],
     dailyRoutine: DailyRoutine,
-    requirements: EvolutionRequirement[] = this.getRequirementsForPokemon(pokemon),
-  ): EvolutionCheckResult {
-    return checkEvolutionCriteria(requirements, status, achievements, dailyRoutine.consecutiveDays);
+    requirements: EvolutionRequirementModel[] = this.getRequirementsForPokemon(pokemon),
+  ): EvolutionCheckResultModel {
+    return checkEvolutionCriteria(
+      requirements,
+      status,
+      achievementList,
+      dailyRoutine.consecutiveDays,
+    );
   }
 
   public computeEvolutionProgress(
-    status: PokemonStatus,
-    achievements: Achievement[],
+    status: PokemonStatusModel,
+    achievementList: AchievementModel[],
     dailyRoutine: DailyRoutine,
-    requirements: EvolutionRequirement[] = EVOLUTION_REQUIREMENTS,
-  ): EvolutionProgress {
+    requirements: EvolutionRequirementModel[] = EVOLUTION_REQUIREMENTS,
+  ): EvolutionProgressModel {
     const result = checkEvolutionCriteria(
       requirements,
       status,
-      achievements,
+      achievementList,
       dailyRoutine.consecutiveDays,
     );
 
     return result.progress;
   }
 
-  public getEvolutionChain(pokemon: Pokemon): EvolutionChain {
+  public getEvolutionChain(pokemon: PokemonModel): EvolutionChainModel {
     return pokemon.evolutionChain;
   }
 
-  public getRequirementsForPokemon(pokemon: Pokemon): EvolutionRequirement[] {
+  public getRequirementsForPokemon(pokemon: PokemonModel): EvolutionRequirementModel[] {
     const chainRequirements = pokemon.evolutionChain.nextEvolution?.requirements;
 
     if (chainRequirements && chainRequirements.length > 0) {
@@ -64,7 +69,7 @@ export class EvolutionService {
     return EVOLUTION_REQUIREMENTS;
   }
 
-  public buildEvolutionData(pokemon: Pokemon): EvolutionData | null {
+  public buildEvolutionData(pokemon: PokemonModel): EvolutionDataModel | null {
     const nextEvolution = pokemon.evolutionChain.nextEvolution;
 
     if (!nextEvolution) {
@@ -79,7 +84,10 @@ export class EvolutionService {
     };
   }
 
-  public triggerEvolution(pokemon: Pokemon, evolutionData: EvolutionData): EvolutionResult | null {
+  public triggerEvolution(
+    pokemon: PokemonModel,
+    evolutionData: EvolutionDataModel,
+  ): EvolutionResultModel | null {
     if (evolutionData.fromPokemonId !== pokemon.id) {
       return null;
     }
@@ -97,14 +105,14 @@ export class EvolutionService {
   }
 
   public getRequirementCompletionRatio(
-    requirement: EvolutionRequirement,
-    status: PokemonStatus,
-    achievements: Achievement[],
+    requirement: EvolutionRequirementModel,
+    status: PokemonStatusModel,
+    achievementList: AchievementModel[],
     dailyRoutine: DailyRoutine,
   ): number {
     const currentProgress = buildEvolutionProgressValues(
       status,
-      achievements,
+      achievementList,
       dailyRoutine.consecutiveDays,
     );
 
@@ -112,15 +120,15 @@ export class EvolutionService {
   }
 
   public canEvolve(
-    pokemon: Pokemon,
-    status: PokemonStatus,
-    achievements: Achievement[],
+    pokemon: PokemonModel,
+    status: PokemonStatusModel,
+    achievementList: AchievementModel[],
     dailyRoutine: DailyRoutine,
   ): boolean {
     if (!pokemon.isFirstStage && !pokemon.evolutionChain.nextEvolution) {
       return false;
     }
 
-    return this.checkEvolutionCriteria(pokemon, status, achievements, dailyRoutine).isReady;
+    return this.checkEvolutionCriteria(pokemon, status, achievementList, dailyRoutine).isReady;
   }
 }

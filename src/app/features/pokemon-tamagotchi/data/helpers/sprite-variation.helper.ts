@@ -1,14 +1,18 @@
-import type { Pokemon, PokemonSpriteUrls, SpriteVariation } from '../../models/pokemon.model';
-import type { PokemonStatus } from '../../models/pokemon-status.model';
+import type {
+  PokemonModel,
+  PokemonSpriteUrlsModel,
+  SpriteVariation,
+} from '../models/pokemon.model';
+import type { PokemonStatusModel } from '../models/pokemon-status.model';
 
-export type StatusSpriteKey = keyof PokemonSpriteUrls;
+export type StatusSpriteKey = keyof PokemonSpriteUrlsModel;
 
 export const DEFAULT_SPRITE_VARIATION: SpriteVariation = 'default';
 
 export function resolveStatusSpriteKey(
   isEvolving: boolean,
   isSleeping: boolean,
-  status: PokemonStatus,
+  status: PokemonStatusModel,
 ): StatusSpriteKey {
   if (isEvolving) {
     return 'evolving';
@@ -30,9 +34,9 @@ export function resolveStatusSpriteKey(
 }
 
 export function spriteSetForVariation(
-  pokemon: Pokemon,
+  pokemon: PokemonModel,
   variation: SpriteVariation,
-): PokemonSpriteUrls {
+): PokemonSpriteUrlsModel {
   const variations = pokemon.spriteVariations;
 
   if (variations?.[variation]) {
@@ -43,7 +47,7 @@ export function spriteSetForVariation(
 }
 
 export function resolveSpriteUrl(
-  pokemon: Pokemon,
+  pokemon: PokemonModel,
   statusKey: StatusSpriteKey,
   variation: SpriteVariation = DEFAULT_SPRITE_VARIATION,
 ): string {
@@ -53,7 +57,7 @@ export function resolveSpriteUrl(
   return spriteSet[statusKey] || spriteSet.normal;
 }
 
-export function ensurePokemonSpriteVariations(pokemon: Pokemon): Pokemon {
+export function ensurePokemonSpriteVariations(pokemon: PokemonModel): PokemonModel {
   if (pokemon.spriteVariations?.default?.normal) {
     return pokemon;
   }

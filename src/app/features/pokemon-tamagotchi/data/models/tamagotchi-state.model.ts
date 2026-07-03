@@ -1,9 +1,9 @@
-import type { Achievement } from './achievement.model';
-import type { EvolutionProgress } from './evolution.model';
-import type { InteractionEvent } from './interaction.model';
-import type { Notification } from './notification.model';
-import type { Pokemon } from './pokemon.model';
-import type { PokemonStatus } from './pokemon-status.model';
+import type { AchievementModel } from './achievement.model';
+import type { EvolutionProgressModel } from './evolution.model';
+import type { InteractionEventModel } from './interaction.model';
+import type { NotificationModel } from './notification.model';
+import type { PokemonModel } from './pokemon.model';
+import type { PokemonStatusModel } from './pokemon-status.model';
 
 export type ActionType = 'feed' | 'water' | 'care' | 'play' | 'train' | 'sleep';
 
@@ -29,20 +29,20 @@ export interface ValidationResult {
   cooldownRemaining?: number;
 }
 
-export interface TamagotchiState {
-  pokemon: Pokemon | null;
-  status: PokemonStatus;
-  achievements: Achievement[];
-  evolutionProgress: EvolutionProgress;
+export interface TamagotchiStateModel {
+  pokemon: PokemonModel | null;
+  status: PokemonStatusModel;
+  achievementList: AchievementModel[];
+  evolutionProgress: EvolutionProgressModel;
   lastActionTime: number | null;
   lastDecayTime: number | null;
   dailyRoutine: DailyRoutine;
-  interactionHistory: InteractionEvent[];
+  interactionHistory: InteractionEventModel[];
   isSleeping: boolean;
   isEvolving: boolean;
   trainingStartedAt: number | null;
   trainingExperienceReward: number | null;
-  notifications: Notification[];
+  notificationList: NotificationModel[];
   initialized: boolean;
   lastSaveTime: number | null;
   error: string | null;

@@ -1,29 +1,29 @@
-import type { Achievement } from '../../models/achievement.model';
+import type { AchievementModel } from '../models/achievement.model';
 import type {
-  EvolutionCheckResult,
-  EvolutionProgress,
-  EvolutionRequirement,
-} from '../../models/evolution.model';
-import type { Pokemon } from '../../models/pokemon.model';
-import type { PokemonStatus } from '../../models/pokemon-status.model';
+  EvolutionCheckResultModel,
+  EvolutionProgressModel,
+  EvolutionRequirementModel,
+} from '../models/evolution.model';
+import type { PokemonModel } from '../models/pokemon.model';
+import type { PokemonStatusModel } from '../models/pokemon-status.model';
 
-export function computeCareScore(status: PokemonStatus): number {
+export function computeCareScore(status: PokemonStatusModel): number {
   return Math.round((status.health + status.hunger + status.mood + status.hydration) / 4);
 }
 
-export function computeTrainingScore(achievements: Achievement[]): number {
-  return achievements
+export function computeTrainingScore(achievementList: AchievementModel[]): number {
+  return achievementList
     .filter((achievement) => achievement.category === 'training' && achievement.unlocked)
     .reduce((total, achievement) => total + achievement.reward.experience, 0);
 }
 
 export function buildEvolutionProgressValues(
-  status: PokemonStatus,
-  achievements: Achievement[],
+  status: PokemonStatusModel,
+  achievementList: AchievementModel[],
   consecutiveDays: number,
 ): Record<string, number> {
   return {
-    achievement: computeTrainingScore(achievements),
+    achievement: computeTrainingScore(achievementList),
     care: computeCareScore(status),
     experience: status.experience,
     level: status.level,
@@ -32,9 +32,9 @@ export function buildEvolutionProgressValues(
 }
 
 export function evaluateEvolutionRequirements(
-  requirements: EvolutionRequirement[],
+  requirements: EvolutionRequirementModel[],
   currentProgress: Record<string, number>,
-): { isReady: boolean; missingRequirements: EvolutionRequirement[] } {
+): { isReady: boolean; missingRequirements: EvolutionRequirementModel[] } {
   const missingRequirements = requirements.filter(
     (requirement) => (currentProgress[requirement.type] ?? 0) < requirement.value,
   );
@@ -46,18 +46,18 @@ export function evaluateEvolutionRequirements(
 }
 
 export function checkEvolutionCriteria(
-  requirements: EvolutionRequirement[],
-  status: PokemonStatus,
-  achievements: Achievement[],
+  requirements: EvolutionRequirementModel[],
+  status: PokemonStatusModel,
+  achievementList: AchievementModel[],
   consecutiveDays: number,
-): EvolutionCheckResult {
-  const currentProgress = buildEvolutionProgressValues(status, achievements, consecutiveDays);
+): EvolutionCheckResultModel {
+  const currentProgress = buildEvolutionProgressValues(status, achievementList, consecutiveDays);
   const { isReady, missingRequirements } = evaluateEvolutionRequirements(
     requirements,
     currentProgress,
   );
 
-  const progress: EvolutionProgress = {
+  const progress: EvolutionProgressModel = {
     currentProgress,
     isReady,
     requirements,
@@ -71,7 +71,7 @@ export function checkEvolutionCriteria(
 }
 
 export function getRequirementCompletionRatio(
-  requirement: EvolutionRequirement,
+  requirement: EvolutionRequirementModel,
   currentProgress: Record<string, number>,
 ): number {
   if (requirement.value <= 0) {
@@ -83,7 +83,7 @@ export function getRequirementCompletionRatio(
   return Math.min(1, current / requirement.value);
 }
 
-export function buildEvolvedPokemon(pokemon: Pokemon): Pokemon | null {
+export function buildEvolvedPokemon(pokemon: PokemonModel): PokemonModel | null {
   const nextEvolution = pokemon.evolutionChain.nextEvolution;
 
   if (!nextEvolution) {

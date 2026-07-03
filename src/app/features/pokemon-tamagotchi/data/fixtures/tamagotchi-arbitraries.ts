@@ -1,14 +1,18 @@
 import * as fc from 'fast-check';
 import type { EvolutionChainItemApiData } from '@shared/models/pokemon-evolution-chain-api-data-interface';
-import type { Achievement } from '../../models/achievement.model';
-import type { EvolutionRequirement } from '../../models/evolution.model';
-import type { InteractionEvent, InteractionType } from '../../models/interaction.model';
-import type { Pokemon } from '../../models/pokemon.model';
-import type { PokemonStatus, StatusDecay, StatusUpdate } from '../../models/pokemon-status.model';
-import type { TamagotchiState } from '../../models/tamagotchi-state.model';
+import type { AchievementModel } from '../models/achievement.model';
+import type { EvolutionRequirementModel } from '../models/evolution.model';
+import type { InteractionEventModel, InteractionType } from '../models/interaction.model';
+import type { PokemonModel } from '../models/pokemon.model';
+import type {
+  PokemonStatusModel,
+  StatusDecayModel,
+  StatusUpdateModel,
+} from '../models/pokemon-status.model';
+import type { TamagotchiStateModel } from '../models/tamagotchi-state.model';
 import { createInitialTamagotchiState } from '../store/tamagotchi-initial';
 
-export const TEST_POKEMON: Pokemon = {
+export const TEST_POKEMON: PokemonModel = {
   baseStats: {
     energyRestorationRate: 1,
     experienceMultiplier: 1,
@@ -59,15 +63,15 @@ export const TEST_POKEMON: Pokemon = {
 const interactionTypes: InteractionType[] = ['click', 'drag', 'multiTouch', 'pet'];
 const evolutionRequirementTypes = ['achievement', 'care', 'experience', 'level', 'time'] as const;
 
-export const arbitraryEvolutionRequirement = (): fc.Arbitrary<EvolutionRequirement> =>
+export const arbitraryEvolutionRequirementModel = (): fc.Arbitrary<EvolutionRequirementModel> =>
   fc.record({
     description: fc.string({ maxLength: 40, minLength: 1 }),
     type: fc.constantFrom(...evolutionRequirementTypes),
     value: fc.integer({ max: 2_000, min: 1 }),
   });
 
-export const arbitraryEvolutionRequirements = (): fc.Arbitrary<EvolutionRequirement[]> =>
-  fc.array(arbitraryEvolutionRequirement(), { maxLength: 5, minLength: 1 });
+export const arbitraryEvolutionRequirementModels = (): fc.Arbitrary<EvolutionRequirementModel[]> =>
+  fc.array(arbitraryEvolutionRequirementModel(), { maxLength: 5, minLength: 1 });
 
 export function buildLinearEvolutionChain(stageCount: number): EvolutionChainItemApiData {
   const rootSpecies = 'species-0';
@@ -99,7 +103,7 @@ export function buildLinearEvolutionChain(stageCount: number): EvolutionChainIte
   return node;
 }
 
-export const arbitraryLinearEvolutionChain = (): fc.Arbitrary<{
+export const arbitraryLinearEvolutionChainModel = (): fc.Arbitrary<{
   chain: EvolutionChainItemApiData;
   speciesIndex: number;
   stageCount: number;
@@ -112,7 +116,7 @@ export const arbitraryLinearEvolutionChain = (): fc.Arbitrary<{
     })),
   );
 
-export const arbitraryTrainingAchievements = (): fc.Arbitrary<Achievement[]> =>
+export const arbitraryTrainingAchievementModels = (): fc.Arbitrary<AchievementModel[]> =>
   fc.array(
     fc.record({
       category: fc.constant<'training'>('training'),
@@ -130,7 +134,7 @@ export const arbitraryTrainingAchievements = (): fc.Arbitrary<Achievement[]> =>
     { maxLength: 6, minLength: 0 },
   );
 
-export const arbitraryPokemonStatus = (): fc.Arbitrary<PokemonStatus> =>
+export const arbitraryPokemonStatus = (): fc.Arbitrary<PokemonStatusModel> =>
   fc.record({
     energy: fc.integer({ max: 100, min: 0 }),
     experience: fc.nat({ max: 10_000 }),
@@ -146,7 +150,7 @@ export const arbitraryPokemonStatus = (): fc.Arbitrary<PokemonStatus> =>
     mood: fc.integer({ max: 100, min: 0 }),
   });
 
-export const arbitraryStatusUpdate = (): fc.Arbitrary<StatusUpdate> =>
+export const arbitraryStatusUpdateModel = (): fc.Arbitrary<StatusUpdateModel> =>
   fc.record({
     energy: fc.option(fc.integer({ max: 50, min: -50 }), { nil: undefined }),
     experience: fc.option(fc.integer({ max: 200, min: -200 }), { nil: undefined }),
@@ -157,7 +161,7 @@ export const arbitraryStatusUpdate = (): fc.Arbitrary<StatusUpdate> =>
     mood: fc.option(fc.integer({ max: 50, min: -50 }), { nil: undefined }),
   });
 
-export const arbitraryStatusDecay = (): fc.Arbitrary<StatusDecay> =>
+export const arbitraryStatusDecayModel = (): fc.Arbitrary<StatusDecayModel> =>
   fc.record({
     energy: fc.integer({ max: 50, min: 0 }),
     hunger: fc.integer({ max: 50, min: 0 }),
@@ -166,7 +170,7 @@ export const arbitraryStatusDecay = (): fc.Arbitrary<StatusDecay> =>
     timestamp: fc.nat(),
   });
 
-export const arbitraryInteractionEvent = (): fc.Arbitrary<InteractionEvent> =>
+export const arbitraryInteractionEventModel = (): fc.Arbitrary<InteractionEventModel> =>
   fc.record({
     intensity: fc.float({ max: 1, min: 0 }),
     moodIncrease: fc.integer({ max: 30, min: 0 }),
@@ -185,10 +189,10 @@ export type CareActionKind =
   | 'water';
 
 export interface CareAction {
-  decay?: StatusDecay;
-  interaction?: InteractionEvent;
+  decay?: StatusDecayModel;
+  interaction?: InteractionEventModel;
   kind: CareActionKind;
-  statusUpdate?: StatusUpdate;
+  statusUpdate?: StatusUpdateModel;
 }
 
 export const arbitraryCareAction = (): fc.Arbitrary<CareAction> =>
@@ -199,20 +203,20 @@ export const arbitraryCareAction = (): fc.Arbitrary<CareAction> =>
     fc.record({ kind: fc.constant<CareActionKind>('play') }),
     fc.record({ kind: fc.constant<CareActionKind>('train') }),
     fc.record({
-      interaction: arbitraryInteractionEvent(),
+      interaction: arbitraryInteractionEventModel(),
       kind: fc.constant<CareActionKind>('interact'),
     }),
     fc.record({
       kind: fc.constant<CareActionKind>('updateStatus'),
-      statusUpdate: arbitraryStatusUpdate(),
+      statusUpdate: arbitraryStatusUpdateModel(),
     }),
     fc.record({
-      decay: arbitraryStatusDecay(),
+      decay: arbitraryStatusDecayModel(),
       kind: fc.constant<CareActionKind>('applyStatusDecay'),
     }),
   );
 
-export const arbitraryTamagotchiState = (): fc.Arbitrary<TamagotchiState> =>
+export const arbitraryTamagotchiState = (): fc.Arbitrary<TamagotchiStateModel> =>
   fc
     .record({
       error: fc.option(fc.string(), { nil: null }),
@@ -237,3 +241,9 @@ export const arbitraryTamagotchiState = (): fc.Arbitrary<TamagotchiState> =>
         status: { ...fields.status },
       };
     });
+
+export const arbitraryEvolutionRequirement = arbitraryEvolutionRequirementModel;
+export const arbitraryEvolutionRequirements = arbitraryEvolutionRequirementModels;
+export const arbitraryLinearEvolutionChain = arbitraryLinearEvolutionChainModel;
+export const arbitraryTrainingAchievements = arbitraryTrainingAchievementModels;
+export const arbitraryInteractionEvent = arbitraryInteractionEventModel;

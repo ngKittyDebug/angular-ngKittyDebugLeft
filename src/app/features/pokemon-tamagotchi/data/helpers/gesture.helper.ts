@@ -1,16 +1,16 @@
 import { BOND_LEVEL, GESTURE_CONFIGS, GESTURE_THRESHOLDS } from '../constants/gesture.constants';
 import type {
-  GestureConfig,
-  InteractionEvent,
+  GestureConfigModel,
+  InteractionEventModel,
   InteractionType,
-} from '../../models/interaction.model';
+} from '../models/interaction.model';
 
 export interface GestureResult {
   animationTrigger: string;
-  event: InteractionEvent;
+  event: InteractionEventModel;
 }
 
-export function getGestureConfig(type: InteractionType): GestureConfig {
+export function getGestureConfig(type: InteractionType): GestureConfigModel {
   return GESTURE_CONFIGS[type];
 }
 
@@ -25,7 +25,7 @@ export function createInteractionEvent(
   type: InteractionType,
   intensity: number,
   timestamp: number = Date.now(),
-): InteractionEvent {
+): InteractionEventModel {
   const clampedIntensity = Math.min(1, Math.max(0, intensity));
 
   return {
@@ -45,7 +45,10 @@ export function buildGestureResult(type: InteractionType, intensity: number): Ge
   };
 }
 
-export function calculateBondLevel(history: InteractionEvent[], now: number = Date.now()): number {
+export function calculateBondLevel(
+  history: InteractionEventModel[],
+  now: number = Date.now(),
+): number {
   const recent = history.filter((event) => now - event.timestamp <= BOND_LEVEL.WINDOW_MS);
   const score = recent.reduce((total, event) => {
     const weight = BOND_LEVEL.TYPE_WEIGHT[event.type];

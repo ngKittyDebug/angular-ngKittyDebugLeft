@@ -1,6 +1,6 @@
 export type StatusType = 'health' | 'hunger' | 'mood' | 'energy' | 'hydration' | 'experience';
 
-export interface PokemonStatus {
+export interface PokemonStatusModel {
   health: number;
   hunger: number;
   mood: number;
@@ -15,7 +15,7 @@ export interface PokemonStatus {
   lastSaveTime: number | null;
 }
 
-export interface StatusThresholds {
+export interface StatusThresholdsModel {
   healthWarning: number;
   hungerWarning: number;
   moodWarning: number;
@@ -28,7 +28,7 @@ export interface StatusThresholds {
   hydrationCritical: number;
 }
 
-export interface StatusDecay {
+export interface StatusDecayModel {
   hunger: number;
   mood: number;
   energy: number;
@@ -36,7 +36,7 @@ export interface StatusDecay {
   timestamp: number;
 }
 
-export interface StatusUpdate {
+export interface StatusUpdateModel {
   health?: number;
   hunger?: number;
   mood?: number;

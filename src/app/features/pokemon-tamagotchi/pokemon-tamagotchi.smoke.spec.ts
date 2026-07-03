@@ -17,7 +17,7 @@ import { TamagotchiStore } from './data/store/tamagotchi.store';
 import { TamagotchiInitService } from './data/services/tamagotchi-init.service';
 import { TamagotchiPersistenceService } from './data/services/tamagotchi-persistence.service';
 import { PokemonProfileIntegrationService } from './data/services/pokemon-profile-integration.service';
-import { TEST_POKEMON } from './data/testing/tamagotchi-arbitraries';
+import { TEST_POKEMON } from './data/fixtures/tamagotchi-arbitraries';
 import { pokemonTamagotchiRoutes, TAMAGOTCHI_PATH } from './pokemon-tamagotchi.routes';
 import { PokemonTamagotchiPageComponent } from './ui/components/pokemon-tamagotchi-page/pokemon-tamagotchi-page.component';
 
@@ -198,7 +198,7 @@ describe('Feature: pokemon-tamagotchi, Integration Tests', () => {
           {
             provide: TamagotchiStore,
             useValue: {
-              achievements: signal(initial.achievements),
+              achievementList: signal(initial.achievementList),
               canEvolve: signal(false),
               checkEvolution: vi.fn(),
               clearError: vi.fn(),
@@ -214,7 +214,7 @@ describe('Feature: pokemon-tamagotchi, Integration Tests', () => {
               lastActionTime: signal(initial.lastActionTime),
               lastDecayTime: signal(initial.lastDecayTime),
               lastSaveTime: signal(initial.lastSaveTime),
-              notifications: signal(initial.notifications),
+              notificationList: signal(initial.notificationList),
               pokemon: signal(null),
               status: signal(initial.status),
               trainingExperienceReward: signal(null),

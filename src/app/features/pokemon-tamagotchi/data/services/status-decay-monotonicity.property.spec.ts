@@ -5,7 +5,7 @@ import {
   decayAmountForElapsed,
 } from '../helpers/status-decay.helper';
 import { GAME_BALANCE } from '../constants/game-balance.constants';
-import { arbitraryPokemonStatus } from '../testing/tamagotchi-arbitraries';
+import { arbitraryPokemonStatus } from '../fixtures/tamagotchi-arbitraries';
 
 const PROPERTY_RUNS = 100;
 const RATE_EPSILON = 1e-9;

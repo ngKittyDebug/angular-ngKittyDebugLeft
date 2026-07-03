@@ -1,8 +1,8 @@
 import { GAME_BALANCE } from '../constants/game-balance.constants';
 import { STATUS_THRESHOLDS } from '../constants/status-thresholds.constants';
 import { TIMER_CONFIG } from '../constants/timer.constants';
-import type { StatusAlertType } from '../../models/notification.model';
-import type { PokemonStatus, StatusDecay } from '../../models/pokemon-status.model';
+import type { StatusAlertType } from '../models/notification.model';
+import type { PokemonStatusModel, StatusDecayModel } from '../models/pokemon-status.model';
 import { applyStatusDelta } from './status-bounds.helper';
 import { getStatusIndicatorLevel } from './status-indicator.helper';
 
@@ -18,10 +18,10 @@ export function decayAmountForElapsed(ratePerHour: number, elapsedMs: number): n
 
 export function calculateDecay(
   elapsedMs: number,
-  currentStatus: PokemonStatus,
+  currentStatus: PokemonStatusModel,
   isSleeping: boolean,
   timestamp: number = Date.now(),
-): StatusDecay {
+): StatusDecayModel {
   const hunger = decayAmountForElapsed(GAME_BALANCE.STATUS_DECAY.HUNGER, elapsedMs);
   const mood = decayAmountForElapsed(GAME_BALANCE.STATUS_DECAY.MOOD, elapsedMs);
   const hydration = decayAmountForElapsed(GAME_BALANCE.STATUS_DECAY.HYDRATION, elapsedMs);
@@ -39,7 +39,10 @@ export function calculateDecay(
   };
 }
 
-export function applyDecayToStatus(status: PokemonStatus, decay: StatusDecay): PokemonStatus {
+export function applyDecayToStatus(
+  status: PokemonStatusModel,
+  decay: StatusDecayModel,
+): PokemonStatusModel {
   return {
     ...status,
     energy: applyStatusDelta(status.energy, -decay.energy),
@@ -56,7 +59,7 @@ interface ThresholdPair {
 
 interface StatAlertConfig {
   criticalType: StatusAlertType;
-  getValue: (status: PokemonStatus) => number;
+  getValue: (status: PokemonStatusModel) => number;
   lowType: StatusAlertType;
   thresholds: ThresholdPair;
 }
@@ -128,7 +131,10 @@ function detectStatAlerts(
   return [];
 }
 
-export function detectStatusAlerts(before: PokemonStatus, after: PokemonStatus): StatusAlertType[] {
+export function detectStatusAlerts(
+  before: PokemonStatusModel,
+  after: PokemonStatusModel,
+): StatusAlertType[] {
   return STAT_ALERT_CONFIG.flatMap((config) =>
     detectStatAlerts(
       config.getValue(before),
@@ -141,7 +147,7 @@ export function detectStatusAlerts(before: PokemonStatus, after: PokemonStatus):
 }
 
 export function detectPeriodicCriticalAlerts(
-  status: PokemonStatus,
+  status: PokemonStatusModel,
   lastShownAt: Readonly<Partial<Record<StatusAlertType, number>>>,
   now: number = Date.now(),
   repeatIntervalMs: number = TIMER_CONFIG.CRITICAL_ALERT_REPEAT_MS,

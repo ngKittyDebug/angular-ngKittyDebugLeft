@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { TuiButton, TuiHint } from '@taiga-ui/core';
-import type { ActionCooldowns, ActionType } from '../../../models/tamagotchi-state.model';
+import type { ActionCooldowns, ActionType } from '../../../data/models/tamagotchi-state.model';
 
 export interface ActionButtonViewModel {
   action: ActionType;
