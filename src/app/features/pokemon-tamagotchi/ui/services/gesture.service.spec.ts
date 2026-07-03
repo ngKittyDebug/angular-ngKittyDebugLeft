@@ -26,41 +26,43 @@ describe('GestureService', () => {
     });
   }
 
-  it('detects click gestures on pointer up', () => {
-    service.handlePointerDown(pointerEvent('pointerdown', 1, 10, 10));
-    const result = service.handlePointerUp(pointerEvent('pointerup', 1, 12, 11));
+  describe('Happy Path', () => {
+    it('должен определять click-жесты при pointer up', () => {
+      service.handlePointerDown(pointerEvent('pointerdown', 1, 10, 10));
+      const result = service.handlePointerUp(pointerEvent('pointerup', 1, 12, 11));
 
-    expect(result?.event.type).toBe('click');
-    expect(result?.animationTrigger).toBe('sprite-pop');
-  });
+      expect(result?.event.type).toBe('click');
+      expect(result?.animationTrigger).toBe('sprite-pop');
+    });
 
-  it('detects drag gestures on pointer up', () => {
-    service.handlePointerDown(pointerEvent('pointerdown', 2, 0, 0));
-    service.handlePointerMove(pointerEvent('pointermove', 2, 40, 0));
-    const result = service.handlePointerUp(pointerEvent('pointerup', 2, 40, 0));
+    it('должен определять drag-жесты при pointer up', () => {
+      service.handlePointerDown(pointerEvent('pointerdown', 2, 0, 0));
+      service.handlePointerMove(pointerEvent('pointermove', 2, 40, 0));
+      const result = service.handlePointerUp(pointerEvent('pointerup', 2, 40, 0));
 
-    expect(result?.event.type).toBe('drag');
-    expect(result?.animationTrigger).toBe('sprite-wiggle');
-  });
+      expect(result?.event.type).toBe('drag');
+      expect(result?.animationTrigger).toBe('sprite-wiggle');
+    });
 
-  it('detects multi-touch when a second pointer is active', () => {
-    service.handlePointerDown(pointerEvent('pointerdown', 3, 0, 0));
-    const result = service.handlePointerDown(pointerEvent('pointerdown', 4, 20, 20));
+    it('должен определять multi-touch при втором активном указателе', () => {
+      service.handlePointerDown(pointerEvent('pointerdown', 3, 0, 0));
+      const result = service.handlePointerDown(pointerEvent('pointerdown', 4, 20, 20));
 
-    expect(result?.event.type).toBe('multiTouch');
-    expect(result?.animationTrigger).toBe('sprite-sparkle');
-  });
+      expect(result?.event.type).toBe('multiTouch');
+      expect(result?.animationTrigger).toBe('sprite-sparkle');
+    });
 
-  it('calculates bond level from interaction history', () => {
-    const level = service.calculateBondLevel([
-      {
-        intensity: 1,
-        moodIncrease: 5,
-        timestamp: Date.now(),
-        type: 'multiTouch',
-      },
-    ]);
+    it('должен вычислять уровень связи из истории взаимодействий', () => {
+      const level = service.calculateBondLevel([
+        {
+          intensity: 1,
+          moodIncrease: 5,
+          timestamp: Date.now(),
+          type: 'multiTouch',
+        },
+      ]);
 
-    expect(level).toBeGreaterThan(0);
+      expect(level).toBeGreaterThan(0);
+    });
   });
 });

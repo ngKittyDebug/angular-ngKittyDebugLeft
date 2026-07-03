@@ -52,67 +52,73 @@ function indicatorRoot(fixture: ComponentFixture<StatusIndicatorComponent>): HTM
 }
 
 describe('StatusIndicatorComponent', () => {
-  it('should create', () => {
-    expect(createFixture().componentInstance).toBeTruthy();
-  });
-
-  it('renders the translated status label and numeric value', () => {
-    const element = createFixture({ currentValue: 72, statusType: 'mood' })
-      .nativeElement as HTMLElement;
-
-    expect(element.querySelector('.status-indicator__label')?.textContent?.trim()).toBe('Mood');
-    expect(element.querySelector('.status-indicator__value')?.textContent?.trim()).toBe('72 / 100');
-  });
-
-  it('renders a visible progress bar', () => {
-    const element = createFixture({ currentValue: 72, statusType: 'hunger' })
-      .nativeElement as HTMLElement;
-    const bar = element.querySelector('progress[tuiProgressBar]') as HTMLProgressElement | null;
-
-    expect(bar).toBeTruthy();
-    expect(bar?.value).toBe(72);
-    expect(bar?.max).toBe(100);
-  });
-
-  it('does not apply alert classes when the value is above warning threshold', () => {
-    const fixture = createFixture({ currentValue: 50, statusType: 'hunger' });
-    const root = indicatorRoot(fixture);
-
-    expect(root.classList.contains('status-indicator--warning')).toBe(false);
-    expect(root.classList.contains('status-indicator--critical')).toBe(false);
-    expect(root.querySelector('.status-indicator__badge')).toBeNull();
-  });
-
-  it('applies warning styling when the value reaches the warning threshold', () => {
-    const fixture = createFixture({
-      currentValue: STATUS_THRESHOLDS.hungerWarning,
-      statusType: 'hunger',
+  describe('Happy Path', () => {
+    it('должен создаваться', () => {
+      expect(createFixture().componentInstance).toBeTruthy();
     });
-    const root = indicatorRoot(fixture);
 
-    expect(root.classList.contains('status-indicator--warning')).toBe(true);
-    expect(root.classList.contains('status-indicator--critical')).toBe(false);
-    expect(root.querySelector('.status-indicator__badge')?.textContent?.trim()).toBe('!');
-  });
+    it('должен отображать переведённую метку статуса и числовое значение', () => {
+      const element = createFixture({ currentValue: 72, statusType: 'mood' })
+        .nativeElement as HTMLElement;
 
-  it('applies critical styling when the value reaches the critical threshold', () => {
-    const fixture = createFixture({
-      currentValue: STATUS_THRESHOLDS.energyCritical,
-      statusType: 'energy',
+      expect(element.querySelector('.status-indicator__label')?.textContent?.trim()).toBe('Mood');
+      expect(element.querySelector('.status-indicator__value')?.textContent?.trim()).toBe(
+        '72 / 100',
+      );
     });
-    const root = indicatorRoot(fixture);
 
-    expect(root.classList.contains('status-indicator--critical')).toBe(true);
-    expect(root.classList.contains('status-indicator--warning')).toBe(false);
-    expect(root.querySelector('.status-indicator__badge')?.textContent?.trim()).toBe('!!');
+    it('должен отображать видимый progress bar', () => {
+      const element = createFixture({ currentValue: 72, statusType: 'hunger' })
+        .nativeElement as HTMLElement;
+      const bar = element.querySelector('progress[tuiProgressBar]') as HTMLProgressElement | null;
+
+      expect(bar).toBeTruthy();
+      expect(bar?.value).toBe(72);
+      expect(bar?.max).toBe(100);
+    });
+
+    it('должен отображать опыт без значков предупреждения', () => {
+      const fixture = createFixture({ currentValue: 5, statusType: 'experience' });
+      const root = indicatorRoot(fixture);
+
+      expect(root.classList.contains('status-indicator--warning')).toBe(false);
+      expect(root.classList.contains('status-indicator--critical')).toBe(false);
+      expect(root.querySelector('.status-indicator__badge')).toBeNull();
+    });
   });
 
-  it('renders experience without threshold alert badges', () => {
-    const fixture = createFixture({ currentValue: 5, statusType: 'experience' });
-    const root = indicatorRoot(fixture);
+  describe('Edge Cases', () => {
+    it('не должен применять alert-классы, когда значение выше порога warning', () => {
+      const fixture = createFixture({ currentValue: 50, statusType: 'hunger' });
+      const root = indicatorRoot(fixture);
 
-    expect(root.classList.contains('status-indicator--warning')).toBe(false);
-    expect(root.classList.contains('status-indicator--critical')).toBe(false);
-    expect(root.querySelector('.status-indicator__badge')).toBeNull();
+      expect(root.classList.contains('status-indicator--warning')).toBe(false);
+      expect(root.classList.contains('status-indicator--critical')).toBe(false);
+      expect(root.querySelector('.status-indicator__badge')).toBeNull();
+    });
+
+    it('должен применять warning-стили, когда значение достигает порога warning', () => {
+      const fixture = createFixture({
+        currentValue: STATUS_THRESHOLDS.hungerWarning,
+        statusType: 'hunger',
+      });
+      const root = indicatorRoot(fixture);
+
+      expect(root.classList.contains('status-indicator--warning')).toBe(true);
+      expect(root.classList.contains('status-indicator--critical')).toBe(false);
+      expect(root.querySelector('.status-indicator__badge')?.textContent?.trim()).toBe('!');
+    });
+
+    it('должен применять critical-стили, когда значение достигает порога critical', () => {
+      const fixture = createFixture({
+        currentValue: STATUS_THRESHOLDS.energyCritical,
+        statusType: 'energy',
+      });
+      const root = indicatorRoot(fixture);
+
+      expect(root.classList.contains('status-indicator--critical')).toBe(true);
+      expect(root.classList.contains('status-indicator--warning')).toBe(false);
+      expect(root.querySelector('.status-indicator__badge')?.textContent?.trim()).toBe('!!');
+    });
   });
 });

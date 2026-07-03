@@ -42,75 +42,83 @@ describe('EvolutionService', () => {
     service = TestBed.inject(EvolutionService);
   });
 
-  describe('checkEvolutionCriteria', () => {
-    it('should not be ready when any requirement is missing', () => {
-      const result = service.checkEvolutionCriteria(
-        basePokemon,
-        { ...readyStatus, level: 1 },
-        [],
-        createInitialDailyRoutine(),
-      );
+  describe('Happy Path', () => {
+    describe('checkEvolutionCriteria', () => {
+      it('должен быть готов, только когда все требования выполнены', () => {
+        const result = service.checkEvolutionCriteria(
+          basePokemon,
+          readyStatus,
+          [],
+          createInitialDailyRoutine(),
+        );
 
-      expect(result.isReady).toBe(false);
-      expect(result.missingRequirements.length).toBeGreaterThan(0);
+        expect(result.isReady).toBe(true);
+        expect(result.missingRequirements).toEqual([]);
+        expect(result.progress.currentProgress['level']).toBe(GAME_BALANCE.EVOLUTION.MIN_LEVEL);
+        expect(result.progress.currentProgress['experience']).toBe(
+          GAME_BALANCE.EVOLUTION.MIN_EXPERIENCE,
+        );
+      });
     });
 
-    it('should be ready only when all requirements are satisfied', () => {
-      const result = service.checkEvolutionCriteria(
-        basePokemon,
-        readyStatus,
-        [],
-        createInitialDailyRoutine(),
-      );
+    describe('getRequirementCompletionRatio', () => {
+      it('должен возвращать пропорциональный прогресс к требованию', () => {
+        const ratio = service.getRequirementCompletionRatio(
+          EVOLUTION_REQUIREMENTS[0],
+          { ...readyStatus, level: 5 },
+          [],
+          createInitialDailyRoutine(),
+        );
 
-      expect(result.isReady).toBe(true);
-      expect(result.missingRequirements).toEqual([]);
-      expect(result.progress.currentProgress['level']).toBe(GAME_BALANCE.EVOLUTION.MIN_LEVEL);
-      expect(result.progress.currentProgress['experience']).toBe(
-        GAME_BALANCE.EVOLUTION.MIN_EXPERIENCE,
-      );
-    });
-  });
-
-  describe('getRequirementCompletionRatio', () => {
-    it('should return proportional progress toward a requirement', () => {
-      const ratio = service.getRequirementCompletionRatio(
-        EVOLUTION_REQUIREMENTS[0],
-        { ...readyStatus, level: 5 },
-        [],
-        createInitialDailyRoutine(),
-      );
-
-      expect(ratio).toBeCloseTo(5 / GAME_BALANCE.EVOLUTION.MIN_LEVEL);
-    });
-  });
-
-  describe('triggerEvolution', () => {
-    it('should produce evolved pokemon when criteria data matches chain', () => {
-      const evolutionData = service.buildEvolutionData(basePokemon);
-
-      expect(evolutionData).not.toBeNull();
-
-      const result = service.triggerEvolution(basePokemon, evolutionData!);
-
-      expect(result).not.toBeNull();
-      expect(result?.evolvedPokemon.id).toBe('26');
-      expect(result?.evolvedPokemon.isFirstStage).toBe(false);
-      expect(result?.evolvedPokemon.evolutionChain.currentStage).toBe(2);
+        expect(ratio).toBeCloseTo(5 / GAME_BALANCE.EVOLUTION.MIN_LEVEL);
+      });
     });
 
-    it('should return null when evolution data does not match pokemon', () => {
-      const evolutionData = service.buildEvolutionData(basePokemon)!;
+    describe('triggerEvolution', () => {
+      it('должен возвращать эволюционировавшего покемона, когда данные критериев совпадают с цепочкой', () => {
+        const evolutionData = service.buildEvolutionData(basePokemon);
 
-      const result = service.triggerEvolution({ ...basePokemon, id: '999' }, evolutionData);
+        expect(evolutionData).not.toBeNull();
 
-      expect(result).toBeNull();
+        const result = service.triggerEvolution(basePokemon, evolutionData!);
+
+        expect(result).not.toBeNull();
+        expect(result?.evolvedPokemon.id).toBe('26');
+        expect(result?.evolvedPokemon.isFirstStage).toBe(false);
+        expect(result?.evolvedPokemon.evolutionChain.currentStage).toBe(2);
+      });
+    });
+
+    describe('getEvolutionChain', () => {
+      it('должен возвращать цепочку эволюции из покемона', () => {
+        expect(service.getEvolutionChain(basePokemon)).toEqual(basePokemon.evolutionChain);
+      });
     });
   });
 
-  describe('getEvolutionChain', () => {
-    it('should return evolution chain from pokemon', () => {
-      expect(service.getEvolutionChain(basePokemon)).toEqual(basePokemon.evolutionChain);
+  describe('Negative Cases', () => {
+    describe('checkEvolutionCriteria', () => {
+      it('не должен быть готов, когда не выполнено хотя бы одно требование', () => {
+        const result = service.checkEvolutionCriteria(
+          basePokemon,
+          { ...readyStatus, level: 1 },
+          [],
+          createInitialDailyRoutine(),
+        );
+
+        expect(result.isReady).toBe(false);
+        expect(result.missingRequirements.length).toBeGreaterThan(0);
+      });
+    });
+
+    describe('triggerEvolution', () => {
+      it('должен возвращать null, когда данные эволюции не совпадают с покемоном', () => {
+        const evolutionData = service.buildEvolutionData(basePokemon)!;
+
+        const result = service.triggerEvolution({ ...basePokemon, id: '999' }, evolutionData);
+
+        expect(result).toBeNull();
+      });
     });
   });
 });

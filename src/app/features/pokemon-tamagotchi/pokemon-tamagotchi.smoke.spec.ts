@@ -44,9 +44,9 @@ function readTranslationPath(source: Record<string, unknown>, path: string): unk
   }, source);
 }
 
-describe('Feature: pokemon-tamagotchi, Smoke Tests', () => {
-  describe('Route configuration', () => {
-    it('should register lazy route at /tamagotchi', () => {
+describe('PokemonTamagotchi — смоук', () => {
+  describe('Конфигурация роута', () => {
+    it('должен регистрировать lazy-роут по пути /tamagotchi', () => {
       const route = pokemonTamagotchiRoutes.find((entry) => entry.path === TAMAGOTCHI_PATH);
 
       expect(route).toBeDefined();
@@ -54,28 +54,28 @@ describe('Feature: pokemon-tamagotchi, Smoke Tests', () => {
       expect(route?.providers?.length).toBeGreaterThan(0);
     });
 
-    it('should lazy-load PokemonTamagotchiPageComponent', async () => {
+    it('должен lazy-загружать PokemonTamagotchiPageComponent', async () => {
       const route = pokemonTamagotchiRoutes.find((entry) => entry.path === TAMAGOTCHI_PATH);
       const loaded = await route?.loadComponent?.();
 
       expect(loaded).toBe(PokemonTamagotchiPageComponent);
     });
 
-    it('should be included in application feature routes', () => {
+    it('должен быть подключён в общих роутах приложения', () => {
       const registered = ChildrenRouts.some((entry) => entry.path === TAMAGOTCHI_PATH);
 
       expect(registered).toBe(true);
     });
   });
 
-  describe('Translation assets', () => {
-    it('should ship non-empty English and Russian locale files', () => {
+  describe('Переводы', () => {
+    it('должен содержать непустые файлы локалей en и ru', () => {
       expect(Object.keys(enTranslations).length).toBeGreaterThan(0);
       expect(Object.keys(ruTranslations).length).toBeGreaterThan(0);
     });
 
     it.each(REQUIRED_TRANSLATION_PATHS)(
-      'should include translation key "%s" in both locales',
+      'должен включать ключ перевода "%s" в обеих локалях',
       (path) => {
         expect(readTranslationPath(enTranslations, path)).toBeTruthy();
         expect(readTranslationPath(ruTranslations, path)).toBeTruthy();
@@ -84,8 +84,8 @@ describe('Feature: pokemon-tamagotchi, Smoke Tests', () => {
   });
 });
 
-describe('Feature: pokemon-tamagotchi, Integration Tests', () => {
-  describe('LocalStorage persistence', () => {
+describe('PokemonTamagotchi — интеграция', () => {
+  describe('Сохранение в LocalStorage', () => {
     let persistence: TamagotchiPersistenceService;
 
     beforeEach(() => {
@@ -94,7 +94,7 @@ describe('Feature: pokemon-tamagotchi, Integration Tests', () => {
       persistence = TestBed.inject(TamagotchiPersistenceService);
     });
 
-    it('should persist care actions across reload simulation', () => {
+    it('должен сохранять действия ухода при симуляции перезагрузки', () => {
       const fixedNow = 1_700_000_000_000;
       let state = selectPokemonState(createInitialTamagotchiState(), TEST_POKEMON);
 
@@ -117,8 +117,8 @@ describe('Feature: pokemon-tamagotchi, Integration Tests', () => {
     });
   });
 
-  describe('Pokemon profile bootstrap', () => {
-    it('should surface evolved pokemon selection error in store', async () => {
+  describe('Bootstrap из профиля покемона', () => {
+    it('должен записывать ошибку выбора эволюционировавшего покемона в store', async () => {
       const error = signal<string | null>(null);
       const initialized = signal(true);
       const hasPokemon = signal(false);
@@ -158,12 +158,12 @@ describe('Feature: pokemon-tamagotchi, Integration Tests', () => {
       await firstValueFrom(service.bootstrapFromProfile());
 
       expect(loadFromPersistence).toHaveBeenCalledTimes(1);
-      expect(setError).toHaveBeenCalledWith('evolvedPokemon');
+      expect(setError).toHaveBeenNthCalledWith(1, 'evolvedPokemon');
       expect(error()).toBe('evolvedPokemon');
     });
   });
 
-  describe('No-selection user guidance', () => {
+  describe('Подсказка при отсутствии выбранного покемона', () => {
     let fixture: ComponentFixture<PokemonTamagotchiPageComponent>;
 
     beforeEach(async () => {
@@ -240,7 +240,7 @@ describe('Feature: pokemon-tamagotchi, Integration Tests', () => {
       fixture.detectChanges();
     });
 
-    it('should show profile guidance when no pokemon is selected', () => {
+    it('должен показывать подсказку перейти в профиль, если покемон не выбран', () => {
       const title = fixture.nativeElement.querySelector('.tamagotchi-page__empty-title');
       const profileLink = fixture.nativeElement.querySelector('a[routerLink="/profile"]');
 

@@ -67,8 +67,8 @@ function evolutionResponseFromChain(
   };
 }
 
-describe('Tamagotchi property tests', () => {
-  describe('Property 5: First-Stage Pokemon Validation', () => {
+describe('PokemonProfileIntegrationService', () => {
+  describe('Property 5: валидация покемона первой стадии', () => {
     let integration: PokemonProfileIntegrationService;
 
     beforeEach(() => {
@@ -77,57 +77,61 @@ describe('Tamagotchi property tests', () => {
     });
 
     // Feature: pokemon-tamagotchi, Property 5: First-Stage PokemonModel Validation
-    it('should classify only chain-root species as first stage', () => {
-      fc.assert(
-        fc.property(arbitraryLinearEvolutionChain(), ({ chain, speciesIndex, stageCount }) => {
-          const speciesName = `species-${speciesIndex}`;
-          const expectedFirstStage = speciesIndex === 0;
+    describe('Happy Path', () => {
+      it('должен классифицировать только корневой вид цепочки как первую стадию', () => {
+        fc.assert(
+          fc.property(arbitraryLinearEvolutionChain(), ({ chain, speciesIndex, stageCount }) => {
+            const speciesName = `species-${speciesIndex}`;
+            const expectedFirstStage = speciesIndex === 0;
 
-          return (
-            isFirstStageInEvolutionChain(speciesName, chain) === expectedFirstStage &&
-            isFirstStageInEvolutionChain(`species-0`, chain) === true &&
-            (stageCount === 1 ||
-              isFirstStageInEvolutionChain(`species-${stageCount - 1}`, chain) === false)
-          );
-        }),
-        { numRuns: PROPERTY_RUNS },
-      );
+            return (
+              isFirstStageInEvolutionChain(speciesName, chain) === expectedFirstStage &&
+              isFirstStageInEvolutionChain(`species-0`, chain) === true &&
+              (stageCount === 1 ||
+                isFirstStageInEvolutionChain(`species-${stageCount - 1}`, chain) === false)
+            );
+          }),
+          { numRuns: PROPERTY_RUNS },
+        );
+      });
+
+      it('должен согласованно маппить флаг first-stage API-покемона с корнем цепочки эволюции', () => {
+        fc.assert(
+          fc.property(arbitraryLinearEvolutionChain(), ({ chain, speciesIndex }) => {
+            const speciesName = `species-${speciesIndex}`;
+            const detail = detailForSpecies(speciesName, speciesIndex + 1);
+            const pokemon = convertPokemonDetailApiDataToTamagotchiPokemon(
+              detail,
+              evolutionResponseFromChain(chain),
+            );
+
+            return pokemon.isFirstStage === (speciesIndex === 0);
+          }),
+          { numRuns: PROPERTY_RUNS },
+        );
+      });
     });
 
-    it('should map API pokemon first-stage flag consistently with evolution chain root', () => {
-      fc.assert(
-        fc.property(arbitraryLinearEvolutionChain(), ({ chain, speciesIndex }) => {
-          const speciesName = `species-${speciesIndex}`;
-          const detail = detailForSpecies(speciesName, speciesIndex + 1);
-          const pokemon = convertPokemonDetailApiDataToTamagotchiPokemon(
-            detail,
-            evolutionResponseFromChain(chain),
-          );
+    describe('Negative Cases', () => {
+      it('должен принимать только покемонов первой стадии и отклонять эволюционировавшие формы', () => {
+        fc.assert(
+          fc.property(arbitraryLinearEvolutionChain(), ({ chain, speciesIndex }) => {
+            const speciesName = `species-${speciesIndex}`;
+            const pokemon = convertPokemonDetailApiDataToTamagotchiPokemon(
+              detailForSpecies(speciesName, speciesIndex + 1),
+              evolutionResponseFromChain(chain),
+            );
+            const validation = integration.validatePokemonSelection(pokemon);
 
-          return pokemon.isFirstStage === (speciesIndex === 0);
-        }),
-        { numRuns: PROPERTY_RUNS },
-      );
-    });
+            if (speciesIndex === 0) {
+              return validation.valid === true && validation.pokemon?.isFirstStage === true;
+            }
 
-    it('should accept only first-stage pokemon and reject evolved forms', () => {
-      fc.assert(
-        fc.property(arbitraryLinearEvolutionChain(), ({ chain, speciesIndex }) => {
-          const speciesName = `species-${speciesIndex}`;
-          const pokemon = convertPokemonDetailApiDataToTamagotchiPokemon(
-            detailForSpecies(speciesName, speciesIndex + 1),
-            evolutionResponseFromChain(chain),
-          );
-          const validation = integration.validatePokemonSelection(pokemon);
-
-          if (speciesIndex === 0) {
-            return validation.valid === true && validation.pokemon?.isFirstStage === true;
-          }
-
-          return validation.valid === false && validation.error === 'evolvedPokemon';
-        }),
-        { numRuns: PROPERTY_RUNS },
-      );
+            return validation.valid === false && validation.error === 'evolvedPokemon';
+          }),
+          { numRuns: PROPERTY_RUNS },
+        );
+      });
     });
   });
 });

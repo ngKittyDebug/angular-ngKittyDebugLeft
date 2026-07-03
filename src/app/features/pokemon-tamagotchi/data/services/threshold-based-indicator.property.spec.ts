@@ -22,68 +22,60 @@ const arbitraryThresholdPair = fc
     warning: Math.max(first, second),
   }));
 
-function expectedLevel(value: number, warning: number, critical: number): StatusIndicatorLevel {
-  if (value <= critical) {
-    return 'critical';
-  }
-
-  if (value <= warning) {
-    return 'warning';
-  }
-
-  return 'normal';
-}
-
-function shouldActivateWarning(level: StatusIndicatorLevel): boolean {
-  return level === 'warning';
-}
-
-function shouldActivateCritical(level: StatusIndicatorLevel): boolean {
-  return level === 'critical';
-}
-
-describe('Tamagotchi property tests', () => {
-  describe('Property 3: Threshold-Based Indicator Behavior', () => {
-    // Feature: pokemon-tamagotchi, Property 3: Threshold-Based Indicator Behavior
-    it('should classify indicator levels only when values reach configured thresholds', () => {
+describe('status-indicator.helper', () => {
+  describe('Property 3: пороговая классификация', () => {
+    it('должен возвращать critical при value <= critical', () => {
       fc.assert(
         fc.property(
           arbitraryStatusValue,
           arbitraryThresholdPair,
           (value, { critical, warning }) => {
-            const level = getStatusIndicatorLevel(value, warning, critical);
-
-            return level === expectedLevel(value, warning, critical);
-          },
-        ),
-        { numRuns: PROPERTY_RUNS },
-      );
-    });
-
-    it('should activate warning and critical alerts only at or below their thresholds', () => {
-      fc.assert(
-        fc.property(
-          arbitraryStatusValue,
-          arbitraryThresholdPair,
-          (value, { critical, warning }) => {
-            const level = getStatusIndicatorLevel(value, warning, critical);
-
-            if (value > warning) {
-              return !shouldActivateWarning(level) && !shouldActivateCritical(level);
-            }
-
             if (value > critical) {
-              return shouldActivateWarning(level) && !shouldActivateCritical(level);
+              return true;
             }
 
-            return shouldActivateCritical(level);
+            return getStatusIndicatorLevel(value, warning, critical) === 'critical';
           },
         ),
         { numRuns: PROPERTY_RUNS },
       );
     });
 
-    it('should apply equivalent indicator levels across all thresholded status types', () => {
+    it('должен возвращать warning при critical < value <= warning', () => {
+      fc.assert(
+        fc.property(
+          arbitraryStatusValue,
+          arbitraryThresholdPair,
+          (value, { critical, warning }) => {
+            if (value <= critical || value > warning) {
+              return true;
+            }
+
+            return getStatusIndicatorLevel(value, warning, critical) === 'warning';
+          },
+        ),
+        { numRuns: PROPERTY_RUNS },
+      );
+    });
+
+    it('должен возвращать normal при value > warning', () => {
+      fc.assert(
+        fc.property(
+          arbitraryStatusValue,
+          arbitraryThresholdPair,
+          (value, { critical, warning }) => {
+            if (value <= warning) {
+              return true;
+            }
+
+            return getStatusIndicatorLevel(value, warning, critical) === 'normal';
+          },
+        ),
+        { numRuns: PROPERTY_RUNS },
+      );
+    });
+
+    it('должен применять одинаковый уровень ко всем пороговым типам статуса', () => {
       fc.assert(
         fc.property(
           arbitraryThresholdPair,
@@ -100,7 +92,7 @@ describe('Tamagotchi property tests', () => {
       );
     });
 
-    it('should map equivalent threshold violations to the same indicator color', () => {
+    it('должен сопоставлять одинаковые нарушения порогов одному цвету индикатора', () => {
       fc.assert(
         fc.property(
           arbitraryThresholdPair,
@@ -129,7 +121,7 @@ describe('Tamagotchi property tests', () => {
       );
     });
 
-    it('should keep indicator severity monotonic as status values decrease', () => {
+    it('должен сохранять монотонность серьёзности при уменьшении значения статуса', () => {
       fc.assert(
         fc.property(
           fc.integer({ max: 100, min: 1 }),
@@ -152,7 +144,7 @@ describe('Tamagotchi property tests', () => {
       );
     });
 
-    it('should use a neutral accent color for experience without threshold alerts', () => {
+    it('должен использовать нейтральный accent-цвет для experience без пороговых алертов', () => {
       fc.assert(
         fc.property(arbitraryStatusValue, (value) => {
           const bounds = getThresholdsForStatusType('experience', STATUS_THRESHOLDS);
@@ -164,7 +156,7 @@ describe('Tamagotchi property tests', () => {
       );
     });
 
-    it('should map each indicator level to a single stable color token', () => {
+    it('должен сопоставлять каждому уровню индикатора стабильный цветовой токен', () => {
       fc.assert(
         fc.property(
           fc.constantFrom<StatusIndicatorLevel>('critical', 'normal', 'warning'),
@@ -177,6 +169,20 @@ describe('Tamagotchi property tests', () => {
         ),
         { numRuns: PROPERTY_RUNS },
       );
+    });
+
+    describe('Edge Cases', () => {
+      it('должен классифицировать value на границе critical как critical', () => {
+        expect(getStatusIndicatorLevel(20, 50, 20)).toBe('critical');
+      });
+
+      it('должен классифицировать value на границе warning как warning', () => {
+        expect(getStatusIndicatorLevel(50, 50, 20)).toBe('warning');
+      });
+
+      it('должен классифицировать value выше warning как normal', () => {
+        expect(getStatusIndicatorLevel(51, 50, 20)).toBe('normal');
+      });
     });
   });
 });

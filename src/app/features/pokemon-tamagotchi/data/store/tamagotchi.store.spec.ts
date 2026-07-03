@@ -49,136 +49,152 @@ function createStoreTestBed(): InstanceType<typeof TamagotchiStore> {
 
 describe('TamagotchiStore', () => {
   describe('loadFromPersistence', () => {
-    it('should set error and remain initialized when persistence load throws', () => {
-      let shouldThrow = true;
-      const load = vi.fn(() => {
-        if (shouldThrow) {
-          throw new Error('storage corrupted');
-        }
+    describe('Negative Cases', () => {
+      it('должен установить ошибку и остаться инициализированным, когда загрузка persistence бросает исключение', () => {
+        let shouldThrow = true;
+        const load = vi.fn(() => {
+          if (shouldThrow) {
+            throw new Error('storage corrupted');
+          }
 
-        return null;
-      });
+          return null;
+        });
 
-      TestBed.configureTestingModule({
-        providers: [
-          TamagotchiStore,
-          {
-            provide: TamagotchiPersistenceService,
-            useValue: {
-              clear: vi.fn(),
-              load,
-              save: vi.fn(),
+        TestBed.configureTestingModule({
+          providers: [
+            TamagotchiStore,
+            {
+              provide: TamagotchiPersistenceService,
+              useValue: {
+                clear: vi.fn(),
+                load,
+                save: vi.fn(),
+              },
             },
-          },
-          {
-            provide: TamagotchiErrorRecoveryService,
-            useValue: {
-              logError: vi.fn(),
+            {
+              provide: TamagotchiErrorRecoveryService,
+              useValue: {
+                logError: vi.fn(),
+              },
             },
-          },
-        ],
+          ],
+        });
+
+        const store = TestBed.inject(TamagotchiStore);
+
+        store.loadFromPersistence();
+        expect(store.error()).toBe(TAMAGOTCHI_SYSTEM_ERRORS.LOAD_FAILED);
+        expect(store.initialized()).toBe(true);
+
+        shouldThrow = false;
+        store.loadFromPersistence();
+
+        expect(store.initialized()).toBe(true);
+        expect(load).toHaveBeenCalledTimes(2);
       });
-
-      const store = TestBed.inject(TamagotchiStore);
-
-      store.loadFromPersistence();
-      expect(store.error()).toBe(TAMAGOTCHI_SYSTEM_ERRORS.LOAD_FAILED);
-      expect(store.initialized()).toBe(true);
-
-      shouldThrow = false;
-      store.loadFromPersistence();
-
-      expect(store.initialized()).toBe(true);
-      expect(load).toHaveBeenCalledTimes(2);
     });
 
-    it('should load persisted state on a subsequent successful call', () => {
-      const persisted = selectPokemonState(createInitialTamagotchiState(), TEST_POKEMON);
-      const load = vi
-        .fn()
-        .mockImplementationOnce(() => {
-          throw new Error('storage corrupted');
-        })
-        .mockImplementationOnce(() => ({
-          recoveredFromBackup: false,
-          state: persisted,
-        }));
+    describe('Happy Path', () => {
+      it('должен загрузить сохранённое состояние при последующем успешном вызове', () => {
+        const persisted = selectPokemonState(createInitialTamagotchiState(), TEST_POKEMON);
+        const load = vi
+          .fn()
+          .mockImplementationOnce(() => {
+            throw new Error('storage corrupted');
+          })
+          .mockImplementationOnce(() => ({
+            recoveredFromBackup: false,
+            state: persisted,
+          }));
 
-      TestBed.configureTestingModule({
-        providers: [
-          TamagotchiStore,
-          {
-            provide: TamagotchiPersistenceService,
-            useValue: {
-              clear: vi.fn(),
-              load,
-              save: vi.fn(),
+        TestBed.configureTestingModule({
+          providers: [
+            TamagotchiStore,
+            {
+              provide: TamagotchiPersistenceService,
+              useValue: {
+                clear: vi.fn(),
+                load,
+                save: vi.fn(),
+              },
             },
-          },
-          {
-            provide: TamagotchiErrorRecoveryService,
-            useValue: {
-              logError: vi.fn(),
+            {
+              provide: TamagotchiErrorRecoveryService,
+              useValue: {
+                logError: vi.fn(),
+              },
             },
-          },
-        ],
+          ],
+        });
+
+        const store = TestBed.inject(TamagotchiStore);
+
+        store.loadFromPersistence();
+        store.loadFromPersistence();
+
+        expect(store.pokemon()?.id).toBe(TEST_POKEMON.id);
+        expect(load).toHaveBeenCalledTimes(2);
+      });
+    });
+  });
+
+  describe('Happy Path', () => {
+    describe('интеграция эволюции', () => {
+      const fixedNow = 1_700_000_000_000;
+      const experienceGain = GAME_BALANCE.EVOLUTION.MIN_EXPERIENCE;
+
+      it('должен достигать canEvolve после тренировки при выполнении порогов уровня, опыта и заботы', () => {
+        const store = createStoreTestBed();
+
+        store.selectPokemon(EVOLVABLE_TEST_POKEMON);
+        store.startTraining(fixedNow, experienceGain);
+        store.completeTraining(
+          fixedNow + GAME_BALANCE.ACTION_EFFECTS.TRAIN.durationMs,
+          experienceGain,
+        );
+        store.checkEvolution();
+
+        expect(store.status().experience).toBe(experienceGain);
+        expect(store.status().level).toBeGreaterThanOrEqual(GAME_BALANCE.EVOLUTION.MIN_LEVEL);
+        expect(store.evolutionProgress().currentProgress['care']).toBeGreaterThanOrEqual(
+          GAME_BALANCE.EVOLUTION.MIN_CARE_SCORE,
+        );
+        expect(store.canEvolve()).toBe(true);
       });
 
-      const store = TestBed.inject(TamagotchiStore);
+      it('должен разрешать startEvolution, когда требования выполнены', () => {
+        const store = createStoreTestBed();
 
-      store.loadFromPersistence();
-      store.loadFromPersistence();
+        store.selectPokemon(EVOLVABLE_TEST_POKEMON);
+        store.startTraining(fixedNow, experienceGain);
+        store.completeTraining(
+          fixedNow + GAME_BALANCE.ACTION_EFFECTS.TRAIN.durationMs,
+          experienceGain,
+        );
+        store.checkEvolution();
+        store.startEvolution();
 
-      expect(store.pokemon()?.id).toBe(TEST_POKEMON.id);
-      expect(load).toHaveBeenCalledTimes(2);
+        expect(store.isEvolving()).toBe(true);
+      });
     });
   });
 });
 
-describe('tamagotchiStateTransitions training determinism', () => {
-  const fixedNow = 1_700_000_000_000;
-  const fixedReward = 42;
+describe('tamagotchiStateTransitions', () => {
+  describe('Happy Path', () => {
+    describe('детерминизм тренировки', () => {
+      const fixedNow = 1_700_000_000_000;
+      const fixedReward = 42;
 
-  it('should produce identical training state for the same inputs', () => {
-    const selected = selectPokemonState(initialTamagotchiState, TEST_POKEMON);
-    const first = startTrainingState(selected, fixedNow, fixedReward);
-    const second = startTrainingState(selected, fixedNow, fixedReward);
+      it('должен давать идентичное состояние тренировки для одинаковых входных данных', () => {
+        const selected = selectPokemonState(initialTamagotchiState, TEST_POKEMON);
+        const first = startTrainingState(selected, fixedNow, fixedReward);
+        const second = startTrainingState(selected, fixedNow, fixedReward);
 
-    expect(first).toEqual(second);
-    expect(first.trainingExperienceReward).toBe(fixedReward);
-    expect(first.trainingStartedAt).toBe(fixedNow);
-  });
-});
-
-describe('TamagotchiStore evolution integration', () => {
-  const fixedNow = 1_700_000_000_000;
-  const experienceGain = GAME_BALANCE.EVOLUTION.MIN_EXPERIENCE;
-
-  it('should reach canEvolve after training when level, experience, and care thresholds are met', () => {
-    const store = createStoreTestBed();
-
-    store.selectPokemon(EVOLVABLE_TEST_POKEMON);
-    store.startTraining(fixedNow, experienceGain);
-    store.completeTraining(fixedNow + GAME_BALANCE.ACTION_EFFECTS.TRAIN.durationMs, experienceGain);
-    store.checkEvolution();
-
-    expect(store.status().experience).toBe(experienceGain);
-    expect(store.status().level).toBeGreaterThanOrEqual(GAME_BALANCE.EVOLUTION.MIN_LEVEL);
-    expect(store.evolutionProgress().currentProgress['care']).toBeGreaterThanOrEqual(
-      GAME_BALANCE.EVOLUTION.MIN_CARE_SCORE,
-    );
-    expect(store.canEvolve()).toBe(true);
-  });
-
-  it('should allow startEvolution when requirements are satisfied', () => {
-    const store = createStoreTestBed();
-
-    store.selectPokemon(EVOLVABLE_TEST_POKEMON);
-    store.startTraining(fixedNow, experienceGain);
-    store.completeTraining(fixedNow + GAME_BALANCE.ACTION_EFFECTS.TRAIN.durationMs, experienceGain);
-    store.checkEvolution();
-    store.startEvolution();
-
-    expect(store.isEvolving()).toBe(true);
+        expect(first).toEqual(second);
+        expect(first.trainingExperienceReward).toBe(fixedReward);
+        expect(first.trainingStartedAt).toBe(fixedNow);
+      });
+    });
   });
 });

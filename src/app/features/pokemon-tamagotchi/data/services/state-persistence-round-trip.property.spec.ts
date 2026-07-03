@@ -91,8 +91,8 @@ function assertPersistedEquivalence(
   return true;
 }
 
-describe('Tamagotchi property tests', () => {
-  describe('Property 6: State Persistence Round-Trip', () => {
+describe('TamagotchiPersistenceService', () => {
+  describe('Property 6: round-trip сохранения состояния', () => {
     // Feature: pokemon-tamagotchi, Property 6: State Persistence Round-Trip
     let service: TamagotchiPersistenceService;
 
@@ -102,46 +102,48 @@ describe('Tamagotchi property tests', () => {
       service = TestBed.inject(TamagotchiPersistenceService);
     });
 
-    it('should recover an equivalent state after save and load', () => {
-      fc.assert(
-        fc.property(arbitraryTamagotchiState(), (state) => {
-          service.clear();
-          service.save(state);
-          const loaded = service.load();
+    describe('Happy Path', () => {
+      it('должен восстанавливать эквивалентное состояние после сохранения и загрузки', () => {
+        fc.assert(
+          fc.property(arbitraryTamagotchiState(), (state) => {
+            service.clear();
+            service.save(state);
+            const loaded = service.load();
 
-          if (!loaded || loaded.recoveredFromBackup) {
-            return false;
-          }
+            if (!loaded || loaded.recoveredFromBackup) {
+              return false;
+            }
 
-          return assertPersistedEquivalence(state, loaded.state);
-        }),
-        { numRuns: PROPERTY_RUNS },
-      );
-    });
+            return assertPersistedEquivalence(state, loaded.state);
+          }),
+          { numRuns: PROPERTY_RUNS },
+        );
+      });
 
-    it('should preserve progression metrics and timestamps across round-trip', () => {
-      fc.assert(
-        fc.property(arbitraryTamagotchiState(), (state) => {
-          service.clear();
-          service.save(state);
-          const loaded = service.load();
+      it('должен сохранять метрики прогресса и метки времени при round-trip', () => {
+        fc.assert(
+          fc.property(arbitraryTamagotchiState(), (state) => {
+            service.clear();
+            service.save(state);
+            const loaded = service.load();
 
-          if (!loaded) {
-            return false;
-          }
+            if (!loaded) {
+              return false;
+            }
 
-          return (
-            loaded.state.status.experience === state.status.experience &&
-            loaded.state.status.level === state.status.level &&
-            loaded.state.status.lastFeedTime === state.status.lastFeedTime &&
-            loaded.state.status.lastPlayTime === state.status.lastPlayTime &&
-            loaded.state.status.lastSleepTime === state.status.lastSleepTime &&
-            loaded.state.status.lastHydrationTime === state.status.lastHydrationTime &&
-            loaded.state.lastSaveTime === loaded.state.status.lastSaveTime
-          );
-        }),
-        { numRuns: PROPERTY_RUNS },
-      );
+            return (
+              loaded.state.status.experience === state.status.experience &&
+              loaded.state.status.level === state.status.level &&
+              loaded.state.status.lastFeedTime === state.status.lastFeedTime &&
+              loaded.state.status.lastPlayTime === state.status.lastPlayTime &&
+              loaded.state.status.lastSleepTime === state.status.lastSleepTime &&
+              loaded.state.status.lastHydrationTime === state.status.lastHydrationTime &&
+              loaded.state.lastSaveTime === loaded.state.status.lastSaveTime
+            );
+          }),
+          { numRuns: PROPERTY_RUNS },
+        );
+      });
     });
   });
 });

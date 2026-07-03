@@ -11,87 +11,91 @@ import { PokemonProfileIntegrationService } from './pokemon-profile-integration.
 import { TAMAGOTCHI_SYSTEM_ERRORS } from '../constants/system-errors.constants';
 
 describe('TamagotchiInitService', () => {
-  it('should skip profile selection when persisted pokemon exists', () => {
-    const validateSelectedPokemon = vi.fn(() => of({ error: 'noSelection', valid: false }));
-    const loadFromPersistence = vi.fn();
-    const selectPokemon = vi.fn();
+  describe('Happy Path', () => {
+    it('должен выбирать покемона из профиля, когда сохранённого покемона нет', () => {
+      const validateSelectedPokemon = vi.fn(() =>
+        of({ pokemon: TEST_POKEMON, valid: true as const }),
+      );
+      const saveSelectedPokemon = vi.fn();
+      const loadFromPersistence = vi.fn();
+      const selectPokemon = vi.fn();
 
-    TestBed.configureTestingModule({
-      providers: [
-        TamagotchiInitService,
-        {
-          provide: TamagotchiStore,
-          useValue: {
-            hasPokemon: signal(true),
-            initialized: signal(true),
-            loadFromPersistence,
-            selectPokemon,
-            setError: vi.fn(),
+      TestBed.configureTestingModule({
+        providers: [
+          TamagotchiInitService,
+          {
+            provide: TamagotchiStore,
+            useValue: {
+              hasPokemon: signal(false),
+              initialized: signal(true),
+              loadFromPersistence,
+              selectPokemon,
+              setError: vi.fn(),
+            },
           },
-        },
-        {
-          provide: PokemonProfileIntegrationService,
-          useValue: {
-            saveSelectedPokemon: vi.fn(),
-            validateSelectedPokemon,
+          {
+            provide: PokemonProfileIntegrationService,
+            useValue: {
+              saveSelectedPokemon,
+              validateSelectedPokemon,
+            },
           },
-        },
-      ],
+        ],
+      });
+
+      const service = TestBed.inject(TamagotchiInitService);
+
+      service.bootstrapFromProfile().subscribe();
+
+      expect(validateSelectedPokemon).toHaveBeenCalledTimes(1);
+      expect(loadFromPersistence).toHaveBeenCalledTimes(1);
+      expect(selectPokemon).toHaveBeenNthCalledWith(1, TEST_POKEMON);
+      expect(saveSelectedPokemon).toHaveBeenNthCalledWith(1, TEST_POKEMON);
     });
-
-    const service = TestBed.inject(TamagotchiInitService);
-
-    let completed = false;
-
-    service.bootstrapFromProfile().subscribe(() => {
-      completed = true;
-    });
-
-    expect(completed).toBe(true);
-    expect(validateSelectedPokemon).not.toHaveBeenCalled();
-    expect(loadFromPersistence).toHaveBeenCalledTimes(1);
-    expect(selectPokemon).not.toHaveBeenCalled();
   });
 
-  it('should select profile pokemon when no persisted pokemon exists', () => {
-    const validateSelectedPokemon = vi.fn(() =>
-      of({ pokemon: TEST_POKEMON, valid: true as const }),
-    );
-    const saveSelectedPokemon = vi.fn();
-    const loadFromPersistence = vi.fn();
-    const selectPokemon = vi.fn();
+  describe('Edge Cases', () => {
+    it('должен пропускать выбор из профиля, когда сохранённый покемон уже есть', () => {
+      const validateSelectedPokemon = vi.fn(() => of({ error: 'noSelection', valid: false }));
+      const loadFromPersistence = vi.fn();
+      const selectPokemon = vi.fn();
 
-    TestBed.configureTestingModule({
-      providers: [
-        TamagotchiInitService,
-        {
-          provide: TamagotchiStore,
-          useValue: {
-            hasPokemon: signal(false),
-            initialized: signal(true),
-            loadFromPersistence,
-            selectPokemon,
-            setError: vi.fn(),
+      TestBed.configureTestingModule({
+        providers: [
+          TamagotchiInitService,
+          {
+            provide: TamagotchiStore,
+            useValue: {
+              hasPokemon: signal(true),
+              initialized: signal(true),
+              loadFromPersistence,
+              selectPokemon,
+              setError: vi.fn(),
+            },
           },
-        },
-        {
-          provide: PokemonProfileIntegrationService,
-          useValue: {
-            saveSelectedPokemon,
-            validateSelectedPokemon,
+          {
+            provide: PokemonProfileIntegrationService,
+            useValue: {
+              saveSelectedPokemon: vi.fn(),
+              validateSelectedPokemon,
+            },
           },
-        },
-      ],
+        ],
+      });
+
+      const service = TestBed.inject(TamagotchiInitService);
+
+      let completed = false;
+
+      service.bootstrapFromProfile().subscribe(() => {
+        completed = true;
+      });
+
+      expect(completed).toBe(true);
+      expect(validateSelectedPokemon).not.toHaveBeenCalled();
+      expect(loadFromPersistence).toHaveBeenCalledTimes(1);
+      expect(selectPokemon).not.toHaveBeenCalled();
     });
-
-    const service = TestBed.inject(TamagotchiInitService);
-
-    service.bootstrapFromProfile().subscribe();
-
-    expect(validateSelectedPokemon).toHaveBeenCalled();
-    expect(loadFromPersistence).toHaveBeenCalledTimes(1);
-    expect(selectPokemon).toHaveBeenCalledWith(TEST_POKEMON);
-    expect(saveSelectedPokemon).toHaveBeenCalledWith(TEST_POKEMON);
   });
 });
 
@@ -103,34 +107,36 @@ describe('TamagotchiErrorRecoveryService', () => {
     service = TestBed.inject(TamagotchiErrorRecoveryService);
   });
 
-  it('should repair valid state with clamped status values', () => {
-    const broken = {
-      ...createInitialTamagotchiState(),
-      initialized: true,
-      pokemon: TEST_POKEMON,
-      status: {
-        ...createInitialTamagotchiState().status,
-        energy: 150,
-        hunger: -10,
-      },
-    };
+  describe('Happy Path', () => {
+    it('должен восстанавливать валидное состояние с зажатыми значениями статуса', () => {
+      const broken = {
+        ...createInitialTamagotchiState(),
+        initialized: true,
+        pokemon: TEST_POKEMON,
+        status: {
+          ...createInitialTamagotchiState().status,
+          energy: 150,
+          hunger: -10,
+        },
+      };
 
-    const repaired = service.repairState(broken);
+      const repaired = service.repairState(broken);
 
-    expect(repaired?.status.energy).toBe(100);
-    expect(repaired?.status.hunger).toBe(0);
-    expect(repaired?.error).toBeNull();
-  });
-
-  it('should report recovery metadata for repaired state', () => {
-    const result = service.attemptStateRecovery({
-      ...createInitialTamagotchiState(),
-      initialized: true,
-      pokemon: TEST_POKEMON,
-      status: createInitialTamagotchiState().status,
+      expect(repaired?.status.energy).toBe(100);
+      expect(repaired?.status.hunger).toBe(0);
+      expect(repaired?.error).toBeNull();
     });
 
-    expect(result.recovered).toBe(true);
-    expect(result.message).toBe(TAMAGOTCHI_SYSTEM_ERRORS.RECOVERED_FROM_BACKUP);
+    it('должен сообщать метаданные восстановления для отремонтированного состояния', () => {
+      const result = service.attemptStateRecovery({
+        ...createInitialTamagotchiState(),
+        initialized: true,
+        pokemon: TEST_POKEMON,
+        status: createInitialTamagotchiState().status,
+      });
+
+      expect(result.recovered).toBe(true);
+      expect(result.message).toBe(TAMAGOTCHI_SYSTEM_ERRORS.RECOVERED_FROM_BACKUP);
+    });
   });
 });

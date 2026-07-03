@@ -53,7 +53,7 @@ function loadLocaleKeys(language: 'en' | 'ru'): string[] {
   return collectTranslationKeys(parsed).sort();
 }
 
-describe('Tamagotchi Remaining Property Tests', () => {
+describe('TamagotchiService', () => {
   beforeEach(() => {
     localStorage.clear();
     TestBed.configureTestingModule({
@@ -61,8 +61,8 @@ describe('Tamagotchi Remaining Property Tests', () => {
     });
   });
 
-  describe('Property 9: Energy-Constrained Game Availability', () => {
-    it('should block game actions only when energy is at or below warning threshold', () => {
+  describe('Property 9: доступность игры при ограничении энергии', () => {
+    it('должен блокировать игровые действия только когда энергия на уровне или ниже warning-порога', () => {
       fc.assert(
         fc.property(fc.constant('play' as const), (action) => {
           const service = TestBed.inject(TamagotchiService);
@@ -99,8 +99,8 @@ describe('Tamagotchi Remaining Property Tests', () => {
     });
   });
 
-  describe('Property 10: Sleep Mode Energy Restoration', () => {
-    it('should apply sleep bonus only after minimum sleep duration', () => {
+  describe('Property 10: восстановление энергии в режиме сна', () => {
+    it('должен применять бонус сна только после минимальной длительности сна', () => {
       fc.assert(
         fc.property(fc.nat({ max: TIMER_CONFIG.SLEEP.MIN_DURATION_MS * 2 }), (elapsedMs) => {
           const startedAt = 1_000_000;
@@ -117,8 +117,8 @@ describe('Tamagotchi Remaining Property Tests', () => {
     });
   });
 
-  describe('Property 11: Interaction-Driven Mood Enhancement', () => {
-    it('should increase mood monotonically with interaction intensity and keep history', () => {
+  describe('Property 11: улучшение настроения через взаимодействие', () => {
+    it('должен монотонно увеличивать настроение с интенсивностью взаимодействия и сохранять историю', () => {
       fc.assert(
         fc.property(
           fc.float({ max: 1, min: 0, noNaN: true }),
@@ -152,8 +152,8 @@ describe('Tamagotchi Remaining Property Tests', () => {
     });
   });
 
-  describe('Property 12: Sprite-State Correspondence', () => {
-    it('should map sprite keys to status and sleeping/evolving flags', () => {
+  describe('Property 12: соответствие спрайта состоянию', () => {
+    it('должен маппить ключи спрайтов на статус и флаги сна/эволюции', () => {
       fc.assert(
         fc.property(
           arbitraryPokemonStatus(),
@@ -186,8 +186,8 @@ describe('Tamagotchi Remaining Property Tests', () => {
     });
   });
 
-  describe('Property 14: Internationalization Consistency', () => {
-    it('should keep matching translation keys between English and Russian locales', () => {
+  describe('Property 14: согласованность интернационализации', () => {
+    it('должен сохранять совпадающие ключи переводов между английской и русской локалями', () => {
       const englishKeys = loadLocaleKeys('en');
       const russianKeys = loadLocaleKeys('ru');
 
@@ -195,8 +195,8 @@ describe('Tamagotchi Remaining Property Tests', () => {
     });
   });
 
-  describe('Property 15: Notification Priority Handling', () => {
-    it('should sort notifications with critical highest priority', () => {
+  describe('Property 15: обработка приоритета уведомлений', () => {
+    it('должен сортировать уведомления с critical наивысшим приоритетом', () => {
       fc.assert(
         fc.property(
           fc.shuffledSubarray(
@@ -230,36 +230,40 @@ describe('Tamagotchi Remaining Property Tests', () => {
     });
   });
 
-  describe('Property 16: Error Recovery Gracefulness', () => {
-    it('should fall back to initial state when repair is impossible', () => {
-      const recovery = TestBed.inject(TamagotchiErrorRecoveryService);
-      const broken = {
-        ...createInitialTamagotchiState(),
-        pokemon: TEST_POKEMON,
-        status: {
-          ...createInitialTamagotchiState().status,
-          mood: Number.NaN,
-        },
-      };
+  describe('Property 16: корректное восстановление после ошибок', () => {
+    describe('Negative Cases', () => {
+      it('должен откатываться к начальному состоянию, когда восстановление невозможно', () => {
+        const recovery = TestBed.inject(TamagotchiErrorRecoveryService);
+        const broken = {
+          ...createInitialTamagotchiState(),
+          pokemon: TEST_POKEMON,
+          status: {
+            ...createInitialTamagotchiState().status,
+            mood: Number.NaN,
+          },
+        };
 
-      const result = recovery.attemptStateRecovery(broken);
+        const result = recovery.attemptStateRecovery(broken);
 
-      expect(result.recovered).toBe(false);
-      expect(result.state.status.mood).toBe(100);
+        expect(result.recovered).toBe(false);
+        expect(result.state.status.mood).toBe(100);
+      });
     });
 
-    it('should repair valid state while preserving pokemon', () => {
-      const recovery = TestBed.inject(TamagotchiErrorRecoveryService);
-      const customized = selectPokemonState(createInitialTamagotchiState(), TEST_POKEMON);
+    describe('Happy Path', () => {
+      it('должен восстанавливать валидное состояние, сохраняя покемона', () => {
+        const recovery = TestBed.inject(TamagotchiErrorRecoveryService);
+        const customized = selectPokemonState(createInitialTamagotchiState(), TEST_POKEMON);
 
-      const repaired = recovery.repairState(customized);
+        const repaired = recovery.repairState(customized);
 
-      expect(repaired?.pokemon?.id).toBe(TEST_POKEMON.id);
+        expect(repaired?.pokemon?.id).toBe(TEST_POKEMON.id);
+      });
     });
   });
 
-  describe('Property 19: Daily Routine Bonus Eligibility', () => {
-    it('should award routine bonus only when consistency thresholds are met', () => {
+  describe('Property 19: право на бонус ежедневной рутины', () => {
+    it('должен начислять бонус рутины только при выполнении порогов последовательности', () => {
       fc.assert(
         fc.property(fc.nat({ max: 10 }), fc.nat({ max: 10 }), (consecutiveDays, totalToday) => {
           const eligible = isRoutineBonusEligible(consecutiveDays, totalToday);
@@ -273,7 +277,7 @@ describe('Tamagotchi Remaining Property Tests', () => {
       );
     });
 
-    it('should increment consecutive days only after enough actions on consecutive dates', () => {
+    it('должен увеличивать последовательные дни только после достаточного числа действий в последовательные даты', () => {
       const dayOne = Date.parse('2026-07-01T12:00:00.000Z');
       const dayTwo = Date.parse('2026-07-02T12:00:00.000Z');
       let routine = recordRoutineActivity(
@@ -292,8 +296,8 @@ describe('Tamagotchi Remaining Property Tests', () => {
     });
   });
 
-  describe('Property 20: Game Constraint Enforcement', () => {
-    it('should reject awake-only actions while sleeping and enforce cooldown reasons consistently', () => {
+  describe('Property 20: принудительное соблюдение игровых ограничений', () => {
+    it('должен отклонять действия только для бодрствования во сне и согласованно применять причины кулдауна', () => {
       fc.assert(
         fc.property(
           arbitraryPokemonStatus(),

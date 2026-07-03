@@ -12,7 +12,7 @@ import type {
 import type { TamagotchiStateModel } from '../models/tamagotchi-state.model';
 import { createInitialTamagotchiState } from '../store/tamagotchi-initial';
 
-export const TEST_POKEMON: PokemonModel = {
+export const TEST_POKEMON = {
   baseStats: {
     energyRestorationRate: 1,
     experienceMultiplier: 1,
@@ -58,7 +58,7 @@ export const TEST_POKEMON: PokemonModel = {
       sleeping: '/sprites/shiny-sleeping.png',
     },
   },
-};
+} as const satisfies PokemonModel;
 
 const interactionTypes: InteractionType[] = ['click', 'drag', 'multiTouch', 'pet'];
 const evolutionRequirementTypes = ['achievement', 'care', 'experience', 'level', 'time'] as const;

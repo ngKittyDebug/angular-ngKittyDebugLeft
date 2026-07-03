@@ -155,66 +155,70 @@ describe('PokemonProfileIntegrationService', () => {
     httpMock.verify();
   });
 
-  it('should persist and read selected pokemon reference', () => {
-    service.saveSelectedPokemon(
-      buildPokemon({
-        eating: '',
-        evolving: '',
-        happy: '',
-        normal: '',
-        sad: '',
-        sleeping: '',
-      }),
-    );
+  describe('Happy Path', () => {
+    it('должен сохранять и читать ссылку на выбранного покемона', () => {
+      service.saveSelectedPokemon(
+        buildPokemon({
+          eating: '',
+          evolving: '',
+          happy: '',
+          normal: '',
+          sad: '',
+          sleeping: '',
+        }),
+      );
 
-    expect(service.getSelectedPokemonReference()).toEqual({
-      id: '4',
-      name: 'charmander',
-      species: 'charmander',
-    });
-    expect(storageMock.getItem(TAMAGOTCHI_SELECTED_POKEMON_KEY)).not.toBeNull();
-  });
-
-  it('should reject evolved pokemon selection', () => {
-    let validation: unknown;
-
-    service.loadPokemonByName('charmeleon').subscribe((pokemon) => {
-      validation = service.validatePokemonSelection(pokemon);
-    });
-
-    const detailRequest = httpMock.expectOne(`${POKEMON_BASE_API}pokemon/charmeleon`);
-
-    detailRequest.flush(charmeleonDetail);
-
-    const speciesRequest = httpMock.expectOne(`${POKEMON_BASE_API}pokemon-species/charmeleon`);
-
-    speciesRequest.flush({
-      ...charmanderSpecies,
-      evolution_chain: charmanderSpecies.evolution_chain,
-      id: 5,
-      name: 'charmeleon',
-    });
-
-    const chainRequest = httpMock.expectOne(`${POKEMON_BASE_API}evolution-chain/10`);
-
-    chainRequest.flush(charmanderEvolution);
-
-    expect(validation).toEqual({
-      error: 'evolvedPokemon',
-      valid: false,
+      expect(service.getSelectedPokemonReference()).toEqual({
+        id: '4',
+        name: 'charmander',
+        species: 'charmander',
+      });
+      expect(storageMock.getItem(TAMAGOTCHI_SELECTED_POKEMON_KEY)).not.toBeNull();
     });
   });
 
-  it('should report no selection when storage is empty', () => {
-    let validation: unknown;
+  describe('Negative Cases', () => {
+    it('должен отклонять выбор эволюционировавшего покемона', () => {
+      let validation: unknown;
 
-    service.validateSelectedPokemon().subscribe((result) => {
-      validation = result;
+      service.loadPokemonByName('charmeleon').subscribe((pokemon) => {
+        validation = service.validatePokemonSelection(pokemon);
+      });
+
+      const detailRequest = httpMock.expectOne(`${POKEMON_BASE_API}pokemon/charmeleon`);
+
+      detailRequest.flush(charmeleonDetail);
+
+      const speciesRequest = httpMock.expectOne(`${POKEMON_BASE_API}pokemon-species/charmeleon`);
+
+      speciesRequest.flush({
+        ...charmanderSpecies,
+        evolution_chain: charmanderSpecies.evolution_chain,
+        id: 5,
+        name: 'charmeleon',
+      });
+
+      const chainRequest = httpMock.expectOne(`${POKEMON_BASE_API}evolution-chain/10`);
+
+      chainRequest.flush(charmanderEvolution);
+
+      expect(validation).toEqual({
+        error: 'evolvedPokemon',
+        valid: false,
+      });
     });
 
-    expect(validation).toEqual({
-      error: 'noSelection',
-      valid: false,
+    it('должен сообщать об отсутствии выбора, когда хранилище пусто', () => {
+      let validation: unknown;
+
+      service.validateSelectedPokemon().subscribe((result) => {
+        validation = result;
+      });
+
+      expect(validation).toEqual({
+        error: 'noSelection',
+        valid: false,
+      });
     });
   });
 });

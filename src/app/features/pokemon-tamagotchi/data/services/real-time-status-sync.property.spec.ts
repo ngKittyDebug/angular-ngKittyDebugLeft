@@ -78,136 +78,140 @@ function stateWithPokemon(status: PokemonStatusModel, isSleeping: boolean): Tama
   };
 }
 
-describe('Tamagotchi property tests', () => {
-  describe('Property 7: Real-Time Status Synchronization', () => {
+describe('status-indicator-sync.helper', () => {
+  describe('Property 7: синхронизация статуса в реальном времени', () => {
     // Feature: pokemon-tamagotchi, Property 7: Real-Time Status Synchronization
-    it('should keep projected indicator values equal to store status after any action sequence', () => {
-      fc.assert(
-        fc.property(
-          arbitraryPokemonStatus(),
-          fc.array(arbitraryCareAction(), { maxLength: 12, minLength: 1 }),
-          fc.boolean(),
-          (initialStatus, actions, isSleeping) => {
-            let state = stateWithPokemon(initialStatus, isSleeping);
+    describe('Happy Path', () => {
+      it('должен сохранять проецируемые значения индикаторов равными статусу стора после любой последовательности действий', () => {
+        fc.assert(
+          fc.property(
+            arbitraryPokemonStatus(),
+            fc.array(arbitraryCareAction(), { maxLength: 12, minLength: 1 }),
+            fc.boolean(),
+            (initialStatus, actions, isSleeping) => {
+              let state = stateWithPokemon(initialStatus, isSleeping);
 
-            for (const action of actions) {
-              state = applyCareAction(state, action);
-              const indicators = projectAllStatusIndicators(state.status);
+              for (const action of actions) {
+                state = applyCareAction(state, action);
+                const indicators = projectAllStatusIndicators(state.status);
 
-              if (!indicatorsMatchStatus(state.status, indicators)) {
-                return false;
-              }
-            }
-
-            return true;
-          },
-        ),
-        { numRuns: PROPERTY_RUNS },
-      );
-    });
-
-    it('should derive indicator percentages directly from current status values', () => {
-      fc.assert(
-        fc.property(arbitraryPokemonStatus(), (status) => {
-          const indicators = projectAllStatusIndicators(status);
-
-          return indicators.every((indicator) => {
-            const max = maxValueForStatusType(indicator.statusType);
-
-            return (
-              indicator.percentage === computeIndicatorPercentage(indicator.value, max) &&
-              indicator.value === statusValueForType(indicator.statusType, status)
-            );
-          });
-        }),
-        { numRuns: PROPERTY_RUNS },
-      );
-    });
-
-    it('should reflect every intermediate status change in indicator projections', () => {
-      fc.assert(
-        fc.property(
-          arbitraryPokemonStatus(),
-          fc.array(arbitraryCareAction(), { maxLength: 8, minLength: 2 }),
-          (initialStatus, actions) => {
-            let state = stateWithPokemon(initialStatus, false);
-            let previousIndicators = projectAllStatusIndicators(state.status);
-
-            for (const action of actions) {
-              state = applyCareAction(state, action);
-              const nextIndicators = projectAllStatusIndicators(state.status);
-
-              for (const next of nextIndicators) {
-                const previous = previousIndicators.find(
-                  (indicator) => indicator.statusType === next.statusType,
-                );
-
-                if (!previous) {
-                  return false;
-                }
-
-                const statusValue = statusValueForType(next.statusType, state.status);
-
-                if (next.value !== statusValue) {
-                  return false;
-                }
-
-                if (previous.value !== statusValue && next.value === previous.value) {
+                if (!indicatorsMatchStatus(state.status, indicators)) {
                   return false;
                 }
               }
 
-              if (!indicatorsMatchStatus(state.status, nextIndicators)) {
-                return false;
+              return true;
+            },
+          ),
+          { numRuns: PROPERTY_RUNS },
+        );
+      });
+
+      it('должен выводить проценты индикаторов напрямую из текущих значений статуса', () => {
+        fc.assert(
+          fc.property(arbitraryPokemonStatus(), (status) => {
+            const indicators = projectAllStatusIndicators(status);
+
+            return indicators.every((indicator) => {
+              const max = maxValueForStatusType(indicator.statusType);
+
+              return (
+                indicator.percentage === computeIndicatorPercentage(indicator.value, max) &&
+                indicator.value === statusValueForType(indicator.statusType, status)
+              );
+            });
+          }),
+          { numRuns: PROPERTY_RUNS },
+        );
+      });
+
+      it('должен отражать каждое промежуточное изменение статуса в проекциях индикаторов', () => {
+        fc.assert(
+          fc.property(
+            arbitraryPokemonStatus(),
+            fc.array(arbitraryCareAction(), { maxLength: 8, minLength: 2 }),
+            (initialStatus, actions) => {
+              let state = stateWithPokemon(initialStatus, false);
+              let previousIndicators = projectAllStatusIndicators(state.status);
+
+              for (const action of actions) {
+                state = applyCareAction(state, action);
+                const nextIndicators = projectAllStatusIndicators(state.status);
+
+                for (const next of nextIndicators) {
+                  const previous = previousIndicators.find(
+                    (indicator) => indicator.statusType === next.statusType,
+                  );
+
+                  if (!previous) {
+                    return false;
+                  }
+
+                  const statusValue = statusValueForType(next.statusType, state.status);
+
+                  if (next.value !== statusValue) {
+                    return false;
+                  }
+
+                  if (previous.value !== statusValue && next.value === previous.value) {
+                    return false;
+                  }
+                }
+
+                if (!indicatorsMatchStatus(state.status, nextIndicators)) {
+                  return false;
+                }
+
+                previousIndicators = nextIndicators;
               }
 
-              previousIndicators = nextIndicators;
-            }
-
-            return true;
-          },
-        ),
-        { numRuns: PROPERTY_RUNS },
-      );
+              return true;
+            },
+          ),
+          { numRuns: PROPERTY_RUNS },
+        );
+      });
     });
 
-    it('should keep indicator percentages monotonic with status value changes', () => {
-      fc.assert(
-        fc.property(
-          fc.integer({ max: 100, min: 0 }),
-          fc.integer({ max: 100, min: 0 }),
-          (before, after) => {
-            const statusBefore: PokemonStatusModel = {
-              energy: before,
-              experience: before,
-              health: before,
-              hunger: before,
-              hydration: before,
-              lastFeedTime: null,
-              lastHydrationTime: null,
-              lastPlayTime: null,
-              lastSaveTime: null,
-              lastSleepTime: null,
-              level: 1,
-              mood: before,
-            };
-            const statusAfter: PokemonStatusModel = { ...statusBefore, hunger: after };
-            const indicatorBefore = projectStatusIndicator('hunger', statusBefore);
-            const indicatorAfter = projectStatusIndicator('hunger', statusAfter);
+    describe('Edge Cases', () => {
+      it('должен сохранять монотонность процентов индикаторов при изменении значений статуса', () => {
+        fc.assert(
+          fc.property(
+            fc.integer({ max: 100, min: 0 }),
+            fc.integer({ max: 100, min: 0 }),
+            (before, after) => {
+              const statusBefore: PokemonStatusModel = {
+                energy: before,
+                experience: before,
+                health: before,
+                hunger: before,
+                hydration: before,
+                lastFeedTime: null,
+                lastHydrationTime: null,
+                lastPlayTime: null,
+                lastSaveTime: null,
+                lastSleepTime: null,
+                level: 1,
+                mood: before,
+              };
+              const statusAfter: PokemonStatusModel = { ...statusBefore, hunger: after };
+              const indicatorBefore = projectStatusIndicator('hunger', statusBefore);
+              const indicatorAfter = projectStatusIndicator('hunger', statusAfter);
 
-            if (after > before) {
-              return indicatorAfter.percentage >= indicatorBefore.percentage;
-            }
+              if (after > before) {
+                return indicatorAfter.percentage >= indicatorBefore.percentage;
+              }
 
-            if (after < before) {
-              return indicatorAfter.percentage <= indicatorBefore.percentage;
-            }
+              if (after < before) {
+                return indicatorAfter.percentage <= indicatorBefore.percentage;
+              }
 
-            return indicatorAfter.percentage === indicatorBefore.percentage;
-          },
-        ),
-        { numRuns: PROPERTY_RUNS },
-      );
+              return indicatorAfter.percentage === indicatorBefore.percentage;
+            },
+          ),
+          { numRuns: PROPERTY_RUNS },
+        );
+      });
     });
   });
 });

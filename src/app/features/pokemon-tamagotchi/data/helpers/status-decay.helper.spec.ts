@@ -4,153 +4,157 @@ import { TIMER_CONFIG } from '../constants/timer.constants';
 import { detectPeriodicCriticalAlerts, detectStatusAlerts } from './status-decay.helper';
 import { createInitialPokemonStatus } from '../store/tamagotchi-initial';
 
-describe('status-decay.helper alerts', () => {
-  it('should alert when hunger crosses warning threshold', () => {
-    const before = {
-      ...createInitialPokemonStatus(),
-      hunger: STATUS_THRESHOLDS.hungerWarning + 1,
-    };
-    const after = {
-      ...before,
-      hunger: STATUS_THRESHOLDS.hungerWarning,
-    };
+describe('status-decay.helper', () => {
+  describe('Happy Path', () => {
+    it('должен алертить, когда голод пересекает warning-порог', () => {
+      const before = {
+        ...createInitialPokemonStatus(),
+        hunger: STATUS_THRESHOLDS.hungerWarning + 1,
+      };
+      const after = {
+        ...before,
+        hunger: STATUS_THRESHOLDS.hungerWarning,
+      };
 
-    expect(detectStatusAlerts(before, after)).toContain('hungerLow');
+      expect(detectStatusAlerts(before, after)).toContain('hungerLow');
+    });
+
+    it('должен алертить при дальнейшем снижении голода на единицу в warning-зоне', () => {
+      const before = {
+        ...createInitialPokemonStatus(),
+        hunger: STATUS_THRESHOLDS.hungerWarning,
+      };
+      const after = {
+        ...before,
+        hunger: STATUS_THRESHOLDS.hungerWarning - 1,
+      };
+
+      expect(detectStatusAlerts(before, after)).toContain('hungerLow');
+    });
+
+    it('должен алертить, когда гидратация пересекает critical-порог', () => {
+      const before = {
+        ...createInitialPokemonStatus(),
+        hydration: STATUS_THRESHOLDS.hydrationCritical + 1,
+      };
+      const after = {
+        ...before,
+        hydration: STATUS_THRESHOLDS.hydrationCritical,
+      };
+
+      expect(detectStatusAlerts(before, after)).toContain('hydrationCritical');
+    });
+
+    it('должен предпочитать critical-алерт warning при входе в critical-зону', () => {
+      const before = {
+        ...createInitialPokemonStatus(),
+        mood: STATUS_THRESHOLDS.moodCritical + 1,
+      };
+      const after = {
+        ...before,
+        mood: STATUS_THRESHOLDS.moodCritical,
+      };
+
+      expect(detectStatusAlerts(before, after)).toEqual(['moodCritical']);
+    });
+
+    it('должен алертить при снижении critical-стата на единицу, оставаясь в critical', () => {
+      const before = {
+        ...createInitialPokemonStatus(),
+        hydration: STATUS_THRESHOLDS.hydrationCritical,
+      };
+      const after = {
+        ...before,
+        hydration: STATUS_THRESHOLDS.hydrationCritical - 1,
+      };
+
+      expect(detectStatusAlerts(before, after)).toEqual(['hydrationCritical']);
+    });
+
+    it('должен повторять critical-алерты каждые 15 минут, пока стат остаётся critical', () => {
+      const status = {
+        ...createInitialPokemonStatus(),
+        energy: STATUS_THRESHOLDS.energyCritical,
+      };
+      const now = 1_000_000;
+
+      expect(
+        detectPeriodicCriticalAlerts(
+          status,
+          { energyCritical: now - TIMER_CONFIG.CRITICAL_ALERT_REPEAT_MS },
+          now,
+        ),
+      ).toContain('energyCritical');
+    });
   });
 
-  it('should alert on further hunger decrease by one while in warning zone', () => {
-    const before = {
-      ...createInitialPokemonStatus(),
-      hunger: STATUS_THRESHOLDS.hungerWarning,
-    };
-    const after = {
-      ...before,
-      hunger: STATUS_THRESHOLDS.hungerWarning - 1,
-    };
+  describe('Edge Cases', () => {
+    it('должен не алертить, когда голод падает больше чем на единицу в warning-зоне', () => {
+      const before = {
+        ...createInitialPokemonStatus(),
+        hunger: STATUS_THRESHOLDS.hungerWarning,
+      };
+      const after = {
+        ...before,
+        hunger: STATUS_THRESHOLDS.hungerWarning - 3,
+      };
 
-    expect(detectStatusAlerts(before, after)).toContain('hungerLow');
-  });
+      expect(detectStatusAlerts(before, after)).toEqual([]);
+    });
 
-  it('should not alert when hunger drops by more than one in warning zone', () => {
-    const before = {
-      ...createInitialPokemonStatus(),
-      hunger: STATUS_THRESHOLDS.hungerWarning,
-    };
-    const after = {
-      ...before,
-      hunger: STATUS_THRESHOLDS.hungerWarning - 3,
-    };
+    it('должен не алертить при дробном снижении в пределах одного целого шага', () => {
+      const before = {
+        ...createInitialPokemonStatus(),
+        hydration: 10.8,
+      };
+      const after = {
+        ...before,
+        hydration: 10.2,
+      };
 
-    expect(detectStatusAlerts(before, after)).toEqual([]);
-  });
+      expect(detectStatusAlerts(before, after)).toEqual([]);
+    });
 
-  it('should not alert on fractional decrease within the same integer step', () => {
-    const before = {
-      ...createInitialPokemonStatus(),
-      hydration: 10.8,
-    };
-    const after = {
-      ...before,
-      hydration: 10.2,
-    };
+    it('должен алертить, когда дробное снижение пересекает следующее целое в critical-зоне', () => {
+      const before = {
+        ...createInitialPokemonStatus(),
+        hydration: 10.2,
+      };
+      const after = {
+        ...before,
+        hydration: 9.8,
+      };
 
-    expect(detectStatusAlerts(before, after)).toEqual([]);
-  });
+      expect(detectStatusAlerts(before, after)).toEqual(['hydrationCritical']);
+    });
 
-  it('should alert when fractional decrease crosses the next integer in critical zone', () => {
-    const before = {
-      ...createInitialPokemonStatus(),
-      hydration: 10.2,
-    };
-    const after = {
-      ...before,
-      hydration: 9.8,
-    };
+    it('должен не алертить, когда голод снижается, но остаётся выше warning-порога', () => {
+      const before = {
+        ...createInitialPokemonStatus(),
+        hunger: STATUS_THRESHOLDS.hungerWarning + 10,
+      };
+      const after = {
+        ...before,
+        hunger: STATUS_THRESHOLDS.hungerWarning + 5,
+      };
 
-    expect(detectStatusAlerts(before, after)).toEqual(['hydrationCritical']);
-  });
+      expect(detectStatusAlerts(before, after)).toEqual([]);
+    });
 
-  it('should not alert when hunger decreases but stays above warning threshold', () => {
-    const before = {
-      ...createInitialPokemonStatus(),
-      hunger: STATUS_THRESHOLDS.hungerWarning + 10,
-    };
-    const after = {
-      ...before,
-      hunger: STATUS_THRESHOLDS.hungerWarning + 5,
-    };
+    it('должен не повторять critical-алерты раньше чем через 15 минут', () => {
+      const status = {
+        ...createInitialPokemonStatus(),
+        energy: STATUS_THRESHOLDS.energyCritical,
+      };
+      const now = 1_000_000;
 
-    expect(detectStatusAlerts(before, after)).toEqual([]);
-  });
-
-  it('should alert when hydration crosses critical threshold', () => {
-    const before = {
-      ...createInitialPokemonStatus(),
-      hydration: STATUS_THRESHOLDS.hydrationCritical + 1,
-    };
-    const after = {
-      ...before,
-      hydration: STATUS_THRESHOLDS.hydrationCritical,
-    };
-
-    expect(detectStatusAlerts(before, after)).toContain('hydrationCritical');
-  });
-
-  it('should prefer critical alert over warning when crossing into critical zone', () => {
-    const before = {
-      ...createInitialPokemonStatus(),
-      mood: STATUS_THRESHOLDS.moodCritical + 1,
-    };
-    const after = {
-      ...before,
-      mood: STATUS_THRESHOLDS.moodCritical,
-    };
-
-    expect(detectStatusAlerts(before, after)).toEqual(['moodCritical']);
-  });
-
-  it('should alert when critical stat decreases by one while staying critical', () => {
-    const before = {
-      ...createInitialPokemonStatus(),
-      hydration: STATUS_THRESHOLDS.hydrationCritical,
-    };
-    const after = {
-      ...before,
-      hydration: STATUS_THRESHOLDS.hydrationCritical - 1,
-    };
-
-    expect(detectStatusAlerts(before, after)).toEqual(['hydrationCritical']);
-  });
-
-  it('should repeat critical alerts every 15 minutes while stat stays critical', () => {
-    const status = {
-      ...createInitialPokemonStatus(),
-      energy: STATUS_THRESHOLDS.energyCritical,
-    };
-    const now = 1_000_000;
-
-    expect(
-      detectPeriodicCriticalAlerts(
-        status,
-        { energyCritical: now - TIMER_CONFIG.CRITICAL_ALERT_REPEAT_MS },
-        now,
-      ),
-    ).toContain('energyCritical');
-  });
-
-  it('should not repeat critical alerts before 15 minutes elapsed', () => {
-    const status = {
-      ...createInitialPokemonStatus(),
-      energy: STATUS_THRESHOLDS.energyCritical,
-    };
-    const now = 1_000_000;
-
-    expect(
-      detectPeriodicCriticalAlerts(
-        status,
-        { energyCritical: now - TIMER_CONFIG.CRITICAL_ALERT_REPEAT_MS + 1_000 },
-        now,
-      ),
-    ).toEqual([]);
+      expect(
+        detectPeriodicCriticalAlerts(
+          status,
+          { energyCritical: now - TIMER_CONFIG.CRITICAL_ALERT_REPEAT_MS + 1_000 },
+          now,
+        ),
+      ).toEqual([]);
+    });
   });
 });

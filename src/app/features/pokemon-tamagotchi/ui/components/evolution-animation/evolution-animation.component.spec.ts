@@ -82,32 +82,34 @@ describe('EvolutionAnimationComponent', () => {
     vi.useRealTimers();
   });
 
-  it('should create', () => {
-    expect(createFixture().componentInstance).toBeTruthy();
-  });
+  describe('Happy Path', () => {
+    it('должен создаваться', () => {
+      expect(createFixture().componentInstance).toBeTruthy();
+    });
 
-  it('shows overlay while evolution animation is active', () => {
-    const fixture = createFixture({ active: true });
+    it('должен показывать оверлей, пока активна анимация эволюции', () => {
+      const fixture = createFixture({ active: true });
 
-    fixture.detectChanges();
+      fixture.detectChanges();
 
-    expect(fixture.nativeElement.querySelector('.evolution-animation')).toBeTruthy();
-    expect(fixture.nativeElement.textContent).toContain('Evolving…');
-  });
+      expect(fixture.nativeElement.querySelector('.evolution-animation')).toBeTruthy();
+      expect(fixture.nativeElement.textContent).toContain('Evolving…');
+    });
 
-  it('emits animationComplete with evolved pokemon after duration', () => {
-    const fixture = createFixture({ active: true });
-    const evolved = basePokemon('26', 'Raichu');
-    const completeSpy = vi.fn();
+    it('должен эмитить animationComplete с эволюционировавшим покемоном после длительности анимации', () => {
+      const fixture = createFixture({ active: true });
+      const evolved = basePokemon('26', 'Raichu');
+      const completeSpy = vi.fn();
 
-    fixture.componentRef.setInput('toPokemon', evolved);
-    fixture.componentInstance.animationComplete.subscribe(completeSpy);
-    fixture.detectChanges();
+      fixture.componentRef.setInput('toPokemon', evolved);
+      fixture.componentInstance.animationComplete.subscribe(completeSpy);
+      fixture.detectChanges();
 
-    vi.advanceTimersByTime(EVOLUTION_ANIMATION_DURATION_MS);
-    fixture.detectChanges();
+      vi.advanceTimersByTime(EVOLUTION_ANIMATION_DURATION_MS);
+      fixture.detectChanges();
 
-    expect(completeSpy).toHaveBeenCalledWith(evolved);
-    expect(fixture.nativeElement.querySelector('.evolution-animation')).toBeNull();
+      expect(completeSpy).toHaveBeenNthCalledWith(1, evolved);
+      expect(fixture.nativeElement.querySelector('.evolution-animation')).toBeNull();
+    });
   });
 });

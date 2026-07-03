@@ -14,62 +14,68 @@ describe('StatusDecayService', () => {
     service = TestBed.inject(StatusDecayService);
   });
 
-  describe('calculateDecay', () => {
-    it('should decay needs proportionally to elapsed time when awake', () => {
-      const status = createInitialPokemonStatus();
-      const decay = service.calculateDecay(ONE_HOUR_MS, status, false, 1_000);
+  describe('Happy Path', () => {
+    describe('calculateDecay', () => {
+      it('должен уменьшать потребности пропорционально прошедшему времени в бодрствовании', () => {
+        const status = createInitialPokemonStatus();
+        const decay = service.calculateDecay(ONE_HOUR_MS, status, false, 1_000);
 
-      expect(decay.hunger).toBeCloseTo(GAME_BALANCE.STATUS_DECAY.HUNGER);
-      expect(decay.mood).toBeCloseTo(GAME_BALANCE.STATUS_DECAY.MOOD);
-      expect(decay.hydration).toBeCloseTo(GAME_BALANCE.STATUS_DECAY.HYDRATION);
-      expect(decay.energy).toBeCloseTo(GAME_BALANCE.STATUS_DECAY.ENERGY);
-      expect(decay.timestamp).toBe(1_000);
+        expect(decay.hunger).toBeCloseTo(GAME_BALANCE.STATUS_DECAY.HUNGER);
+        expect(decay.mood).toBeCloseTo(GAME_BALANCE.STATUS_DECAY.MOOD);
+        expect(decay.hydration).toBeCloseTo(GAME_BALANCE.STATUS_DECAY.HYDRATION);
+        expect(decay.energy).toBeCloseTo(GAME_BALANCE.STATUS_DECAY.ENERGY);
+        expect(decay.timestamp).toBe(1_000);
+      });
+
+      it('должен восстанавливать энергию во сне и продолжать уменьшать голод и настроение', () => {
+        const status = createInitialPokemonStatus();
+        const decay = service.calculateDecay(ONE_HOUR_MS, status, true, 1_000);
+
+        expect(decay.hunger).toBeCloseTo(GAME_BALANCE.STATUS_DECAY.HUNGER);
+        expect(decay.mood).toBeCloseTo(GAME_BALANCE.STATUS_DECAY.MOOD);
+        expect(decay.energy).toBeCloseTo(-GAME_BALANCE.ACTION_EFFECTS.SLEEP.energyRestore);
+      });
     });
 
-    it('should restore energy while sleeping and still decay hunger and mood', () => {
-      const status = createInitialPokemonStatus();
-      const decay = service.calculateDecay(ONE_HOUR_MS, status, true, 1_000);
+    describe('detectCriticalAlerts', () => {
+      it('должен алертить, когда голод пересекает warning-порог', () => {
+        const before = {
+          ...createInitialPokemonStatus(),
+          hunger: STATUS_THRESHOLDS.hungerWarning + 1,
+        };
+        const after = {
+          ...before,
+          hunger: STATUS_THRESHOLDS.hungerWarning,
+        };
 
-      expect(decay.hunger).toBeCloseTo(GAME_BALANCE.STATUS_DECAY.HUNGER);
-      expect(decay.mood).toBeCloseTo(GAME_BALANCE.STATUS_DECAY.MOOD);
-      expect(decay.energy).toBeCloseTo(-GAME_BALANCE.ACTION_EFFECTS.SLEEP.energyRestore);
-    });
+        expect(service.detectCriticalAlerts(before, after)).toContain('hungerLow');
+      });
 
-    it('should produce monotonically increasing decay for longer intervals', () => {
-      const status = createInitialPokemonStatus();
-      const shortDecay = service.calculateDecay(ONE_HOUR_MS / 2, status, false);
-      const longDecay = service.calculateDecay(ONE_HOUR_MS, status, false);
+      it('должен алертить, когда гидратация пересекает critical-порог', () => {
+        const before = {
+          ...createInitialPokemonStatus(),
+          hydration: STATUS_THRESHOLDS.hydrationCritical + 1,
+        };
+        const after = {
+          ...before,
+          hydration: STATUS_THRESHOLDS.hydrationCritical,
+        };
 
-      expect(longDecay.hunger).toBeGreaterThan(shortDecay.hunger);
-      expect(longDecay.mood).toBeGreaterThan(shortDecay.mood);
+        expect(service.detectCriticalAlerts(before, after)).toContain('hydrationCritical');
+      });
     });
   });
 
-  describe('detectCriticalAlerts', () => {
-    it('should alert when hunger crosses warning threshold', () => {
-      const before = {
-        ...createInitialPokemonStatus(),
-        hunger: STATUS_THRESHOLDS.hungerWarning + 1,
-      };
-      const after = {
-        ...before,
-        hunger: STATUS_THRESHOLDS.hungerWarning,
-      };
+  describe('Edge Cases', () => {
+    describe('calculateDecay', () => {
+      it('должен давать монотонно возрастающее уменьшение при более длинных интервалах', () => {
+        const status = createInitialPokemonStatus();
+        const shortDecay = service.calculateDecay(ONE_HOUR_MS / 2, status, false);
+        const longDecay = service.calculateDecay(ONE_HOUR_MS, status, false);
 
-      expect(service.detectCriticalAlerts(before, after)).toContain('hungerLow');
-    });
-
-    it('should alert when hydration crosses critical threshold', () => {
-      const before = {
-        ...createInitialPokemonStatus(),
-        hydration: STATUS_THRESHOLDS.hydrationCritical + 1,
-      };
-      const after = {
-        ...before,
-        hydration: STATUS_THRESHOLDS.hydrationCritical,
-      };
-
-      expect(service.detectCriticalAlerts(before, after)).toContain('hydrationCritical');
+        expect(longDecay.hunger).toBeGreaterThan(shortDecay.hunger);
+        expect(longDecay.mood).toBeGreaterThan(shortDecay.mood);
+      });
     });
   });
 });

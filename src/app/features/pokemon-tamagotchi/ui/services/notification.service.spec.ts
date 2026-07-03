@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { TranslocoService } from '@jsverse/transloco';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, type MockedObject, vi } from 'vitest';
 import { AppNotificationService } from '@core/services/app-notification.service';
 import { TIMER_CONFIG } from '../../data/constants/timer.constants';
 import { TamagotchiStore } from '../../data/store/tamagotchi.store';
@@ -19,11 +19,12 @@ const TRANSLATIONS: Record<string, string> = {
 describe('TamagotchiNotificationService', () => {
   let service: TamagotchiNotificationService;
   let addNotification: ReturnType<typeof vi.fn>;
-  let appNotifications: {
-    showErrorNotification: ReturnType<typeof vi.fn>;
-    showPositiveNotification: ReturnType<typeof vi.fn>;
-    showWarningNotification: ReturnType<typeof vi.fn>;
-  };
+  let appNotifications: MockedObject<
+    Pick<
+      AppNotificationService,
+      'showErrorNotification' | 'showPositiveNotification' | 'showWarningNotification'
+    >
+  >;
 
   beforeEach(() => {
     addNotification = vi.fn();
@@ -31,7 +32,12 @@ describe('TamagotchiNotificationService', () => {
       showErrorNotification: vi.fn(),
       showPositiveNotification: vi.fn(),
       showWarningNotification: vi.fn(),
-    };
+    } as const satisfies MockedObject<
+      Pick<
+        AppNotificationService,
+        'showErrorNotification' | 'showPositiveNotification' | 'showWarningNotification'
+      >
+    >;
 
     TestBed.configureTestingModule({
       providers: [
@@ -58,79 +64,88 @@ describe('TamagotchiNotificationService', () => {
     service = TestBed.inject(TamagotchiNotificationService);
   });
 
-  it('shows warning toast and stores history for status alerts', () => {
-    service.notifyStatusAlerts(['hungerLow']);
+  describe('Happy Path', () => {
+    it('должен показывать warning toast и сохранять историю для status alerts', () => {
+      service.notifyStatusAlerts(['hungerLow']);
 
-    expect(appNotifications.showWarningNotification).toHaveBeenCalledWith(
-      'Your Pokémon is hungry.',
-      'Getting hungry',
-    );
-    expect(addNotification).toHaveBeenCalledTimes(1);
-    expect(addNotification).toHaveBeenCalledWith(
-      expect.objectContaining({
-        priority: 'warning',
-        title: 'alerts.hungerLow.title',
-      }),
-    );
-  });
-
-  it('merges threshold and periodic critical alerts without duplicates', () => {
-    const timestamp = 2_000_000;
-    const status = {
-      ...createInitialPokemonStatus(),
-      energy: 5,
-    };
-
-    service.processStatusAlerts({
-      status,
-      thresholdAlerts: ['energyCritical'],
-      timestamp,
+      expect(appNotifications.showWarningNotification).toHaveBeenNthCalledWith(
+        1,
+        'Your Pokémon is hungry.',
+        'Getting hungry',
+      );
+      expect(addNotification).toHaveBeenCalledTimes(1);
+      expect(addNotification).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({
+          priority: 'warning',
+          title: 'alerts.hungerLow.title',
+        }),
+      );
     });
 
-    expect(addNotification).toHaveBeenCalledTimes(1);
-    expect(appNotifications.showErrorNotification).toHaveBeenCalledWith(
-      'No energy left.',
-      'Exhausted!',
-    );
+    it('должен показывать positive toast при готовности к эволюции', () => {
+      service.notifyEvolutionReady('Pikachu');
 
-    addNotification.mockClear();
-    appNotifications.showErrorNotification.mockClear();
-
-    service.processStatusAlerts({
-      status,
-      thresholdAlerts: [],
-      timestamp: timestamp + TIMER_CONFIG.CRITICAL_ALERT_REPEAT_MS,
+      expect(appNotifications.showPositiveNotification).toHaveBeenNthCalledWith(
+        1,
+        'Pikachu',
+        'Ready to evolve!',
+      );
     });
 
-    expect(addNotification).toHaveBeenCalledTimes(1);
+    it('должен показывать positive toast для достижений', () => {
+      const achievement: AchievementModel = {
+        category: 'care',
+        description: 'Fed your Pokémon 10 times',
+        id: 'care-10',
+        name: 'Dedicated caretaker',
+        requirements: [],
+        reward: { experience: 50, unlockables: [] },
+        unlocked: true,
+        unlockedAt: Date.now(),
+      };
+
+      service.notifyAchievementUnlocked(achievement);
+
+      expect(appNotifications.showPositiveNotification).toHaveBeenNthCalledWith(
+        1,
+        'Fed your Pokémon 10 times',
+        'Dedicated caretaker',
+      );
+    });
   });
 
-  it('shows positive toast for evolution readiness', () => {
-    service.notifyEvolutionReady('Pikachu');
+  describe('Edge Cases', () => {
+    it('должен объединять пороговые и периодические critical alerts без дубликатов', () => {
+      const timestamp = 2_000_000;
+      const status = {
+        ...createInitialPokemonStatus(),
+        energy: 5,
+      };
 
-    expect(appNotifications.showPositiveNotification).toHaveBeenCalledWith(
-      'Pikachu',
-      'Ready to evolve!',
-    );
-  });
+      service.processStatusAlerts({
+        status,
+        thresholdAlerts: ['energyCritical'],
+        timestamp,
+      });
 
-  it('shows positive toast for achievements', () => {
-    const achievement: AchievementModel = {
-      category: 'care',
-      description: 'Fed your Pokémon 10 times',
-      id: 'care-10',
-      name: 'Dedicated caretaker',
-      requirements: [],
-      reward: { experience: 50, unlockables: [] },
-      unlocked: true,
-      unlockedAt: Date.now(),
-    };
+      expect(addNotification).toHaveBeenCalledTimes(1);
+      expect(appNotifications.showErrorNotification).toHaveBeenNthCalledWith(
+        1,
+        'No energy left.',
+        'Exhausted!',
+      );
 
-    service.notifyAchievementUnlocked(achievement);
+      addNotification.mockClear();
+      appNotifications.showErrorNotification.mockClear();
 
-    expect(appNotifications.showPositiveNotification).toHaveBeenCalledWith(
-      'Fed your Pokémon 10 times',
-      'Dedicated caretaker',
-    );
+      service.processStatusAlerts({
+        status,
+        thresholdAlerts: [],
+        timestamp: timestamp + TIMER_CONFIG.CRITICAL_ALERT_REPEAT_MS,
+      });
+
+      expect(addNotification).toHaveBeenCalledTimes(1);
+    });
   });
 });

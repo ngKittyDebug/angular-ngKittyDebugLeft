@@ -4,7 +4,7 @@ import type { ComponentFixture } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { TranslocoTestingModule } from '@jsverse/transloco';
 import { of } from 'rxjs';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { PokemonProfileIntegrationService } from '../../../data/services/pokemon-profile-integration.service';
 import { TamagotchiInitService } from '../../../data/services/tamagotchi-init.service';
 import { TEST_POKEMON } from '../../../data/fixtures/tamagotchi-arbitraries';
@@ -91,173 +91,175 @@ function createStoreMock(
 }
 
 describe('PokemonTamagotchiPageComponent', () => {
-  let fixture: ComponentFixture<PokemonTamagotchiPageComponent>;
+  describe('Happy Path', () => {
+    let fixture: ComponentFixture<PokemonTamagotchiPageComponent>;
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [
-        PokemonTamagotchiPageComponent,
-        TranslocoTestingModule.forRoot({
-          langs: {
-            en: {
-              pokemonTamagotchi: {
-                actions: {
-                  care: 'Care',
-                  cooldown: '{{seconds}}s',
-                  disabledCooldown: 'Cooldown',
-                  disabledLowEnergy: 'Low energy',
-                  feed: 'Feed',
-                  play: 'Play',
-                  sleep: 'Sleep',
-                  train: 'Train',
-                  wakeUp: 'Wake up',
-                  water: 'Water',
-                },
-                evolution: {
-                  evolving: 'Evolving…',
-                  evolvingAria: '{{name}} is evolving',
-                },
-                notificationList: {
-                  dismiss: 'Dismiss',
-                  empty: 'No notifications',
-                  hideHistory: 'Hide history',
-                  showHistory: 'Show history',
-                },
-                page: PAGE_TRANSLATIONS,
-                status: {
-                  energy: 'Energy',
-                  experience: 'Experience',
-                  health: 'Health',
-                  hunger: 'Hunger',
-                  hydration: 'Hydration',
-                  levelTooltip: 'Level {{level}}',
-                  mood: 'Mood',
-                  tooltip: '{{label}}: {{value}} / {{max}}',
+    beforeEach(async () => {
+      await TestBed.configureTestingModule({
+        imports: [
+          PokemonTamagotchiPageComponent,
+          TranslocoTestingModule.forRoot({
+            langs: {
+              en: {
+                pokemonTamagotchi: {
+                  actions: {
+                    care: 'Care',
+                    cooldown: '{{seconds}}s',
+                    disabledCooldown: 'Cooldown',
+                    disabledLowEnergy: 'Low energy',
+                    feed: 'Feed',
+                    play: 'Play',
+                    sleep: 'Sleep',
+                    train: 'Train',
+                    wakeUp: 'Wake up',
+                    water: 'Water',
+                  },
+                  evolution: {
+                    evolving: 'Evolving…',
+                    evolvingAria: '{{name}} is evolving',
+                  },
+                  notificationList: {
+                    dismiss: 'Dismiss',
+                    empty: 'No notifications',
+                    hideHistory: 'Hide history',
+                    showHistory: 'Show history',
+                  },
+                  page: PAGE_TRANSLATIONS,
+                  status: {
+                    energy: 'Energy',
+                    experience: 'Experience',
+                    health: 'Health',
+                    hunger: 'Hunger',
+                    hydration: 'Hydration',
+                    levelTooltip: 'Level {{level}}',
+                    mood: 'Mood',
+                    tooltip: '{{label}}: {{value}} / {{max}}',
+                  },
                 },
               },
             },
+            translocoConfig: {
+              availableLangs: ['en'],
+              defaultLang: 'en',
+            },
+          }),
+        ],
+        providers: [
+          provideRouter([]),
+          {
+            provide: TamagotchiStore,
+            useValue: createStoreMock(),
           },
-          translocoConfig: {
-            availableLangs: ['en'],
-            defaultLang: 'en',
-          },
-        }),
-      ],
-      providers: [
-        provideRouter([]),
-        {
-          provide: TamagotchiStore,
-          useValue: createStoreMock(),
-        },
-        {
-          provide: TamagotchiInitService,
-          useValue: {
-            bootstrapFromProfile: vi.fn(() => of(undefined)),
-          },
-        },
-        {
-          provide: PokemonProfileIntegrationService,
-          useValue: {
-            loadPokemonByName: vi.fn(() => of(TEST_POKEMON)),
-            saveSelectedPokemon: vi.fn(),
-            validateSelectedPokemon: vi.fn(() => of({ error: 'noSelection', valid: false })),
-          },
-        },
-      ],
-    }).compileComponents();
-
-    fixture = TestBed.createComponent(PokemonTamagotchiPageComponent);
-    fixture.detectChanges();
-  });
-
-  it('should create', () => {
-    expect(fixture.componentInstance).toBeTruthy();
-  });
-
-  it('should render page title', () => {
-    const title = fixture.nativeElement.querySelector('.tamagotchi-page__title');
-
-    expect(title?.textContent?.trim()).toBe('Pokémon Tamagotchi');
-  });
-
-  it('should render status indicators when pokemon is loaded', () => {
-    const indicators = fixture.nativeElement.querySelectorAll('left-paw-status-indicator');
-    const labels = fixture.nativeElement.querySelectorAll(
-      '.status-indicator__label',
-    ) as NodeListOf<Element>;
-    const bars = fixture.nativeElement.querySelectorAll('progress[tuiProgressBar]');
-
-    expect(indicators.length).toBe(6);
-    expect(labels.length).toBe(6);
-    expect(bars.length).toBe(6);
-    const labelTexts = [...labels].map((node) => node.textContent?.trim() ?? '');
-
-    expect(labelTexts).toEqual(
-      expect.arrayContaining(['Health', 'Hunger', 'Hydration', 'Mood', 'Energy', 'Experience']),
-    );
-  });
-
-  it('should render notifications panel', () => {
-    const notificationList = fixture.nativeElement.querySelector(
-      'left-paw-tamagotchi-notifications',
-    );
-
-    expect(notificationList).toBeTruthy();
-  });
-});
-
-describe('PokemonTamagotchiPageComponent loading state', () => {
-  let fixture: ComponentFixture<PokemonTamagotchiPageComponent>;
-
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [
-        PokemonTamagotchiPageComponent,
-        TranslocoTestingModule.forRoot({
-          langs: {
-            en: {
-              pokemonTamagotchi: {
-                page: PAGE_TRANSLATIONS,
-              },
+          {
+            provide: TamagotchiInitService,
+            useValue: {
+              bootstrapFromProfile: vi.fn(() => of(undefined)),
             },
           },
-          translocoConfig: {
-            availableLangs: ['en'],
-            defaultLang: 'en',
+          {
+            provide: PokemonProfileIntegrationService,
+            useValue: {
+              loadPokemonByName: vi.fn(() => of(TEST_POKEMON)),
+              saveSelectedPokemon: vi.fn(),
+              validateSelectedPokemon: vi.fn(() => of({ error: 'noSelection', valid: false })),
+            },
           },
-        }),
-      ],
-      providers: [
-        provideRouter([]),
-        {
-          provide: TamagotchiStore,
-          useValue: createStoreMock({ initialized: false, pokemon: null }),
-        },
-        {
-          provide: TamagotchiInitService,
-          useValue: {
-            bootstrapFromProfile: vi.fn(() => of(undefined)),
-          },
-        },
-        {
-          provide: PokemonProfileIntegrationService,
-          useValue: {
-            loadPokemonByName: vi.fn(() => of(TEST_POKEMON)),
-            saveSelectedPokemon: vi.fn(),
-            validateSelectedPokemon: vi.fn(() => of({ error: 'noSelection', valid: false })),
-          },
-        },
-      ],
-    }).compileComponents();
+        ],
+      }).compileComponents();
 
-    fixture = TestBed.createComponent(PokemonTamagotchiPageComponent);
-    fixture.detectChanges();
+      fixture = TestBed.createComponent(PokemonTamagotchiPageComponent);
+      fixture.detectChanges();
+    });
+
+    it('должен создаваться', () => {
+      expect(fixture.componentInstance).toBeTruthy();
+    });
+
+    it('должен отображать заголовок страницы', () => {
+      const title = fixture.nativeElement.querySelector('.tamagotchi-page__title');
+
+      expect(title?.textContent?.trim()).toBe('Pokémon Tamagotchi');
+    });
+
+    it('должен отображать индикаторы статуса, когда покемон загружен', () => {
+      const indicators = fixture.nativeElement.querySelectorAll('left-paw-status-indicator');
+      const labels = fixture.nativeElement.querySelectorAll(
+        '.status-indicator__label',
+      ) as NodeListOf<Element>;
+      const bars = fixture.nativeElement.querySelectorAll('progress[tuiProgressBar]');
+
+      expect(indicators.length).toBe(6);
+      expect(labels.length).toBe(6);
+      expect(bars.length).toBe(6);
+      const labelTexts = [...labels].map((node) => node.textContent?.trim() ?? '');
+
+      expect(labelTexts).toEqual(
+        expect.arrayContaining(['Health', 'Hunger', 'Hydration', 'Mood', 'Energy', 'Experience']),
+      );
+    });
+
+    it('должен отображать панель уведомлений', () => {
+      const notificationList = fixture.nativeElement.querySelector(
+        'left-paw-tamagotchi-notifications',
+      );
+
+      expect(notificationList).toBeTruthy();
+    });
   });
 
-  it('should show loading state while store is not initialized', () => {
-    const loading = fixture.nativeElement.querySelector('.tamagotchi-page__loading');
+  describe('Edge Cases', () => {
+    let fixture: ComponentFixture<PokemonTamagotchiPageComponent>;
 
-    expect(loading).toBeTruthy();
-    expect(loading?.textContent).toContain('Loading…');
+    beforeEach(async () => {
+      await TestBed.configureTestingModule({
+        imports: [
+          PokemonTamagotchiPageComponent,
+          TranslocoTestingModule.forRoot({
+            langs: {
+              en: {
+                pokemonTamagotchi: {
+                  page: PAGE_TRANSLATIONS,
+                },
+              },
+            },
+            translocoConfig: {
+              availableLangs: ['en'],
+              defaultLang: 'en',
+            },
+          }),
+        ],
+        providers: [
+          provideRouter([]),
+          {
+            provide: TamagotchiStore,
+            useValue: createStoreMock({ initialized: false, pokemon: null }),
+          },
+          {
+            provide: TamagotchiInitService,
+            useValue: {
+              bootstrapFromProfile: vi.fn(() => of(undefined)),
+            },
+          },
+          {
+            provide: PokemonProfileIntegrationService,
+            useValue: {
+              loadPokemonByName: vi.fn(() => of(TEST_POKEMON)),
+              saveSelectedPokemon: vi.fn(),
+              validateSelectedPokemon: vi.fn(() => of({ error: 'noSelection', valid: false })),
+            },
+          },
+        ],
+      }).compileComponents();
+
+      fixture = TestBed.createComponent(PokemonTamagotchiPageComponent);
+      fixture.detectChanges();
+    });
+
+    it('должен показывать состояние загрузки, пока store не инициализирован', () => {
+      const loading = fixture.nativeElement.querySelector('.tamagotchi-page__loading');
+
+      expect(loading).toBeTruthy();
+      expect(loading?.textContent).toContain('Loading…');
+    });
   });
 });

@@ -88,48 +88,50 @@ function stateWithPokemon(status: PokemonStatusModel, isSleeping: boolean): Tama
   };
 }
 
-describe('Tamagotchi property tests', () => {
-  describe('Property 1: Status Action Consistency', () => {
+describe('tamagotchi-state-transitions', () => {
+  describe('Property 1: согласованность действий со статусом', () => {
     // Feature: pokemon-tamagotchi, Property 1: Status Action Consistency
-    it('should keep bounded status values after any care action', () => {
-      fc.assert(
-        fc.property(
-          arbitraryPokemonStatus(),
-          fc.boolean(),
-          arbitraryCareAction(),
-          (status, isSleeping, action) => {
-            const state = stateWithPokemon(status, isSleeping);
-            const next = applyCareAction(state, action);
+    describe('Happy Path', () => {
+      it('должен сохранять ограниченные значения статуса после любого действия ухода', () => {
+        fc.assert(
+          fc.property(
+            arbitraryPokemonStatus(),
+            fc.boolean(),
+            arbitraryCareAction(),
+            (status, isSleeping, action) => {
+              const state = stateWithPokemon(status, isSleeping);
+              const next = applyCareAction(state, action);
 
-            return isBoundedStatus(next.status);
-          },
-        ),
-        { numRuns: PROPERTY_RUNS },
-      );
-    });
+              return isBoundedStatus(next.status);
+            },
+          ),
+          { numRuns: PROPERTY_RUNS },
+        );
+      });
 
-    it('should keep bounded status values after a sequence of care actions', () => {
-      fc.assert(
-        fc.property(
-          arbitraryPokemonStatus(),
-          fc.boolean(),
-          fc.array(arbitraryCareAction(), { maxLength: 8, minLength: 1 }),
-          (status, isSleeping, actions) => {
-            let state = stateWithPokemon(status, isSleeping);
+      it('должен сохранять ограниченные значения статуса после последовательности действий ухода', () => {
+        fc.assert(
+          fc.property(
+            arbitraryPokemonStatus(),
+            fc.boolean(),
+            fc.array(arbitraryCareAction(), { maxLength: 8, minLength: 1 }),
+            (status, isSleeping, actions) => {
+              let state = stateWithPokemon(status, isSleeping);
 
-            for (const action of actions) {
-              state = applyCareAction(state, action);
+              for (const action of actions) {
+                state = applyCareAction(state, action);
 
-              if (!isBoundedStatus(state.status)) {
-                return false;
+                if (!isBoundedStatus(state.status)) {
+                  return false;
+                }
               }
-            }
 
-            return true;
-          },
-        ),
-        { numRuns: PROPERTY_RUNS },
-      );
+              return true;
+            },
+          ),
+          { numRuns: PROPERTY_RUNS },
+        );
+      });
     });
   });
 });

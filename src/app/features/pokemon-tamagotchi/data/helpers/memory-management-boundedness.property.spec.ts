@@ -31,49 +31,53 @@ function isWithinProfileLimits(
   );
 }
 
-describe('Tamagotchi Property Tests', () => {
-  describe('Property 17: Memory Management Boundedness', () => {
+describe('memory-management.helper', () => {
+  describe('Property 17: ограниченность управления памятью', () => {
     // Feature: pokemon-tamagotchi, Property 17: Memory Management Boundedness
-    it('should keep interaction history within profile limits after repeated interactions and garbage collection', () => {
-      fc.assert(
-        fc.property(
-          fc.array(arbitraryInteractionEvent(), { maxLength: 80, minLength: 1 }),
-          fc.constantFrom('high' as const, 'balanced' as const, 'low' as const),
-          (interactions, profileKey) => {
-            let state = withPokemon(initialTamagotchiState);
+    describe('Happy Path', () => {
+      it('должен удерживать историю взаимодействий в пределах профиля после повторных взаимодействий и сборки мусора', () => {
+        fc.assert(
+          fc.property(
+            fc.array(arbitraryInteractionEvent(), { maxLength: 80, minLength: 1 }),
+            fc.constantFrom('high' as const, 'balanced' as const, 'low' as const),
+            (interactions, profileKey) => {
+              let state = withPokemon(initialTamagotchiState);
 
-            for (const interaction of interactions) {
-              state = interactWithPokemonState(state, interaction, FIXED_NOW);
-            }
+              for (const interaction of interactions) {
+                state = interactWithPokemonState(state, interaction, FIXED_NOW);
+              }
 
-            state = garbageCollectState(
-              state,
-              profileToGarbageCollectLimits(PERFORMANCE_PROFILES[profileKey]),
-            );
+              state = garbageCollectState(
+                state,
+                profileToGarbageCollectLimits(PERFORMANCE_PROFILES[profileKey]),
+              );
 
-            return isWithinProfileLimits(state, profileKey);
-          },
-        ),
-        { numRuns: PROPERTY_RUNS },
-      );
+              return isWithinProfileLimits(state, profileKey);
+            },
+          ),
+          { numRuns: PROPERTY_RUNS },
+        );
+      });
     });
 
-    it('should never grow collections beyond absolute max caps even without garbage collection', () => {
-      fc.assert(
-        fc.property(
-          fc.array(arbitraryInteractionEvent(), { maxLength: 120, minLength: 1 }),
-          (interactions) => {
-            let state = withPokemon(initialTamagotchiState);
+    describe('Edge Cases', () => {
+      it('не должен превышать абсолютные максимальные лимиты коллекций даже без сборки мусора', () => {
+        fc.assert(
+          fc.property(
+            fc.array(arbitraryInteractionEvent(), { maxLength: 120, minLength: 1 }),
+            (interactions) => {
+              let state = withPokemon(initialTamagotchiState);
 
-            for (const interaction of interactions) {
-              state = interactWithPokemonState(state, interaction, FIXED_NOW);
-            }
+              for (const interaction of interactions) {
+                state = interactWithPokemonState(state, interaction, FIXED_NOW);
+              }
 
-            return state.interactionHistory.length <= 50 && state.notificationList.length <= 20;
-          },
-        ),
-        { numRuns: PROPERTY_RUNS },
-      );
+              return state.interactionHistory.length <= 50 && state.notificationList.length <= 20;
+            },
+          ),
+          { numRuns: PROPERTY_RUNS },
+        );
+      });
     });
   });
 });

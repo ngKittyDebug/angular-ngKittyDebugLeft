@@ -6,8 +6,8 @@ import { TamagotchiService } from './tamagotchi.service';
 
 const PROPERTY_RUNS = 100;
 
-describe('Tamagotchi property tests', () => {
-  describe('Property 8: Training Experience Reward', () => {
+describe('TamagotchiService', () => {
+  describe('Property 8: награда опыта за тренировку', () => {
     let service: TamagotchiService;
 
     beforeEach(() => {
@@ -16,31 +16,35 @@ describe('Tamagotchi property tests', () => {
     });
 
     // Feature: pokemon-tamagotchi, Property 8: Training Experience Reward
-    it('should stay within configured min and max bounds', () => {
-      const { min, max } = GAME_BALANCE.ACTION_EFFECTS.TRAIN.experienceReward;
+    describe('Happy Path', () => {
+      it('должен оставаться в пределах настроенных минимума и максимума', () => {
+        const { min, max } = GAME_BALANCE.ACTION_EFFECTS.TRAIN.experienceReward;
 
-      fc.assert(
-        fc.property(fc.float({ max: 1, min: 0, noNaN: true }), (random) => {
-          const gain = service.rollTrainingExperienceGain(random);
+        fc.assert(
+          fc.property(fc.float({ max: 1, min: 0, noNaN: true }), (random) => {
+            const gain = service.rollTrainingExperienceGain(random);
 
-          return gain >= min && gain <= max;
-        }),
-        { numRuns: PROPERTY_RUNS },
-      );
+            return gain >= min && gain <= max;
+          }),
+          { numRuns: PROPERTY_RUNS },
+        );
+      });
     });
 
-    it('should return min when random is zero', () => {
-      const { min } = GAME_BALANCE.ACTION_EFFECTS.TRAIN.experienceReward;
+    describe('Edge Cases', () => {
+      it('должен возвращать минимум при random равном нулю', () => {
+        const { min } = GAME_BALANCE.ACTION_EFFECTS.TRAIN.experienceReward;
 
-      expect(rollTrainingExperienceGain(0)).toBe(min);
-      expect(service.rollTrainingExperienceGain(0)).toBe(min);
-    });
+        expect(rollTrainingExperienceGain(0)).toBe(min);
+        expect(service.rollTrainingExperienceGain(0)).toBe(min);
+      });
 
-    it('should return max when random approaches one', () => {
-      const { max } = GAME_BALANCE.ACTION_EFFECTS.TRAIN.experienceReward;
+      it('должен возвращать максимум, когда random приближается к единице', () => {
+        const { max } = GAME_BALANCE.ACTION_EFFECTS.TRAIN.experienceReward;
 
-      expect(rollTrainingExperienceGain(0.999_999)).toBe(max);
-      expect(service.rollTrainingExperienceGain(0.999_999)).toBe(max);
+        expect(rollTrainingExperienceGain(0.999_999)).toBe(max);
+        expect(service.rollTrainingExperienceGain(0.999_999)).toBe(max);
+      });
     });
   });
 });

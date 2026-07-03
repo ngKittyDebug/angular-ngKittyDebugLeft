@@ -55,30 +55,34 @@ function createFixture(
 }
 
 describe('NotificationComponent', () => {
-  it('renders show history toggle with notification count', () => {
-    const fixture = createFixture();
-    const element = fixture.nativeElement as HTMLElement;
+  describe('Happy Path', () => {
+    it('должен отображать переключатель истории с количеством уведомлений', () => {
+      const fixture = createFixture();
+      const element = fixture.nativeElement as HTMLElement;
 
-    expect(element.textContent).toContain('Show history');
-    expect(element.textContent).toContain('(1)');
+      expect(element.textContent).toContain('Show history');
+      expect(element.textContent).toContain('(1)');
+    });
+
+    it('должен показывать записи истории при раскрытии', () => {
+      const fixture = createFixture();
+      const element = fixture.nativeElement as HTMLElement;
+      const toggle = element.querySelector('button');
+
+      toggle?.dispatchEvent(new Event('click'));
+      fixture.detectChanges();
+
+      expect(element.textContent).toContain('Getting hungry');
+      expect(element.textContent).toContain('Your Pokémon is hungry.');
+    });
   });
 
-  it('shows history entries when expanded', () => {
-    const fixture = createFixture();
-    const element = fixture.nativeElement as HTMLElement;
-    const toggle = element.querySelector('button');
+  describe('Edge Cases', () => {
+    it('должен показывать пустое состояние, когда уведомлений нет', () => {
+      const fixture = createFixture([]);
+      const element = fixture.nativeElement as HTMLElement;
 
-    toggle?.dispatchEvent(new Event('click'));
-    fixture.detectChanges();
-
-    expect(element.textContent).toContain('Getting hungry');
-    expect(element.textContent).toContain('Your Pokémon is hungry.');
-  });
-
-  it('shows empty state when there are no notifications', () => {
-    const fixture = createFixture([]);
-    const element = fixture.nativeElement as HTMLElement;
-
-    expect(element.textContent).toContain('No notifications yet');
+      expect(element.textContent).toContain('No notifications yet');
+    });
   });
 });

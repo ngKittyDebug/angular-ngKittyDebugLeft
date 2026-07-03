@@ -19,42 +19,46 @@ describe('PerformanceService', () => {
     service = TestBed.inject(PerformanceService);
   });
 
-  it('persists selected performance mode', () => {
-    service.setMode('low');
+  describe('Happy Path', () => {
+    it('должен сохранять выбранный режим производительности', () => {
+      service.setMode('low');
 
-    expect(storageMock.getItem(PERFORMANCE_MODE_STORAGE_KEY)).toBe('low');
-    expect(service.mode()).toBe('low');
-    expect(service.getProfile().decayIntervalMs).toBe(30_000);
-  });
-
-  it('resolves explicit mode without auto detection', () => {
-    service.setMode('high');
-
-    expect(service.resolveEffectiveMode()).toBe('high');
-    expect(service.getProfile().complexAnimations).toBe(true);
-  });
-
-  it('falls back to low profile when reduced motion is preferred', () => {
-    const previous = globalThis.matchMedia;
-
-    Object.defineProperty(globalThis, 'matchMedia', {
-      configurable: true,
-      value: vi.fn().mockReturnValue({
-        matches: true,
-        media: '(prefers-reduced-motion: reduce)',
-        onchange: null,
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-        addListener: vi.fn(),
-        removeListener: vi.fn(),
-        dispatchEvent: vi.fn(),
-      } as MediaQueryList),
+      expect(storageMock.getItem(PERFORMANCE_MODE_STORAGE_KEY)).toBe('low');
+      expect(service.mode()).toBe('low');
+      expect(service.getProfile().decayIntervalMs).toBe(30_000);
     });
 
-    service.setMode('auto');
+    it('должен резолвить явный режим без автоопределения', () => {
+      service.setMode('high');
 
-    expect(service.resolveEffectiveMode()).toBe('low');
+      expect(service.resolveEffectiveMode()).toBe('high');
+      expect(service.getProfile().complexAnimations).toBe(true);
+    });
+  });
 
-    Object.defineProperty(globalThis, 'matchMedia', { configurable: true, value: previous });
+  describe('Edge Cases', () => {
+    it('должен переключаться на low-профиль при prefers-reduced-motion', () => {
+      const previous = globalThis.matchMedia;
+
+      Object.defineProperty(globalThis, 'matchMedia', {
+        configurable: true,
+        value: vi.fn().mockReturnValue({
+          matches: true,
+          media: '(prefers-reduced-motion: reduce)',
+          onchange: null,
+          addEventListener: vi.fn(),
+          removeEventListener: vi.fn(),
+          addListener: vi.fn(),
+          removeListener: vi.fn(),
+          dispatchEvent: vi.fn(),
+        } as MediaQueryList),
+      });
+
+      service.setMode('auto');
+
+      expect(service.resolveEffectiveMode()).toBe('low');
+
+      Object.defineProperty(globalThis, 'matchMedia', { configurable: true, value: previous });
+    });
   });
 });

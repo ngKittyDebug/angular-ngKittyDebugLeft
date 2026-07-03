@@ -4,18 +4,20 @@ import { describe, expect, it } from 'vitest';
 import { TamagotchiAnalyticsService } from './tamagotchi-analytics.service';
 
 describe('TamagotchiAnalyticsService', () => {
-  it('tracks action counts for interaction patterns', () => {
-    const service = TestBed.inject(TamagotchiAnalyticsService);
+  describe('Happy Path', () => {
+    it('должен учитывать количество действий для паттернов взаимодействия', () => {
+      const service = TestBed.inject(TamagotchiAnalyticsService);
 
-    service.track('feed');
-    service.track('feed');
-    service.track('click');
+      service.track('feed');
+      service.track('feed');
+      service.track('click');
 
-    expect(service.getActionCounts()).toEqual({
-      click: 1,
-      feed: 2,
+      expect(service.getActionCounts()).toEqual({
+        click: 1,
+        feed: 2,
+      });
+      expect(service.getTotalEvents()).toBe(3);
+      expect(service.getLastEventAt()).not.toBeNull();
     });
-    expect(service.getTotalEvents()).toBe(3);
-    expect(service.getLastEventAt()).not.toBeNull();
   });
 });

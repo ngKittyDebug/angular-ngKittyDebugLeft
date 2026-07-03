@@ -73,66 +73,70 @@ function buttonLabels(element: HTMLElement): string[] {
 }
 
 describe('ActionButtonsComponent', () => {
-  it('should create', () => {
-    expect(createFixture().componentInstance).toBeTruthy();
+  describe('Happy Path', () => {
+    it('должен создаваться', () => {
+      expect(createFixture().componentInstance).toBeTruthy();
+    });
+
+    it('должен отображать все действия ухода и сон, когда покемон не спит', () => {
+      const labels = buttonLabels(createFixture().nativeElement as HTMLElement);
+
+      expect(labels).toEqual(['Feed', 'Water', 'Care', 'Play', 'Train', 'Sleep']);
+    });
+
+    it('должен эмитить actionSelected при клике по активной кнопке', () => {
+      const fixture = createFixture();
+      const emitSpy = vi.spyOn(fixture.componentInstance.actionSelected, 'emit');
+      const playButton = [
+        ...(fixture.nativeElement as HTMLElement).querySelectorAll('.action-buttons__btn'),
+      ].find((node) => node.textContent?.trim() === 'Play') as HTMLButtonElement;
+
+      playButton.click();
+      fixture.detectChanges();
+
+      expect(emitSpy).toHaveBeenNthCalledWith(1, 'play' satisfies ActionType);
+    });
   });
 
-  it('renders all awake care actions plus sleep when not sleeping', () => {
-    const labels = buttonLabels(createFixture().nativeElement as HTMLElement);
+  describe('Edge Cases', () => {
+    it('должен отображать только кнопку пробуждения во время сна', () => {
+      const labels = buttonLabels(createFixture({ isSleeping: true }).nativeElement as HTMLElement);
 
-    expect(labels).toEqual(['Feed', 'Water', 'Care', 'Play', 'Train', 'Sleep']);
-  });
+      expect(labels).toEqual(['Wake up']);
+    });
 
-  it('renders only the wake-up control while sleeping', () => {
-    const labels = buttonLabels(createFixture({ isSleeping: true }).nativeElement as HTMLElement);
+    it('должен отключать действие, пока активен кулдаун', () => {
+      const element = createFixture({
+        cooldowns: { ...EMPTY_COOLDOWNS, feed: 45_000 },
+      }).nativeElement as HTMLElement;
+      const feedButton = [...element.querySelectorAll('.action-buttons__btn')].find(
+        (node) => node.textContent?.trim() === 'Feed',
+      ) as HTMLButtonElement;
 
-    expect(labels).toEqual(['Wake up']);
-  });
+      expect(feedButton.disabled).toBe(true);
+    });
 
-  it('disables an action while its cooldown is active', () => {
-    const element = createFixture({
-      cooldowns: { ...EMPTY_COOLDOWNS, feed: 45_000 },
-    }).nativeElement as HTMLElement;
-    const feedButton = [...element.querySelectorAll('.action-buttons__btn')].find(
-      (node) => node.textContent?.trim() === 'Feed',
-    ) as HTMLButtonElement;
+    it('должен отключать тренировку при низкой энергии', () => {
+      const element = createFixture({ canTrain: false }).nativeElement as HTMLElement;
+      const trainButton = [...element.querySelectorAll('.action-buttons__btn')].find(
+        (node) => node.textContent?.trim() === 'Train',
+      ) as HTMLButtonElement;
 
-    expect(feedButton.disabled).toBe(true);
-  });
+      expect(trainButton.disabled).toBe(true);
+    });
 
-  it('disables train when energy is too low', () => {
-    const element = createFixture({ canTrain: false }).nativeElement as HTMLElement;
-    const trainButton = [...element.querySelectorAll('.action-buttons__btn')].find(
-      (node) => node.textContent?.trim() === 'Train',
-    ) as HTMLButtonElement;
+    it('должен эмитить sleep при клике по Wake up во время сна', () => {
+      const fixture = createFixture({ isSleeping: true });
+      const emitSpy = vi.spyOn(fixture.componentInstance.actionSelected, 'emit');
+      const wakeButton = (fixture.nativeElement as HTMLElement).querySelector(
+        '.action-buttons__btn',
+      ) as HTMLButtonElement;
 
-    expect(trainButton.disabled).toBe(true);
-  });
+      wakeButton.click();
+      fixture.detectChanges();
 
-  it('emits actionSelected when an enabled button is clicked', () => {
-    const fixture = createFixture();
-    const emitSpy = vi.spyOn(fixture.componentInstance.actionSelected, 'emit');
-    const playButton = [
-      ...(fixture.nativeElement as HTMLElement).querySelectorAll('.action-buttons__btn'),
-    ].find((node) => node.textContent?.trim() === 'Play') as HTMLButtonElement;
-
-    playButton.click();
-    fixture.detectChanges();
-
-    expect(emitSpy).toHaveBeenCalledWith('play' satisfies ActionType);
-  });
-
-  it('emits wakeUp action label as sleep action type while sleeping', () => {
-    const fixture = createFixture({ isSleeping: true });
-    const emitSpy = vi.spyOn(fixture.componentInstance.actionSelected, 'emit');
-    const wakeButton = (fixture.nativeElement as HTMLElement).querySelector(
-      '.action-buttons__btn',
-    ) as HTMLButtonElement;
-
-    wakeButton.click();
-    fixture.detectChanges();
-
-    expect(wakeButton.textContent?.trim()).toBe('Wake up');
-    expect(emitSpy).toHaveBeenCalledWith('sleep' satisfies ActionType);
+      expect(wakeButton.textContent?.trim()).toBe('Wake up');
+      expect(emitSpy).toHaveBeenNthCalledWith(1, 'sleep' satisfies ActionType);
+    });
   });
 });

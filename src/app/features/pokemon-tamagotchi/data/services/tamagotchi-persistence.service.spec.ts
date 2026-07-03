@@ -21,45 +21,49 @@ describe('TamagotchiPersistenceService', () => {
     service = TestBed.inject(TamagotchiPersistenceService);
   });
 
-  it('should round-trip tamagotchi state through localStorage', () => {
-    const state = {
-      ...createInitialTamagotchiState(),
-      initialized: true,
-      status: {
-        ...createInitialTamagotchiState().status,
-        hunger: 42,
-        mood: 55,
-      },
-    };
+  describe('Happy Path', () => {
+    it('должен выполнять round-trip состояния тамагочи через localStorage', () => {
+      const state = {
+        ...createInitialTamagotchiState(),
+        initialized: true,
+        status: {
+          ...createInitialTamagotchiState().status,
+          hunger: 42,
+          mood: 55,
+        },
+      };
 
-    service.save(state);
-    const loaded = service.load();
+      service.save(state);
+      const loaded = service.load();
 
-    expect(loaded).not.toBeNull();
-    expect(loaded?.state.status.hunger).toBe(42);
-    expect(loaded?.state.status.mood).toBe(55);
-    expect(loaded?.recoveredFromBackup).toBe(false);
+      expect(loaded).not.toBeNull();
+      expect(loaded?.state.status.hunger).toBe(42);
+      expect(loaded?.state.status.mood).toBe(55);
+      expect(loaded?.recoveredFromBackup).toBe(false);
+    });
   });
 
-  it('should recover from backup when primary storage is corrupted', () => {
-    const state = createInitialTamagotchiState();
-    const payload = JSON.stringify({ state, version: TAMAGOTCHI_STATE_VERSION });
+  describe('Edge Cases', () => {
+    it('должен восстанавливаться из backup при повреждённом основном хранилище', () => {
+      const state = createInitialTamagotchiState();
+      const payload = JSON.stringify({ state, version: TAMAGOTCHI_STATE_VERSION });
 
-    storageMock.setItem(TAMAGOTCHI_BACKUP_KEY, payload);
-    storageMock.setItem(TAMAGOTCHI_STORAGE_KEY, '{ invalid json');
+      storageMock.setItem(TAMAGOTCHI_BACKUP_KEY, payload);
+      storageMock.setItem(TAMAGOTCHI_STORAGE_KEY, '{ invalid json');
 
-    const loaded = service.load();
+      const loaded = service.load();
 
-    expect(loaded?.recoveredFromBackup).toBe(true);
-    expect(loaded?.state.status.health).toBe(state.status.health);
-  });
+      expect(loaded?.recoveredFromBackup).toBe(true);
+      expect(loaded?.state.status.health).toBe(state.status.health);
+    });
 
-  it('should clear persisted state', () => {
-    service.save(createInitialTamagotchiState());
-    service.clear();
+    it('должен очищать сохранённое состояние', () => {
+      service.save(createInitialTamagotchiState());
+      service.clear();
 
-    expect(storageMock.getItem(TAMAGOTCHI_STORAGE_KEY)).toBeNull();
-    expect(storageMock.getItem(TAMAGOTCHI_BACKUP_KEY)).toBeNull();
-    expect(service.load()).toBeNull();
+      expect(storageMock.getItem(TAMAGOTCHI_STORAGE_KEY)).toBeNull();
+      expect(storageMock.getItem(TAMAGOTCHI_BACKUP_KEY)).toBeNull();
+      expect(service.load()).toBeNull();
+    });
   });
 });
