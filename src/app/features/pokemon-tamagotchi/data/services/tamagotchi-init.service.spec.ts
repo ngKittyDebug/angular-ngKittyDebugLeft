@@ -96,6 +96,48 @@ describe('TamagotchiInitService', () => {
       expect(loadFromPersistence).toHaveBeenCalledTimes(1);
       expect(selectPokemon).not.toHaveBeenCalled();
     });
+
+    it('должен выставлять noSelection, когда нет сохранённого покемона и выбор в профиле пуст', () => {
+      const validateSelectedPokemon = vi.fn(() => of({ error: 'noSelection', valid: false }));
+      const loadFromPersistence = vi.fn();
+      const selectPokemon = vi.fn();
+      const setError = vi.fn();
+      const loadPokemonByName = vi.fn();
+
+      TestBed.configureTestingModule({
+        providers: [
+          TamagotchiInitService,
+          {
+            provide: TamagotchiStore,
+            useValue: {
+              hasPokemon: signal(false),
+              initialized: signal(true),
+              loadFromPersistence,
+              selectPokemon,
+              setError,
+            },
+          },
+          {
+            provide: PokemonProfileIntegrationService,
+            useValue: {
+              saveSelectedPokemon: vi.fn(),
+              validateSelectedPokemon,
+              loadPokemonByName,
+            },
+          },
+        ],
+      });
+
+      const service = TestBed.inject(TamagotchiInitService);
+
+      service.bootstrapFromProfile().subscribe();
+
+      expect(validateSelectedPokemon).toHaveBeenCalledTimes(1);
+      expect(loadFromPersistence).toHaveBeenCalledTimes(1);
+      expect(setError).toHaveBeenNthCalledWith(1, 'noSelection');
+      expect(selectPokemon).not.toHaveBeenCalled();
+      expect(loadPokemonByName).not.toHaveBeenCalled();
+    });
   });
 });
 

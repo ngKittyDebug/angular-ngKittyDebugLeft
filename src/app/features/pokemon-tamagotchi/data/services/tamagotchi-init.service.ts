@@ -1,7 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { catchError, defer, filter, map, type Observable, of, switchMap, take } from 'rxjs';
-import { environment } from '@environments/environment';
+import { defer, filter, map, type Observable, of, switchMap, take } from 'rxjs';
 import { TamagotchiStore } from '../store/tamagotchi.store';
 import {
   PokemonProfileIntegrationService,
@@ -51,23 +50,6 @@ export class TamagotchiInitService {
       return of({ valid: true });
     }
 
-    return this.profileIntegration.validateSelectedPokemon().pipe(
-      switchMap((validation: PokemonSelectionValidation) => {
-        if (validation.valid && validation.pokemon) {
-          return of(validation);
-        }
-
-        const previewPokemon = environment.tamagotchiPreviewPokemon;
-
-        if (previewPokemon && validation.error === 'noSelection') {
-          return this.profileIntegration.loadPokemonByName(previewPokemon).pipe(
-            map((pokemon) => ({ pokemon, valid: true as const })),
-            catchError(() => of(validation)),
-          );
-        }
-
-        return of(validation);
-      }),
-    );
+    return this.profileIntegration.validateSelectedPokemon();
   }
 }
