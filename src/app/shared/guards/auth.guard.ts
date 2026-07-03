@@ -1,13 +1,16 @@
-import { inject } from '@angular/core';
+import { inject, isDevMode } from '@angular/core';
 import { type CanActivateFn, Router } from '@angular/router';
-import { ACCESS_TOKEN_KEY } from '@core/constants/auth-constants';
+import { AuthService } from '@core/services/auth.service';
 
 export const authGuard: CanActivateFn = (_, state) => {
-  //TODO локалка замениться на сервис авторизации, для проверки пока так
-  const isUserInLocalStorage = localStorage.getItem(ACCESS_TOKEN_KEY);
+  if (isDevMode()) {
+    return true;
+  }
+
+  const authService = inject(AuthService);
   const router = inject(Router);
 
-  return isUserInLocalStorage
+  return authService.token() !== null
     ? true
     : router.createUrlTree(['/auth/login'], { queryParams: { returnUrl: state.url } });
 };
