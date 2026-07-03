@@ -1,10 +1,8 @@
-import { of } from 'rxjs';
 import { TestBed } from '@angular/core/testing';
 import { describe, expect, it, vi } from 'vitest';
 import { GAME_BALANCE } from '../constants/game-balance.constants';
 import { EVOLUTION_REQUIREMENTS } from '../constants/evolution-criteria.constants';
 import { TAMAGOTCHI_SYSTEM_ERRORS } from '../constants/system-errors.constants';
-import { TamagotchiCloudSyncService } from '../services/tamagotchi-cloud-sync.service';
 import { TamagotchiErrorRecoveryService } from '../services/tamagotchi-error-recovery.service';
 import { TamagotchiPersistenceService } from '../services/tamagotchi-persistence.service';
 import { TEST_POKEMON } from '../fixtures/tamagotchi-arbitraries';
@@ -41,12 +39,6 @@ function createStoreTestBed(): InstanceType<typeof TamagotchiStore> {
         provide: TamagotchiErrorRecoveryService,
         useValue: {
           logError: vi.fn(),
-        },
-      },
-      {
-        provide: TamagotchiCloudSyncService,
-        useValue: {
-          sync: vi.fn(() => of(undefined)),
         },
       },
     ],

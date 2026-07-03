@@ -1,5 +1,5 @@
 export interface AchievementRequirementModel {
-  type: 'totalActions' | 'consecutiveDays' | 'statusMaintained' | 'miniGameScore';
+  type: 'totalActions' | 'consecutiveDays' | 'statusMaintained';
   target: number;
   current: number;
 }

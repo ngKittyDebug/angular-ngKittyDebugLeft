@@ -19,7 +19,6 @@ const TRANSLATIONS: Record<string, string> = {
 describe('TamagotchiNotificationService', () => {
   let service: TamagotchiNotificationService;
   let addNotification: ReturnType<typeof vi.fn>;
-  let dismissNotification: ReturnType<typeof vi.fn>;
   let appNotifications: {
     showErrorNotification: ReturnType<typeof vi.fn>;
     showPositiveNotification: ReturnType<typeof vi.fn>;
@@ -28,7 +27,6 @@ describe('TamagotchiNotificationService', () => {
 
   beforeEach(() => {
     addNotification = vi.fn();
-    dismissNotification = vi.fn();
     appNotifications = {
       showErrorNotification: vi.fn(),
       showPositiveNotification: vi.fn(),
@@ -42,7 +40,6 @@ describe('TamagotchiNotificationService', () => {
           provide: TamagotchiStore,
           useValue: {
             addNotification,
-            dismissNotification,
           },
         },
         {
@@ -115,13 +112,6 @@ describe('TamagotchiNotificationService', () => {
       'Pikachu',
       'Ready to evolve!',
     );
-  });
-
-  it('dismisses notification via store', () => {
-    service.dismiss('notification-1');
-
-    expect(dismissNotification).toHaveBeenCalledTimes(1);
-    expect(dismissNotification).toHaveBeenCalledWith('notification-1');
   });
 
   it('shows positive toast for achievements', () => {

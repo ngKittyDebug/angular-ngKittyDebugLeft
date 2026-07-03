@@ -117,13 +117,6 @@ describe('PokemonTamagotchiPageComponent', () => {
                   evolving: 'Evolving…',
                   evolvingAria: '{{name}} is evolving',
                 },
-                miniGame: {
-                  finish: 'Finish',
-                  instruction: 'Tap targets',
-                  score: 'Score {{score}}',
-                  timeLeft: '{{seconds}}s',
-                  title: 'Training',
-                },
                 notificationList: {
                   dismiss: 'Dismiss',
                   empty: 'No notifications',

@@ -39,14 +39,4 @@ export class StatusIndicatorComponent {
 
     return getStatusIndicatorLevel(this.displayValue(), bounds.warning, bounds.critical);
   });
-
-  protected readonly percentage = computed(() => {
-    const max = this.maxValue();
-
-    if (max <= 0) {
-      return 0;
-    }
-
-    return Math.min(100, Math.max(0, (this.displayValue() / max) * 100));
-  });
 }

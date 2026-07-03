@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { TIMER_CONFIG } from '../constants/timer.constants';
 import { applyRoutineBonusIfEligible } from '../helpers/routine.helper';
 import { calculateSleepRestorationBonus } from '../helpers/sleep-restoration.helper';
-import type { StatusDecayContext, StatusDecayTickResult } from './status-decay.service';
+import type { StatusDecayContext } from './status-decay.service';
 import { StatusDecayService } from './status-decay.service';
 import { applyStatusDelta } from '../helpers/status-bounds.helper';
 import type { StatusAlertType } from '../models/notification.model';
@@ -135,19 +135,6 @@ export class TimerService {
 
   public stopTimer(timerHandle: TimerHandle): void {
     timerHandle.cleanup();
-  }
-
-  public createDecayContextFromTimer(context: TamagotchiTimerContext): StatusDecayContext {
-    return {
-      isSleeping: context.isSleeping,
-      lastActionTime: context.lastActionTime,
-      lastDecayTime: context.lastDecayTime,
-      status: context.status,
-    };
-  }
-
-  public processDecayOnly(context: TamagotchiTimerContext): StatusDecayTickResult {
-    return this.statusDecayService.processDecayTick(this.createDecayContextFromTimer(context));
   }
 
   private shouldEmitTick(result: TimerTickResult): boolean {

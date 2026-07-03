@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import { TIMER_CONFIG } from '../constants/timer.constants';
 import {
   applyDecayToStatus,
   calculateDecay,
@@ -8,10 +7,6 @@ import {
 } from '../helpers/status-decay.helper';
 import type { StatusAlertType } from '../models/notification.model';
 import type { PokemonStatusModel, StatusDecayModel } from '../models/pokemon-status.model';
-
-export interface DecayTimerHandle {
-  intervalId: ReturnType<typeof setInterval>;
-}
 
 export interface StatusDecayContext {
   isSleeping: boolean;
@@ -26,8 +21,6 @@ export interface StatusDecayTickResult {
   decay: StatusDecayModel;
   nextStatus: PokemonStatusModel;
 }
-
-const DEFAULT_DECAY_INTERVAL_MS = TIMER_CONFIG.DECAY_INTERVAL_MS;
 
 @Injectable({ providedIn: 'root' })
 export class StatusDecayService {
@@ -63,30 +56,5 @@ export class StatusDecayService {
     after: PokemonStatusModel,
   ): StatusAlertType[] {
     return detectStatusAlerts(before, after);
-  }
-
-  public startDecayTimer(
-    contextProvider: () => StatusDecayContext,
-    updateCallback: (result: StatusDecayTickResult) => void,
-    intervalMs: number = DEFAULT_DECAY_INTERVAL_MS,
-  ): DecayTimerHandle {
-    const intervalId = setInterval(() => {
-      const result = this.processDecayTick(contextProvider());
-
-      if (
-        result.decay.energy !== 0 ||
-        result.decay.hunger !== 0 ||
-        result.decay.hydration !== 0 ||
-        result.decay.mood !== 0
-      ) {
-        updateCallback(result);
-      }
-    }, intervalMs);
-
-    return { intervalId };
-  }
-
-  public stopDecayTimer(timerHandle: DecayTimerHandle): void {
-    clearInterval(timerHandle.intervalId);
   }
 }

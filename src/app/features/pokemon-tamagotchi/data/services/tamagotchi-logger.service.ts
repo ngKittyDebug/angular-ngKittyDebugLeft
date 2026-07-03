@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { environment } from '@environments/environment';
 
 export type TamagotchiLogLevel = 'debug' | 'error' | 'info' | 'warn';
 
@@ -68,10 +69,12 @@ export class TamagotchiLoggerService {
 
     const prefix = `[Tamagotchi:${context}]`;
 
-    if (level === 'error') {
-      console.error(prefix, message, metadata ?? '');
-    } else if (level === 'warn') {
-      console.warn(prefix, message, metadata ?? '');
+    if (!environment.production) {
+      if (level === 'error') {
+        console.error(prefix, message, metadata ?? '');
+      } else if (level === 'warn') {
+        console.warn(prefix, message, metadata ?? '');
+      }
     }
   }
 }

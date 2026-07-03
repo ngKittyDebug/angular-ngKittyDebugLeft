@@ -49,13 +49,6 @@
     "disabledCooldown": "Перезарядка",
     "disabledTraining": "Идёт тренировка"
   },
-  "miniGame": {
-    "title": "Тренировка реакции",
-    "instruction": "Нажимай на цели, пока они не исчезли!",
-    "score": "Счёт: {{score}}",
-    "timeLeft": "{{seconds}}с",
-    "finish": "Завершить"
-  },
   "notifications": {
     "dismiss": "Закрыть уведомление",
     "empty": "Уведомлений пока нет",

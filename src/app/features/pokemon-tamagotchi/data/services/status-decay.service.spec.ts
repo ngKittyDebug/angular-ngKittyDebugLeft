@@ -1,8 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { vi } from 'vitest';
 import { GAME_BALANCE } from '../constants/game-balance.constants';
 import { STATUS_THRESHOLDS } from '../constants/status-thresholds.constants';
-import { decayAmountForElapsed } from '../helpers/status-decay.helper';
 import { createInitialPokemonStatus } from '../store/tamagotchi-initial';
 import { StatusDecayService } from './status-decay.service';
 
@@ -72,45 +70,6 @@ describe('StatusDecayService', () => {
       };
 
       expect(service.detectCriticalAlerts(before, after)).toContain('hydrationCritical');
-    });
-  });
-
-  describe('startDecayTimer', () => {
-    it('should invoke callback on interval with decay result', () => {
-      const now = 1_700_000_000_000;
-      const context = {
-        isSleeping: false,
-        lastActionTime: now - ONE_HOUR_MS,
-        lastDecayTime: null,
-        now,
-        status: createInitialPokemonStatus(),
-      };
-      const results: ReturnType<StatusDecayService['processDecayTick']>[] = [];
-      const intervalCallbacks: (() => void)[] = [];
-
-      vi.spyOn(globalThis, 'setInterval').mockImplementation((callback: TimerHandler) => {
-        intervalCallbacks.push(callback as () => void);
-
-        return 1 as ReturnType<typeof setInterval>;
-      });
-      vi.spyOn(globalThis, 'clearInterval').mockImplementation(() => undefined);
-
-      const handle = service.startDecayTimer(
-        () => context,
-        (result) => results.push(result),
-        1_000,
-      );
-
-      intervalCallbacks[0]();
-
-      expect(results).toHaveLength(1);
-      expect(results[0].decay.hunger).toBeCloseTo(
-        decayAmountForElapsed(GAME_BALANCE.STATUS_DECAY.HUNGER, ONE_HOUR_MS),
-      );
-
-      service.stopDecayTimer(handle);
-
-      vi.restoreAllMocks();
     });
   });
 });

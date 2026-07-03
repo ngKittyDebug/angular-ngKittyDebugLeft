@@ -1,11 +1,9 @@
 import { computed, inject } from '@angular/core';
 import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
-import { catchError, of } from 'rxjs';
 import { TAMAGOTCHI_SYSTEM_ERRORS } from '../constants/system-errors.constants';
 import { calculateBondLevel } from '../helpers/gesture.helper';
 import type { GarbageCollectLimits } from '../helpers/memory-management.helper';
 import { sortNotificationsByPriority } from '../helpers/notification-factory.helper';
-import { TamagotchiCloudSyncService } from '../services/tamagotchi-cloud-sync.service';
 import { TamagotchiErrorRecoveryService } from '../services/tamagotchi-error-recovery.service';
 import { TamagotchiPersistenceService } from '../services/tamagotchi-persistence.service';
 import type { InteractionEventModel } from '../models/interaction.model';
@@ -99,7 +97,6 @@ export const TamagotchiStore = signalStore(
   withMethods(
     (
       store,
-      cloudSync = inject(TamagotchiCloudSyncService),
       errorRecovery = inject(TamagotchiErrorRecoveryService),
       persistence = inject(TamagotchiPersistenceService),
     ) => {
@@ -116,14 +113,7 @@ export const TamagotchiStore = signalStore(
           persistence.save(state);
           const savedAt = Date.now();
 
-          cloudSync
-            .sync(state)
-            .pipe(catchError(() => of(undefined)))
-            .subscribe({
-              next: () => {
-                patchState(store, (current) => saveStateSuccessState(current, savedAt));
-              },
-            });
+          patchState(store, (current) => saveStateSuccessState(current, savedAt));
         } catch (error) {
           errorRecovery.logError('saveState', error);
           patchState(store, (current) =>

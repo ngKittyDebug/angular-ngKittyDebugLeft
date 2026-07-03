@@ -49,13 +49,6 @@
     "disabledCooldown": "On cooldown",
     "disabledTraining": "Training in progress"
   },
-  "miniGame": {
-    "title": "Reflex training",
-    "instruction": "Tap the targets before they fade!",
-    "score": "Score: {{score}}",
-    "timeLeft": "{{seconds}}s",
-    "finish": "Finish"
-  },
   "notifications": {
     "dismiss": "Dismiss notification",
     "empty": "No notifications yet",

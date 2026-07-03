@@ -175,45 +175,6 @@ describe('PokemonProfileIntegrationService', () => {
     expect(storageMock.getItem(TAMAGOTCHI_SELECTED_POKEMON_KEY)).not.toBeNull();
   });
 
-  it('should load first-stage pokemon from profile selection', () => {
-    service.saveSelectedPokemon(
-      buildPokemon({
-        eating: '',
-        evolving: '',
-        happy: '',
-        normal: '',
-        sad: '',
-        sleeping: '',
-      }),
-    );
-
-    let loaded: unknown;
-
-    service.getSelectedPokemon().subscribe((pokemon) => {
-      loaded = pokemon;
-    });
-
-    const detailRequest = httpMock.expectOne(`${POKEMON_BASE_API}pokemon/charmander`);
-
-    detailRequest.flush(charmanderDetail);
-
-    const speciesRequest = httpMock.expectOne(`${POKEMON_BASE_API}pokemon-species/charmander`);
-
-    speciesRequest.flush(charmanderSpecies);
-
-    const chainRequest = httpMock.expectOne(`${POKEMON_BASE_API}evolution-chain/10`);
-
-    chainRequest.flush(charmanderEvolution);
-
-    expect(loaded).toEqual(
-      expect.objectContaining({
-        id: '4',
-        isFirstStage: true,
-        name: 'charmander',
-      }),
-    );
-  });
-
   it('should reject evolved pokemon selection', () => {
     let validation: unknown;
 

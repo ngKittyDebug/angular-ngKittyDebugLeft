@@ -107,7 +107,6 @@ export class TamagotchiPersistenceService {
   private migrateState(state: TamagotchiStateModel, version: number): TamagotchiStateModel {
     const legacy = state as TamagotchiStateModel & {
       achievements?: TamagotchiStateModel['achievementList'];
-      activeMiniGame?: unknown;
       notifications?: TamagotchiStateModel['notificationList'];
     };
     const migrated: TamagotchiStateModel = {
@@ -128,8 +127,6 @@ export class TamagotchiPersistenceService {
       trainingStartedAt:
         version >= TAMAGOTCHI_STATE_VERSION ? (state.trainingStartedAt ?? null) : null,
     };
-
-    void legacy.activeMiniGame;
 
     return migrated;
   }

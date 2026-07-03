@@ -51,10 +51,6 @@ export class TamagotchiNotificationService {
     }
   }
 
-  public dismiss(id: string): void {
-    this.store.dismissNotification(id);
-  }
-
   public notifyEvolutionReady(pokemonName: string, timestamp?: number): void {
     this.publish(notificationFromEvolutionReady(pokemonName, timestamp));
   }
