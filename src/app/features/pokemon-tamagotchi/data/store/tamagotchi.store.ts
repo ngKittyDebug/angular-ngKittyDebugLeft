@@ -237,6 +237,10 @@ export const TamagotchiStore = signalStore(
           mutateAndSave((state) => applyStatusDecayState(state, decay));
         },
 
+        updateDailyRoutine(dailyRoutine: TamagotchiStateModel['dailyRoutine']): void {
+          mutateAndSave((state) => ({ ...state, dailyRoutine }));
+        },
+
         checkEvolution(): void {
           mutateAndSave(checkEvolutionState);
         },

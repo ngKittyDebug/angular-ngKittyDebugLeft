@@ -3,6 +3,10 @@ import type { ActionType } from '../models/tamagotchi-state.model';
 import type { PokemonStatusModel, StatusUpdateModel } from '../models/pokemon-status.model';
 import { applyStatusDelta } from './status-bounds.helper';
 
+export function computeLevelFromExperience(experience: number): number {
+  return 1 + Math.floor(experience / GAME_BALANCE.EXPERIENCE_PER_LEVEL);
+}
+
 export function calculateStatusUpdate(
   currentStatus: PokemonStatusModel,
   action: ActionType,
@@ -85,6 +89,7 @@ export function applyStatusUpdate(
 
   if (statusUpdate.experience !== undefined) {
     next.experience = Math.max(0, next.experience + statusUpdate.experience);
+    next.level = computeLevelFromExperience(next.experience);
   }
 
   if (statusUpdate.level !== undefined) {

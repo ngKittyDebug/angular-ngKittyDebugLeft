@@ -3,6 +3,11 @@ import type { DailyRoutine } from '../models/tamagotchi-state.model';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
+export interface RoutineBonusResult {
+  bonus: number;
+  dailyRoutine: DailyRoutine;
+}
+
 export function toActivityDateKey(timestamp: number): string {
   return new Date(timestamp).toISOString().slice(0, 10);
 }
@@ -48,6 +53,7 @@ export function recordRoutineActivity(
 
   return {
     activityCounts,
+    bonusAppliedDate: null,
     bonusEligible: isRoutineBonusEligible(consecutiveDays, 1),
     consecutiveDays,
     lastActivityDate: today,
@@ -59,6 +65,25 @@ export function isRoutineBonusEligible(consecutiveDays: number, totalToday: numb
     consecutiveDays >= TIMER_CONFIG.ROUTINE.CONSECUTIVE_DAYS_FOR_BONUS &&
     totalToday >= TIMER_CONFIG.ROUTINE.MIN_DAILY_ACTIONS
   );
+}
+
+export function applyRoutineBonusIfEligible(
+  routine: DailyRoutine,
+  now: number = Date.now(),
+): RoutineBonusResult {
+  const today = toActivityDateKey(now);
+
+  if (!routine.bonusEligible || routine.bonusAppliedDate === today) {
+    return { bonus: 0, dailyRoutine: routine };
+  }
+
+  return {
+    bonus: TIMER_CONFIG.ROUTINE.BONUS_MOOD,
+    dailyRoutine: {
+      ...routine,
+      bonusAppliedDate: today,
+    },
+  };
 }
 
 export function routineBonusMood(routine: DailyRoutine): number {

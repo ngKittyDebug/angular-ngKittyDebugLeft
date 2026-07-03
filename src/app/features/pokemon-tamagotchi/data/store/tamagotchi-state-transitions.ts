@@ -1,9 +1,16 @@
 import { GAME_BALANCE } from '../constants/game-balance.constants';
 import { MEMORY_LIMITS } from '../constants/performance-mode.constants';
 import {
+  buildEvolutionProgressValues,
+  evaluateEvolutionRequirements,
+} from '../helpers/evolution-checker.helper';
+import {
   type GarbageCollectLimits,
   garbageCollectTamagotchiState,
 } from '../helpers/memory-management.helper';
+import { recordRoutineActivity } from '../helpers/routine.helper';
+import { applyStatusUpdate, computeLevelFromExperience } from '../helpers/status-calculator.helper';
+import { applyDecayToStatus } from '../helpers/status-decay.helper';
 import { applyStatusDelta } from '../helpers/status-bounds.helper';
 import type { EvolutionProgressModel } from '../models/evolution.model';
 import type { InteractionEventModel } from '../models/interaction.model';
@@ -50,23 +57,14 @@ function updateStatusFields(
 }
 
 export function computeEvolutionProgress(state: TamagotchiStateModel): EvolutionProgressModel {
-  const careScore = Math.round(
-    (state.status.health + state.status.hunger + state.status.mood + state.status.hydration) / 4,
+  const currentProgress = buildEvolutionProgressValues(
+    state.status,
+    state.achievementList,
+    state.dailyRoutine.consecutiveDays,
   );
-  const trainingScore = state.achievementList
-    .filter((achievement) => achievement.category === 'training' && achievement.unlocked)
-    .reduce((total, achievement) => total + achievement.reward.experience, 0);
-
-  const currentProgress: Record<string, number> = {
-    achievement: trainingScore,
-    care: careScore,
-    experience: state.status.experience,
-    level: state.status.level,
-    time: state.dailyRoutine.consecutiveDays,
-  };
-
-  const isReady = state.evolutionProgress.requirements.every(
-    (requirement) => (currentProgress[requirement.type] ?? 0) >= requirement.value,
+  const { isReady } = evaluateEvolutionRequirements(
+    state.evolutionProgress.requirements,
+    currentProgress,
   );
 
   return {
@@ -113,17 +111,20 @@ export function feedPokemonState(state: TamagotchiStateModel, now: number): Tama
     whenAwake(current, (awake) => {
       const { hungerIncrease, moodIncrease, energyCost } = GAME_BALANCE.ACTION_EFFECTS.FEED;
 
-      return touchAction(
-        awake,
-        {
-          ...awake.status,
-          energy: applyStatusDelta(awake.status.energy, -energyCost),
-          hunger: applyStatusDelta(awake.status.hunger, hungerIncrease),
-          lastFeedTime: now,
-          mood: applyStatusDelta(awake.status.mood, moodIncrease),
-        },
-        now,
-      );
+      return {
+        ...touchAction(
+          awake,
+          {
+            ...awake.status,
+            energy: applyStatusDelta(awake.status.energy, -energyCost),
+            hunger: applyStatusDelta(awake.status.hunger, hungerIncrease),
+            lastFeedTime: now,
+            mood: applyStatusDelta(awake.status.mood, moodIncrease),
+          },
+          now,
+        ),
+        dailyRoutine: recordRoutineActivity(awake.dailyRoutine, 'feed', now),
+      };
     }),
   );
 }
@@ -132,16 +133,19 @@ export function waterPokemonState(state: TamagotchiStateModel, now: number): Tam
   return withPokemon(state, (current) => {
     const { hydrationIncrease, energyCost } = GAME_BALANCE.ACTION_EFFECTS.WATER;
 
-    return touchAction(
-      current,
-      {
-        ...current.status,
-        energy: applyStatusDelta(current.status.energy, -energyCost),
-        hydration: applyStatusDelta(current.status.hydration, hydrationIncrease),
-        lastHydrationTime: now,
-      },
-      now,
-    );
+    return {
+      ...touchAction(
+        current,
+        {
+          ...current.status,
+          energy: applyStatusDelta(current.status.energy, -energyCost),
+          hydration: applyStatusDelta(current.status.hydration, hydrationIncrease),
+          lastHydrationTime: now,
+        },
+        now,
+      ),
+      dailyRoutine: recordRoutineActivity(current.dailyRoutine, 'water', now),
+    };
   });
 }
 
@@ -152,16 +156,19 @@ export function careForPokemonState(
   return withPokemon(state, (current) => {
     const { healthIncrease, moodIncrease, energyCost } = GAME_BALANCE.ACTION_EFFECTS.CARE;
 
-    return touchAction(
-      current,
-      {
-        ...current.status,
-        energy: applyStatusDelta(current.status.energy, -energyCost),
-        health: applyStatusDelta(current.status.health, healthIncrease),
-        mood: applyStatusDelta(current.status.mood, moodIncrease),
-      },
-      now,
-    );
+    return {
+      ...touchAction(
+        current,
+        {
+          ...current.status,
+          energy: applyStatusDelta(current.status.energy, -energyCost),
+          health: applyStatusDelta(current.status.health, healthIncrease),
+          mood: applyStatusDelta(current.status.mood, moodIncrease),
+        },
+        now,
+      ),
+      dailyRoutine: recordRoutineActivity(current.dailyRoutine, 'care', now),
+    };
   });
 }
 
@@ -173,16 +180,19 @@ export function playWithPokemonState(
     whenAwake(current, (awake) => {
       const { moodIncrease, energyCost } = GAME_BALANCE.ACTION_EFFECTS.PLAY;
 
-      return touchAction(
-        awake,
-        {
-          ...awake.status,
-          energy: applyStatusDelta(awake.status.energy, -energyCost),
-          lastPlayTime: now,
-          mood: applyStatusDelta(awake.status.mood, moodIncrease),
-        },
-        now,
-      );
+      return {
+        ...touchAction(
+          awake,
+          {
+            ...awake.status,
+            energy: applyStatusDelta(awake.status.energy, -energyCost),
+            lastPlayTime: now,
+            mood: applyStatusDelta(awake.status.mood, moodIncrease),
+          },
+          now,
+        ),
+        dailyRoutine: recordRoutineActivity(awake.dailyRoutine, 'play', now),
+      };
     }),
   );
 }
@@ -227,15 +237,19 @@ export function completeTrainingState(
         return awake;
       }
 
+      const experience = awake.status.experience + experienceGain;
+
       return {
         ...touchAction(
           awake,
           {
             ...awake.status,
-            experience: awake.status.experience + experienceGain,
+            experience,
+            level: computeLevelFromExperience(experience),
           },
           now,
         ),
+        dailyRoutine: recordRoutineActivity(awake.dailyRoutine, 'train', now),
         trainingExperienceReward: null,
         trainingStartedAt: null,
       };
@@ -294,55 +308,20 @@ export function updateStatusState(
   state: TamagotchiStateModel,
   statusUpdate: StatusUpdateModel,
 ): TamagotchiStateModel {
-  const status = { ...state.status };
-
-  if (statusUpdate.health !== undefined) {
-    status.health = applyStatusDelta(status.health, statusUpdate.health);
-  }
-
-  if (statusUpdate.hunger !== undefined) {
-    status.hunger = applyStatusDelta(status.hunger, statusUpdate.hunger);
-  }
-
-  if (statusUpdate.mood !== undefined) {
-    status.mood = applyStatusDelta(status.mood, statusUpdate.mood);
-  }
-
-  if (statusUpdate.energy !== undefined) {
-    status.energy = applyStatusDelta(status.energy, statusUpdate.energy);
-  }
-
-  if (statusUpdate.hydration !== undefined) {
-    status.hydration = applyStatusDelta(status.hydration, statusUpdate.hydration);
-  }
-
-  if (statusUpdate.experience !== undefined) {
-    status.experience = Math.max(0, Math.round(status.experience + statusUpdate.experience));
-  }
-
-  if (statusUpdate.level !== undefined) {
-    status.level = Math.max(1, Math.round(status.level + statusUpdate.level));
-  }
-
-  return { ...state, status };
+  return {
+    ...state,
+    status: applyStatusUpdate(state.status, statusUpdate),
+  };
 }
 
 export function applyStatusDecayState(
   state: TamagotchiStateModel,
   decay: StatusDecayModel,
 ): TamagotchiStateModel {
-  const status = {
-    ...state.status,
-    energy: applyStatusDelta(state.status.energy, -decay.energy),
-    hunger: applyStatusDelta(state.status.hunger, -decay.hunger),
-    hydration: applyStatusDelta(state.status.hydration, -decay.hydration),
-    mood: applyStatusDelta(state.status.mood, -decay.mood),
-  };
-
   return {
     ...state,
     lastDecayTime: decay.timestamp,
-    status,
+    status: applyDecayToStatus(state.status, decay),
   };
 }
 

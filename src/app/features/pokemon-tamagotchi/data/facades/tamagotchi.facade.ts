@@ -299,6 +299,7 @@ export class TamagotchiFacade {
 
     if (result.routineBonusApplied > 0) {
       this.store.updateStatus({ mood: result.routineBonusApplied });
+      this.store.updateDailyRoutine(result.dailyRoutine);
     }
 
     this.notificationService.processStatusAlerts({

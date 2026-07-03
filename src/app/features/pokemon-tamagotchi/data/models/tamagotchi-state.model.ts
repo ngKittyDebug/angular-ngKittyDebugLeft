@@ -17,10 +17,11 @@ export interface ActionCooldowns {
 }
 
 export interface DailyRoutine {
+  activityCounts: Record<string, number>;
+  bonusAppliedDate: string | null;
+  bonusEligible: boolean;
   consecutiveDays: number;
   lastActivityDate: string | null;
-  activityCounts: Record<string, number>;
-  bonusEligible: boolean;
 }
 
 export interface ValidationResult {

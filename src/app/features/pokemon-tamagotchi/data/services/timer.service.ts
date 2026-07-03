@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { TIMER_CONFIG } from '../constants/timer.constants';
-import { routineBonusMood } from '../helpers/routine.helper';
+import { applyRoutineBonusIfEligible } from '../helpers/routine.helper';
 import { calculateSleepRestorationBonus } from '../helpers/sleep-restoration.helper';
 import type { StatusDecayContext, StatusDecayTickResult } from './status-decay.service';
 import { StatusDecayService } from './status-decay.service';
@@ -38,7 +38,10 @@ export class TimerService {
 
   public processTick(context: TamagotchiTimerContext, now: number = Date.now()): TimerTickResult {
     const decayResult = this.statusDecayService.processDecayTick({ ...context, now });
-    const routineBonus = routineBonusMood(context.dailyRoutine);
+    const { bonus: routineBonus, dailyRoutine } = applyRoutineBonusIfEligible(
+      context.dailyRoutine,
+      now,
+    );
     const nextStatus =
       routineBonus > 0
         ? {
@@ -49,7 +52,7 @@ export class TimerService {
 
     return {
       alerts: decayResult.alerts,
-      dailyRoutine: context.dailyRoutine,
+      dailyRoutine,
       decay: decayResult.decay,
       nextStatus,
       routineBonusApplied: routineBonus,

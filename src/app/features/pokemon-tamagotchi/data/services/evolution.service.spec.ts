@@ -3,7 +3,6 @@ import { GAME_BALANCE } from '../constants/game-balance.constants';
 import { EVOLUTION_REQUIREMENTS } from '../constants/evolution-criteria.constants';
 import { createInitialDailyRoutine } from '../store/tamagotchi-initial';
 import { TEST_POKEMON } from '../fixtures/tamagotchi-arbitraries';
-import type { AchievementModel } from '../models/achievement.model';
 import type { PokemonModel } from '../models/pokemon.model';
 import type { PokemonStatusModel } from '../models/pokemon-status.model';
 import { EvolutionService } from './evolution.service';
@@ -38,19 +37,6 @@ describe('EvolutionService', () => {
     mood: 90,
   };
 
-  const trainingAchievements: AchievementModel[] = [
-    {
-      category: 'training',
-      description: 'Win a training mini-game',
-      id: 'train-1',
-      name: 'First training',
-      requirements: [],
-      reward: { experience: GAME_BALANCE.EVOLUTION.MIN_TRAINING_SCORE, unlockables: [] },
-      unlocked: true,
-      unlockedAt: Date.now(),
-    },
-  ];
-
   beforeEach(() => {
     TestBed.configureTestingModule({});
     service = TestBed.inject(EvolutionService);
@@ -61,7 +47,7 @@ describe('EvolutionService', () => {
       const result = service.checkEvolutionCriteria(
         basePokemon,
         { ...readyStatus, level: 1 },
-        trainingAchievements,
+        [],
         createInitialDailyRoutine(),
       );
 
@@ -73,7 +59,7 @@ describe('EvolutionService', () => {
       const result = service.checkEvolutionCriteria(
         basePokemon,
         readyStatus,
-        trainingAchievements,
+        [],
         createInitialDailyRoutine(),
       );
 
@@ -91,7 +77,7 @@ describe('EvolutionService', () => {
       const ratio = service.getRequirementCompletionRatio(
         EVOLUTION_REQUIREMENTS[0],
         { ...readyStatus, level: 5 },
-        trainingAchievements,
+        [],
         createInitialDailyRoutine(),
       );
 

@@ -37,10 +37,11 @@ export function createInitialEvolutionProgress(): EvolutionProgressModel {
 
 export function createInitialDailyRoutine(): DailyRoutine {
   return {
+    activityCounts: {},
+    bonusAppliedDate: null,
+    bonusEligible: false,
     consecutiveDays: 0,
     lastActivityDate: null,
-    activityCounts: {},
-    bonusEligible: false,
   };
 }
 

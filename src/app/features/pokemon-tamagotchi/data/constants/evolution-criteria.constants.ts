@@ -23,9 +23,4 @@ export const EVOLUTION_REQUIREMENTS: EvolutionRequirementModel[] = [
     value: GAME_BALANCE.EVOLUTION.MIN_CARE_SCORE,
     description: 'Maintain high care score',
   },
-  {
-    type: 'achievement',
-    value: GAME_BALANCE.EVOLUTION.MIN_TRAINING_SCORE,
-    description: 'Complete training milestones',
-  },
 ];

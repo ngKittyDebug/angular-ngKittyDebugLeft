@@ -2,7 +2,10 @@ import { inject, Injectable } from '@angular/core';
 import { normalizePokemonStatus } from '../helpers/status-bounds.helper';
 import { ensurePokemonSpriteVariations } from '../helpers/sprite-variation.helper';
 import type { TamagotchiStateModel } from '../models/tamagotchi-state.model';
-import { createInitialTamagotchiState } from '../store/tamagotchi-initial';
+import {
+  createInitialDailyRoutine,
+  createInitialTamagotchiState,
+} from '../store/tamagotchi-initial';
 import { TamagotchiStorageService } from './tamagotchi-storage.service';
 
 export const TAMAGOTCHI_STORAGE_KEY = 'pokemon-tamagotchi-state';
@@ -111,7 +114,10 @@ export class TamagotchiPersistenceService {
       ...createInitialTamagotchiState(),
       ...state,
       achievementList: state.achievementList ?? legacy.achievements ?? [],
-      dailyRoutine: state.dailyRoutine ?? createInitialTamagotchiState().dailyRoutine,
+      dailyRoutine: {
+        ...createInitialDailyRoutine(),
+        ...(state.dailyRoutine ?? {}),
+      },
       evolutionProgress:
         state.evolutionProgress ?? createInitialTamagotchiState().evolutionProgress,
       interactionHistory: state.interactionHistory ?? [],
