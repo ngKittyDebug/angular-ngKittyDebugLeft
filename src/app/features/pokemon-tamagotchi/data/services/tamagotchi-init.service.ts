@@ -46,10 +46,19 @@ export class TamagotchiInitService {
   private resolveProfileSelection(
     hasPersistedPokemon: boolean,
   ): Observable<PokemonSelectionValidation> {
-    if (hasPersistedPokemon) {
-      return of({ valid: true });
+    if (!hasPersistedPokemon) {
+      return this.profileIntegration.validateSelectedPokemon();
     }
 
-    return this.profileIntegration.validateSelectedPokemon();
+    const selectedReference = this.profileIntegration.getSelectedPokemonReference();
+    const persistedPokemon = this.store.pokemon();
+
+    if (selectedReference && persistedPokemon && selectedReference.id !== persistedPokemon.id) {
+      this.store.resetState();
+
+      return this.profileIntegration.validateSelectedPokemon();
+    }
+
+    return of({ valid: true });
   }
 }

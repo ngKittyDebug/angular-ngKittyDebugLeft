@@ -3,6 +3,7 @@ import type { Observable } from 'rxjs';
 import { catchError, map, of } from 'rxjs';
 import { PokemonTamagotchiApiService } from '../api/pokemon/services/pokemon-tamagotchi-api.service';
 import type { PokemonModel } from '../models/pokemon.model';
+import { TamagotchiPersistenceService } from './tamagotchi-persistence.service';
 import { TamagotchiStorageService } from './tamagotchi-storage.service';
 
 export const TAMAGOTCHI_SELECTED_POKEMON_KEY = 'pokemon-tamagotchi-selected-pokemon';
@@ -24,6 +25,7 @@ export interface PokemonSelectionValidation {
 @Injectable({ providedIn: 'root' })
 export class PokemonProfileIntegrationService {
   private readonly api = inject(PokemonTamagotchiApiService);
+  private readonly persistence = inject(TamagotchiPersistenceService);
   private readonly storage = inject(TamagotchiStorageService);
 
   public getSelectedPokemonReference(): SelectedPokemonReference | null {
@@ -57,6 +59,12 @@ export class PokemonProfileIntegrationService {
   }
 
   public saveSelectedPokemon(pokemon: PokemonModel): void {
+    const persistedPokemonId = this.persistence.load()?.state.pokemon?.id ?? null;
+
+    if (persistedPokemonId !== null && persistedPokemonId !== pokemon.id) {
+      this.persistence.clear();
+    }
+
     const reference: SelectedPokemonReference = {
       id: pokemon.id,
       name: pokemon.name,

@@ -6,7 +6,11 @@ import type { EvolutionChainApiResponse } from '@shared/models/pokemon-evolution
 import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
 import type { PokemonSpeciesApiData } from '@shared/models/pokemon-species-api-data-interface';
 import type { PokemonModel, PokemonSpriteUrlsModel } from '../models/pokemon.model';
+import { TEST_POKEMON } from '../fixtures/tamagotchi-arbitraries';
+import { createInitialTamagotchiState } from '../store/tamagotchi-initial';
+import { selectPokemonState } from '../store/tamagotchi-state-transitions';
 import { createTamagotchiStorageMock } from '../fixtures/tamagotchi-storage.mock';
+import { TamagotchiPersistenceService } from './tamagotchi-persistence.service';
 import { TamagotchiStorageService } from './tamagotchi-storage.service';
 import {
   PokemonProfileIntegrationService,
@@ -174,6 +178,36 @@ describe('PokemonProfileIntegrationService', () => {
         species: 'charmander',
       });
       expect(storageMock.getItem(TAMAGOTCHI_SELECTED_POKEMON_KEY)).not.toBeNull();
+    });
+
+    it('должен очищать сохранённый прогресс тамагочи при смене выбранного покемона', () => {
+      const persistence = TestBed.inject(TamagotchiPersistenceService);
+      const charmander = buildPokemon({
+        eating: '',
+        evolving: '',
+        happy: '',
+        normal: '',
+        sad: '',
+        sleeping: '',
+      });
+
+      persistence.save(
+        selectPokemonState(createInitialTamagotchiState(), {
+          ...TEST_POKEMON,
+          id: '1',
+          name: 'bulbasaur',
+          species: 'bulbasaur',
+        }),
+      );
+
+      service.saveSelectedPokemon(charmander);
+
+      expect(persistence.load()).toBeNull();
+      expect(service.getSelectedPokemonReference()).toEqual({
+        id: '4',
+        name: 'charmander',
+        species: 'charmander',
+      });
     });
   });
 

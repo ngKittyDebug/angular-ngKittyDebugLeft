@@ -11,6 +11,12 @@ import { PokemonProfileIntegrationService } from './pokemon-profile-integration.
 import { TAMAGOTCHI_SYSTEM_ERRORS } from '../constants/system-errors.constants';
 
 describe('TamagotchiInitService', () => {
+  const matchingSelectionReference = {
+    id: TEST_POKEMON.id,
+    name: TEST_POKEMON.name,
+    species: TEST_POKEMON.species,
+  };
+
   describe('Happy Path', () => {
     it('должен выбирать покемона из профиля, когда сохранённого покемона нет', () => {
       const validateSelectedPokemon = vi.fn(() =>
@@ -55,10 +61,11 @@ describe('TamagotchiInitService', () => {
   });
 
   describe('Edge Cases', () => {
-    it('должен пропускать выбор из профиля, когда сохранённый покемон уже есть', () => {
+    it('должен пропускать выбор из профиля, когда сохранённый покемон совпадает с выбором', () => {
       const validateSelectedPokemon = vi.fn(() => of({ error: 'noSelection', valid: false }));
       const loadFromPersistence = vi.fn();
       const selectPokemon = vi.fn();
+      const resetState = vi.fn();
 
       TestBed.configureTestingModule({
         providers: [
@@ -69,6 +76,8 @@ describe('TamagotchiInitService', () => {
               hasPokemon: signal(true),
               initialized: signal(true),
               loadFromPersistence,
+              pokemon: signal(TEST_POKEMON),
+              resetState,
               selectPokemon,
               setError: vi.fn(),
             },
@@ -76,6 +85,7 @@ describe('TamagotchiInitService', () => {
           {
             provide: PokemonProfileIntegrationService,
             useValue: {
+              getSelectedPokemonReference: vi.fn(() => matchingSelectionReference),
               saveSelectedPokemon: vi.fn(),
               validateSelectedPokemon,
             },
@@ -94,7 +104,64 @@ describe('TamagotchiInitService', () => {
       expect(completed).toBe(true);
       expect(validateSelectedPokemon).not.toHaveBeenCalled();
       expect(loadFromPersistence).toHaveBeenCalledTimes(1);
+      expect(resetState).not.toHaveBeenCalled();
       expect(selectPokemon).not.toHaveBeenCalled();
+    });
+
+    it('должен сбрасывать прогресс и применять новый выбор, когда покемон в state отличается от выбора в профиле', () => {
+      const replacementPokemon = {
+        ...TEST_POKEMON,
+        id: '4',
+        name: 'charmander',
+        species: 'charmander',
+      };
+      const validateSelectedPokemon = vi.fn(() =>
+        of({ pokemon: replacementPokemon, valid: true as const }),
+      );
+      const loadFromPersistence = vi.fn();
+      const selectPokemon = vi.fn();
+      const resetState = vi.fn();
+      const saveSelectedPokemon = vi.fn();
+
+      TestBed.configureTestingModule({
+        providers: [
+          TamagotchiInitService,
+          {
+            provide: TamagotchiStore,
+            useValue: {
+              hasPokemon: signal(true),
+              initialized: signal(true),
+              loadFromPersistence,
+              pokemon: signal(TEST_POKEMON),
+              resetState,
+              selectPokemon,
+              setError: vi.fn(),
+            },
+          },
+          {
+            provide: PokemonProfileIntegrationService,
+            useValue: {
+              getSelectedPokemonReference: vi.fn(() => ({
+                id: replacementPokemon.id,
+                name: replacementPokemon.name,
+                species: replacementPokemon.species,
+              })),
+              saveSelectedPokemon,
+              validateSelectedPokemon,
+            },
+          },
+        ],
+      });
+
+      const service = TestBed.inject(TamagotchiInitService);
+
+      service.bootstrapFromProfile().subscribe();
+
+      expect(loadFromPersistence).toHaveBeenCalledTimes(1);
+      expect(resetState).toHaveBeenCalledTimes(1);
+      expect(validateSelectedPokemon).toHaveBeenCalledTimes(1);
+      expect(selectPokemon).toHaveBeenNthCalledWith(1, replacementPokemon);
+      expect(saveSelectedPokemon).toHaveBeenNthCalledWith(1, replacementPokemon);
     });
 
     it('должен выставлять noSelection, когда нет сохранённого покемона и выбор в профиле пуст', () => {
