@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { GAME_BALANCE } from '../constants/game-balance.constants';
 import { STATUS_THRESHOLDS } from '../constants/status-thresholds.constants';
 import { applyStatusUpdate } from '../helpers/status-calculator.helper';
-import { createInitialPokemonStatus } from '../store/tamagotchi.state';
+import { createInitialPokemonStatus } from '../store/tamagotchi-initial';
 import { TamagotchiService } from './tamagotchi.service';
 
 describe('TamagotchiService', () => {

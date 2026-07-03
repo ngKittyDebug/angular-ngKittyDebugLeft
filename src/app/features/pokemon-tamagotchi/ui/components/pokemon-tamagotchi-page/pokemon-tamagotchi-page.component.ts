@@ -7,10 +7,9 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { Store } from '@ngrx/store';
 import { TuiButton, TuiLoader, tuiLoaderOptionsProvider } from '@taiga-ui/core';
 import { TuiBadge } from '@taiga-ui/kit';
 import { GAME_BALANCE } from '../../../data/constants/game-balance.constants';
@@ -22,6 +21,7 @@ import {
   maxValueForStatusType,
   statusValueForType,
 } from '../../../data/helpers/status-indicator-sync.helper';
+import { rollTrainingExperienceGain } from '../../../data/helpers/training-reward.helper';
 import { TamagotchiAnalyticsService } from '../../../data/services/tamagotchi-analytics.service';
 import { MEMORY_GC_INTERVAL_TICKS } from '../../../data/constants/performance-mode.constants';
 import { MemoryManagementService } from '../../../data/services/memory-management.service';
@@ -33,22 +33,7 @@ import {
   TimerService,
   type TimerTickResult,
 } from '../../../data/services/timer.service';
-import * as TamagotchiActions from '../../../data/store/tamagotchi.actions';
-import {
-  selectCanEvolve,
-  selectHasPokemon,
-  selectIsEvolving,
-  selectIsInitialized,
-  selectIsSleeping,
-  selectIsTraining,
-  selectNotifications,
-  selectPokemon,
-  selectStatus,
-  selectTamagotchiError,
-  selectTamagotchiState,
-  selectTrainingStartedAt,
-} from '../../../data/store/tamagotchi.selectors';
-import { createInitialTamagotchiState } from '../../../data/store/tamagotchi.state';
+import { TamagotchiStore } from '../../../data/store/tamagotchi.store';
 import type { InteractionEvent } from '../../../models/interaction.model';
 import type { Pokemon } from '../../../models/pokemon.model';
 import type { ActionType, TamagotchiState } from '../../../models/tamagotchi-state.model';
@@ -88,48 +73,46 @@ export class PokemonTamagotchiPageComponent {
   private readonly memoryManagementService = inject(MemoryManagementService);
   private readonly notificationService = inject(TamagotchiNotificationService);
   private readonly performanceService = inject(PerformanceService);
-  private readonly store = inject(Store);
+  private readonly store = inject(TamagotchiStore);
   private readonly tamagotchiService = inject(TamagotchiService);
   private readonly timerService = inject(TimerService);
   private readonly wasEvolutionReady = signal(false);
   private timerTickCount = 0;
-  private readonly state = toSignal(this.store.select(selectTamagotchiState), {
-    initialValue: createInitialTamagotchiState(),
-  });
+
+  private readonly state = computed(
+    (): TamagotchiState => ({
+      achievements: this.store.achievements(),
+      dailyRoutine: this.store.dailyRoutine(),
+      error: this.store.error(),
+      evolutionProgress: this.store.evolutionProgress(),
+      initialized: this.store.initialized(),
+      interactionHistory: this.store.interactionHistory(),
+      isEvolving: this.store.isEvolving(),
+      isSleeping: this.store.isSleeping(),
+      lastActionTime: this.store.lastActionTime(),
+      lastDecayTime: this.store.lastDecayTime(),
+      lastSaveTime: this.store.lastSaveTime(),
+      notifications: this.store.notifications(),
+      pokemon: this.store.pokemon(),
+      status: this.store.status(),
+      trainingExperienceReward: this.store.trainingExperienceReward(),
+      trainingStartedAt: this.store.trainingStartedAt(),
+    }),
+  );
 
   protected readonly displayedStatusTypes = DISPLAYED_STATUS_TYPES;
 
-  protected readonly trainingStartedAt = toSignal(this.store.select(selectTrainingStartedAt), {
-    initialValue: null,
-  });
-  protected readonly isTraining = toSignal(this.store.select(selectIsTraining), {
-    initialValue: false,
-  });
-  protected readonly canEvolve = toSignal(this.store.select(selectCanEvolve), {
-    initialValue: false,
-  });
-  protected readonly error = toSignal(this.store.select(selectTamagotchiError), {
-    initialValue: null,
-  });
-  protected readonly hasPokemon = toSignal(this.store.select(selectHasPokemon), {
-    initialValue: false,
-  });
-  protected readonly isEvolving = toSignal(this.store.select(selectIsEvolving), {
-    initialValue: false,
-  });
-  protected readonly isInitialized = toSignal(this.store.select(selectIsInitialized), {
-    initialValue: false,
-  });
-  protected readonly isSleeping = toSignal(this.store.select(selectIsSleeping), {
-    initialValue: false,
-  });
-  protected readonly notifications = toSignal(this.store.select(selectNotifications), {
-    initialValue: [],
-  });
-  protected readonly pokemon = toSignal(this.store.select(selectPokemon), { initialValue: null });
-  protected readonly status = toSignal(this.store.select(selectStatus), {
-    initialValue: createInitialTamagotchiState().status,
-  });
+  protected readonly trainingStartedAt = this.store.trainingStartedAt;
+  protected readonly isTraining = this.store.isTraining;
+  protected readonly canEvolve = this.store.canEvolve;
+  protected readonly error = this.store.error;
+  protected readonly hasPokemon = this.store.hasPokemon;
+  protected readonly isEvolving = this.store.isEvolving;
+  protected readonly isInitialized = computed(() => this.store.initialized());
+  protected readonly isSleeping = this.store.isSleeping;
+  protected readonly notifications = this.store.notifications;
+  protected readonly pokemon = this.store.pokemon;
+  protected readonly status = this.store.status;
 
   protected readonly evolvedPokemon = computed(() => this.resolveEvolvedPokemon(this.pokemon()));
 
@@ -215,7 +198,7 @@ export class PokemonTamagotchiPageComponent {
 
       if (ready && !this.wasEvolutionReady() && species) {
         this.notificationService.notifyEvolutionReady(species.name);
-        this.store.dispatch(TamagotchiActions.startEvolution());
+        this.store.startEvolution();
       }
 
       this.wasEvolutionReady.set(ready);
@@ -230,10 +213,11 @@ export class PokemonTamagotchiPageComponent {
 
       const remaining = GAME_BALANCE.ACTION_EFFECTS.TRAIN.durationMs - (Date.now() - startedAt);
       const delay = Math.max(0, remaining);
+      const experienceGain = this.store.trainingExperienceReward() ?? rollTrainingExperienceGain();
 
       const timeoutId = setTimeout(() => {
-        this.store.dispatch(TamagotchiActions.completeTraining());
-        this.store.dispatch(TamagotchiActions.checkEvolution());
+        this.store.completeTraining(Date.now(), experienceGain);
+        this.store.checkEvolution();
       }, delay);
 
       onCleanup(() => {
@@ -249,9 +233,11 @@ export class PokemonTamagotchiPageComponent {
       return;
     }
 
+    const now = Date.now();
+
     if (this.isSleeping() && action === 'sleep') {
-      this.store.dispatch(TamagotchiActions.wakeUp());
-      this.store.dispatch(TamagotchiActions.checkEvolution());
+      this.store.wakeUp(now);
+      this.store.checkEvolution();
 
       return;
     }
@@ -264,35 +250,35 @@ export class PokemonTamagotchiPageComponent {
 
     switch (action) {
       case 'care':
-        this.store.dispatch(TamagotchiActions.careForPokemon());
+        this.store.care(now);
         break;
 
       case 'feed':
-        this.store.dispatch(TamagotchiActions.feedPokemon());
+        this.store.feed(now);
         break;
 
       case 'play':
-        this.store.dispatch(TamagotchiActions.playWithPokemon());
+        this.store.play(now);
         break;
 
       case 'sleep':
-        this.store.dispatch(TamagotchiActions.putToSleep());
+        this.store.putToSleep(now);
         break;
 
       case 'train':
-        this.store.dispatch(TamagotchiActions.startTraining());
+        this.store.startTraining(now, rollTrainingExperienceGain());
         break;
 
       case 'water':
-        this.store.dispatch(TamagotchiActions.waterPokemon());
+        this.store.water(now);
         break;
     }
 
-    this.store.dispatch(TamagotchiActions.checkEvolution());
+    this.store.checkEvolution();
   }
 
   protected onEvolutionComplete(evolvedPokemon: Pokemon): void {
-    this.store.dispatch(TamagotchiActions.completeEvolution({ evolvedPokemon }));
+    this.store.completeEvolution(evolvedPokemon);
     this.wasEvolutionReady.set(false);
   }
 
@@ -302,12 +288,12 @@ export class PokemonTamagotchiPageComponent {
     }
 
     this.analyticsService.track(interaction.type);
-    this.store.dispatch(TamagotchiActions.interactWithPokemon({ interaction }));
-    this.store.dispatch(TamagotchiActions.checkEvolution());
+    this.store.interactWithPokemon(interaction, Date.now());
+    this.store.checkEvolution();
   }
 
   protected onSystemErrorDismiss(): void {
-    this.store.dispatch(TamagotchiActions.clearError());
+    this.store.clearError();
   }
 
   protected onPerformanceModeChange(mode: PerformanceMode): void {
@@ -316,8 +302,8 @@ export class PokemonTamagotchiPageComponent {
   }
 
   protected onResetProgress(): void {
-    this.store.dispatch(TamagotchiActions.resetState());
-    this.store.dispatch(TamagotchiActions.clearError());
+    this.store.resetState();
+    this.store.clearError();
     this.initService.bootstrapFromProfile().subscribe();
   }
 
@@ -343,14 +329,10 @@ export class PokemonTamagotchiPageComponent {
   }
 
   private handleTimerTick(result: TimerTickResult): void {
-    this.store.dispatch(TamagotchiActions.applyStatusDecay({ decay: result.decay }));
+    this.store.applyStatusDecay(result.decay);
 
     if (result.routineBonusApplied > 0) {
-      this.store.dispatch(
-        TamagotchiActions.updateStatus({
-          statusUpdate: { mood: result.routineBonusApplied },
-        }),
-      );
+      this.store.updateStatus({ mood: result.routineBonusApplied });
     }
 
     this.notificationService.processStatusAlerts({
@@ -358,7 +340,7 @@ export class PokemonTamagotchiPageComponent {
       thresholdAlerts: result.alerts,
       timestamp: result.decay.timestamp,
     });
-    this.store.dispatch(TamagotchiActions.checkEvolution());
+    this.store.checkEvolution();
 
     this.timerTickCount += 1;
 

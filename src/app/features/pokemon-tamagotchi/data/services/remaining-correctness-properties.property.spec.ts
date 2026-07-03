@@ -20,12 +20,16 @@ import {
 import { TamagotchiErrorRecoveryService } from '../services/tamagotchi-error-recovery.service';
 import { TamagotchiPersistenceService } from '../services/tamagotchi-persistence.service';
 import { TamagotchiService } from '../services/tamagotchi.service';
-import { interactWithPokemon, selectPokemon, updateStatus } from '../store/tamagotchi.actions';
-import { tamagotchiReducer } from '../store/tamagotchi.reducer';
-import { createInitialTamagotchiState } from '../store/tamagotchi.state';
+import {
+  interactWithPokemonState,
+  selectPokemonState,
+  updateStatusState,
+} from '../store/tamagotchi-state-transitions';
+import { createInitialTamagotchiState } from '../store/tamagotchi-initial';
 import type { NotificationPriority } from '../../models/notification.model';
 
 const PROPERTY_RUNS = 100;
+const FIXED_NOW = 1_700_000_000_000;
 
 function collectTranslationKeys(value: unknown, prefix = ''): string[] {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
@@ -124,16 +128,13 @@ describe('Tamagotchi Remaining Property Tests', () => {
             const low = createInteractionEvent(interaction.type, Math.min(intensityA, intensityB));
             const high = createInteractionEvent(interaction.type, Math.max(intensityA, intensityB));
 
-            let state = tamagotchiReducer(
-              createInitialTamagotchiState(),
-              selectPokemon({ pokemon: TEST_POKEMON }),
-            );
+            let state = selectPokemonState(createInitialTamagotchiState(), TEST_POKEMON);
 
-            state = tamagotchiReducer(state, updateStatus({ statusUpdate: { mood: -40 } }));
+            state = updateStatusState(state, { mood: -40 });
 
             const moodBefore = state.status.mood;
 
-            state = tamagotchiReducer(state, interactWithPokemon({ interaction: high }));
+            state = interactWithPokemonState(state, high, FIXED_NOW);
 
             const moodAfter = state.status.mood;
             const tracked = state.interactionHistory.some(
@@ -249,10 +250,7 @@ describe('Tamagotchi Remaining Property Tests', () => {
 
     it('should repair valid state while preserving pokemon', () => {
       const recovery = TestBed.inject(TamagotchiErrorRecoveryService);
-      const customized = tamagotchiReducer(
-        createInitialTamagotchiState(),
-        selectPokemon({ pokemon: TEST_POKEMON }),
-      );
+      const customized = selectPokemonState(createInitialTamagotchiState(), TEST_POKEMON);
 
       const repaired = recovery.repairState(customized);
 

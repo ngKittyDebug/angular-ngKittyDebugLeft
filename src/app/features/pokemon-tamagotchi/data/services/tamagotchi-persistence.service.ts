@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { normalizePokemonStatus } from '../helpers/status-bounds.helper';
 import { ensurePokemonSpriteVariations } from '../helpers/sprite-variation.helper';
 import type { TamagotchiState } from '../../models/tamagotchi-state.model';
-import { createInitialTamagotchiState } from '../store/tamagotchi.state';
+import { createInitialTamagotchiState } from '../store/tamagotchi-initial';
 
 export const TAMAGOTCHI_STORAGE_KEY = 'pokemon-tamagotchi-state';
 export const TAMAGOTCHI_BACKUP_KEY = 'pokemon-tamagotchi-state-backup';

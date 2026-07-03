@@ -1,0 +1,278 @@
+import { computed, inject } from '@angular/core';
+import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
+import { catchError, of } from 'rxjs';
+import { TAMAGOTCHI_SYSTEM_ERRORS } from '../constants/system-errors.constants';
+import { calculateBondLevel } from '../helpers/gesture.helper';
+import type { GarbageCollectLimits } from '../helpers/memory-management.helper';
+import { sortNotificationsByPriority } from '../helpers/notification-factory.helper';
+import { TamagotchiCloudSyncService } from '../services/tamagotchi-cloud-sync.service';
+import { TamagotchiErrorRecoveryService } from '../services/tamagotchi-error-recovery.service';
+import { TamagotchiPersistenceService } from '../services/tamagotchi-persistence.service';
+import type { InteractionEvent } from '../../models/interaction.model';
+import type { Notification } from '../../models/notification.model';
+import type { Pokemon } from '../../models/pokemon.model';
+import type { StatusDecay, StatusUpdate } from '../../models/pokemon-status.model';
+import type { TamagotchiState } from '../../models/tamagotchi-state.model';
+import {
+  addNotificationState,
+  applyStatusDecayState,
+  careForPokemonState,
+  checkEvolutionState,
+  clearErrorState,
+  clearPokemonState,
+  completeEvolutionState,
+  completeTrainingState,
+  dismissNotificationState,
+  feedPokemonState,
+  garbageCollectState,
+  initializeTamagotchiState,
+  interactWithPokemonState,
+  loadStateSuccessState,
+  playWithPokemonState,
+  putToSleepState,
+  resetStateTransition,
+  saveStateSuccessState,
+  selectPokemonState,
+  setErrorState,
+  startEvolutionState,
+  startTrainingState,
+  updateStatusState,
+  wakeUpState,
+  waterPokemonState,
+} from './tamagotchi-state-transitions';
+import { initialTamagotchiState } from './tamagotchi-initial';
+
+const SAVE_DEBOUNCE_MS = 300;
+
+function snapshotState(store: {
+  achievements: () => TamagotchiState['achievements'];
+  dailyRoutine: () => TamagotchiState['dailyRoutine'];
+  error: () => TamagotchiState['error'];
+  evolutionProgress: () => TamagotchiState['evolutionProgress'];
+  initialized: () => boolean;
+  interactionHistory: () => TamagotchiState['interactionHistory'];
+  isEvolving: () => boolean;
+  isSleeping: () => boolean;
+  lastActionTime: () => TamagotchiState['lastActionTime'];
+  lastDecayTime: () => TamagotchiState['lastDecayTime'];
+  lastSaveTime: () => TamagotchiState['lastSaveTime'];
+  notifications: () => TamagotchiState['notifications'];
+  pokemon: () => TamagotchiState['pokemon'];
+  status: () => TamagotchiState['status'];
+  trainingExperienceReward: () => TamagotchiState['trainingExperienceReward'];
+  trainingStartedAt: () => TamagotchiState['trainingStartedAt'];
+}): TamagotchiState {
+  return {
+    achievements: store.achievements(),
+    dailyRoutine: store.dailyRoutine(),
+    error: store.error(),
+    evolutionProgress: store.evolutionProgress(),
+    initialized: store.initialized(),
+    interactionHistory: store.interactionHistory(),
+    isEvolving: store.isEvolving(),
+    isSleeping: store.isSleeping(),
+    lastActionTime: store.lastActionTime(),
+    lastDecayTime: store.lastDecayTime(),
+    lastSaveTime: store.lastSaveTime(),
+    notifications: store.notifications(),
+    pokemon: store.pokemon(),
+    status: store.status(),
+    trainingExperienceReward: store.trainingExperienceReward(),
+    trainingStartedAt: store.trainingStartedAt(),
+  };
+}
+
+export const TamagotchiStore = signalStore(
+  { providedIn: 'root' },
+  withState(initialTamagotchiState),
+  withComputed((store) => ({
+    hasPokemon: computed(() => store.pokemon() !== null),
+    isTraining: computed(() => store.trainingStartedAt() !== null),
+    canEvolve: computed(() => store.evolutionProgress().isReady && !store.isEvolving()),
+    unreadNotifications: computed(() =>
+      sortNotificationsByPriority(
+        store.notifications().filter((notification) => !notification.read),
+      ),
+    ),
+    bondLevel: computed(() => calculateBondLevel(store.interactionHistory())),
+  })),
+  withMethods(
+    (
+      store,
+      cloudSync = inject(TamagotchiCloudSyncService),
+      errorRecovery = inject(TamagotchiErrorRecoveryService),
+      persistence = inject(TamagotchiPersistenceService),
+    ) => {
+      let saveTimer: ReturnType<typeof setTimeout> | null = null;
+
+      const performSave = (): void => {
+        if (!store.initialized()) {
+          return;
+        }
+
+        try {
+          const state = snapshotState(store);
+
+          persistence.save(state);
+          const savedAt = Date.now();
+
+          cloudSync
+            .sync(state)
+            .pipe(catchError(() => of(undefined)))
+            .subscribe({
+              next: () => {
+                patchState(store, (current) => saveStateSuccessState(current, savedAt));
+              },
+            });
+        } catch (error) {
+          errorRecovery.logError('saveState', error);
+          patchState(store, (current) =>
+            setErrorState(current, TAMAGOTCHI_SYSTEM_ERRORS.SAVE_FAILED),
+          );
+        }
+      };
+
+      const scheduleSave = (): void => {
+        if (!store.initialized()) {
+          return;
+        }
+
+        if (saveTimer !== null) {
+          clearTimeout(saveTimer);
+        }
+
+        saveTimer = setTimeout(() => {
+          saveTimer = null;
+          performSave();
+        }, SAVE_DEBOUNCE_MS);
+      };
+
+      const mutateAndSave = (update: (state: TamagotchiState) => TamagotchiState): void => {
+        patchState(store, update);
+        scheduleSave();
+      };
+
+      return {
+        loadFromPersistence(): void {
+          try {
+            const loaded = persistence.load();
+
+            if (!loaded) {
+              patchState(store, initializeTamagotchiState);
+
+              return;
+            }
+
+            patchState(store, (current) =>
+              loadStateSuccessState(current, {
+                ...loaded.state,
+                error: loaded.recoveredFromBackup
+                  ? TAMAGOTCHI_SYSTEM_ERRORS.RECOVERED_FROM_BACKUP
+                  : loaded.state.error,
+              }),
+            );
+          } catch (error) {
+            errorRecovery.logError('loadFromPersistence', error);
+            patchState(store, (current) =>
+              initializeTamagotchiState(
+                setErrorState(current, TAMAGOTCHI_SYSTEM_ERRORS.LOAD_FAILED),
+              ),
+            );
+          }
+        },
+
+        selectPokemon(pokemon: Pokemon): void {
+          mutateAndSave((state) => selectPokemonState(state, pokemon));
+        },
+
+        clearPokemon(): void {
+          persistence.clear();
+          patchState(store, clearPokemonState);
+          scheduleSave();
+        },
+
+        feed(now: number): void {
+          mutateAndSave((state) => feedPokemonState(state, now));
+        },
+
+        water(now: number): void {
+          mutateAndSave((state) => waterPokemonState(state, now));
+        },
+
+        care(now: number): void {
+          mutateAndSave((state) => careForPokemonState(state, now));
+        },
+
+        play(now: number): void {
+          mutateAndSave((state) => playWithPokemonState(state, now));
+        },
+
+        startTraining(now: number, experienceReward: number): void {
+          mutateAndSave((state) => startTrainingState(state, now, experienceReward));
+        },
+
+        completeTraining(now: number, experienceGain: number): void {
+          mutateAndSave((state) => completeTrainingState(state, now, experienceGain));
+        },
+
+        putToSleep(now: number): void {
+          mutateAndSave((state) => putToSleepState(state, now));
+        },
+
+        wakeUp(now: number): void {
+          mutateAndSave((state) => wakeUpState(state, now));
+        },
+
+        interactWithPokemon(interaction: InteractionEvent, now: number): void {
+          mutateAndSave((state) => interactWithPokemonState(state, interaction, now));
+        },
+
+        updateStatus(statusUpdate: StatusUpdate): void {
+          mutateAndSave((state) => updateStatusState(state, statusUpdate));
+        },
+
+        applyStatusDecay(decay: StatusDecay): void {
+          mutateAndSave((state) => applyStatusDecayState(state, decay));
+        },
+
+        checkEvolution(): void {
+          mutateAndSave(checkEvolutionState);
+        },
+
+        startEvolution(): void {
+          patchState(store, startEvolutionState);
+        },
+
+        completeEvolution(evolvedPokemon: Pokemon): void {
+          mutateAndSave((state) => completeEvolutionState(state, evolvedPokemon));
+        },
+
+        addNotification(notification: Notification): void {
+          mutateAndSave((state) => addNotificationState(state, notification));
+        },
+
+        dismissNotification(id: string): void {
+          mutateAndSave((state) => dismissNotificationState(state, id));
+        },
+
+        setError(error: string): void {
+          patchState(store, (state) => setErrorState(state, error));
+        },
+
+        clearError(): void {
+          patchState(store, clearErrorState);
+        },
+
+        resetState(): void {
+          persistence.clear();
+          patchState(store, resetStateTransition);
+          scheduleSave();
+        },
+
+        garbageCollect(limits: GarbageCollectLimits): void {
+          mutateAndSave((state) => garbageCollectState(state, limits));
+        },
+      };
+    },
+  ),
+);

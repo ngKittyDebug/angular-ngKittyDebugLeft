@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 
 import { TAMAGOTCHI_SYSTEM_ERRORS } from '../constants/system-errors.constants';
 import { clampStatusValue } from '../helpers/status-bounds.helper';
-import { createInitialTamagotchiState } from '../store/tamagotchi.state';
+import { createInitialTamagotchiState } from '../store/tamagotchi-initial';
 import type { TamagotchiState } from '../../models/tamagotchi-state.model';
 import { TamagotchiLoggerService } from './tamagotchi-logger.service';
 

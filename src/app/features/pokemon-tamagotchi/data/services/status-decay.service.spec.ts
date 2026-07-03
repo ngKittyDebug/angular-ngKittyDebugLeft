@@ -3,7 +3,7 @@ import { vi } from 'vitest';
 import { GAME_BALANCE } from '../constants/game-balance.constants';
 import { STATUS_THRESHOLDS } from '../constants/status-thresholds.constants';
 import { decayAmountForElapsed } from '../helpers/status-decay.helper';
-import { createInitialPokemonStatus } from '../store/tamagotchi.state';
+import { createInitialPokemonStatus } from '../store/tamagotchi-initial';
 import { StatusDecayService } from './status-decay.service';
 
 const ONE_HOUR_MS = 60 * 60 * 1000;

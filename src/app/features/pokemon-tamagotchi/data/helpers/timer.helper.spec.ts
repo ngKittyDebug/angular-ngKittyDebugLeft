@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { TIMER_CONFIG } from '../constants/timer.constants';
-import { createInitialDailyRoutine } from '../store/tamagotchi.state';
+import { createInitialDailyRoutine } from '../store/tamagotchi-initial';
 import {
   isRoutineBonusEligible,
   recordRoutineActivity,

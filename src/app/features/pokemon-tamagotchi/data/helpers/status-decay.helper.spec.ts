@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { STATUS_THRESHOLDS } from '../constants/status-thresholds.constants';
 import { TIMER_CONFIG } from '../constants/timer.constants';
 import { detectPeriodicCriticalAlerts, detectStatusAlerts } from './status-decay.helper';
-import { createInitialPokemonStatus } from '../store/tamagotchi.state';
+import { createInitialPokemonStatus } from '../store/tamagotchi-initial';
 
 describe('status-decay.helper alerts', () => {
   it('should alert when hunger crosses warning threshold', () => {

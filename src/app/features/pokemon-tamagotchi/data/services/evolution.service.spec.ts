@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { GAME_BALANCE } from '../constants/game-balance.constants';
 import { EVOLUTION_REQUIREMENTS } from '../constants/evolution-criteria.constants';
-import { createInitialDailyRoutine } from '../store/tamagotchi.state';
+import { createInitialDailyRoutine } from '../store/tamagotchi-initial';
 import { TEST_POKEMON } from '../testing/tamagotchi-arbitraries';
 import type { Achievement } from '../../models/achievement.model';
 import type { Pokemon } from '../../models/pokemon.model';

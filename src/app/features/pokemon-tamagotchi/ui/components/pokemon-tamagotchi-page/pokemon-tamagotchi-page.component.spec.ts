@@ -1,17 +1,18 @@
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import type { ComponentFixture } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { TranslocoTestingModule } from '@jsverse/transloco';
-import { provideMockStore } from '@ngrx/store/testing';
 import { of } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
 import { PokemonProfileIntegrationService } from '../../../data/services/pokemon-profile-integration.service';
 import { TamagotchiInitService } from '../../../data/services/tamagotchi-init.service';
 import { TEST_POKEMON } from '../../../data/testing/tamagotchi-arbitraries';
 import {
+  createInitialPokemonStatus,
   createInitialTamagotchiState,
-  TAMAGOTCHI_FEATURE_KEY,
-} from '../../../data/store/tamagotchi.state';
+} from '../../../data/store/tamagotchi-initial';
+import { TamagotchiStore } from '../../../data/store/tamagotchi.store';
 import { PokemonTamagotchiPageComponent } from './pokemon-tamagotchi-page.component';
 
 const PAGE_TRANSLATIONS = {
@@ -40,6 +41,54 @@ const PAGE_TRANSLATIONS = {
   },
   title: 'Pokémon Tamagotchi',
 };
+
+function createStoreMock(
+  overrides: {
+    error?: string | null;
+    initialized?: boolean;
+    pokemon?: typeof TEST_POKEMON | null;
+  } = {},
+) {
+  const initial = createInitialTamagotchiState();
+
+  return {
+    achievements: signal(initial.achievements),
+    applyStatusDecay: vi.fn(),
+    canEvolve: signal(false),
+    care: vi.fn(),
+    checkEvolution: vi.fn(),
+    clearError: vi.fn(),
+    completeEvolution: vi.fn(),
+    completeTraining: vi.fn(),
+    dailyRoutine: signal(initial.dailyRoutine),
+    error: signal(overrides.error ?? initial.error),
+    evolutionProgress: signal(initial.evolutionProgress),
+    feed: vi.fn(),
+    hasPokemon: signal((overrides.pokemon ?? TEST_POKEMON) !== null),
+    initialized: signal(overrides.initialized ?? true),
+    interactionHistory: signal(initial.interactionHistory),
+    interactWithPokemon: vi.fn(),
+    isEvolving: signal(false),
+    isSleeping: signal(false),
+    isTraining: signal(false),
+    lastActionTime: signal(initial.lastActionTime),
+    lastDecayTime: signal(initial.lastDecayTime),
+    lastSaveTime: signal(initial.lastSaveTime),
+    notifications: signal(initial.notifications),
+    play: vi.fn(),
+    pokemon: signal(overrides.pokemon ?? TEST_POKEMON),
+    putToSleep: vi.fn(),
+    resetState: vi.fn(),
+    startEvolution: vi.fn(),
+    startTraining: vi.fn(),
+    status: signal(createInitialPokemonStatus()),
+    trainingExperienceReward: signal<number | null>(null),
+    trainingStartedAt: signal<number | null>(null),
+    updateStatus: vi.fn(),
+    wakeUp: vi.fn(),
+    water: vi.fn(),
+  };
+}
 
 describe('PokemonTamagotchiPageComponent', () => {
   let fixture: ComponentFixture<PokemonTamagotchiPageComponent>;
@@ -103,15 +152,10 @@ describe('PokemonTamagotchiPageComponent', () => {
       ],
       providers: [
         provideRouter([]),
-        provideMockStore({
-          initialState: {
-            [TAMAGOTCHI_FEATURE_KEY]: {
-              ...createInitialTamagotchiState(),
-              initialized: true,
-              pokemon: TEST_POKEMON,
-            },
-          },
-        }),
+        {
+          provide: TamagotchiStore,
+          useValue: createStoreMock(),
+        },
         {
           provide: TamagotchiInitService,
           useValue: {
@@ -190,11 +234,10 @@ describe('PokemonTamagotchiPageComponent loading state', () => {
       ],
       providers: [
         provideRouter([]),
-        provideMockStore({
-          initialState: {
-            [TAMAGOTCHI_FEATURE_KEY]: createInitialTamagotchiState(),
-          },
-        }),
+        {
+          provide: TamagotchiStore,
+          useValue: createStoreMock({ initialized: false, pokemon: null }),
+        },
         {
           provide: TamagotchiInitService,
           useValue: {

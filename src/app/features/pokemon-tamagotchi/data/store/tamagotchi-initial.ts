@@ -4,12 +4,6 @@ import type { EvolutionProgress } from '../../models/evolution.model';
 import type { PokemonStatus } from '../../models/pokemon-status.model';
 import type { DailyRoutine, TamagotchiState } from '../../models/tamagotchi-state.model';
 
-export const TAMAGOTCHI_FEATURE_KEY = 'tamagotchi';
-
-export interface TamagotchiAppState {
-  readonly [TAMAGOTCHI_FEATURE_KEY]: TamagotchiState;
-}
-
 export function createInitialPokemonStatus(): PokemonStatus {
   return {
     health: GAME_BALANCE.THRESHOLDS.MAXIMUM,

@@ -5,7 +5,7 @@ import {
   TAMAGOTCHI_STORAGE_KEY,
   TamagotchiPersistenceService,
 } from './tamagotchi-persistence.service';
-import { createInitialTamagotchiState } from '../store/tamagotchi.state';
+import { createInitialTamagotchiState } from '../store/tamagotchi-initial';
 
 describe('TamagotchiPersistenceService', () => {
   let service: TamagotchiPersistenceService;

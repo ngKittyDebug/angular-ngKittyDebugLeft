@@ -3,19 +3,18 @@ import { GAME_BALANCE } from '../constants/game-balance.constants';
 import type { PokemonStatus } from '../../models/pokemon-status.model';
 import type { TamagotchiState } from '../../models/tamagotchi-state.model';
 import {
-  applyStatusDecay,
-  careForPokemon,
-  completeTraining,
-  feedPokemon,
-  interactWithPokemon,
-  playWithPokemon,
-  selectPokemon,
-  startTraining,
-  updateStatus,
-  waterPokemon,
-} from './tamagotchi.actions';
-import { tamagotchiReducer } from './tamagotchi.reducer';
-import { initialTamagotchiState } from './tamagotchi.state';
+  applyStatusDecayState,
+  careForPokemonState,
+  completeTrainingState,
+  feedPokemonState,
+  interactWithPokemonState,
+  playWithPokemonState,
+  selectPokemonState,
+  startTrainingState,
+  updateStatusState,
+  waterPokemonState,
+} from './tamagotchi-state-transitions';
+import { initialTamagotchiState } from './tamagotchi-initial';
 import {
   arbitraryCareAction,
   arbitraryPokemonStatus,
@@ -24,6 +23,8 @@ import {
 } from '../testing/tamagotchi-arbitraries';
 
 const PROPERTY_RUNS = 100;
+const FIXED_NOW = 1_700_000_000_000;
+const FIXED_TRAINING_REWARD = 25;
 
 function isBoundedStatus(status: PokemonStatus): boolean {
   const { MAXIMUM, MINIMUM } = GAME_BALANCE.THRESHOLDS;
@@ -45,43 +46,40 @@ function isBoundedStatus(status: PokemonStatus): boolean {
 function applyCareAction(state: TamagotchiState, action: CareAction): TamagotchiState {
   switch (action.kind) {
     case 'applyStatusDecay':
-      return tamagotchiReducer(state, applyStatusDecay({ decay: action.decay! }));
+      return applyStatusDecayState(state, action.decay!);
 
     case 'care':
-      return tamagotchiReducer(state, careForPokemon());
+      return careForPokemonState(state, FIXED_NOW);
 
     case 'feed':
-      return tamagotchiReducer(state, feedPokemon());
+      return feedPokemonState(state, FIXED_NOW);
 
     case 'interact':
-      return tamagotchiReducer(state, interactWithPokemon({ interaction: action.interaction! }));
+      return interactWithPokemonState(state, action.interaction!, FIXED_NOW);
 
     case 'play':
-      return tamagotchiReducer(state, playWithPokemon());
+      return playWithPokemonState(state, FIXED_NOW);
 
     case 'train': {
-      const started = tamagotchiReducer(state, startTraining());
+      const started = startTrainingState(state, FIXED_NOW, FIXED_TRAINING_REWARD);
 
       if (started.trainingStartedAt === null) {
         return started;
       }
 
-      return tamagotchiReducer(started, completeTraining());
+      return completeTrainingState(started, FIXED_NOW, FIXED_TRAINING_REWARD);
     }
 
     case 'updateStatus':
-      return tamagotchiReducer(state, updateStatus({ statusUpdate: action.statusUpdate! }));
+      return updateStatusState(state, action.statusUpdate!);
 
     case 'water':
-      return tamagotchiReducer(state, waterPokemon());
+      return waterPokemonState(state, FIXED_NOW);
   }
 }
 
 function stateWithPokemon(status: PokemonStatus, isSleeping: boolean): TamagotchiState {
-  const selected = tamagotchiReducer(
-    initialTamagotchiState,
-    selectPokemon({ pokemon: TEST_POKEMON }),
-  );
+  const selected = selectPokemonState(initialTamagotchiState, TEST_POKEMON);
 
   return {
     ...selected,

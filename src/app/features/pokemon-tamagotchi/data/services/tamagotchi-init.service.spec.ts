@@ -1,32 +1,34 @@
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { Store } from '@ngrx/store';
-import { provideMockStore } from '@ngrx/store/testing';
 import { of } from 'rxjs';
-import { describe, expect, it, vi } from 'vitest';
-import { TAMAGOTCHI_SYSTEM_ERRORS } from '../constants/system-errors.constants';
-import * as TamagotchiActions from '../store/tamagotchi.actions';
-import { createInitialTamagotchiState, TAMAGOTCHI_FEATURE_KEY } from '../store/tamagotchi.state';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { TamagotchiStore } from '../store/tamagotchi.store';
+import { createInitialTamagotchiState } from '../store/tamagotchi-initial';
 import { TEST_POKEMON } from '../testing/tamagotchi-arbitraries';
 import { TamagotchiErrorRecoveryService } from './tamagotchi-error-recovery.service';
 import { TamagotchiInitService } from './tamagotchi-init.service';
 import { PokemonProfileIntegrationService } from './pokemon-profile-integration.service';
+import { TAMAGOTCHI_SYSTEM_ERRORS } from '../constants/system-errors.constants';
 
 describe('TamagotchiInitService', () => {
   it('should skip profile selection when persisted pokemon exists', () => {
     const validateSelectedPokemon = vi.fn(() => of({ error: 'noSelection', valid: false }));
+    const loadFromPersistence = vi.fn();
+    const selectPokemon = vi.fn();
 
     TestBed.configureTestingModule({
       providers: [
         TamagotchiInitService,
-        provideMockStore({
-          initialState: {
-            [TAMAGOTCHI_FEATURE_KEY]: {
-              ...createInitialTamagotchiState(),
-              initialized: true,
-              pokemon: TEST_POKEMON,
-            },
+        {
+          provide: TamagotchiStore,
+          useValue: {
+            hasPokemon: signal(true),
+            initialized: signal(true),
+            loadFromPersistence,
+            selectPokemon,
+            setError: vi.fn(),
           },
-        }),
+        },
         {
           provide: PokemonProfileIntegrationService,
           useValue: {
@@ -38,8 +40,6 @@ describe('TamagotchiInitService', () => {
     });
 
     const service = TestBed.inject(TamagotchiInitService);
-    const store = TestBed.inject(Store);
-    const dispatch = vi.spyOn(store, 'dispatch');
 
     let completed = false;
 
@@ -49,27 +49,31 @@ describe('TamagotchiInitService', () => {
 
     expect(completed).toBe(true);
     expect(validateSelectedPokemon).not.toHaveBeenCalled();
-    expect(dispatch).toHaveBeenCalledWith(TamagotchiActions.loadState());
+    expect(loadFromPersistence).toHaveBeenCalledTimes(1);
+    expect(selectPokemon).not.toHaveBeenCalled();
   });
 
-  it('should dispatch profile pokemon when no persisted pokemon exists', () => {
+  it('should select profile pokemon when no persisted pokemon exists', () => {
     const validateSelectedPokemon = vi.fn(() =>
       of({ pokemon: TEST_POKEMON, valid: true as const }),
     );
     const saveSelectedPokemon = vi.fn();
+    const loadFromPersistence = vi.fn();
+    const selectPokemon = vi.fn();
 
     TestBed.configureTestingModule({
       providers: [
         TamagotchiInitService,
-        provideMockStore({
-          initialState: {
-            [TAMAGOTCHI_FEATURE_KEY]: {
-              ...createInitialTamagotchiState(),
-              initialized: true,
-              pokemon: null,
-            },
+        {
+          provide: TamagotchiStore,
+          useValue: {
+            hasPokemon: signal(false),
+            initialized: signal(true),
+            loadFromPersistence,
+            selectPokemon,
+            setError: vi.fn(),
           },
-        }),
+        },
         {
           provide: PokemonProfileIntegrationService,
           useValue: {
@@ -81,16 +85,12 @@ describe('TamagotchiInitService', () => {
     });
 
     const service = TestBed.inject(TamagotchiInitService);
-    const store = TestBed.inject(Store);
-    const dispatch = vi.spyOn(store, 'dispatch');
 
     service.bootstrapFromProfile().subscribe();
 
     expect(validateSelectedPokemon).toHaveBeenCalled();
-    expect(dispatch).toHaveBeenCalledWith(TamagotchiActions.loadState());
-    expect(dispatch).toHaveBeenCalledWith(
-      TamagotchiActions.selectPokemon({ pokemon: TEST_POKEMON }),
-    );
+    expect(loadFromPersistence).toHaveBeenCalledTimes(1);
+    expect(selectPokemon).toHaveBeenCalledWith(TEST_POKEMON);
     expect(saveSelectedPokemon).toHaveBeenCalledWith(TEST_POKEMON);
   });
 });

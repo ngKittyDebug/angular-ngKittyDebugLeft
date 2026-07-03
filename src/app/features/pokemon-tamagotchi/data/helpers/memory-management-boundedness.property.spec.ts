@@ -3,16 +3,20 @@ import { describe, it } from 'vitest';
 
 import { PERFORMANCE_PROFILES } from '../constants/performance-mode.constants';
 import { profileToGarbageCollectLimits } from '../helpers/memory-management.helper';
-import { garbageCollect, interactWithPokemon, selectPokemon } from '../store/tamagotchi.actions';
-import { tamagotchiReducer } from '../store/tamagotchi.reducer';
-import { initialTamagotchiState } from '../store/tamagotchi.state';
+import {
+  garbageCollectState,
+  interactWithPokemonState,
+  selectPokemonState,
+} from '../store/tamagotchi-state-transitions';
+import { initialTamagotchiState } from '../store/tamagotchi-initial';
 import { arbitraryInteractionEvent, TEST_POKEMON } from '../testing/tamagotchi-arbitraries';
 import type { TamagotchiState } from '../../models/tamagotchi-state.model';
 
 const PROPERTY_RUNS = 100;
+const FIXED_NOW = 1_700_000_000_000;
 
 function withPokemon(state: TamagotchiState): TamagotchiState {
-  return tamagotchiReducer(state, selectPokemon({ pokemon: TEST_POKEMON }));
+  return selectPokemonState(state, TEST_POKEMON);
 }
 
 function isWithinProfileLimits(
@@ -39,19 +43,12 @@ describe('Tamagotchi Property Tests', () => {
             let state = withPokemon(initialTamagotchiState);
 
             for (const interaction of interactions) {
-              state = tamagotchiReducer(
-                state,
-                interactWithPokemon({
-                  interaction,
-                }),
-              );
+              state = interactWithPokemonState(state, interaction, FIXED_NOW);
             }
 
-            state = tamagotchiReducer(
+            state = garbageCollectState(
               state,
-              garbageCollect({
-                limits: profileToGarbageCollectLimits(PERFORMANCE_PROFILES[profileKey]),
-              }),
+              profileToGarbageCollectLimits(PERFORMANCE_PROFILES[profileKey]),
             );
 
             return isWithinProfileLimits(state, profileKey);
@@ -69,12 +66,7 @@ describe('Tamagotchi Property Tests', () => {
             let state = withPokemon(initialTamagotchiState);
 
             for (const interaction of interactions) {
-              state = tamagotchiReducer(
-                state,
-                interactWithPokemon({
-                  interaction,
-                }),
-              );
+              state = interactWithPokemonState(state, interaction, FIXED_NOW);
             }
 
             return state.interactionHistory.length <= 50 && state.notifications.length <= 20;

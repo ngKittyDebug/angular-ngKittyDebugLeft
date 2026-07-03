@@ -7,7 +7,7 @@ import {
   trimBoundedList,
   trimNewestFirst,
 } from './memory-management.helper';
-import { createInitialTamagotchiState } from '../store/tamagotchi.state';
+import { createInitialTamagotchiState } from '../store/tamagotchi-initial';
 
 function createNotification(id: string, read: boolean, timestamp: number): Notification {
   return {

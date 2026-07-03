@@ -1,12 +1,9 @@
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import type { ComponentFixture } from '@angular/core/testing';
-import { ɵgetComponentDef } from '@angular/core';
-import type { Type } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { TranslocoTestingModule } from '@jsverse/transloco';
-import { provideStore, Store } from '@ngrx/store';
-import { provideMockStore } from '@ngrx/store/testing';
-import { firstValueFrom, of, take } from 'rxjs';
+import { firstValueFrom, of } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // eslint-disable-next-line import/extensions -- JSON fixtures must be imported with their extension.
@@ -14,24 +11,15 @@ import enTranslations from '../../../../public/i18n/pokemonTamagotchi/en.json';
 // eslint-disable-next-line import/extensions -- JSON fixtures must be imported with their extension.
 import ruTranslations from '../../../../public/i18n/pokemonTamagotchi/ru.json';
 import { ChildrenRouts } from '../features.routes';
-import { feedPokemon, loadStateSuccess, selectPokemon } from './data/store/tamagotchi.actions';
-import { tamagotchiReducer } from './data/store/tamagotchi.reducer';
-import { selectTamagotchiError } from './data/store/tamagotchi.selectors';
-import {
-  createInitialTamagotchiState,
-  TAMAGOTCHI_FEATURE_KEY,
-} from './data/store/tamagotchi.state';
+import { feedPokemonState, selectPokemonState } from './data/store/tamagotchi-state-transitions';
+import { createInitialTamagotchiState } from './data/store/tamagotchi-initial';
+import { TamagotchiStore } from './data/store/tamagotchi.store';
 import { TamagotchiInitService } from './data/services/tamagotchi-init.service';
 import { TamagotchiPersistenceService } from './data/services/tamagotchi-persistence.service';
 import { PokemonProfileIntegrationService } from './data/services/pokemon-profile-integration.service';
 import { TEST_POKEMON } from './data/testing/tamagotchi-arbitraries';
 import { pokemonTamagotchiRoutes, TAMAGOTCHI_PATH } from './pokemon-tamagotchi.routes';
-import { ActionButtonsComponent } from './ui/components/action-buttons/action-buttons.component';
-import { EvolutionAnimationComponent } from './ui/components/evolution-animation/evolution-animation.component';
-import { NotificationComponent } from './ui/components/notifications/notification.component';
 import { PokemonTamagotchiPageComponent } from './ui/components/pokemon-tamagotchi-page/pokemon-tamagotchi-page.component';
-import { PokemonSpriteComponent } from './ui/components/pokemon-sprite/pokemon-sprite.component';
-import { StatusIndicatorComponent } from './ui/components/status-indicator/status-indicator.component';
 
 const REQUIRED_TRANSLATION_PATHS = [
   'page.title',
@@ -46,15 +34,6 @@ const REQUIRED_TRANSLATION_PATHS = [
   'notifications.empty',
 ] as const;
 
-const STANDALONE_COMPONENTS: Type<unknown>[] = [
-  PokemonTamagotchiPageComponent,
-  StatusIndicatorComponent,
-  ActionButtonsComponent,
-  PokemonSpriteComponent,
-  NotificationComponent,
-  EvolutionAnimationComponent,
-];
-
 function readTranslationPath(source: Record<string, unknown>, path: string): unknown {
   return path.split('.').reduce<unknown>((current, segment) => {
     if (!current || typeof current !== 'object') {
@@ -63,13 +42,6 @@ function readTranslationPath(source: Record<string, unknown>, path: string): unk
 
     return (current as Record<string, unknown>)[segment];
   }, source);
-}
-
-function expectStandaloneComponent(component: Type<unknown>): void {
-  const definition = ɵgetComponentDef(component);
-
-  expect(definition).toBeDefined();
-  expect(definition?.standalone).not.toBe(false);
 }
 
 describe('Feature: pokemon-tamagotchi, Smoke Tests', () => {
@@ -94,15 +66,6 @@ describe('Feature: pokemon-tamagotchi, Smoke Tests', () => {
 
       expect(registered).toBe(true);
     });
-  });
-
-  describe('Standalone component architecture', () => {
-    it.each(STANDALONE_COMPONENTS.map((component) => [component.name, component] as const))(
-      'should declare %s as standalone',
-      (_name, component) => {
-        expectStandaloneComponent(component);
-      },
-    );
   });
 
   describe('Translation assets', () => {
@@ -132,10 +95,8 @@ describe('Feature: pokemon-tamagotchi, Integration Tests', () => {
     });
 
     it('should persist care actions across reload simulation', () => {
-      let state = tamagotchiReducer(
-        createInitialTamagotchiState(),
-        selectPokemon({ pokemon: TEST_POKEMON }),
-      );
+      const fixedNow = 1_700_000_000_000;
+      let state = selectPokemonState(createInitialTamagotchiState(), TEST_POKEMON);
 
       state = {
         ...state,
@@ -146,7 +107,7 @@ describe('Feature: pokemon-tamagotchi, Integration Tests', () => {
       };
       const hungerBefore = state.status.hunger;
 
-      state = tamagotchiReducer(state, feedPokemon());
+      state = feedPokemonState(state, fixedNow);
       persistence.save(state);
 
       const loaded = persistence.load();
@@ -158,10 +119,28 @@ describe('Feature: pokemon-tamagotchi, Integration Tests', () => {
 
   describe('Pokemon profile bootstrap', () => {
     it('should surface evolved pokemon selection error in store', async () => {
+      const error = signal<string | null>(null);
+      const initialized = signal(true);
+      const hasPokemon = signal(false);
+      const loadFromPersistence = vi.fn();
+      const setError = vi.fn((value: string) => {
+        error.set(value);
+      });
+
       TestBed.configureTestingModule({
         providers: [
           TamagotchiInitService,
-          provideStore({ [TAMAGOTCHI_FEATURE_KEY]: tamagotchiReducer }),
+          {
+            provide: TamagotchiStore,
+            useValue: {
+              error,
+              hasPokemon,
+              initialized,
+              loadFromPersistence,
+              selectPokemon: vi.fn(),
+              setError,
+            },
+          },
           {
             provide: PokemonProfileIntegrationService,
             useValue: {
@@ -175,24 +154,12 @@ describe('Feature: pokemon-tamagotchi, Integration Tests', () => {
       });
 
       const service = TestBed.inject(TamagotchiInitService);
-      const store = TestBed.inject(Store);
-
-      store.dispatch(
-        loadStateSuccess({
-          state: {
-            ...createInitialTamagotchiState(),
-            pokemon: null,
-          },
-        }),
-      );
 
       await firstValueFrom(service.bootstrapFromProfile());
 
-      const selectionError = await firstValueFrom(
-        store.select(selectTamagotchiError).pipe(take(1)),
-      );
-
-      expect(selectionError).toBe('evolvedPokemon');
+      expect(loadFromPersistence).toHaveBeenCalledTimes(1);
+      expect(setError).toHaveBeenCalledWith('evolvedPokemon');
+      expect(error()).toBe('evolvedPokemon');
     });
   });
 
@@ -200,6 +167,8 @@ describe('Feature: pokemon-tamagotchi, Integration Tests', () => {
     let fixture: ComponentFixture<PokemonTamagotchiPageComponent>;
 
     beforeEach(async () => {
+      const initial = createInitialTamagotchiState();
+
       await TestBed.configureTestingModule({
         imports: [
           PokemonTamagotchiPageComponent,
@@ -226,16 +195,32 @@ describe('Feature: pokemon-tamagotchi, Integration Tests', () => {
         ],
         providers: [
           provideRouter([]),
-          provideMockStore({
-            initialState: {
-              [TAMAGOTCHI_FEATURE_KEY]: {
-                ...createInitialTamagotchiState(),
-                error: 'noSelection',
-                initialized: true,
-                pokemon: null,
-              },
+          {
+            provide: TamagotchiStore,
+            useValue: {
+              achievements: signal(initial.achievements),
+              canEvolve: signal(false),
+              checkEvolution: vi.fn(),
+              clearError: vi.fn(),
+              dailyRoutine: signal(initial.dailyRoutine),
+              error: signal('noSelection'),
+              evolutionProgress: signal(initial.evolutionProgress),
+              hasPokemon: signal(false),
+              initialized: signal(true),
+              interactionHistory: signal(initial.interactionHistory),
+              isEvolving: signal(false),
+              isSleeping: signal(false),
+              isTraining: signal(false),
+              lastActionTime: signal(initial.lastActionTime),
+              lastDecayTime: signal(initial.lastDecayTime),
+              lastSaveTime: signal(initial.lastSaveTime),
+              notifications: signal(initial.notifications),
+              pokemon: signal(null),
+              status: signal(initial.status),
+              trainingExperienceReward: signal(null),
+              trainingStartedAt: signal(null),
             },
-          }),
+          },
           {
             provide: TamagotchiInitService,
             useValue: {

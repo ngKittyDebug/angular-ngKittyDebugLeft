@@ -1,9 +1,8 @@
 import { inject, Injectable } from '@angular/core';
-import { Store } from '@ngrx/store';
-import { catchError, filter, map, type Observable, of, switchMap, take } from 'rxjs';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { catchError, defer, filter, map, type Observable, of, switchMap, take } from 'rxjs';
 import { environment } from '@environments/environment';
-import * as TamagotchiActions from '../store/tamagotchi.actions';
-import { selectHasPokemon, selectIsInitialized } from '../store/tamagotchi.selectors';
+import { TamagotchiStore } from '../store/tamagotchi.store';
 import {
   PokemonProfileIntegrationService,
   type PokemonSelectionValidation,
@@ -12,26 +11,34 @@ import {
 @Injectable({ providedIn: 'root' })
 export class TamagotchiInitService {
   private readonly profileIntegration = inject(PokemonProfileIntegrationService);
-  private readonly store = inject(Store);
+  private readonly store = inject(TamagotchiStore);
+  private readonly initialized$ = toObservable(this.store.initialized);
 
   public bootstrapFromProfile(): Observable<void> {
-    this.store.dispatch(TamagotchiActions.loadState());
+    return defer(() => {
+      this.store.loadFromPersistence();
 
-    return this.store.select(selectIsInitialized).pipe(
-      filter(Boolean),
-      take(1),
-      switchMap(() => this.store.select(selectHasPokemon).pipe(take(1))),
+      if (this.store.initialized()) {
+        return of(this.store.hasPokemon());
+      }
+
+      return this.initialized$.pipe(
+        filter(Boolean),
+        take(1),
+        map(() => this.store.hasPokemon()),
+      );
+    }).pipe(
       switchMap((hasPersistedPokemon) => this.resolveProfileSelection(hasPersistedPokemon)),
       map((validation) => {
         if (validation.valid && validation.pokemon) {
-          this.store.dispatch(TamagotchiActions.selectPokemon({ pokemon: validation.pokemon }));
+          this.store.selectPokemon(validation.pokemon);
           this.profileIntegration.saveSelectedPokemon(validation.pokemon);
 
           return;
         }
 
         if (!validation.valid && validation.error) {
-          this.store.dispatch(TamagotchiActions.setError({ error: validation.error }));
+          this.store.setError(validation.error);
         }
       }),
     );

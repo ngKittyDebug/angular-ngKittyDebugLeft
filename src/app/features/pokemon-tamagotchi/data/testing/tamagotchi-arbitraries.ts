@@ -6,7 +6,7 @@ import type { InteractionEvent, InteractionType } from '../../models/interaction
 import type { Pokemon } from '../../models/pokemon.model';
 import type { PokemonStatus, StatusDecay, StatusUpdate } from '../../models/pokemon-status.model';
 import type { TamagotchiState } from '../../models/tamagotchi-state.model';
-import { createInitialTamagotchiState } from '../store/tamagotchi.state';
+import { createInitialTamagotchiState } from '../store/tamagotchi-initial';
 
 export const TEST_POKEMON: Pokemon = {
   baseStats: {

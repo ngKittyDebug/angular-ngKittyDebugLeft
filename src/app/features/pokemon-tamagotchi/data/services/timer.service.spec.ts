@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createInitialPokemonStatus } from '../store/tamagotchi.state';
-import { createInitialDailyRoutine } from '../store/tamagotchi.state';
+import { createInitialPokemonStatus } from '../store/tamagotchi-initial';
+import { createInitialDailyRoutine } from '../store/tamagotchi-initial';
 import { TIMER_CONFIG } from '../constants/timer.constants';
 import { TimerService } from './timer.service';
 import { StatusDecayService } from './status-decay.service';

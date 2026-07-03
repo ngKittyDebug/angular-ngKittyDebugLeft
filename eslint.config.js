@@ -141,11 +141,6 @@ export default defineConfig(
           facade: 'off',
           guard: 'off',
           store: 'off',
-          state: 'off',
-          actions: 'off',
-          reducer: 'off',
-          effects: 'off',
-          selectors: 'off',
           helper: 'off',
           interceptor: 'off'
         },

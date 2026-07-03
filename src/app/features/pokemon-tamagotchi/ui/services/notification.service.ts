@@ -1,6 +1,5 @@
 import { inject, Injectable } from '@angular/core';
 import { TranslocoService } from '@jsverse/transloco';
-import { Store } from '@ngrx/store';
 import { AppNotificationService } from '@core/services/app-notification.service';
 import {
   notificationFromAchievement,
@@ -8,7 +7,7 @@ import {
   notificationFromStatusAlert,
 } from '../../data/helpers/notification-factory.helper';
 import { detectPeriodicCriticalAlerts } from '../../data/helpers/status-decay.helper';
-import * as TamagotchiActions from '../../data/store/tamagotchi.actions';
+import { TamagotchiStore } from '../../data/store/tamagotchi.store';
 import type { Achievement } from '../../models/achievement.model';
 import type {
   Notification,
@@ -28,7 +27,7 @@ export interface StatusAlertNotificationContext {
 @Injectable({ providedIn: 'root' })
 export class TamagotchiNotificationService {
   private readonly appNotifications = inject(AppNotificationService);
-  private readonly store = inject(Store);
+  private readonly store = inject(TamagotchiStore);
   private readonly transloco = inject(TranslocoService);
   private readonly lastCriticalAlertAt: Partial<Record<StatusAlertType, number>> = {};
 
@@ -53,7 +52,7 @@ export class TamagotchiNotificationService {
   }
 
   public dismiss(id: string): void {
-    this.store.dispatch(TamagotchiActions.dismissNotification({ id }));
+    this.store.dismissNotification(id);
   }
 
   public notifyEvolutionReady(pokemonName: string, timestamp?: number): void {
@@ -75,7 +74,7 @@ export class TamagotchiNotificationService {
   }
 
   private publish(notification: Notification): void {
-    this.store.dispatch(TamagotchiActions.addNotification({ notification }));
+    this.store.addNotification(notification);
 
     const label = this.resolveText(notification.title);
     const message = this.resolveText(notification.message);
