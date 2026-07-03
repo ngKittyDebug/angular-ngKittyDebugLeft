@@ -1,5 +1,4 @@
 import { inject, Service } from '@angular/core';
-import { ACCESS_TOKEN_KEY } from '@core/constants/auth-constants';
 import { AuthService } from '@core/services/auth.service';
 import type { ChangePasswordModel, UpdateAvatar, UpdateUserModel } from '../models/profile.model';
 import { UserProfileStore } from '../store/profile.store';
@@ -36,7 +35,6 @@ export class ProfileFacade {
   }
 
   public logout(): void {
-    localStorage.removeItem(ACCESS_TOKEN_KEY);
-    this.authService.clearToken();
+    this.authService.logout();
   }
 }
