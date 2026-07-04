@@ -1,4 +1,3 @@
-import type { AchievementModel } from '../models/achievement.model';
 import type {
   NotificationModel,
   NotificationPriority,
@@ -66,10 +65,6 @@ const PRIORITY_RANK: Record<NotificationPriority, number> = {
   warning: 1,
 };
 
-export function alertTemplateFor(alertType: StatusAlertType): AlertNotificationTemplate {
-  return ALERT_TEMPLATES[alertType];
-}
-
 export function createNotificationId(): string {
   return `notification-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
@@ -114,20 +109,6 @@ export function notificationFromEvolutionReady(
     read: false,
     timestamp,
     title: 'evolution.readyTitle',
-  };
-}
-
-export function notificationFromAchievement(
-  achievement: AchievementModel,
-  timestamp: number = Date.now(),
-): NotificationModel {
-  return {
-    id: createNotificationId(),
-    message: achievement.description,
-    priority: 'achievement',
-    read: false,
-    timestamp,
-    title: achievement.name,
   };
 }
 

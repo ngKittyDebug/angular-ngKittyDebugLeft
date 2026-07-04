@@ -3,23 +3,20 @@ import type { Observable } from 'rxjs';
 import { catchError, map, of } from 'rxjs';
 import type { TamagotchiSelectionPort } from '@shared/constants/tamagotchi-selection.token';
 import type {
+  PokemonSelectionValidation,
   SelectedPokemonReference,
   TamagotchiSelectionPokemon,
 } from '@shared/models/tamagotchi-selection.model';
 import { PokemonTamagotchiApiService } from '../api/pokemon/services/pokemon-tamagotchi-api.service';
 import { validateTamagotchiPokemonSelection } from '../helpers/validate-tamagotchi-pokemon-selection.helper';
 import type { PokemonModel } from '../models/pokemon.model';
-import type { PokemonSelectionValidation } from '../models/pokemon-selection.model';
+import type { PokemonSelectionValidation as FeaturePokemonSelectionValidation } from '../models/pokemon-selection.model';
 import { TamagotchiSelectionStorageService } from './tamagotchi-selection-storage.service';
 
 @Injectable({ providedIn: 'root' })
 export class TamagotchiSelectionService implements TamagotchiSelectionPort {
   private readonly api = inject(PokemonTamagotchiApiService);
   private readonly storage = inject(TamagotchiSelectionStorageService);
-
-  public clearSelectedPokemon(): void {
-    this.storage.clear();
-  }
 
   public getSelectedPokemonReference(): SelectedPokemonReference | null {
     return this.storage.getReference();
@@ -34,10 +31,10 @@ export class TamagotchiSelectionService implements TamagotchiSelectionPort {
   }
 
   public validatePokemonSelection(pokemon: TamagotchiSelectionPokemon): PokemonSelectionValidation {
-    return validateTamagotchiPokemonSelection(pokemon) as PokemonSelectionValidation;
+    return validateTamagotchiPokemonSelection(pokemon);
   }
 
-  public validateSelectedPokemon(): Observable<PokemonSelectionValidation> {
+  public validateSelectedPokemon(): Observable<FeaturePokemonSelectionValidation> {
     const reference = this.getSelectedPokemonReference();
 
     if (!reference) {
@@ -45,8 +42,18 @@ export class TamagotchiSelectionService implements TamagotchiSelectionPort {
     }
 
     return this.loadPokemonByName(reference.name).pipe(
-      map((pokemon) => this.validatePokemonSelection(pokemon)),
-      catchError(() => of<PokemonSelectionValidation>({ error: 'loadFailed', valid: false })),
+      map((pokemon): FeaturePokemonSelectionValidation => {
+        const validation = validateTamagotchiPokemonSelection(pokemon);
+
+        if (!validation.valid) {
+          return { error: validation.error, valid: false };
+        }
+
+        return { pokemon, valid: true };
+      }),
+      catchError(() =>
+        of<FeaturePokemonSelectionValidation>({ error: 'loadFailed', valid: false }),
+      ),
     );
   }
 }

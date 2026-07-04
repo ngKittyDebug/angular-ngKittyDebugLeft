@@ -5,7 +5,6 @@ import { AppNotificationService } from '@core/services/app-notification.service'
 import { TIMER_CONFIG } from '../../data/constants/timer.constants';
 import { TamagotchiStore } from '../../data/store/tamagotchi.store';
 import { createInitialPokemonStatus } from '../../data/store/tamagotchi-initial';
-import type { AchievementModel } from '../../data/models/achievement.model';
 import { TamagotchiNotificationService } from './notification.service';
 
 const TRANSLATIONS: Record<string, string> = {
@@ -90,27 +89,6 @@ describe('TamagotchiNotificationService', () => {
         1,
         'Pikachu',
         'Ready to evolve!',
-      );
-    });
-
-    it('должен показывать positive toast для достижений', () => {
-      const achievement: AchievementModel = {
-        category: 'care',
-        description: 'Fed your Pokémon 10 times',
-        id: 'care-10',
-        name: 'Dedicated caretaker',
-        requirements: [],
-        reward: { experience: 50, unlockables: [] },
-        unlocked: true,
-        unlockedAt: Date.now(),
-      };
-
-      service.notifyAchievementUnlocked(achievement);
-
-      expect(appNotifications.showPositiveNotification).toHaveBeenNthCalledWith(
-        1,
-        'Fed your Pokémon 10 times',
-        'Dedicated caretaker',
       );
     });
   });

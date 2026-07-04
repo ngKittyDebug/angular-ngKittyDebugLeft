@@ -49,7 +49,6 @@ export class TamagotchiFacade {
   public readonly hasPokemon = this.store.hasPokemon;
   public readonly isEvolving = this.store.isEvolving;
   public readonly isSleeping = this.store.isSleeping;
-  public readonly notificationList = this.store.notificationList;
   public readonly notifications = this.store.notificationList;
   public readonly pokemon = this.store.pokemon;
   public readonly status = this.store.status;

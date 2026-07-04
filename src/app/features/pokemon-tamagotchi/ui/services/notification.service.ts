@@ -2,13 +2,11 @@ import { inject, Injectable } from '@angular/core';
 import { TranslocoService } from '@jsverse/transloco';
 import { AppNotificationService } from '@core/services/app-notification.service';
 import {
-  notificationFromAchievement,
   notificationFromEvolutionReady,
   notificationFromStatusAlert,
 } from '../../data/helpers/notification-factory.helper';
 import { detectPeriodicCriticalAlerts } from '../../data/helpers/status-decay.helper';
 import { TamagotchiStore } from '../../data/store/tamagotchi.store';
-import type { AchievementModel } from '../../data/models/achievement.model';
 import type {
   NotificationModel,
   NotificationPriority,
@@ -53,10 +51,6 @@ export class TamagotchiNotificationService {
 
   public notifyEvolutionReady(pokemonName: string, timestamp?: number): void {
     this.publish(notificationFromEvolutionReady(pokemonName, timestamp));
-  }
-
-  public notifyAchievementUnlocked(achievement: AchievementModel, timestamp?: number): void {
-    this.publish(notificationFromAchievement(achievement, timestamp));
   }
 
   private notifyStatusAlert(alertType: StatusAlertType, timestamp?: number): void {

@@ -50,7 +50,6 @@
     "disabledTraining": "Training in progress"
   },
   "notifications": {
-    "dismiss": "Dismiss notification",
     "empty": "No notifications yet",
     "hideHistory": "Hide history",
     "showHistory": "Show history",

@@ -174,12 +174,6 @@ describe('PokemonTamagotchiPageComponent', () => {
                     evolving: 'Evolving…',
                     evolvingAria: '{{name}} is evolving',
                   },
-                  notificationList: {
-                    dismiss: 'Dismiss',
-                    empty: 'No notifications',
-                    hideHistory: 'Hide history',
-                    showHistory: 'Show history',
-                  },
                   page: PAGE_TRANSLATIONS,
                   status: {
                     energy: 'Energy',

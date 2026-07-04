@@ -3,7 +3,7 @@ import type {
   TamagotchiSelectionPokemon,
 } from '@shared/models/tamagotchi-selection.model';
 
-export function isFirstStageTamagotchiPokemon(pokemon: TamagotchiSelectionPokemon): boolean {
+function isFirstStageTamagotchiPokemon(pokemon: TamagotchiSelectionPokemon): boolean {
   return pokemon.isFirstStage;
 }
 

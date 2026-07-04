@@ -50,7 +50,6 @@
     "disabledTraining": "Идёт тренировка"
   },
   "notifications": {
-    "dismiss": "Закрыть уведомление",
     "empty": "Уведомлений пока нет",
     "hideHistory": "Скрыть историю",
     "showHistory": "Показать историю",

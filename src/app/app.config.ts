@@ -13,8 +13,6 @@ import { TranslocoHttpLoader } from './transloco-loader';
 import { provideTransloco } from '@jsverse/transloco';
 import { provideTranslocoPersistLang } from '@jsverse/transloco-persist-lang';
 import { authBearerInterceptor } from '@core/interceptors/auth-bearer.interceptor';
-import { TamagotchiSelectionService } from '@features/pokemon-tamagotchi/data/services/tamagotchi-selection.service';
-import { TAMAGOTCHI_SELECTION_PORT } from '@shared/constants/tamagotchi-selection.token';
 
 export const appConfig = {
   providers: [
@@ -45,6 +43,5 @@ export const appConfig = {
         'ng-dirty': (field) => field.state().dirty(),
       },
     }),
-    { provide: TAMAGOTCHI_SELECTION_PORT, useExisting: TamagotchiSelectionService },
   ],
 } satisfies ApplicationConfig;

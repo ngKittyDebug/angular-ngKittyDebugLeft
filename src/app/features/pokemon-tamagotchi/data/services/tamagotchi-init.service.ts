@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { defer, filter, map, type Observable, of, switchMap, take } from 'rxjs';
-import type { PokemonSelectionValidation } from '../models/pokemon-selection.model';
+import type { PokemonSelectionValidation as FeaturePokemonSelectionValidation } from '../models/pokemon-selection.model';
 import { TamagotchiStore } from '../store/tamagotchi.store';
 import { TamagotchiSelectionService } from './tamagotchi-selection.service';
 
@@ -43,7 +43,7 @@ export class TamagotchiInitService {
 
   private resolveProfileSelection(
     hasPersistedPokemon: boolean,
-  ): Observable<PokemonSelectionValidation> {
+  ): Observable<FeaturePokemonSelectionValidation> {
     if (!hasPersistedPokemon) {
       return this.selection.validateSelectedPokemon();
     }

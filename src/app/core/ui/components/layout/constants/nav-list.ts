@@ -2,7 +2,7 @@ import { ABOUT_PATH } from '@features/about/about.routes';
 import { MAIN_PATH } from '@features/main-catalog/main-catalog.routes';
 import { PROFILE_PATH } from '@features/profile/profile.routes';
 import { FRENZY_PATH } from '@features/frenzy/frenzy.routes';
-import { TAMAGOTCHI_PATH } from '@features/pokemon-tamagotchi/pokemon-tamagotchi.routes';
+import { TAMAGOTCHI_PATH } from '@shared/constants/tamagotchi-routes';
 
 export const NAV_LIST_ITEMS = [
   {

@@ -13,10 +13,6 @@ export class TamagotchiSelectionStorageService {
   private readonly persistence = inject(TamagotchiPersistenceService);
   private readonly storage = inject(TamagotchiStorageService);
 
-  public clear(): void {
-    this.storage.removeItem(TAMAGOTCHI_SELECTED_POKEMON_KEY);
-  }
-
   public getReference(): SelectedPokemonReference | null {
     const raw = this.storage.getItem(TAMAGOTCHI_SELECTED_POKEMON_KEY);
 
