@@ -1,9 +1,10 @@
-import { inject, isDevMode } from '@angular/core';
+import { inject } from '@angular/core';
 import { type CanActivateFn, Router } from '@angular/router';
 import { AuthService } from '@core/services/auth.service';
+import { environment } from '@environments/environment';
 
 export const guestGuard: CanActivateFn = () => {
-  if (isDevMode()) {
+  if (environment.disableAuthGuards) {
     return true;
   }
 

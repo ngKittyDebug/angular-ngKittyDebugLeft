@@ -10,18 +10,12 @@ export const authRefreshInterceptor: HttpInterceptorFn = (request, next) => {
     catchError((error: HttpErrorResponse) => {
       if (error.status === 401) {
         if (request.url.includes('auth/refresh')) {
-          authService.clearLocalState();
-
           return throwError(() => error);
         }
 
         return authService.getNewTokenOrWait().pipe(
-          switchMap((newToken) => {
-            const retryRequest = request.clone({
-              setHeaders: {
-                Authorization: `Bearer ${newToken}`,
-              },
-            });
+          switchMap(() => {
+            const retryRequest = request.clone();
 
             return next(retryRequest);
           }),
