@@ -1,8 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 import * as fc from 'fast-check';
+import type { EvolutionProgressModel } from '../models/evolution.model';
 import type { PokemonStatusModel } from '../models/pokemon-status.model';
 import type { TamagotchiStateModel } from '../models/tamagotchi-state.model';
 import { arbitraryTamagotchiState } from '../fixtures/tamagotchi-arbitraries';
+import { syncEvolutionProgressWithPokemon } from '../store/tamagotchi-state-transitions';
 import { TamagotchiPersistenceService } from './tamagotchi-persistence.service';
 
 const PROPERTY_RUNS = 100;
@@ -17,6 +19,16 @@ function statusWithoutSaveTimestamp(
   return rest;
 }
 
+function expectedEvolutionProgressAfterLoad(
+  original: TamagotchiStateModel,
+): EvolutionProgressModel {
+  if (!original.pokemon) {
+    return original.evolutionProgress;
+  }
+
+  return syncEvolutionProgressWithPokemon(original).evolutionProgress;
+}
+
 function assertPersistedEquivalence(
   original: TamagotchiStateModel,
   loaded: TamagotchiStateModel,
@@ -29,7 +41,10 @@ function assertPersistedEquivalence(
     return false;
   }
 
-  if (JSON.stringify(loaded.evolutionProgress) !== JSON.stringify(original.evolutionProgress)) {
+  if (
+    JSON.stringify(loaded.evolutionProgress) !==
+    JSON.stringify(expectedEvolutionProgressAfterLoad(original))
+  ) {
     return false;
   }
 
