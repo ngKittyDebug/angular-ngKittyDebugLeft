@@ -6,13 +6,16 @@ export interface EvolutionRequirementModel {
   description: string;
 }
 
+export interface EvolutionStepModel {
+  pokemonId: string;
+  requirements: EvolutionRequirementModel[];
+  childNextEvolution?: EvolutionStepModel;
+}
+
 export interface EvolutionChainModel {
   currentStage: number;
   totalStages: number;
-  nextEvolution?: {
-    pokemonId: string;
-    requirements: EvolutionRequirementModel[];
-  };
+  nextEvolution?: EvolutionStepModel;
 }
 
 export interface EvolutionProgressModel {

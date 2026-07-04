@@ -1,4 +1,6 @@
 import { TestBed } from '@angular/core/testing';
+import { TEST_POKEMON } from '../fixtures/tamagotchi-arbitraries';
+import type { PokemonModel } from '../models/pokemon.model';
 import { createInitialTamagotchiState } from '../store/tamagotchi-initial';
 import { createTamagotchiStorageMock } from '../fixtures/tamagotchi-storage.mock';
 import { TamagotchiStorageService } from './tamagotchi-storage.service';
@@ -40,6 +42,48 @@ describe('TamagotchiPersistenceService', () => {
       expect(loaded?.state.status.hunger).toBe(42);
       expect(loaded?.state.status.mood).toBe(55);
       expect(loaded?.recoveredFromBackup).toBe(false);
+    });
+
+    it('должен синхронизировать evolution requirements с chain покемона при загрузке', () => {
+      const staleRequirements = [
+        {
+          type: 'level' as const,
+          value: 1,
+          description: 'Stale threshold',
+        },
+      ];
+      const pokemon: PokemonModel = {
+        ...TEST_POKEMON,
+        evolutionChain: {
+          currentStage: 2,
+          nextEvolution: {
+            pokemonId: 'venusaur',
+            requirements: [
+              {
+                type: 'level',
+                value: 99,
+                description: 'Reach level 99',
+              },
+            ],
+          },
+          totalStages: 3,
+        },
+      };
+      const state = {
+        ...createInitialTamagotchiState(),
+        evolutionProgress: {
+          currentProgress: { level: 50 },
+          isReady: false,
+          requirements: staleRequirements,
+        },
+        initialized: true,
+        pokemon,
+      };
+
+      service.save(state);
+      const loaded = service.load();
+
+      expect(loaded?.state.evolutionProgress.requirements[0]?.value).toBe(99);
     });
   });
 

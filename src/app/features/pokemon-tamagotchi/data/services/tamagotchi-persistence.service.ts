@@ -6,6 +6,7 @@ import {
   createInitialDailyRoutine,
   createInitialTamagotchiState,
 } from '../store/tamagotchi-initial';
+import { syncEvolutionProgressWithPokemon } from '../store/tamagotchi-state-transitions';
 import { TamagotchiStorageService } from './tamagotchi-storage.service';
 
 export const TAMAGOTCHI_STORAGE_KEY = 'pokemon-tamagotchi-state';
@@ -128,7 +129,11 @@ export class TamagotchiPersistenceService {
         version >= TAMAGOTCHI_STATE_VERSION ? (state.trainingStartedAt ?? null) : null,
     };
 
-    return migrated;
+    if (!migrated.pokemon) {
+      return migrated;
+    }
+
+    return syncEvolutionProgressWithPokemon(migrated);
   }
 
   private validateState(state: TamagotchiStateModel): TamagotchiStateModel {

@@ -87,6 +87,31 @@ describe('EvolutionService', () => {
         expect(result?.evolvedPokemon.isFirstStage).toBe(false);
         expect(result?.evolvedPokemon.evolutionChain.currentStage).toBe(2);
       });
+
+      it('должен сохранять nextEvolution для второй ступени из childNextEvolution', () => {
+        const threeStagePokemon: PokemonModel = {
+          ...basePokemon,
+          evolutionChain: {
+            currentStage: 1,
+            nextEvolution: {
+              pokemonId: 'ivysaur',
+              requirements: EVOLUTION_REQUIREMENTS,
+              childNextEvolution: {
+                pokemonId: 'venusaur',
+                requirements: EVOLUTION_REQUIREMENTS,
+              },
+            },
+            totalStages: 3,
+          },
+        };
+        const evolutionData = service.buildEvolutionData(threeStagePokemon);
+
+        expect(evolutionData).not.toBeNull();
+
+        const result = service.triggerEvolution(threeStagePokemon, evolutionData!);
+
+        expect(result?.evolvedPokemon.evolutionChain.nextEvolution?.pokemonId).toBe('venusaur');
+      });
     });
 
     describe('getEvolutionChain', () => {

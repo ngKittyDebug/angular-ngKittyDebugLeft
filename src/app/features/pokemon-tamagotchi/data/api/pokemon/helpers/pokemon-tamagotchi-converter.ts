@@ -6,8 +6,8 @@ import type {
   PokemonDetailApiData,
   PokemonSpritesApiData,
 } from '@shared/models/pokemon-detail-api-data-interface';
-import { EVOLUTION_REQUIREMENTS } from '../../../constants/evolution-criteria.constants';
-import type { EvolutionChainModel } from '../../../models/evolution.model';
+import { getEvolutionRequirementsForFromStage } from '../../../constants/evolution-criteria.constants';
+import type { EvolutionChainModel, EvolutionStepModel } from '../../../models/evolution.model';
 import type {
   PokemonModel,
   PokemonSpriteUrlsModel,
@@ -100,6 +100,23 @@ export function convertApiSpritesToSpriteVariations(
   };
 }
 
+export function buildNextEvolutionStep(
+  chainNode: EvolutionChainItemApiData,
+  fromStage = 1,
+): EvolutionStepModel | undefined {
+  const child = chainNode.evolves_to?.[0];
+
+  if (!child) {
+    return undefined;
+  }
+
+  return {
+    pokemonId: child.species.name,
+    requirements: getEvolutionRequirementsForFromStage(fromStage),
+    childNextEvolution: buildNextEvolutionStep(child, fromStage + 1),
+  };
+}
+
 export function buildEvolutionChain(
   detail: PokemonDetailApiData,
   evolutionResponse: EvolutionChainApiResponse,
@@ -107,16 +124,10 @@ export function buildEvolutionChain(
 ): EvolutionChainModel {
   const speciesName = detail.species.name;
   const currentStage = findEvolutionStageIndex(evolutionResponse.chain, speciesName) ?? 1;
-  const nextSpecies = chainNode.evolves_to?.[0]?.species;
 
   return {
     currentStage,
-    nextEvolution: nextSpecies
-      ? {
-          pokemonId: nextSpecies.name,
-          requirements: EVOLUTION_REQUIREMENTS,
-        }
-      : undefined,
+    nextEvolution: buildNextEvolutionStep(chainNode),
     totalStages: countEvolutionStages(evolutionResponse.chain),
   };
 }

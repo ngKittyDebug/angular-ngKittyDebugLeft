@@ -38,27 +38,7 @@ export class TamagotchiFacade {
   private readonly timerService = inject(TimerService);
   private readonly wasEvolutionReady = signal(false);
   private readonly isInitialized = computed(() => this.store.initialized());
-
-  private readonly state = computed(
-    (): TamagotchiStateModel => ({
-      achievementList: this.store.achievementList(),
-      dailyRoutine: this.store.dailyRoutine(),
-      error: this.store.error(),
-      evolutionProgress: this.store.evolutionProgress(),
-      initialized: this.store.initialized(),
-      interactionHistory: this.store.interactionHistory(),
-      isEvolving: this.store.isEvolving(),
-      isSleeping: this.store.isSleeping(),
-      lastActionTime: this.store.lastActionTime(),
-      lastDecayTime: this.store.lastDecayTime(),
-      lastSaveTime: this.store.lastSaveTime(),
-      notificationList: this.store.notificationList(),
-      pokemon: this.store.pokemon(),
-      status: this.store.status(),
-      trainingExperienceReward: this.store.trainingExperienceReward(),
-      trainingStartedAt: this.store.trainingStartedAt(),
-    }),
-  );
+  private readonly state = this.store.snapshot;
 
   public readonly displayedStatusTypes = DISPLAYED_STATUS_TYPES;
 
@@ -270,7 +250,7 @@ export class TamagotchiFacade {
   public onResetProgress(): void {
     this.store.resetState();
     this.store.clearError();
-    this.initService.bootstrapFromProfile().subscribe();
+    this.initService.bootstrapFromProfile().pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
   }
 
   public maxValueForStatus(statusType: StatusType): number {

@@ -1,6 +1,10 @@
 import { GAME_BALANCE } from '../constants/game-balance.constants';
+import { EVOLUTION_REQUIREMENTS } from '../constants/evolution-criteria.constants';
 import { TEST_POKEMON } from '../fixtures/tamagotchi-arbitraries';
+import type { PokemonModel } from '../models/pokemon.model';
 import {
+  checkEvolutionState,
+  completeEvolutionState,
   feedPokemonState,
   selectPokemonState,
   updateStatusState,
@@ -52,6 +56,93 @@ describe('tamagotchiStateTransitions', () => {
       const second = feedPokemonState(prepared, FIXED_NOW);
 
       expect(first).toEqual(second);
+    });
+  });
+
+  describe('Эволюция', () => {
+    const stage2Pokemon: PokemonModel = {
+      ...TEST_POKEMON,
+      evolutionChain: {
+        currentStage: 2,
+        nextEvolution: {
+          pokemonId: '3',
+          requirements: [
+            {
+              type: 'level',
+              value: 99,
+              description: 'Reach level 99',
+            },
+          ],
+        },
+        totalStages: 3,
+      },
+    };
+
+    it('должен сверять готовность к эволюции с requirements текущего покемона', () => {
+      const selected = selectPokemonState(initialTamagotchiState, stage2Pokemon);
+
+      expect(selected.evolutionProgress.requirements[0]?.value).toBe(99);
+
+      const meetsDefaultThreshold = updateStatusState(selected, {
+        level: GAME_BALANCE.EVOLUTION.MIN_LEVEL,
+      });
+      const checkedDefault = checkEvolutionState(meetsDefaultThreshold);
+
+      expect(checkedDefault.evolutionProgress.isReady).toBe(false);
+
+      const meetsCustomThreshold = updateStatusState(selected, { level: 99 });
+      const checkedCustom = checkEvolutionState(meetsCustomThreshold);
+
+      expect(checkedCustom.evolutionProgress.isReady).toBe(true);
+    });
+
+    it('должен пересчитывать requirements после completeEvolution', () => {
+      const stage1Pokemon: PokemonModel = {
+        ...TEST_POKEMON,
+        evolutionChain: {
+          currentStage: 1,
+          nextEvolution: {
+            pokemonId: '26',
+            requirements: EVOLUTION_REQUIREMENTS,
+            childNextEvolution: {
+              pokemonId: '3',
+              requirements: [
+                {
+                  type: 'level',
+                  value: 99,
+                  description: 'Reach level 99',
+                },
+              ],
+            },
+          },
+          totalStages: 3,
+        },
+      };
+      const evolvedPokemon: PokemonModel = {
+        ...TEST_POKEMON,
+        evolutionChain: {
+          currentStage: 2,
+          nextEvolution: {
+            pokemonId: '3',
+            requirements: [
+              {
+                type: 'level',
+                value: 99,
+                description: 'Reach level 99',
+              },
+            ],
+          },
+          totalStages: 3,
+        },
+        id: '26',
+        isFirstStage: false,
+      };
+
+      const selected = selectPokemonState(initialTamagotchiState, stage1Pokemon);
+      const completed = completeEvolutionState({ ...selected, isEvolving: true }, evolvedPokemon);
+
+      expect(completed.evolutionProgress.requirements[0]?.value).toBe(99);
+      expect(completed.evolutionProgress.isReady).toBe(false);
     });
   });
 });

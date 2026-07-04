@@ -1,7 +1,7 @@
-import { signal } from '@angular/core';
+import { computed, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
-import { beforeEach, describe, expect, it, type MockedObject, vi } from 'vitest';
+import { Observable, of } from 'rxjs';
+import { afterEach, beforeEach, describe, expect, it, type MockedObject, vi } from 'vitest';
 import { EvolutionService } from '../services/evolution.service';
 import { PerformanceService } from '../services/performance.service';
 import { TamagotchiInitService } from '../services/tamagotchi-init.service';
@@ -12,7 +12,7 @@ import {
   createInitialPokemonStatus,
   createInitialTamagotchiState,
 } from '../store/tamagotchi-initial';
-import { TamagotchiStore } from '../store/tamagotchi.store';
+import { snapshotState, TamagotchiStore } from '../store/tamagotchi.store';
 import { TamagotchiNotificationService } from '../../ui/services/notification.service';
 import { PERFORMANCE_PROFILES } from '../constants/performance-mode.constants';
 import { TamagotchiFacade } from './tamagotchi.facade';
@@ -70,7 +70,7 @@ function createStoreMock(
     water: vi.fn(),
   } as const satisfies TamagotchiStoreMethodsMock;
 
-  return {
+  const storeSignals = {
     achievementList: signal(initial.achievementList),
     canEvolve: signal(false),
     dailyRoutine: signal(initial.dailyRoutine),
@@ -90,6 +90,11 @@ function createStoreMock(
     status: signal(createInitialPokemonStatus()),
     trainingExperienceReward: signal<number | null>(null),
     trainingStartedAt: signal<number | null>(null),
+  };
+
+  return {
+    ...storeSignals,
+    snapshot: computed(() => snapshotState(storeSignals)),
     ...methods,
   };
 }
@@ -189,6 +194,87 @@ describe('TamagotchiFacade', () => {
         expect(mockStore.clearError).toHaveBeenCalledTimes(1);
         expect(mockInitService.bootstrapFromProfile).toHaveBeenCalledTimes(2);
       });
+    });
+  });
+
+  describe('Подписки', () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('не должен обрабатывать поздний emit bootstrap после уничтожения фасада', () => {
+      vi.useFakeTimers();
+
+      let bootstrapCallCount = 0;
+      const lateBootstrapEffect = vi.fn();
+
+      mockInitService.bootstrapFromProfile = vi.fn(() => {
+        bootstrapCallCount++;
+
+        if (bootstrapCallCount === 1) {
+          return of(undefined);
+        }
+
+        return new Observable<void>((subscriber) => {
+          const timeoutId = setTimeout(() => {
+            lateBootstrapEffect();
+            subscriber.next();
+            subscriber.complete();
+          }, 100);
+
+          return () => {
+            clearTimeout(timeoutId);
+          };
+        });
+      });
+
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [
+          TamagotchiFacade,
+          { provide: TamagotchiStore, useValue: mockStore },
+          { provide: TamagotchiInitService, useValue: mockInitService },
+          {
+            provide: TamagotchiNotificationService,
+            useValue: {
+              notifyEvolutionReady: vi.fn(),
+              processStatusAlerts: vi.fn(),
+            },
+          },
+          {
+            provide: EvolutionService,
+            useValue: {
+              buildEvolutionData: vi.fn(),
+              triggerEvolution: vi.fn(),
+            },
+          },
+          {
+            provide: PerformanceService,
+            useValue: {
+              getProfile: vi.fn(() => PERFORMANCE_PROFILES.balanced),
+              mode: signal('balanced' as const),
+              resolveEffectiveMode: vi.fn(() => 'balanced' as const),
+              setMode: vi.fn(),
+            },
+          },
+          {
+            provide: TimerService,
+            useValue: {
+              startTimer: vi.fn(() => ({ cleanup: vi.fn() })),
+              stopTimer: vi.fn(),
+            },
+          },
+          TamagotchiService,
+        ],
+      });
+
+      const resetFacade = TestBed.inject(TamagotchiFacade);
+
+      resetFacade.onResetProgress();
+      TestBed.resetTestingModule();
+      vi.advanceTimersByTime(200);
+
+      expect(lateBootstrapEffect).not.toHaveBeenCalled();
     });
   });
 });

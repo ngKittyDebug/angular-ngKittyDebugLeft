@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 
 import { TAMAGOTCHI_SYSTEM_ERRORS } from '../constants/system-errors.constants';
 import { clampStatusValue } from '../helpers/status-bounds.helper';
+import { syncEvolutionProgressWithPokemon } from '../store/tamagotchi-state-transitions';
 import { createInitialTamagotchiState } from '../store/tamagotchi-initial';
 import type { TamagotchiStateModel } from '../models/tamagotchi-state.model';
 import { TamagotchiLoggerService } from './tamagotchi-logger.service';
@@ -63,7 +64,7 @@ export class TamagotchiErrorRecoveryService {
       }
     }
 
-    return {
+    const repaired: TamagotchiStateModel = {
       ...createInitialTamagotchiState(),
       ...state,
       achievementList: state.achievementList ?? [],
@@ -85,5 +86,7 @@ export class TamagotchiErrorRecoveryService {
         mood: clampStatusValue(state.status.mood),
       },
     };
+
+    return syncEvolutionProgressWithPokemon(repaired);
   }
 }

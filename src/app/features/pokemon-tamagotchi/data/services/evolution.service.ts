@@ -7,6 +7,7 @@ import {
   buildEvolutionProgressValues,
   buildEvolvedPokemon,
   checkEvolutionCriteria,
+  getEvolutionRequirementsForPokemon,
   getRequirementCompletionRatio,
 } from '../helpers/evolution-checker.helper';
 import type { AchievementModel } from '../models/achievement.model';
@@ -60,13 +61,7 @@ export class EvolutionService {
   }
 
   public getRequirementsForPokemon(pokemon: PokemonModel): EvolutionRequirementModel[] {
-    const chainRequirements = pokemon.evolutionChain.nextEvolution?.requirements;
-
-    if (chainRequirements && chainRequirements.length > 0) {
-      return chainRequirements;
-    }
-
-    return EVOLUTION_REQUIREMENTS;
+    return getEvolutionRequirementsForPokemon(pokemon);
   }
 
   public buildEvolutionData(pokemon: PokemonModel): EvolutionDataModel | null {

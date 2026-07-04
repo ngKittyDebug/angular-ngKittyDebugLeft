@@ -1,4 +1,4 @@
-import { signal } from '@angular/core';
+import { computed, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import type { ComponentFixture } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
@@ -13,7 +13,7 @@ import ruTranslations from '../../../../public/i18n/pokemonTamagotchi/ru.json';
 import { ChildrenRouts } from '../features.routes';
 import { feedPokemonState, selectPokemonState } from './data/store/tamagotchi-state-transitions';
 import { createInitialTamagotchiState } from './data/store/tamagotchi-initial';
-import { TamagotchiStore } from './data/store/tamagotchi.store';
+import { snapshotState, TamagotchiStore } from './data/store/tamagotchi.store';
 import { TamagotchiInitService } from './data/services/tamagotchi-init.service';
 import { TamagotchiPersistenceService } from './data/services/tamagotchi-persistence.service';
 import { TamagotchiSelectionService } from './data/services/tamagotchi-selection.service';
@@ -197,6 +197,28 @@ describe('PokemonTamagotchi — интеграция', () => {
         clearError: vi.fn(),
       } as const satisfies Pick<TamagotchiStoreSmokeMethodsMock, 'checkEvolution' | 'clearError'>;
 
+      const storeSignals = {
+        achievementList: signal(initial.achievementList),
+        canEvolve: signal(false),
+        dailyRoutine: signal(initial.dailyRoutine),
+        error: signal('noSelection'),
+        evolutionProgress: signal(initial.evolutionProgress),
+        hasPokemon: signal(false),
+        initialized: signal(true),
+        interactionHistory: signal(initial.interactionHistory),
+        isEvolving: signal(false),
+        isSleeping: signal(false),
+        isTraining: signal(false),
+        lastActionTime: signal(initial.lastActionTime),
+        lastDecayTime: signal(initial.lastDecayTime),
+        lastSaveTime: signal(initial.lastSaveTime),
+        notificationList: signal(initial.notificationList),
+        pokemon: signal(null),
+        status: signal(initial.status),
+        trainingExperienceReward: signal(null),
+        trainingStartedAt: signal(null),
+      };
+
       const selection = {
         validateSelectedPokemon: vi.fn(() => of({ error: 'noSelection' as const, valid: false })),
       } as const satisfies Pick<TamagotchiSelectionSmokeMock, 'validateSelectedPokemon'>;
@@ -230,25 +252,8 @@ describe('PokemonTamagotchi — интеграция', () => {
           {
             provide: TamagotchiStore,
             useValue: {
-              achievementList: signal(initial.achievementList),
-              canEvolve: signal(false),
-              dailyRoutine: signal(initial.dailyRoutine),
-              error: signal('noSelection'),
-              evolutionProgress: signal(initial.evolutionProgress),
-              hasPokemon: signal(false),
-              initialized: signal(true),
-              interactionHistory: signal(initial.interactionHistory),
-              isEvolving: signal(false),
-              isSleeping: signal(false),
-              isTraining: signal(false),
-              lastActionTime: signal(initial.lastActionTime),
-              lastDecayTime: signal(initial.lastDecayTime),
-              lastSaveTime: signal(initial.lastSaveTime),
-              notificationList: signal(initial.notificationList),
-              pokemon: signal(null),
-              status: signal(initial.status),
-              trainingExperienceReward: signal(null),
-              trainingStartedAt: signal(null),
+              ...storeSignals,
+              snapshot: computed(() => snapshotState(storeSignals)),
               ...storeMethods,
             },
           },

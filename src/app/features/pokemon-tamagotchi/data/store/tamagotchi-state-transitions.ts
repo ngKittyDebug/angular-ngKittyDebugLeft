@@ -1,6 +1,7 @@
 import { GAME_BALANCE } from '../constants/game-balance.constants';
 import { MEMORY_LIMITS } from '../constants/performance-mode.constants';
 import {
+  buildEvolutionProgressForPokemon,
   buildEvolutionProgressValues,
   evaluateEvolutionRequirements,
 } from '../helpers/evolution-checker.helper';
@@ -91,6 +92,7 @@ export function selectPokemonState(
     error: null,
     initialized: true,
     pokemon,
+    evolutionProgress: buildEvolutionProgressForPokemon(pokemon),
   };
 }
 
@@ -328,6 +330,27 @@ export function checkEvolutionState(state: TamagotchiStateModel): TamagotchiStat
   };
 }
 
+export function syncEvolutionProgressWithPokemon(
+  state: TamagotchiStateModel,
+): TamagotchiStateModel {
+  if (!state.pokemon) {
+    return state;
+  }
+
+  const syncedState: TamagotchiStateModel = {
+    ...state,
+    evolutionProgress: {
+      ...buildEvolutionProgressForPokemon(state.pokemon),
+      currentProgress: state.evolutionProgress.currentProgress,
+    },
+  };
+
+  return {
+    ...syncedState,
+    evolutionProgress: computeEvolutionProgress(syncedState),
+  };
+}
+
 export function startEvolutionState(state: TamagotchiStateModel): TamagotchiStateModel {
   if (!state.evolutionProgress.isReady || state.isEvolving) {
     return state;
@@ -345,11 +368,7 @@ export function completeEvolutionState(
 ): TamagotchiStateModel {
   return {
     ...state,
-    evolutionProgress: {
-      ...state.evolutionProgress,
-      currentProgress: {},
-      isReady: false,
-    },
+    evolutionProgress: buildEvolutionProgressForPokemon(evolvedPokemon),
     isEvolving: false,
     pokemon: evolvedPokemon,
   };

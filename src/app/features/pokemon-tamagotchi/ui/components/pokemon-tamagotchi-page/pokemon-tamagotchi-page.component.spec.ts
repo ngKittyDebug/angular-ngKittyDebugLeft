@@ -1,4 +1,4 @@
-import { signal } from '@angular/core';
+import { computed, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import type { ComponentFixture } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
@@ -12,7 +12,7 @@ import {
   createInitialPokemonStatus,
   createInitialTamagotchiState,
 } from '../../../data/store/tamagotchi-initial';
-import { TamagotchiStore } from '../../../data/store/tamagotchi.store';
+import { snapshotState, TamagotchiStore } from '../../../data/store/tamagotchi.store';
 import { PokemonTamagotchiPageComponent } from './pokemon-tamagotchi-page.component';
 
 type TamagotchiStoreInstance = InstanceType<typeof TamagotchiStore>;
@@ -117,7 +117,7 @@ function createStoreMock(
     water: vi.fn(),
   } as const satisfies TamagotchiStorePageMethodsMock;
 
-  return {
+  const storeSignals = {
     achievementList: signal(initial.achievementList),
     canEvolve: signal(false),
     dailyRoutine: signal(initial.dailyRoutine),
@@ -137,6 +137,11 @@ function createStoreMock(
     status: signal(createInitialPokemonStatus()),
     trainingExperienceReward: signal<number | null>(null),
     trainingStartedAt: signal<number | null>(null),
+  };
+
+  return {
+    ...storeSignals,
+    snapshot: computed(() => snapshotState(storeSignals)),
     ...methods,
   };
 }

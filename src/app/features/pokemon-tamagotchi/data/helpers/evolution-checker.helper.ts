@@ -1,3 +1,4 @@
+import { EVOLUTION_REQUIREMENTS } from '../constants/evolution-criteria.constants';
 import type { AchievementModel } from '../models/achievement.model';
 import type {
   EvolutionCheckResultModel,
@@ -42,6 +43,39 @@ export function evaluateEvolutionRequirements(
   return {
     isReady: missingRequirements.length === 0,
     missingRequirements,
+  };
+}
+
+export function getEvolutionRequirementsForPokemon(
+  pokemon: PokemonModel | null,
+): EvolutionRequirementModel[] {
+  const chainRequirements = pokemon?.evolutionChain.nextEvolution?.requirements;
+
+  if (chainRequirements && chainRequirements.length > 0) {
+    return chainRequirements;
+  }
+
+  return EVOLUTION_REQUIREMENTS;
+}
+
+export function buildEvolutionProgressForPokemon(
+  pokemon: PokemonModel | null,
+): EvolutionProgressModel {
+  if (!pokemon?.evolutionChain.nextEvolution) {
+    return { requirements: [], currentProgress: {}, isReady: false };
+  }
+
+  const requirements = getEvolutionRequirementsForPokemon(pokemon);
+  const currentProgress: Record<string, number> = {};
+
+  for (const requirement of requirements) {
+    currentProgress[requirement.type] = 0;
+  }
+
+  return {
+    requirements,
+    currentProgress,
+    isReady: false,
   };
 }
 
@@ -96,6 +130,7 @@ export function buildEvolvedPokemon(pokemon: PokemonModel): PokemonModel | null 
     ...pokemon,
     evolutionChain: {
       currentStage: nextStage,
+      nextEvolution: nextEvolution.childNextEvolution,
       totalStages: pokemon.evolutionChain.totalStages,
     },
     id: nextEvolution.pokemonId,
