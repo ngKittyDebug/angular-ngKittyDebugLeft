@@ -1,13 +1,3 @@
-<figure class="card__cover">
-  <img
-    class="card__image"
-    [src]="pokemonCardData()?.sprites?.other?.['official-artwork']?.front_default"
-    [alt]="pokemonCardData()?.name"
-  />
-  <figcaption class="card__information">
-    <div class="card__line">
-      <h3 class="card__name">{{ pokemonCardData()?.name }}</h3>
-      <p class="card__id">#{{ pokemonCardData()?.id }}</p>
-    </div>
-  </figcaption>
-</figure>
+<a [routerLink]="['/pokemon', pokemonName()]" class="card__link">
+  <left-paw-pokemon-card-mini [pokemonName]="pokemonName()" />
+</a>

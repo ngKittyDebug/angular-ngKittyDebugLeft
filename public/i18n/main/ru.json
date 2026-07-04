@@ -2,5 +2,6 @@
   "filterInputName": "Имя Покемона",
   "filterAdvancedSearch": "Расширенный поиск",
   "filterType": "Тип",
-  "filterGeneration": "Поколение"
+  "filterGeneration": "Поколение",
+  "noResults": "Ничего не найдено"
 }

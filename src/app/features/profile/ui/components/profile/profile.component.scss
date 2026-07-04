@@ -29,7 +29,6 @@ p {
   @include flex_container_function($direction: column, $align_items: start, $gap: 0.5rem);
 }
 .user-info,
-.achievements,
 .settings {
   background: var(--gradient-bg);
   border: 2px solid var(--sidebar-primary);
@@ -37,30 +36,11 @@ p {
   flex: 2;
   padding: 1rem;
 }
-.achievement-box {
-  @include flex_container_function($gap: 0.5rem, $flex_wrap: wrap, $justify_content: space-evenly);
-  padding: 0.5rem 0;
-  color: #fff;
-}
-.achievement-icon {
-  @include flex_container_function($direction: row, $flex_wrap: nowrap, $align_items: center);
-  background: linear-gradient(135deg, var(--chart-1), var(--chart-5), var(--chart-1));
-  padding: 0.5rem;
-  margin: 0;
-  border: 2px solid var(--ring);
-  border-radius: 1rem;
-  width: fit-content;
-}
-.achievement-text {
-  margin-left: 0.5rem;
-  text-wrap: wrap;
-}
 .user-info {
   flex: 1;
   @include flex_container_function($gap: 1rem, $flex_wrap: nowrap, $justify_content: start);
 }
 
-.caught,
 .favorite {
   flex: 1;
   background: var(--gradient-bg);
@@ -94,6 +74,94 @@ p {
   padding: 1rem 0;
 }
 
+.setting-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--tui-border-normal);
+
+  &--password {
+    align-items: flex-start;
+  }
+
+  &--avatar {
+    background: var(--tui-background-base-alt);
+    border-radius: 0.75rem;
+    padding: 0.5rem 0;
+    border-bottom: none;
+    margin-bottom: 0.25rem;
+  }
+
+  &--actions {
+    margin-top: 0.5rem;
+    border-bottom: none;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: space-between;
+  }
+}
+
+.setting-label {
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.avatar-upload-btn {
+  margin-left: auto;
+}
+
+.password-dots {
+  flex: 1;
+  text-align: end;
+}
+
+.password-inputs {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.password-input {
+  background: var(--tui-background-base);
+  border: 1px solid var(--tui-border-normal);
+  border-radius: 0.25rem;
+  outline: none;
+  font: inherit;
+  color: inherit;
+  padding: 1px 6px;
+  width: 100%;
+
+  &:focus {
+    border-color: var(--tui-primary);
+  }
+}
+
+.field-error {
+  font-size: 0.75rem;
+  color: var(--tui-status-negative);
+}
+
+.logout-btn {
+  color: var(--popover-foreground);
+  border-color: var(--tui-status-negative);
+  background: color-mix(in srgb, var(--destructive) 50%, transparent);
+}
+
+.delete-warning {
+  color: var(--tui-status-negative);
+  margin: 0;
+  width: 100%;
+}
+
+.password-success {
+  flex: 1;
+  font-size: 0.875rem;
+  color: var(--tui-status-positive);
+  text-align: end;
+}
+
 @include respond_to($screen-large, max) {
   .user {
     flex-direction: column;
@@ -107,6 +175,10 @@ p {
   }
 }
 @include respond_to($screen-small, max) {
+  :host {
+    padding: 0 1rem;
+  }
+
   .wrapper {
     flex-direction: column;
     align-items: stretch;

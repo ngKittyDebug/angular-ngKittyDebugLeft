@@ -2,12 +2,18 @@
 @use 'screens-width';
 
 :host {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
   max-width: screens-width.$screen-xx-large;
   width: 100%;
-  height: 100%;
 }
 
 .catalog-container {
+  flex: 1;
+  align-content: start;
+  padding: 1.5rem 0;
+
   @include mixins.grid_container_function(
     $grid_template_columns: repeat(5, 13.75rem),
     $align_items: center,
@@ -31,4 +37,12 @@
 .empty__card {
   @include mixins.flex_container_function();
   height: 19.125rem;
+}
+
+.empty-state {
+  grid-column: 1 / -1;
+  @include mixins.flex_container_function();
+  padding: 4rem 0;
+  font-size: 1.25rem;
+  color: var(--tui-text-secondary);
 }

@@ -1,9 +1,17 @@
-export interface UserProfile {
-  id?: string;
+export interface UserProfileApiData {
   username: string;
   email: string;
-  avatarUrl?: string;
-  favoritePokemonList: string[];
+  avatar?: string;
+  createdAt: string;
+  pokemonNameFavorite: string[];
+}
+
+export interface UserProfileModel {
+  username: string;
+  email: string;
+  avatar?: string;
+  createdAt: string;
+  pokemonNameFavoriteList: string[];
 }
 
 export interface UpdateUserModel {
@@ -18,11 +26,12 @@ export interface ChangePasswordModel {
 }
 
 export interface UserState {
-  profile: UserProfile | null;
+  profile: UserProfileModel | null;
   favoritePokemonList: string[];
   isLoading: boolean;
   error: string | null;
   isPasswordChangedSuccess: boolean;
+  isAccountDeleted: boolean;
 }
 
 export interface UpdateAvatar {

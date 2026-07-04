@@ -179,14 +179,7 @@ export const arbitraryInteractionEventModel = (): fc.Arbitrary<InteractionEventM
   });
 
 export type CareActionKind =
-  | 'applyStatusDecay'
-  | 'care'
-  | 'feed'
-  | 'interact'
-  | 'play'
-  | 'train'
-  | 'updateStatus'
-  | 'water';
+  'applyStatusDecay' | 'care' | 'feed' | 'interact' | 'play' | 'train' | 'updateStatus' | 'water';
 
 export interface CareAction {
   decay?: StatusDecayModel;

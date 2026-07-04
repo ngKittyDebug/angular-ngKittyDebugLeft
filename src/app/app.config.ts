@@ -2,24 +2,30 @@ import { provideTaiga } from '@taiga-ui/core';
 import type { ApplicationConfig } from '@angular/core';
 import {
   isDevMode,
+  provideAppInitializer,
   provideBrowserGlobalErrorListeners,
   provideZoneChangeDetection,
 } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideSignalFormsConfig } from '@angular/forms/signals';
 import { routes } from './app.routes';
+import { provideStore } from '@ngrx/store';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { TranslocoHttpLoader } from './transloco-loader';
 import { provideTransloco } from '@jsverse/transloco';
 import { provideTranslocoPersistLang } from '@jsverse/transloco-persist-lang';
 import { authBearerInterceptor } from '@core/interceptors/auth-bearer.interceptor';
+import { authRefreshInterceptor } from '@core/interceptors/auth-refresh.interceptor';
+import { authInitializer } from '@core/initializers/auth-initializer';
 
 export const appConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection(),
     provideRouter(routes, withComponentInputBinding()),
-    provideHttpClient(withInterceptors([authBearerInterceptor])),
+    provideStore(),
+    provideHttpClient(withInterceptors([authRefreshInterceptor, authBearerInterceptor])),
+    provideAppInitializer(authInitializer),
     provideTaiga(),
     provideTransloco({
       config: {

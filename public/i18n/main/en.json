@@ -2,5 +2,6 @@
   "filterInputName": "Name of Pokemon",
   "filterAdvancedSearch": "Advanced search",
   "filterType": "Type",
-  "filterGeneration": "Generation"
+  "filterGeneration": "Generation",
+  "noResults": "Nothing found"
 }

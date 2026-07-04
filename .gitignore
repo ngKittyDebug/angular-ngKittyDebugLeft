@@ -61,16 +61,12 @@ CONTEXT.md
 # Local architecture decision records (per-developer, not for merge)
 docs/adr/
 
-# Claude Code — local config / sessions / skills stay local, EXCEPT the committed review
-# skills (used by cloud routines, which only see what's in the repo), CLAUDE.md and .mcp.json
-# (cloud routines need the taiga-ui / angular-cli verification MCPs too).
+# Claude Code — local config / sessions stay local; committed: .claude/commands/,
+# .claude/skills/, CLAUDE.md and .mcp.json — cloud routines only see what's in the repo.
 .claude/*
+!.claude/commands/
 !.claude/skills/
-.claude/skills/*
-!.claude/skills/pr-review/
-!.claude/skills/codebase-audit/
-!.claude/skills/_shared/
-skills-lock.json
+!.claude/settings.json
 
 # Gemini CLI — local config / sessions / skills stay local, EXCEPT the committed review
 # skills, settings.json

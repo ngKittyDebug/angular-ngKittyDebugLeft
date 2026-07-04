@@ -8,7 +8,7 @@ You are doing the analysis phase of a mentor PR review. Do NOT post anything to 
 
 Read these files from the project for full context on style and rules:
 - `.claude/skills/pr-review/SKILL.md` (Section 0 — the ironic-mentor voice and severity levels)
-- `.claude/skills/_shared/project-review-criteria.md` (the review criteria: style guides, Angular v21 checklist, RS School + Taiga — the *what to flag*)
+- `.claude/skills/_shared/project-review-criteria.md` (the review criteria: style guides, Angular v22 checklist, RS School + Taiga — the *what to flag*)
 - `.claude/skills/pr-review/reference/tone-examples.md`
 - `docs/Стайлгайд нейминг и структура.md`
 - `docs/Стайлгайд структура папок.md`
@@ -16,7 +16,7 @@ Read these files from the project for full context on style and rules:
 - `docs/Стайлгайд PR.md`
 - `docs/Стайлгайд тестирование.md` (only if *.spec.ts files are in the diff)
 
-**Before writing any comment about Angular patterns, signals, or testing — validate your assessment against the relevant project skill.** Beyond your initial read, consult the three skills under `.claude/skills/`: `angular-developer/SKILL.md` (umbrella — components, signals/`linkedSignal`/`resource`/`effect`, forms, DI, routing, ARIA, styling, testing, CLI; it indexes into `angular-developer/references/*.md` — open the matching reference for depth), `angular-best-practices-signalstore/SKILL.md` (NgRx SignalStore), `angular-best-practices-transloco/SKILL.md` (Transloco i18n). Read the matching skill to confirm the verdict, not as a last resort. **When the skills don't settle a version-specific Angular API**, use the `angular-cli` MCP (`mcp__angular-cli__search_documentation` for API/concept lookups, `mcp__angular-cli__get_best_practices` for version-pinned standards) — Angular v21 APIs drift from training data, so verify before roasting.
+**Before writing any comment about Angular patterns, signals, or testing — validate your assessment against the relevant project skill.** Beyond your initial read, consult the three skills under `.claude/skills/`: `angular-developer/SKILL.md` (umbrella — components, signals/`linkedSignal`/`resource`/`effect`, forms, DI, routing, ARIA, styling, testing, CLI; it indexes into `angular-developer/references/*.md` — open the matching reference for depth), `angular-best-practices-signalstore/SKILL.md` (NgRx SignalStore), `angular-best-practices-transloco/SKILL.md` (Transloco i18n). Read the matching skill to confirm the verdict, not as a last resort. **When the skills don't settle a version-specific Angular API**, use the `angular-cli` MCP (`mcp__angular-cli__search_documentation` for API/concept lookups, `mcp__angular-cli__get_best_practices` for version-pinned standards) — Angular v22 APIs drift from training data, so verify before roasting.
 
 **For any Taiga UI comment, verify against the `taiga-ui` MCP before writing it** (see `.claude/skills/pr-review/reference/taiga-mcp.md`). If the diff touches a `Tui*` import, a `tui*` directive, a `var(--tui-*)` token, or raw HTML where a Taiga component fits — or if you're about to recommend a Taiga component — confirm the symbol, its package, and its API via the MCP (`mcp__taiga-ui__get_overview` for the Import Map, `mcp__taiga-ui__get_list_components` to find the right one, `mcp__taiga-ui__get_component_example` to ground a snippet). A wrong-package import is a 🔴 compile error; a `suggestion` block that doesn't compile is worse than none. Don't roast Taiga usage from memory.
 
@@ -59,7 +59,7 @@ Read these files from the project for full context on style and rules:
 #### <file>:<line> [👺|🔴|🟡|🫥|💩|🤮]
 _[jab — one ironic/wry sentence, severity-matched register from tone-examples.md]_
 
-[diagnosis — one sentence: why this is wrong in Angular v21 / this project]
+[diagnosis — one sentence: why this is wrong in Angular v22 / this project]
 
 ```suggestion / code block with fix```
 
