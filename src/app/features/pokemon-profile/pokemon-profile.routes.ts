@@ -1,5 +1,6 @@
 import type { Routes } from '@angular/router';
 import { provideTranslocoScope } from '@jsverse/transloco';
+import { pokemonExistsCanMatch } from '@shared/guards/pokemon-exists.guard';
 
 import { provideEchartsCore } from 'ngx-echarts'; // <-- Используем Core-версию
 import * as echarts from 'echarts/core';
@@ -12,6 +13,7 @@ echarts.use([RadarChart, TitleComponent, TooltipComponent, LegendComponent, SVGR
 export const pokemonProfileRoutes: Routes = [
   {
     path: 'pokemon/:pokemonEndpoint',
+    canMatch: [pokemonExistsCanMatch],
     loadComponent: () =>
       import('./ui/components/pokemon-profile-page/pokemon-profile-page.component').then(
         (m) => m.PokemonProfilePageComponent,

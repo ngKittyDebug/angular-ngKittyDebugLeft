@@ -1,3 +1,4 @@
+import type { HttpErrorResponse } from '@angular/common/http';
 import { HttpClient } from '@angular/common/http';
 import { inject, Service } from '@angular/core';
 import { POKEMON_BASE_API } from '@core/constants/pokemon-constants';
@@ -6,7 +7,7 @@ import type {
   PokemonTypeApiData,
 } from '@features/main-catalog/data/models/pokemons-api-reference';
 import type { PokemonListApiData } from '@shared/models/pokemon-list-api-data-interface';
-import type { Observable } from 'rxjs';
+import { catchError, map, type Observable, of } from 'rxjs';
 
 const ALL_POKEMON_LIMIT = 10000;
 
@@ -24,6 +25,13 @@ export class PokemonApiService {
 
   public getPokemonData(pokemonEndpoint: string): string {
     return `${POKEMON_BASE_API}pokemon/${pokemonEndpoint}`;
+  }
+
+  public checkPokemonExists(pokemonEndpoint: string): Observable<boolean> {
+    return this.http.get<unknown>(this.getPokemonData(pokemonEndpoint)).pipe(
+      map(() => true),
+      catchError((error: HttpErrorResponse) => of(error.status !== 404)),
+    );
   }
 
   public getPokemonSpecies(pokemonEndpoint: string): string {
