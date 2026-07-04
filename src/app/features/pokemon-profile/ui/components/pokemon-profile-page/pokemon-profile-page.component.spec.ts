@@ -5,15 +5,22 @@ import { provideRouter } from '@angular/router';
 import { TranslocoTestingModule } from '@jsverse/transloco';
 import { of } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { TEST_POKEMON } from '@features/pokemon-tamagotchi/data/fixtures/tamagotchi-arbitraries';
-import { PokemonProfileIntegrationService } from '@features/pokemon-tamagotchi/data/services/pokemon-profile-integration.service';
+import type { TamagotchiSelectionPokemon } from '@shared/models/tamagotchi-selection.model';
+import { TAMAGOTCHI_SELECTION_PORT } from '@shared/constants/tamagotchi-selection.token';
 import { PokemonTamagotchiSelectionComponent } from '@shared/ui/components/pokemon-tamagotchi-selection/pokemon-tamagotchi-selection.component';
 import { PokemonDataService } from '@shared/services/pokemon-data.service';
 import { PokemonProfilePageComponent } from './pokemon-profile-page.component';
 
+const SELECTION_POKEMON: TamagotchiSelectionPokemon = {
+  id: '25',
+  isFirstStage: true,
+  name: 'Pikachu',
+  species: 'pikachu',
+};
+
 describe('PokemonProfilePageComponent', () => {
   let fixture: ComponentFixture<PokemonProfilePageComponent>;
-  let integration: {
+  let selectionPort: {
     getSelectedPokemonReference: ReturnType<typeof vi.fn>;
     loadPokemonByName: ReturnType<typeof vi.fn>;
     saveSelectedPokemon: ReturnType<typeof vi.fn>;
@@ -21,11 +28,11 @@ describe('PokemonProfilePageComponent', () => {
   };
 
   beforeEach(async () => {
-    integration = {
+    selectionPort = {
       getSelectedPokemonReference: vi.fn(() => null),
-      loadPokemonByName: vi.fn(() => of(TEST_POKEMON)),
+      loadPokemonByName: vi.fn(() => of(SELECTION_POKEMON)),
       saveSelectedPokemon: vi.fn(),
-      validatePokemonSelection: vi.fn((pokemon: typeof TEST_POKEMON) => ({
+      validatePokemonSelection: vi.fn((pokemon: TamagotchiSelectionPokemon) => ({
         pokemon,
         valid: true,
       })),
@@ -68,8 +75,8 @@ describe('PokemonProfilePageComponent', () => {
           },
         },
         {
-          provide: PokemonProfileIntegrationService,
-          useValue: integration,
+          provide: TAMAGOTCHI_SELECTION_PORT,
+          useValue: selectionPort,
         },
       ],
     })
@@ -110,8 +117,8 @@ describe('PokemonProfilePageComponent', () => {
     component.onTamagotchiSelectRequested();
     fixture.detectChanges();
 
-    expect(integration.saveSelectedPokemon).toHaveBeenCalledTimes(1);
-    expect(integration.saveSelectedPokemon).toHaveBeenCalledWith(TEST_POKEMON);
+    expect(selectionPort.saveSelectedPokemon).toHaveBeenCalledTimes(1);
+    expect(selectionPort.saveSelectedPokemon).toHaveBeenCalledWith(SELECTION_POKEMON);
     expect(component.isCurrentTamagotchiSelection()).toBe(true);
 
     const buttonAfter = fixture.nativeElement.querySelector('button');

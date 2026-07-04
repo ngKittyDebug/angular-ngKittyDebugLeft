@@ -1,15 +1,13 @@
 import { inject, Injectable } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { defer, filter, map, type Observable, of, switchMap, take } from 'rxjs';
+import type { PokemonSelectionValidation } from '../models/pokemon-selection.model';
 import { TamagotchiStore } from '../store/tamagotchi.store';
-import {
-  PokemonProfileIntegrationService,
-  type PokemonSelectionValidation,
-} from './pokemon-profile-integration.service';
+import { TamagotchiSelectionService } from './tamagotchi-selection.service';
 
 @Injectable({ providedIn: 'root' })
 export class TamagotchiInitService {
-  private readonly profileIntegration = inject(PokemonProfileIntegrationService);
+  private readonly selection = inject(TamagotchiSelectionService);
   private readonly store = inject(TamagotchiStore);
   private readonly initialized$ = toObservable(this.store.initialized);
 
@@ -31,7 +29,7 @@ export class TamagotchiInitService {
       map((validation) => {
         if (validation.valid && validation.pokemon) {
           this.store.selectPokemon(validation.pokemon);
-          this.profileIntegration.saveSelectedPokemon(validation.pokemon);
+          this.selection.saveSelectedPokemon(validation.pokemon);
 
           return;
         }
@@ -47,16 +45,16 @@ export class TamagotchiInitService {
     hasPersistedPokemon: boolean,
   ): Observable<PokemonSelectionValidation> {
     if (!hasPersistedPokemon) {
-      return this.profileIntegration.validateSelectedPokemon();
+      return this.selection.validateSelectedPokemon();
     }
 
-    const selectedReference = this.profileIntegration.getSelectedPokemonReference();
+    const selectedReference = this.selection.getSelectedPokemonReference();
     const persistedPokemon = this.store.pokemon();
 
     if (selectedReference && persistedPokemon && selectedReference.id !== persistedPokemon.id) {
       this.store.resetState();
 
-      return this.profileIntegration.validateSelectedPokemon();
+      return this.selection.validateSelectedPokemon();
     }
 
     return of({ valid: true });

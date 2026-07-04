@@ -5,7 +5,7 @@ import { provideRouter } from '@angular/router';
 import { TranslocoTestingModule } from '@jsverse/transloco';
 import { of } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { PokemonProfileIntegrationService } from '../../../data/services/pokemon-profile-integration.service';
+import { TamagotchiSelectionService } from '../../../data/services/tamagotchi-selection.service';
 import { TamagotchiInitService } from '../../../data/services/tamagotchi-init.service';
 import { TEST_POKEMON } from '../../../data/fixtures/tamagotchi-arbitraries';
 import {
@@ -157,7 +157,7 @@ describe('PokemonTamagotchiPageComponent', () => {
             },
           },
           {
-            provide: PokemonProfileIntegrationService,
+            provide: TamagotchiSelectionService,
             useValue: {
               loadPokemonByName: vi.fn(() => of(TEST_POKEMON)),
               saveSelectedPokemon: vi.fn(),
@@ -241,7 +241,7 @@ describe('PokemonTamagotchiPageComponent', () => {
             },
           },
           {
-            provide: PokemonProfileIntegrationService,
+            provide: TamagotchiSelectionService,
             useValue: {
               loadPokemonByName: vi.fn(() => of(TEST_POKEMON)),
               saveSelectedPokemon: vi.fn(),

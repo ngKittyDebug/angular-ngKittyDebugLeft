@@ -79,7 +79,7 @@ export function buildSpriteSet(primary: string): PokemonSpriteUrlsModel {
   };
 }
 
-export function mapSpriteVariations(
+export function convertApiSpritesToSpriteVariations(
   sprites: PokemonSpritesApiData,
 ): Record<SpriteVariation, PokemonSpriteUrlsModel> {
   const pixelFront = sprites.front_default ?? '';
@@ -129,7 +129,7 @@ export function convertPokemonDetailApiDataToTamagotchiPokemon(
     findEvolutionChainNode(evolutionResponse.chain, detail.species.name) ?? evolutionResponse.chain;
   const speciesName = detail.species.name;
 
-  const spriteVariations = mapSpriteVariations(detail.sprites);
+  const spriteVariations = convertApiSpritesToSpriteVariations(detail.sprites);
 
   return {
     baseStats: {

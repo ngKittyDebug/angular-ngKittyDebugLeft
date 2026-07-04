@@ -7,7 +7,7 @@ import { createInitialTamagotchiState } from '../store/tamagotchi-initial';
 import { TEST_POKEMON } from '../fixtures/tamagotchi-arbitraries';
 import { TamagotchiErrorRecoveryService } from './tamagotchi-error-recovery.service';
 import { TamagotchiInitService } from './tamagotchi-init.service';
-import { PokemonProfileIntegrationService } from './pokemon-profile-integration.service';
+import { TamagotchiSelectionService } from './tamagotchi-selection.service';
 import { TAMAGOTCHI_SYSTEM_ERRORS } from '../constants/system-errors.constants';
 
 describe('TamagotchiInitService', () => {
@@ -40,7 +40,7 @@ describe('TamagotchiInitService', () => {
             },
           },
           {
-            provide: PokemonProfileIntegrationService,
+            provide: TamagotchiSelectionService,
             useValue: {
               saveSelectedPokemon,
               validateSelectedPokemon,
@@ -83,7 +83,7 @@ describe('TamagotchiInitService', () => {
             },
           },
           {
-            provide: PokemonProfileIntegrationService,
+            provide: TamagotchiSelectionService,
             useValue: {
               getSelectedPokemonReference: vi.fn(() => matchingSelectionReference),
               saveSelectedPokemon: vi.fn(),
@@ -139,7 +139,7 @@ describe('TamagotchiInitService', () => {
             },
           },
           {
-            provide: PokemonProfileIntegrationService,
+            provide: TamagotchiSelectionService,
             useValue: {
               getSelectedPokemonReference: vi.fn(() => ({
                 id: replacementPokemon.id,
@@ -185,7 +185,7 @@ describe('TamagotchiInitService', () => {
             },
           },
           {
-            provide: PokemonProfileIntegrationService,
+            provide: TamagotchiSelectionService,
             useValue: {
               saveSelectedPokemon: vi.fn(),
               validateSelectedPokemon,

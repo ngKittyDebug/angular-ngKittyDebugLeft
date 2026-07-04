@@ -16,7 +16,7 @@ import { createInitialTamagotchiState } from './data/store/tamagotchi-initial';
 import { TamagotchiStore } from './data/store/tamagotchi.store';
 import { TamagotchiInitService } from './data/services/tamagotchi-init.service';
 import { TamagotchiPersistenceService } from './data/services/tamagotchi-persistence.service';
-import { PokemonProfileIntegrationService } from './data/services/pokemon-profile-integration.service';
+import { TamagotchiSelectionService } from './data/services/tamagotchi-selection.service';
 import { TEST_POKEMON } from './data/fixtures/tamagotchi-arbitraries';
 import { pokemonTamagotchiRoutes, TAMAGOTCHI_PATH } from './pokemon-tamagotchi.routes';
 import { PokemonTamagotchiPageComponent } from './ui/components/pokemon-tamagotchi-page/pokemon-tamagotchi-page.component';
@@ -142,7 +142,7 @@ describe('PokemonTamagotchi — интеграция', () => {
             },
           },
           {
-            provide: PokemonProfileIntegrationService,
+            provide: TamagotchiSelectionService,
             useValue: {
               saveSelectedPokemon: vi.fn(),
               validateSelectedPokemon: vi.fn(() =>
@@ -228,7 +228,7 @@ describe('PokemonTamagotchi — интеграция', () => {
             },
           },
           {
-            provide: PokemonProfileIntegrationService,
+            provide: TamagotchiSelectionService,
             useValue: {
               validateSelectedPokemon: vi.fn(() => of({ error: 'noSelection', valid: false })),
             },

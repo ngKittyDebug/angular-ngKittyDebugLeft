@@ -1,12 +1,11 @@
 import * as fc from 'fast-check';
-import { TestBed } from '@angular/core/testing';
 import type { EvolutionChainApiResponse } from '@shared/models/pokemon-evolution-chain-api-data-interface';
 import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
 import {
   convertPokemonDetailApiDataToTamagotchiPokemon,
   isFirstStageInEvolutionChain,
 } from '../api/pokemon/helpers/pokemon-tamagotchi-converter';
-import { PokemonProfileIntegrationService } from './pokemon-profile-integration.service';
+import { validateTamagotchiPokemonSelection } from '../helpers/validate-tamagotchi-pokemon-selection.helper';
 import { arbitraryLinearEvolutionChain } from '../fixtures/tamagotchi-arbitraries';
 
 const PROPERTY_RUNS = 100;
@@ -67,15 +66,8 @@ function evolutionResponseFromChain(
   };
 }
 
-describe('PokemonProfileIntegrationService', () => {
+describe('validateTamagotchiPokemonSelection', () => {
   describe('Property 5: валидация покемона первой стадии', () => {
-    let integration: PokemonProfileIntegrationService;
-
-    beforeEach(() => {
-      TestBed.configureTestingModule({});
-      integration = TestBed.inject(PokemonProfileIntegrationService);
-    });
-
     // Feature: pokemon-tamagotchi, Property 5: First-Stage PokemonModel Validation
     describe('Happy Path', () => {
       it('должен классифицировать только корневой вид цепочки как первую стадию', () => {
@@ -121,7 +113,7 @@ describe('PokemonProfileIntegrationService', () => {
               detailForSpecies(speciesName, speciesIndex + 1),
               evolutionResponseFromChain(chain),
             );
-            const validation = integration.validatePokemonSelection(pokemon);
+            const validation = validateTamagotchiPokemonSelection(pokemon);
 
             if (speciesIndex === 0) {
               return validation.valid === true && validation.pokemon?.isFirstStage === true;

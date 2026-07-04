@@ -18,8 +18,8 @@ import { PokemonProfileSpeciesBreedingComponent } from './pokemon-profile-specie
 import { TranslocoDirective } from '@jsverse/transloco';
 import { PokemonDataService } from '@shared/services/pokemon-data.service';
 import { convertEvolutionChainToNodeModel } from '@features/pokemon-profile/data/helpers/convert-evolution-chain';
-import { PokemonProfileIntegrationService } from '@features/pokemon-tamagotchi/data/services/pokemon-profile-integration.service';
 import { TAMAGOTCHI_PATH } from '@shared/constants/tamagotchi-routes';
+import { TAMAGOTCHI_SELECTION_PORT } from '@shared/constants/tamagotchi-selection.token';
 import {
   PokemonTamagotchiSelectionComponent,
   type TamagotchiSelectionFeedback,
@@ -43,7 +43,7 @@ import {
 })
 export class PokemonProfilePageComponent {
   private readonly destroyRef = inject(DestroyRef);
-  private readonly profileIntegration = inject(PokemonProfileIntegrationService);
+  private readonly selectionPort = inject(TAMAGOTCHI_SELECTION_PORT);
   private readonly profileService = inject(PokemonDataService);
 
   public readonly pokemonEndpoint = input.required<string>();
@@ -62,7 +62,7 @@ export class PokemonProfilePageComponent {
   protected readonly selectionFeedback = signal<TamagotchiSelectionFeedback>(null);
   protected readonly selectionLoading = signal(false);
   protected readonly selectedPokemonName = signal<string | null>(
-    this.profileIntegration.getSelectedPokemonReference()?.name ?? null,
+    this.selectionPort.getSelectedPokemonReference()?.name ?? null,
   );
 
   protected readonly isCurrentTamagotchiSelection = computed(() => {
@@ -86,17 +86,17 @@ export class PokemonProfilePageComponent {
     this.selectionLoading.set(true);
     this.selectionFeedback.set(null);
 
-    this.profileIntegration
+    this.selectionPort
       .loadPokemonByName(pokemonName)
       .pipe(
-        map((pokemon) => this.profileIntegration.validatePokemonSelection(pokemon)),
+        map((pokemon) => this.selectionPort.validatePokemonSelection(pokemon)),
         catchError(() => of({ error: 'loadFailed' as const, valid: false as const })),
         finalize(() => this.selectionLoading.set(false)),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((validation) => {
         if (validation.valid && validation.pokemon) {
-          this.profileIntegration.saveSelectedPokemon(validation.pokemon);
+          this.selectionPort.saveSelectedPokemon(validation.pokemon);
           this.selectedPokemonName.set(validation.pokemon.name);
           this.selectionFeedback.set('saved');
 
