@@ -93,8 +93,7 @@ export interface NpcPlayer<
 }
 
 export type Player<TEffectId extends string = string, TNpcId extends string = string> =
-  | HumanPlayer<TEffectId>
-  | NpcPlayer<TEffectId, TNpcId>;
+  HumanPlayer<TEffectId> | NpcPlayer<TEffectId, TNpcId>;
 
 /** Narrows a player to the NPC variant (server-spawned autobot). */
 export const isNPC = <TEffectId extends string, TNpcId extends string>(
