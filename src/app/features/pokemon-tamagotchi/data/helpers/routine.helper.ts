@@ -85,7 +85,3 @@ export function applyRoutineBonusIfEligible(
     },
   };
 }
-
-export function routineBonusMood(routine: DailyRoutine): number {
-  return routine.bonusEligible ? TIMER_CONFIG.ROUTINE.BONUS_MOOD : 0;
-}

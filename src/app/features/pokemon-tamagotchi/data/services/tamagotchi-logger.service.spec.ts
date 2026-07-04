@@ -14,19 +14,6 @@ describe('TamagotchiLoggerService', () => {
     TestBed.configureTestingModule({});
   });
 
-  describe('Happy Path', () => {
-    it('должен хранить ограниченный журнал ошибок', () => {
-      const service = TestBed.inject(TamagotchiLoggerService);
-
-      for (let index = 0; index < 120; index += 1) {
-        service.error('test', `message-${index}`);
-      }
-
-      expect(service.getRecentEntries()).toHaveLength(100);
-      expect(service.getRecentEntries()[0]?.message).toBe('message-20');
-    });
-  });
-
   describe('Edge Cases', () => {
     it('должен писать предупреждения в console только вне production', () => {
       const service = TestBed.inject(TamagotchiLoggerService);
@@ -42,7 +29,6 @@ describe('TamagotchiLoggerService', () => {
       service.warn('test', 'silent in prod');
 
       expect(warnSpy).not.toHaveBeenCalled();
-      expect(service.getRecentEntries().at(-1)?.message).toBe('silent in prod');
     });
 
     it('должен писать ошибки в console только вне production', () => {
@@ -59,7 +45,6 @@ describe('TamagotchiLoggerService', () => {
       service.error('test', 'silent in prod');
 
       expect(errorSpy).not.toHaveBeenCalled();
-      expect(service.getRecentEntries().at(-1)?.message).toBe('silent in prod');
     });
   });
 });

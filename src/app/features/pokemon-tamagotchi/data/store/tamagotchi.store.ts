@@ -2,7 +2,6 @@ import { computed, inject } from '@angular/core';
 import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
 import { TAMAGOTCHI_SYSTEM_ERRORS } from '../constants/system-errors.constants';
 import { calculateBondLevel } from '../helpers/gesture.helper';
-import type { GarbageCollectLimits } from '../helpers/memory-management.helper';
 import { sortNotificationsByPriority } from '../helpers/notification-factory.helper';
 import { TamagotchiErrorRecoveryService } from '../services/tamagotchi-error-recovery.service';
 import { TamagotchiPersistenceService } from '../services/tamagotchi-persistence.service';
@@ -20,9 +19,7 @@ import {
   clearPokemonState,
   completeEvolutionState,
   completeTrainingState,
-  dismissNotificationState,
   feedPokemonState,
-  garbageCollectState,
   initializeTamagotchiState,
   interactWithPokemonState,
   loadStateSuccessState,
@@ -247,10 +244,6 @@ export const TamagotchiStore = signalStore(
           mutateAndSave((state) => addNotificationState(state, notification));
         },
 
-        dismissNotification(id: string): void {
-          mutateAndSave((state) => dismissNotificationState(state, id));
-        },
-
         setError(error: string): void {
           patchState(store, (state) => setErrorState(state, error));
         },
@@ -263,10 +256,6 @@ export const TamagotchiStore = signalStore(
           persistence.clear();
           patchState(store, resetStateTransition);
           scheduleSave();
-        },
-
-        garbageCollect(limits: GarbageCollectLimits): void {
-          mutateAndSave((state) => garbageCollectState(state, limits));
         },
       };
     },

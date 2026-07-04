@@ -1,8 +1,6 @@
 import { GAME_BALANCE } from '../constants/game-balance.constants';
 import { TEST_POKEMON } from '../fixtures/tamagotchi-arbitraries';
 import {
-  addNotificationState,
-  dismissNotificationState,
   feedPokemonState,
   selectPokemonState,
   updateStatusState,
@@ -54,22 +52,6 @@ describe('tamagotchiStateTransitions', () => {
       const second = feedPokemonState(prepared, FIXED_NOW);
 
       expect(first).toEqual(second);
-    });
-
-    it('должен помечать уведомление прочитанным при закрытии', () => {
-      const notification = {
-        id: 'alert-1',
-        message: 'test',
-        priority: 'warning' as const,
-        read: false,
-        timestamp: 1,
-        title: 'test',
-      };
-      const withNotification = addNotificationState(initialTamagotchiState, notification);
-      const dismissed = dismissNotificationState(withNotification, 'alert-1');
-
-      expect(dismissed.notificationList).toHaveLength(1);
-      expect(dismissed.notificationList[0]?.read).toBe(true);
     });
   });
 });

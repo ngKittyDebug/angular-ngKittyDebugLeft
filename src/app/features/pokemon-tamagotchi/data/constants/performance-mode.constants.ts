@@ -9,8 +9,6 @@ export const PERFORMANCE_MODE_STORAGE_KEY = 'pokemon-tamagotchi-performance-mode
 
 export const DEFAULT_PERFORMANCE_MODE: PerformanceMode = 'auto';
 
-export const MEMORY_GC_INTERVAL_TICKS = 5;
-
 export const MEMORY_LIMITS = {
   INTERACTION_HISTORY_MAX: 50,
   NOTIFICATION_HISTORY_MAX: 20,

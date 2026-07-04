@@ -1,7 +1,6 @@
 import { computed, DestroyRef, effect, inject, Service, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { GAME_BALANCE } from '../constants/game-balance.constants';
-import { MEMORY_GC_INTERVAL_TICKS } from '../constants/performance-mode.constants';
 import { isTamagotchiSelectionError } from '../constants/selection-errors.constants';
 import { TAMAGOTCHI_SYSTEM_ERRORS } from '../constants/system-errors.constants';
 import {
@@ -11,9 +10,7 @@ import {
 } from '../helpers/status-indicator-sync.helper';
 import { rollTrainingExperienceGain } from '../helpers/training-reward.helper';
 import { EvolutionService } from '../services/evolution.service';
-import { MemoryManagementService } from '../services/memory-management.service';
 import { PerformanceService } from '../services/performance.service';
-import { TamagotchiAnalyticsService } from '../services/tamagotchi-analytics.service';
 import { TamagotchiInitService } from '../services/tamagotchi-init.service';
 import { TamagotchiService } from '../services/tamagotchi.service';
 import {
@@ -31,18 +28,15 @@ import { TamagotchiNotificationService } from '../../ui/services/notification.se
 
 @Service({ autoProvided: false })
 export class TamagotchiFacade {
-  private readonly analyticsService = inject(TamagotchiAnalyticsService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly evolutionService = inject(EvolutionService);
   private readonly initService = inject(TamagotchiInitService);
-  private readonly memoryManagementService = inject(MemoryManagementService);
   private readonly notificationService = inject(TamagotchiNotificationService);
   private readonly performanceService = inject(PerformanceService);
   private readonly store = inject(TamagotchiStore);
   private readonly tamagotchiService = inject(TamagotchiService);
   private readonly timerService = inject(TimerService);
   private readonly wasEvolutionReady = signal(false);
-  private timerTickCount = 0;
   private readonly isInitialized = computed(() => this.store.initialized());
 
   private readonly state = computed(
@@ -136,7 +130,6 @@ export class TamagotchiFacade {
   );
 
   public constructor() {
-    this.analyticsService.track('pageView');
     this.initService.bootstrapFromProfile().pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
 
     effect((onCleanup) => {
@@ -196,8 +189,6 @@ export class TamagotchiFacade {
   }
 
   public onAction(action: ActionType): void {
-    this.analyticsService.track(action);
-
     if (this.isTraining()) {
       return;
     }
@@ -256,7 +247,6 @@ export class TamagotchiFacade {
       return;
     }
 
-    this.analyticsService.track(interaction.type);
     this.store.interactWithPokemon(interaction, Date.now());
     this.store.checkEvolution();
   }
@@ -267,7 +257,6 @@ export class TamagotchiFacade {
 
   public onPerformanceModeChange(mode: PerformanceMode): void {
     this.performanceService.setMode(mode);
-    this.memoryManagementService.runGarbageCollection();
   }
 
   public onPerformanceModeIndexChange(index: number): void {
@@ -319,12 +308,6 @@ export class TamagotchiFacade {
       timestamp: result.decay.timestamp,
     });
     this.store.checkEvolution();
-
-    this.timerTickCount += 1;
-
-    if (this.timerTickCount % MEMORY_GC_INTERVAL_TICKS === 0) {
-      this.memoryManagementService.runGarbageCollection();
-    }
   }
 
   private isActionAllowed(action: ActionType): boolean {

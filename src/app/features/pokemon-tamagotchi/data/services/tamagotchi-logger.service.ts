@@ -43,10 +43,6 @@ export class TamagotchiLoggerService {
     this.error(context, message, metadata);
   }
 
-  public getRecentEntries(limit: number = MAX_LOG_ENTRIES): TamagotchiLogEntry[] {
-    return this.entries.slice(-limit);
-  }
-
   private append(
     level: TamagotchiLogLevel,
     context: string,

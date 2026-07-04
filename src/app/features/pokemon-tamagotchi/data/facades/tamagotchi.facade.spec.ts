@@ -3,9 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EvolutionService } from '../services/evolution.service';
-import { MemoryManagementService } from '../services/memory-management.service';
 import { PerformanceService } from '../services/performance.service';
-import { TamagotchiAnalyticsService } from '../services/tamagotchi-analytics.service';
 import { TamagotchiInitService } from '../services/tamagotchi-init.service';
 import { TamagotchiService } from '../services/tamagotchi.service';
 import { TimerService } from '../services/timer.service';
@@ -83,7 +81,6 @@ describe('TamagotchiFacade', () => {
         TamagotchiFacade,
         { provide: TamagotchiStore, useValue: mockStore },
         { provide: TamagotchiInitService, useValue: mockInitService },
-        { provide: TamagotchiAnalyticsService, useValue: { track: vi.fn() } },
         {
           provide: TamagotchiNotificationService,
           useValue: {
@@ -98,7 +95,6 @@ describe('TamagotchiFacade', () => {
             triggerEvolution: vi.fn(),
           },
         },
-        { provide: MemoryManagementService, useValue: { runGarbageCollection: vi.fn() } },
         {
           provide: PerformanceService,
           useValue: {

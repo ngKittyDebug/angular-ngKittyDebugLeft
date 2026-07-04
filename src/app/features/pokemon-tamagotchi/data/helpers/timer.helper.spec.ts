@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { TIMER_CONFIG } from '../constants/timer.constants';
 import { createInitialDailyRoutine } from '../store/tamagotchi-initial';
 import {
+  applyRoutineBonusIfEligible,
   isRoutineBonusEligible,
   recordRoutineActivity,
-  routineBonusMood,
   toActivityDateKey,
 } from './routine.helper';
 import { calculateSleepRestorationBonus } from './sleep-restoration.helper';
@@ -52,7 +52,15 @@ describe('routine.helper', () => {
       expect(
         isRoutineBonusEligible(routine.consecutiveDays, routine.activityCounts['total'] ?? 0),
       ).toBe(true);
-      expect(routineBonusMood(routine)).toBe(TIMER_CONFIG.ROUTINE.BONUS_MOOD);
+
+      const dayFourBonus = applyRoutineBonusIfEligible(routine, dayFour);
+
+      expect(dayFourBonus.bonus).toBe(TIMER_CONFIG.ROUTINE.BONUS_MOOD);
+      expect(dayFourBonus.dailyRoutine.bonusAppliedDate).toBe(toActivityDateKey(dayFour));
+
+      const secondBonusSameDay = applyRoutineBonusIfEligible(dayFourBonus.dailyRoutine, dayFour);
+
+      expect(secondBonusSameDay.bonus).toBe(0);
     });
   });
 });

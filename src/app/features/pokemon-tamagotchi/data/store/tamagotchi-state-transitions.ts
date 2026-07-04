@@ -4,10 +4,6 @@ import {
   buildEvolutionProgressValues,
   evaluateEvolutionRequirements,
 } from '../helpers/evolution-checker.helper';
-import {
-  type GarbageCollectLimits,
-  garbageCollectTamagotchiState,
-} from '../helpers/memory-management.helper';
 import { recordRoutineActivity } from '../helpers/routine.helper';
 import { applyStatusUpdate, computeLevelFromExperience } from '../helpers/status-calculator.helper';
 import { applyDecayToStatus } from '../helpers/status-decay.helper';
@@ -372,22 +368,6 @@ export function addNotificationState(
   };
 }
 
-export function dismissNotificationState(
-  state: TamagotchiStateModel,
-  id: string,
-): TamagotchiStateModel {
-  return {
-    ...state,
-    notificationList: state.notificationList.map((notification) => {
-      if (notification.id === id) {
-        return { ...notification, read: true };
-      }
-
-      return notification;
-    }),
-  };
-}
-
 export function initializeTamagotchiState(state: TamagotchiStateModel): TamagotchiStateModel {
   return {
     ...state,
@@ -436,11 +416,4 @@ export function clearErrorState(state: TamagotchiStateModel): TamagotchiStateMod
     ...state,
     error: null,
   };
-}
-
-export function garbageCollectState(
-  state: TamagotchiStateModel,
-  limits: GarbageCollectLimits,
-): TamagotchiStateModel {
-  return garbageCollectTamagotchiState(state, limits);
 }
