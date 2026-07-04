@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, type MockedObject, vi } from 'vitest';
 import { GAME_BALANCE } from '../constants/game-balance.constants';
 import { EVOLUTION_REQUIREMENTS } from '../constants/evolution-criteria.constants';
 import { TAMAGOTCHI_SYSTEM_ERRORS } from '../constants/system-errors.constants';
@@ -10,6 +10,29 @@ import type { PokemonModel } from '../models/pokemon.model';
 import { selectPokemonState, startTrainingState } from './tamagotchi-state-transitions';
 import { createInitialTamagotchiState, initialTamagotchiState } from './tamagotchi-initial';
 import { TamagotchiStore } from './tamagotchi.store';
+
+type TamagotchiPersistenceMock = MockedObject<
+  Pick<TamagotchiPersistenceService, 'clear' | 'load' | 'save'>
+>;
+
+type TamagotchiErrorRecoveryMock = MockedObject<Pick<TamagotchiErrorRecoveryService, 'logError'>>;
+
+function createPersistenceMock(
+  overrides: Partial<TamagotchiPersistenceMock> = {},
+): TamagotchiPersistenceMock {
+  return {
+    clear: vi.fn(),
+    load: vi.fn(() => null),
+    save: vi.fn(),
+    ...overrides,
+  } as const satisfies TamagotchiPersistenceMock;
+}
+
+function createErrorRecoveryMock(): TamagotchiErrorRecoveryMock {
+  return {
+    logError: vi.fn(),
+  } as const satisfies TamagotchiErrorRecoveryMock;
+}
 
 const EVOLVABLE_TEST_POKEMON: PokemonModel = {
   ...TEST_POKEMON,
@@ -27,20 +50,8 @@ function createStoreTestBed(): InstanceType<typeof TamagotchiStore> {
   TestBed.configureTestingModule({
     providers: [
       TamagotchiStore,
-      {
-        provide: TamagotchiPersistenceService,
-        useValue: {
-          clear: vi.fn(),
-          load: vi.fn(() => null),
-          save: vi.fn(),
-        },
-      },
-      {
-        provide: TamagotchiErrorRecoveryService,
-        useValue: {
-          logError: vi.fn(),
-        },
-      },
+      { provide: TamagotchiPersistenceService, useValue: createPersistenceMock() },
+      { provide: TamagotchiErrorRecoveryService, useValue: createErrorRecoveryMock() },
     ],
   });
 
@@ -52,31 +63,21 @@ describe('TamagotchiStore', () => {
     describe('Negative Cases', () => {
       it('должен установить ошибку и остаться инициализированным, когда загрузка persistence бросает исключение', () => {
         let shouldThrow = true;
-        const load = vi.fn(() => {
-          if (shouldThrow) {
-            throw new Error('storage corrupted');
-          }
+        const persistence = createPersistenceMock({
+          load: vi.fn(() => {
+            if (shouldThrow) {
+              throw new Error('storage corrupted');
+            }
 
-          return null;
+            return null;
+          }),
         });
 
         TestBed.configureTestingModule({
           providers: [
             TamagotchiStore,
-            {
-              provide: TamagotchiPersistenceService,
-              useValue: {
-                clear: vi.fn(),
-                load,
-                save: vi.fn(),
-              },
-            },
-            {
-              provide: TamagotchiErrorRecoveryService,
-              useValue: {
-                logError: vi.fn(),
-              },
-            },
+            { provide: TamagotchiPersistenceService, useValue: persistence },
+            { provide: TamagotchiErrorRecoveryService, useValue: createErrorRecoveryMock() },
           ],
         });
 
@@ -90,40 +91,30 @@ describe('TamagotchiStore', () => {
         store.loadFromPersistence();
 
         expect(store.initialized()).toBe(true);
-        expect(load).toHaveBeenCalledTimes(2);
+        expect(persistence.load).toHaveBeenCalledTimes(2);
       });
     });
 
     describe('Happy Path', () => {
       it('должен загрузить сохранённое состояние при последующем успешном вызове', () => {
         const persisted = selectPokemonState(createInitialTamagotchiState(), TEST_POKEMON);
-        const load = vi
-          .fn()
-          .mockImplementationOnce(() => {
-            throw new Error('storage corrupted');
-          })
-          .mockImplementationOnce(() => ({
-            recoveredFromBackup: false,
-            state: persisted,
-          }));
+        const persistence = createPersistenceMock({
+          load: vi
+            .fn()
+            .mockImplementationOnce(() => {
+              throw new Error('storage corrupted');
+            })
+            .mockImplementationOnce(() => ({
+              recoveredFromBackup: false,
+              state: persisted,
+            })),
+        });
 
         TestBed.configureTestingModule({
           providers: [
             TamagotchiStore,
-            {
-              provide: TamagotchiPersistenceService,
-              useValue: {
-                clear: vi.fn(),
-                load,
-                save: vi.fn(),
-              },
-            },
-            {
-              provide: TamagotchiErrorRecoveryService,
-              useValue: {
-                logError: vi.fn(),
-              },
-            },
+            { provide: TamagotchiPersistenceService, useValue: persistence },
+            { provide: TamagotchiErrorRecoveryService, useValue: createErrorRecoveryMock() },
           ],
         });
 
@@ -133,7 +124,7 @@ describe('TamagotchiStore', () => {
         store.loadFromPersistence();
 
         expect(store.pokemon()?.id).toBe(TEST_POKEMON.id);
-        expect(load).toHaveBeenCalledTimes(2);
+        expect(persistence.load).toHaveBeenCalledTimes(2);
       });
     });
   });

@@ -1,9 +1,11 @@
-import { vi } from 'vitest';
+import { type MockedObject, vi } from 'vitest';
 import type { TamagotchiStorageService } from '../services/tamagotchi-storage.service';
 
-export interface TamagotchiStorageMock extends TamagotchiStorageService {
+export type TamagotchiStorageMock = MockedObject<
+  Pick<TamagotchiStorageService, 'getItem' | 'removeItem' | 'setItem'>
+> & {
   store: Map<string, string>;
-}
+};
 
 export function createTamagotchiStorageMock(): TamagotchiStorageMock {
   const store = new Map<string, string>();
@@ -17,5 +19,5 @@ export function createTamagotchiStorageMock(): TamagotchiStorageMock {
     setItem: vi.fn((key: string, value: string) => {
       store.set(key, value);
     }),
-  };
+  } as const satisfies TamagotchiStorageMock;
 }

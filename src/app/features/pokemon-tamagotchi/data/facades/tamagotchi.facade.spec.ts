@@ -1,7 +1,7 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, type MockedObject, vi } from 'vitest';
 import { EvolutionService } from '../services/evolution.service';
 import { PerformanceService } from '../services/performance.service';
 import { TamagotchiInitService } from '../services/tamagotchi-init.service';
@@ -14,7 +14,32 @@ import {
 } from '../store/tamagotchi-initial';
 import { TamagotchiStore } from '../store/tamagotchi.store';
 import { TamagotchiNotificationService } from '../../ui/services/notification.service';
+import { PERFORMANCE_PROFILES } from '../constants/performance-mode.constants';
 import { TamagotchiFacade } from './tamagotchi.facade';
+
+type TamagotchiStoreInstance = InstanceType<typeof TamagotchiStore>;
+
+type TamagotchiStoreMethodsMock = MockedObject<
+  Pick<
+    TamagotchiStoreInstance,
+    | 'applyStatusDecay'
+    | 'care'
+    | 'checkEvolution'
+    | 'clearError'
+    | 'completeEvolution'
+    | 'completeTraining'
+    | 'feed'
+    | 'interactWithPokemon'
+    | 'play'
+    | 'putToSleep'
+    | 'resetState'
+    | 'startEvolution'
+    | 'startTraining'
+    | 'updateStatus'
+    | 'wakeUp'
+    | 'water'
+  >
+>;
 
 function createStoreMock(
   overrides: {
@@ -26,23 +51,34 @@ function createStoreMock(
 ) {
   const initial = createInitialTamagotchiState();
 
-  return {
-    achievementList: signal(initial.achievementList),
+  const methods = {
     applyStatusDecay: vi.fn(),
-    canEvolve: signal(false),
     care: vi.fn(),
     checkEvolution: vi.fn(),
     clearError: vi.fn(),
     completeEvolution: vi.fn(),
     completeTraining: vi.fn(),
+    feed: vi.fn(),
+    interactWithPokemon: vi.fn(),
+    play: vi.fn(),
+    putToSleep: vi.fn(),
+    resetState: vi.fn(),
+    startEvolution: vi.fn(),
+    startTraining: vi.fn(),
+    updateStatus: vi.fn(),
+    wakeUp: vi.fn(),
+    water: vi.fn(),
+  } as const satisfies TamagotchiStoreMethodsMock;
+
+  return {
+    achievementList: signal(initial.achievementList),
+    canEvolve: signal(false),
     dailyRoutine: signal(initial.dailyRoutine),
     error: signal(overrides.error ?? initial.error),
     evolutionProgress: signal(initial.evolutionProgress),
-    feed: vi.fn(),
     hasPokemon: signal((overrides.pokemon ?? TEST_POKEMON) !== null),
     initialized: signal(overrides.initialized ?? true),
     interactionHistory: signal(initial.interactionHistory),
-    interactWithPokemon: vi.fn(),
     isEvolving: signal(false),
     isSleeping: signal(false),
     isTraining: signal(overrides.isTraining ?? false),
@@ -50,67 +86,66 @@ function createStoreMock(
     lastDecayTime: signal(initial.lastDecayTime),
     lastSaveTime: signal(initial.lastSaveTime),
     notificationList: signal(initial.notificationList),
-    play: vi.fn(),
     pokemon: signal(overrides.pokemon ?? TEST_POKEMON),
-    putToSleep: vi.fn(),
-    resetState: vi.fn(),
-    startEvolution: vi.fn(),
-    startTraining: vi.fn(),
     status: signal(createInitialPokemonStatus()),
     trainingExperienceReward: signal<number | null>(null),
     trainingStartedAt: signal<number | null>(null),
-    updateStatus: vi.fn(),
-    wakeUp: vi.fn(),
-    water: vi.fn(),
+    ...methods,
   };
 }
 
 describe('TamagotchiFacade', () => {
   let mockStore: ReturnType<typeof createStoreMock>;
-  let mockInitService: { bootstrapFromProfile: ReturnType<typeof vi.fn> };
+  let mockInitService: MockedObject<Pick<TamagotchiInitService, 'bootstrapFromProfile'>>;
   let facade: TamagotchiFacade;
 
   beforeEach(() => {
     mockStore = createStoreMock();
     mockInitService = {
       bootstrapFromProfile: vi.fn(() => of(undefined)),
+    } as const satisfies MockedObject<Pick<TamagotchiInitService, 'bootstrapFromProfile'>>;
+
+    const mockNotificationService = {
+      notifyEvolutionReady: vi.fn(),
+      processStatusAlerts: vi.fn(),
+    } as const satisfies MockedObject<
+      Pick<TamagotchiNotificationService, 'notifyEvolutionReady' | 'processStatusAlerts'>
+    >;
+
+    const mockEvolutionService = {
+      buildEvolutionData: vi.fn(),
+      triggerEvolution: vi.fn(),
+    } as const satisfies MockedObject<
+      Pick<EvolutionService, 'buildEvolutionData' | 'triggerEvolution'>
+    >;
+
+    const mockPerformanceMethods = {
+      getProfile: vi.fn(() => PERFORMANCE_PROFILES.balanced),
+      resolveEffectiveMode: vi.fn(() => 'balanced' as const),
+      setMode: vi.fn(),
+    } as const satisfies MockedObject<
+      Pick<PerformanceService, 'getProfile' | 'resolveEffectiveMode' | 'setMode'>
+    >;
+
+    const mockPerformanceService = {
+      ...mockPerformanceMethods,
+      mode: signal('balanced' as const),
     };
+
+    const mockTimerService = {
+      startTimer: vi.fn(() => ({ cleanup: vi.fn() })),
+      stopTimer: vi.fn(),
+    } as const satisfies MockedObject<Pick<TimerService, 'startTimer' | 'stopTimer'>>;
 
     TestBed.configureTestingModule({
       providers: [
         TamagotchiFacade,
         { provide: TamagotchiStore, useValue: mockStore },
         { provide: TamagotchiInitService, useValue: mockInitService },
-        {
-          provide: TamagotchiNotificationService,
-          useValue: {
-            notifyEvolutionReady: vi.fn(),
-            processStatusAlerts: vi.fn(),
-          },
-        },
-        {
-          provide: EvolutionService,
-          useValue: {
-            buildEvolutionData: vi.fn(),
-            triggerEvolution: vi.fn(),
-          },
-        },
-        {
-          provide: PerformanceService,
-          useValue: {
-            getProfile: vi.fn(() => ({ decayIntervalMs: 15_000 })),
-            mode: signal('balanced' as const),
-            resolveEffectiveMode: vi.fn(() => 'balanced' as const),
-            setMode: vi.fn(),
-          },
-        },
-        {
-          provide: TimerService,
-          useValue: {
-            startTimer: vi.fn(() => 1),
-            stopTimer: vi.fn(),
-          },
-        },
+        { provide: TamagotchiNotificationService, useValue: mockNotificationService },
+        { provide: EvolutionService, useValue: mockEvolutionService },
+        { provide: PerformanceService, useValue: mockPerformanceService },
+        { provide: TimerService, useValue: mockTimerService },
         TamagotchiService,
       ],
     });

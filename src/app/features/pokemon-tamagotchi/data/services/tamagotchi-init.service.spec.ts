@@ -1,14 +1,67 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, type MockedObject, vi } from 'vitest';
 import { TamagotchiStore } from '../store/tamagotchi.store';
 import { createInitialTamagotchiState } from '../store/tamagotchi-initial';
 import { TEST_POKEMON } from '../fixtures/tamagotchi-arbitraries';
+import type { PokemonModel } from '../models/pokemon.model';
 import { TamagotchiErrorRecoveryService } from './tamagotchi-error-recovery.service';
 import { TamagotchiInitService } from './tamagotchi-init.service';
 import { TamagotchiSelectionService } from './tamagotchi-selection.service';
 import { TAMAGOTCHI_SYSTEM_ERRORS } from '../constants/system-errors.constants';
+
+type TamagotchiStoreInstance = InstanceType<typeof TamagotchiStore>;
+
+type TamagotchiStoreInitMethodsMock = MockedObject<
+  Pick<TamagotchiStoreInstance, 'loadFromPersistence' | 'resetState' | 'selectPokemon' | 'setError'>
+>;
+
+type TamagotchiSelectionInitMock = MockedObject<
+  Pick<
+    TamagotchiSelectionService,
+    | 'getSelectedPokemonReference'
+    | 'loadPokemonByName'
+    | 'saveSelectedPokemon'
+    | 'validateSelectedPokemon'
+  >
+>;
+
+function createInitStoreMock(
+  options: {
+    hasPokemon: boolean;
+    initialized?: boolean;
+    pokemon?: PokemonModel;
+  },
+  methodOverrides: Partial<TamagotchiStoreInitMethodsMock> = {},
+) {
+  const methods = {
+    loadFromPersistence: vi.fn(),
+    resetState: vi.fn(),
+    selectPokemon: vi.fn(),
+    setError: vi.fn(),
+    ...methodOverrides,
+  } as const satisfies TamagotchiStoreInitMethodsMock;
+
+  return {
+    hasPokemon: signal(options.hasPokemon),
+    initialized: signal(options.initialized ?? true),
+    ...(options.pokemon === undefined ? {} : { pokemon: signal(options.pokemon) }),
+    ...methods,
+  };
+}
+
+function createSelectionInitMock(
+  overrides: Partial<TamagotchiSelectionInitMock> = {},
+): TamagotchiSelectionInitMock {
+  return {
+    getSelectedPokemonReference: vi.fn(() => null),
+    loadPokemonByName: vi.fn(),
+    saveSelectedPokemon: vi.fn(),
+    validateSelectedPokemon: vi.fn(),
+    ...overrides,
+  } as const satisfies TamagotchiSelectionInitMock;
+}
 
 describe('TamagotchiInitService', () => {
   const matchingSelectionReference = {
@@ -25,27 +78,22 @@ describe('TamagotchiInitService', () => {
       const saveSelectedPokemon = vi.fn();
       const loadFromPersistence = vi.fn();
       const selectPokemon = vi.fn();
+      const selection = createSelectionInitMock({
+        saveSelectedPokemon,
+        validateSelectedPokemon,
+      });
 
       TestBed.configureTestingModule({
         providers: [
           TamagotchiInitService,
           {
             provide: TamagotchiStore,
-            useValue: {
-              hasPokemon: signal(false),
-              initialized: signal(true),
-              loadFromPersistence,
-              selectPokemon,
-              setError: vi.fn(),
-            },
+            useValue: createInitStoreMock(
+              { hasPokemon: false },
+              { loadFromPersistence, selectPokemon },
+            ),
           },
-          {
-            provide: TamagotchiSelectionService,
-            useValue: {
-              saveSelectedPokemon,
-              validateSelectedPokemon,
-            },
-          },
+          { provide: TamagotchiSelectionService, useValue: selection },
         ],
       });
 
@@ -62,34 +110,28 @@ describe('TamagotchiInitService', () => {
 
   describe('Edge Cases', () => {
     it('должен пропускать выбор из профиля, когда сохранённый покемон совпадает с выбором', () => {
-      const validateSelectedPokemon = vi.fn(() => of({ error: 'noSelection', valid: false }));
+      const validateSelectedPokemon = vi.fn(() =>
+        of({ error: 'noSelection' as const, valid: false }),
+      );
       const loadFromPersistence = vi.fn();
       const selectPokemon = vi.fn();
       const resetState = vi.fn();
+      const selection = createSelectionInitMock({
+        getSelectedPokemonReference: vi.fn(() => matchingSelectionReference),
+        validateSelectedPokemon,
+      });
 
       TestBed.configureTestingModule({
         providers: [
           TamagotchiInitService,
           {
             provide: TamagotchiStore,
-            useValue: {
-              hasPokemon: signal(true),
-              initialized: signal(true),
-              loadFromPersistence,
-              pokemon: signal(TEST_POKEMON),
-              resetState,
-              selectPokemon,
-              setError: vi.fn(),
-            },
+            useValue: createInitStoreMock(
+              { hasPokemon: true, pokemon: TEST_POKEMON },
+              { loadFromPersistence, resetState, selectPokemon },
+            ),
           },
-          {
-            provide: TamagotchiSelectionService,
-            useValue: {
-              getSelectedPokemonReference: vi.fn(() => matchingSelectionReference),
-              saveSelectedPokemon: vi.fn(),
-              validateSelectedPokemon,
-            },
-          },
+          { provide: TamagotchiSelectionService, useValue: selection },
         ],
       });
 
@@ -122,34 +164,27 @@ describe('TamagotchiInitService', () => {
       const selectPokemon = vi.fn();
       const resetState = vi.fn();
       const saveSelectedPokemon = vi.fn();
+      const selection = createSelectionInitMock({
+        getSelectedPokemonReference: vi.fn(() => ({
+          id: replacementPokemon.id,
+          name: replacementPokemon.name,
+          species: replacementPokemon.species,
+        })),
+        saveSelectedPokemon,
+        validateSelectedPokemon,
+      });
 
       TestBed.configureTestingModule({
         providers: [
           TamagotchiInitService,
           {
             provide: TamagotchiStore,
-            useValue: {
-              hasPokemon: signal(true),
-              initialized: signal(true),
-              loadFromPersistence,
-              pokemon: signal(TEST_POKEMON),
-              resetState,
-              selectPokemon,
-              setError: vi.fn(),
-            },
+            useValue: createInitStoreMock(
+              { hasPokemon: true, pokemon: TEST_POKEMON },
+              { loadFromPersistence, resetState, selectPokemon },
+            ),
           },
-          {
-            provide: TamagotchiSelectionService,
-            useValue: {
-              getSelectedPokemonReference: vi.fn(() => ({
-                id: replacementPokemon.id,
-                name: replacementPokemon.name,
-                species: replacementPokemon.species,
-              })),
-              saveSelectedPokemon,
-              validateSelectedPokemon,
-            },
-          },
+          { provide: TamagotchiSelectionService, useValue: selection },
         ],
       });
 
@@ -165,33 +200,29 @@ describe('TamagotchiInitService', () => {
     });
 
     it('должен выставлять noSelection, когда нет сохранённого покемона и выбор в профиле пуст', () => {
-      const validateSelectedPokemon = vi.fn(() => of({ error: 'noSelection', valid: false }));
+      const validateSelectedPokemon = vi.fn(() =>
+        of({ error: 'noSelection' as const, valid: false }),
+      );
       const loadFromPersistence = vi.fn();
       const selectPokemon = vi.fn();
       const setError = vi.fn();
       const loadPokemonByName = vi.fn();
+      const selection = createSelectionInitMock({
+        loadPokemonByName,
+        validateSelectedPokemon,
+      });
 
       TestBed.configureTestingModule({
         providers: [
           TamagotchiInitService,
           {
             provide: TamagotchiStore,
-            useValue: {
-              hasPokemon: signal(false),
-              initialized: signal(true),
-              loadFromPersistence,
-              selectPokemon,
-              setError,
-            },
+            useValue: createInitStoreMock(
+              { hasPokemon: false },
+              { loadFromPersistence, selectPokemon, setError },
+            ),
           },
-          {
-            provide: TamagotchiSelectionService,
-            useValue: {
-              saveSelectedPokemon: vi.fn(),
-              validateSelectedPokemon,
-              loadPokemonByName,
-            },
-          },
+          { provide: TamagotchiSelectionService, useValue: selection },
         ],
       });
 

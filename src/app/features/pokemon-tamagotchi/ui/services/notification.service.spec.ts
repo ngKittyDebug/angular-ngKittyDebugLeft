@@ -16,9 +16,13 @@ const TRANSLATIONS: Record<string, string> = {
   'pokemonTamagotchi.notifications.evolution.readyTitle': 'Ready to evolve!',
 };
 
+type NotificationTranslocoMock = MockedObject<{
+  translate(key: string): string;
+}>;
+
 describe('TamagotchiNotificationService', () => {
   let service: TamagotchiNotificationService;
-  let addNotification: ReturnType<typeof vi.fn>;
+  let storeMock: MockedObject<Pick<InstanceType<typeof TamagotchiStore>, 'addNotification'>>;
   let appNotifications: MockedObject<
     Pick<
       AppNotificationService,
@@ -27,7 +31,12 @@ describe('TamagotchiNotificationService', () => {
   >;
 
   beforeEach(() => {
-    addNotification = vi.fn();
+    storeMock = {
+      addNotification: vi.fn(),
+    } as const satisfies MockedObject<
+      Pick<InstanceType<typeof TamagotchiStore>, 'addNotification'>
+    >;
+
     appNotifications = {
       showErrorNotification: vi.fn(),
       showPositiveNotification: vi.fn(),
@@ -39,25 +48,16 @@ describe('TamagotchiNotificationService', () => {
       >
     >;
 
+    const translocoMock = {
+      translate: vi.fn((key: string) => TRANSLATIONS[key] ?? key),
+    } as const satisfies NotificationTranslocoMock;
+
     TestBed.configureTestingModule({
       providers: [
         TamagotchiNotificationService,
-        {
-          provide: TamagotchiStore,
-          useValue: {
-            addNotification,
-          },
-        },
-        {
-          provide: AppNotificationService,
-          useValue: appNotifications,
-        },
-        {
-          provide: TranslocoService,
-          useValue: {
-            translate: (key: string) => TRANSLATIONS[key] ?? key,
-          },
-        },
+        { provide: TamagotchiStore, useValue: storeMock },
+        { provide: AppNotificationService, useValue: appNotifications },
+        { provide: TranslocoService, useValue: translocoMock },
       ],
     });
 
@@ -73,8 +73,8 @@ describe('TamagotchiNotificationService', () => {
         'Your Pokémon is hungry.',
         'Getting hungry',
       );
-      expect(addNotification).toHaveBeenCalledTimes(1);
-      expect(addNotification).toHaveBeenNthCalledWith(
+      expect(storeMock.addNotification).toHaveBeenCalledTimes(1);
+      expect(storeMock.addNotification).toHaveBeenNthCalledWith(
         1,
         expect.objectContaining({
           priority: 'warning',
@@ -129,14 +129,14 @@ describe('TamagotchiNotificationService', () => {
         timestamp,
       });
 
-      expect(addNotification).toHaveBeenCalledTimes(1);
+      expect(storeMock.addNotification).toHaveBeenCalledTimes(1);
       expect(appNotifications.showErrorNotification).toHaveBeenNthCalledWith(
         1,
         'No energy left.',
         'Exhausted!',
       );
 
-      addNotification.mockClear();
+      storeMock.addNotification.mockClear();
       appNotifications.showErrorNotification.mockClear();
 
       service.processStatusAlerts({
@@ -145,7 +145,7 @@ describe('TamagotchiNotificationService', () => {
         timestamp: timestamp + TIMER_CONFIG.CRITICAL_ALERT_REPEAT_MS,
       });
 
-      expect(addNotification).toHaveBeenCalledTimes(1);
+      expect(storeMock.addNotification).toHaveBeenCalledTimes(1);
     });
   });
 });

@@ -4,7 +4,7 @@ import type { ComponentFixture } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { TranslocoTestingModule } from '@jsverse/transloco';
 import { firstValueFrom, of } from 'rxjs';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, type MockedObject, vi } from 'vitest';
 
 // eslint-disable-next-line import/extensions -- JSON fixtures must be imported with their extension.
 import enTranslations from '../../../../public/i18n/pokemonTamagotchi/en.json';
@@ -20,6 +20,27 @@ import { TamagotchiSelectionService } from './data/services/tamagotchi-selection
 import { TEST_POKEMON } from './data/fixtures/tamagotchi-arbitraries';
 import { pokemonTamagotchiRoutes, TAMAGOTCHI_PATH } from './pokemon-tamagotchi.routes';
 import { PokemonTamagotchiPageComponent } from './ui/components/pokemon-tamagotchi-page/pokemon-tamagotchi-page.component';
+
+type TamagotchiStoreInstance = InstanceType<typeof TamagotchiStore>;
+
+type TamagotchiStoreSmokeMethodsMock = MockedObject<
+  Pick<
+    TamagotchiStoreInstance,
+    'checkEvolution' | 'clearError' | 'loadFromPersistence' | 'selectPokemon' | 'setError'
+  >
+>;
+
+type TamagotchiInitSmokeMock = MockedObject<Pick<TamagotchiInitService, 'bootstrapFromProfile'>>;
+
+type TamagotchiSelectionSmokeMock = MockedObject<
+  Pick<TamagotchiSelectionService, 'saveSelectedPokemon' | 'validateSelectedPokemon'>
+>;
+
+function createInitSmokeMock(): TamagotchiInitSmokeMock {
+  return {
+    bootstrapFromProfile: vi.fn(() => of(undefined)),
+  } as const satisfies TamagotchiInitSmokeMock;
+}
 
 const REQUIRED_TRANSLATION_PATHS = [
   'page.title',
@@ -122,10 +143,23 @@ describe('PokemonTamagotchi — интеграция', () => {
       const error = signal<string | null>(null);
       const initialized = signal(true);
       const hasPokemon = signal(false);
-      const loadFromPersistence = vi.fn();
-      const setError = vi.fn((value: string) => {
-        error.set(value);
-      });
+      const storeMethods = {
+        loadFromPersistence: vi.fn(),
+        selectPokemon: vi.fn(),
+        setError: vi.fn((value: string) => {
+          error.set(value);
+        }),
+      } as const satisfies Pick<
+        TamagotchiStoreSmokeMethodsMock,
+        'loadFromPersistence' | 'selectPokemon' | 'setError'
+      >;
+
+      const selection = {
+        saveSelectedPokemon: vi.fn(),
+        validateSelectedPokemon: vi.fn(() =>
+          of({ error: 'evolvedPokemon' as const, valid: false as const }),
+        ),
+      } as const satisfies TamagotchiSelectionSmokeMock;
 
       TestBed.configureTestingModule({
         providers: [
@@ -136,20 +170,10 @@ describe('PokemonTamagotchi — интеграция', () => {
               error,
               hasPokemon,
               initialized,
-              loadFromPersistence,
-              selectPokemon: vi.fn(),
-              setError,
+              ...storeMethods,
             },
           },
-          {
-            provide: TamagotchiSelectionService,
-            useValue: {
-              saveSelectedPokemon: vi.fn(),
-              validateSelectedPokemon: vi.fn(() =>
-                of({ error: 'evolvedPokemon', valid: false as const }),
-              ),
-            },
-          },
+          { provide: TamagotchiSelectionService, useValue: selection },
         ],
       });
 
@@ -157,8 +181,8 @@ describe('PokemonTamagotchi — интеграция', () => {
 
       await firstValueFrom(service.bootstrapFromProfile());
 
-      expect(loadFromPersistence).toHaveBeenCalledTimes(1);
-      expect(setError).toHaveBeenNthCalledWith(1, 'evolvedPokemon');
+      expect(storeMethods.loadFromPersistence).toHaveBeenCalledTimes(1);
+      expect(storeMethods.setError).toHaveBeenNthCalledWith(1, 'evolvedPokemon');
       expect(error()).toBe('evolvedPokemon');
     });
   });
@@ -168,6 +192,14 @@ describe('PokemonTamagotchi — интеграция', () => {
 
     beforeEach(async () => {
       const initial = createInitialTamagotchiState();
+      const storeMethods = {
+        checkEvolution: vi.fn(),
+        clearError: vi.fn(),
+      } as const satisfies Pick<TamagotchiStoreSmokeMethodsMock, 'checkEvolution' | 'clearError'>;
+
+      const selection = {
+        validateSelectedPokemon: vi.fn(() => of({ error: 'noSelection' as const, valid: false })),
+      } as const satisfies Pick<TamagotchiSelectionSmokeMock, 'validateSelectedPokemon'>;
 
       await TestBed.configureTestingModule({
         imports: [
@@ -200,8 +232,6 @@ describe('PokemonTamagotchi — интеграция', () => {
             useValue: {
               achievementList: signal(initial.achievementList),
               canEvolve: signal(false),
-              checkEvolution: vi.fn(),
-              clearError: vi.fn(),
               dailyRoutine: signal(initial.dailyRoutine),
               error: signal('noSelection'),
               evolutionProgress: signal(initial.evolutionProgress),
@@ -219,20 +249,11 @@ describe('PokemonTamagotchi — интеграция', () => {
               status: signal(initial.status),
               trainingExperienceReward: signal(null),
               trainingStartedAt: signal(null),
+              ...storeMethods,
             },
           },
-          {
-            provide: TamagotchiInitService,
-            useValue: {
-              bootstrapFromProfile: vi.fn(() => of(undefined)),
-            },
-          },
-          {
-            provide: TamagotchiSelectionService,
-            useValue: {
-              validateSelectedPokemon: vi.fn(() => of({ error: 'noSelection', valid: false })),
-            },
-          },
+          { provide: TamagotchiInitService, useValue: createInitSmokeMock() },
+          { provide: TamagotchiSelectionService, useValue: selection },
         ],
       }).compileComponents();
 

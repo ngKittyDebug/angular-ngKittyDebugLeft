@@ -4,7 +4,7 @@ import type { ComponentFixture } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { TranslocoTestingModule } from '@jsverse/transloco';
 import { of } from 'rxjs';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, type MockedObject, vi } from 'vitest';
 import { TamagotchiSelectionService } from '../../../data/services/tamagotchi-selection.service';
 import { TamagotchiInitService } from '../../../data/services/tamagotchi-init.service';
 import { TEST_POKEMON } from '../../../data/fixtures/tamagotchi-arbitraries';
@@ -14,6 +14,53 @@ import {
 } from '../../../data/store/tamagotchi-initial';
 import { TamagotchiStore } from '../../../data/store/tamagotchi.store';
 import { PokemonTamagotchiPageComponent } from './pokemon-tamagotchi-page.component';
+
+type TamagotchiStoreInstance = InstanceType<typeof TamagotchiStore>;
+
+type TamagotchiStorePageMethodsMock = MockedObject<
+  Pick<
+    TamagotchiStoreInstance,
+    | 'applyStatusDecay'
+    | 'care'
+    | 'checkEvolution'
+    | 'clearError'
+    | 'completeEvolution'
+    | 'completeTraining'
+    | 'feed'
+    | 'interactWithPokemon'
+    | 'play'
+    | 'putToSleep'
+    | 'resetState'
+    | 'startEvolution'
+    | 'startTraining'
+    | 'updateStatus'
+    | 'wakeUp'
+    | 'water'
+  >
+>;
+
+type TamagotchiInitPageMock = MockedObject<Pick<TamagotchiInitService, 'bootstrapFromProfile'>>;
+
+type TamagotchiSelectionPageMock = MockedObject<
+  Pick<
+    TamagotchiSelectionService,
+    'loadPokemonByName' | 'saveSelectedPokemon' | 'validateSelectedPokemon'
+  >
+>;
+
+function createInitPageMock(): TamagotchiInitPageMock {
+  return {
+    bootstrapFromProfile: vi.fn(() => of(undefined)),
+  } as const satisfies TamagotchiInitPageMock;
+}
+
+function createSelectionPageMock(): TamagotchiSelectionPageMock {
+  return {
+    loadPokemonByName: vi.fn(() => of(TEST_POKEMON)),
+    saveSelectedPokemon: vi.fn(),
+    validateSelectedPokemon: vi.fn(() => of({ error: 'noSelection' as const, valid: false })),
+  } as const satisfies TamagotchiSelectionPageMock;
+}
 
 const PAGE_TRANSLATIONS = {
   ariaLabel: 'Tamagotchi',
@@ -51,23 +98,34 @@ function createStoreMock(
 ) {
   const initial = createInitialTamagotchiState();
 
-  return {
-    achievementList: signal(initial.achievementList),
+  const methods = {
     applyStatusDecay: vi.fn(),
-    canEvolve: signal(false),
     care: vi.fn(),
     checkEvolution: vi.fn(),
     clearError: vi.fn(),
     completeEvolution: vi.fn(),
     completeTraining: vi.fn(),
+    feed: vi.fn(),
+    interactWithPokemon: vi.fn(),
+    play: vi.fn(),
+    putToSleep: vi.fn(),
+    resetState: vi.fn(),
+    startEvolution: vi.fn(),
+    startTraining: vi.fn(),
+    updateStatus: vi.fn(),
+    wakeUp: vi.fn(),
+    water: vi.fn(),
+  } as const satisfies TamagotchiStorePageMethodsMock;
+
+  return {
+    achievementList: signal(initial.achievementList),
+    canEvolve: signal(false),
     dailyRoutine: signal(initial.dailyRoutine),
     error: signal(overrides.error ?? initial.error),
     evolutionProgress: signal(initial.evolutionProgress),
-    feed: vi.fn(),
     hasPokemon: signal((overrides.pokemon ?? TEST_POKEMON) !== null),
     initialized: signal(overrides.initialized ?? true),
     interactionHistory: signal(initial.interactionHistory),
-    interactWithPokemon: vi.fn(),
     isEvolving: signal(false),
     isSleeping: signal(false),
     isTraining: signal(false),
@@ -75,18 +133,11 @@ function createStoreMock(
     lastDecayTime: signal(initial.lastDecayTime),
     lastSaveTime: signal(initial.lastSaveTime),
     notificationList: signal(initial.notificationList),
-    play: vi.fn(),
     pokemon: signal(overrides.pokemon ?? TEST_POKEMON),
-    putToSleep: vi.fn(),
-    resetState: vi.fn(),
-    startEvolution: vi.fn(),
-    startTraining: vi.fn(),
     status: signal(createInitialPokemonStatus()),
     trainingExperienceReward: signal<number | null>(null),
     trainingStartedAt: signal<number | null>(null),
-    updateStatus: vi.fn(),
-    wakeUp: vi.fn(),
-    water: vi.fn(),
+    ...methods,
   };
 }
 
@@ -146,24 +197,9 @@ describe('PokemonTamagotchiPageComponent', () => {
         ],
         providers: [
           provideRouter([]),
-          {
-            provide: TamagotchiStore,
-            useValue: createStoreMock(),
-          },
-          {
-            provide: TamagotchiInitService,
-            useValue: {
-              bootstrapFromProfile: vi.fn(() => of(undefined)),
-            },
-          },
-          {
-            provide: TamagotchiSelectionService,
-            useValue: {
-              loadPokemonByName: vi.fn(() => of(TEST_POKEMON)),
-              saveSelectedPokemon: vi.fn(),
-              validateSelectedPokemon: vi.fn(() => of({ error: 'noSelection', valid: false })),
-            },
-          },
+          { provide: TamagotchiStore, useValue: createStoreMock() },
+          { provide: TamagotchiInitService, useValue: createInitPageMock() },
+          { provide: TamagotchiSelectionService, useValue: createSelectionPageMock() },
         ],
       }).compileComponents();
 
@@ -234,20 +270,8 @@ describe('PokemonTamagotchiPageComponent', () => {
             provide: TamagotchiStore,
             useValue: createStoreMock({ initialized: false, pokemon: null }),
           },
-          {
-            provide: TamagotchiInitService,
-            useValue: {
-              bootstrapFromProfile: vi.fn(() => of(undefined)),
-            },
-          },
-          {
-            provide: TamagotchiSelectionService,
-            useValue: {
-              loadPokemonByName: vi.fn(() => of(TEST_POKEMON)),
-              saveSelectedPokemon: vi.fn(),
-              validateSelectedPokemon: vi.fn(() => of({ error: 'noSelection', valid: false })),
-            },
-          },
+          { provide: TamagotchiInitService, useValue: createInitPageMock() },
+          { provide: TamagotchiSelectionService, useValue: createSelectionPageMock() },
         ],
       }).compileComponents();
 

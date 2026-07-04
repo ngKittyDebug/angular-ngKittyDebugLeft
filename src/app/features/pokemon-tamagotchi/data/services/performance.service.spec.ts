@@ -2,13 +2,16 @@ import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PERFORMANCE_MODE_STORAGE_KEY } from '../constants/performance-mode.constants';
-import { createTamagotchiStorageMock } from '../fixtures/tamagotchi-storage.mock';
+import {
+  createTamagotchiStorageMock,
+  type TamagotchiStorageMock,
+} from '../fixtures/tamagotchi-storage.mock';
 import { TamagotchiStorageService } from './tamagotchi-storage.service';
 import { PerformanceService } from './performance.service';
 
 describe('PerformanceService', () => {
   let service: PerformanceService;
-  let storageMock: ReturnType<typeof createTamagotchiStorageMock>;
+  let storageMock: TamagotchiStorageMock;
 
   beforeEach(() => {
     storageMock = createTamagotchiStorageMock();
