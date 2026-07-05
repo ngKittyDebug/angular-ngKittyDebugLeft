@@ -1,4 +1,4 @@
-<figure *transloco="let t" class="profile_pokemon__intro">
+<figure *transloco="let t; prefix: 'pokemonProfile'" class="profile_pokemon__intro">
   <img
     class="profile_pokemon__image"
     [src]="pokemonProfileData().sprites.other['official-artwork'].front_default"
@@ -10,7 +10,7 @@
       <p class="profile__id">#{{ pokemonProfileData().id }}</p>
     </div>
     <div class="pokemon__info_group-column">
-      <p class="pokemon__info_subheading">{{ t('pokemonProfile.types') }}</p>
+      <p class="pokemon__info_subheading">{{ t('types') }}</p>
       <div class="pokemon__info_badges_row">
         @for (item of pokemonProfileData().types; track item.type.name) {
           <span class="profile__type profile__type-{{ item.type.name }}" tuiBadge>{{
@@ -20,7 +20,7 @@
       </div>
     </div>
     <div class="pokemon__info_group-column">
-      <p class="pokemon__info_subheading">{{ t('pokemonProfile.abilities') }}</p>
+      <p class="pokemon__info_subheading">{{ t('abilities') }}</p>
       <div class="pokemon__info_badges_row">
         @for (item of pokemonProfileData().abilities; track item.ability?.name) {
           <span
@@ -37,16 +37,25 @@
     </div>
     <div class="pokemon__info_group">
       <p class="profile__param">
-        <span class="pokemon__info_subheading">{{ t('pokemonProfile.weight') }}</span
-        >{{ pokemonProfileData().weight | leftPawDivideByTen }} {{ t('pokemonProfile.kg') }}
+        <span class="pokemon__info_subheading">{{ t('weight') }}</span
+        >{{ pokemonProfileData().weight | leftPawDivideByTen }} {{ t('kg') }}
       </p>
       <p class="profile__param">
-        <span class="pokemon__info_subheading">{{ t('pokemonProfile.height') }}</span
-        >{{ pokemonProfileData().height | leftPawDivideByTen }} {{ t('pokemonProfile.m') }}
+        <span class="pokemon__info_subheading">{{ t('height') }}</span
+        >{{ pokemonProfileData().height | leftPawDivideByTen }} {{ t('m') }}
       </p>
     </div>
-    <button class="pokemon__info_button" tuiButton size="m" appearance="brand-primary">
-      {{ t('pokemonProfile.favorites') }}
+    <button
+      class="pokemon__info_button"
+      tuiButton
+      tuiButtonLoading
+      type="button"
+      size="m"
+      appearance="brand-primary"
+      [loading]="profileFacade.isLoading()"
+      (click)="onFavoriteClick()"
+    >
+      {{ isFavorite() ? t('removeFromFavorites') : t('favorites') }}
     </button>
     <left-paw-pokemon-tamagotchi-selection
       [feedback]="selectionFeedback()"

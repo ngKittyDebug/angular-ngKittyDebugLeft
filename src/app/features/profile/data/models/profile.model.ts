@@ -39,5 +39,6 @@ export interface UpdateAvatar {
 }
 
 export interface PokemonFavoriteResponse {
-  pokemonNameFavoriteList: string[];
+  pokemonNameFavorite?: string[];
+  pokemonNameFavoriteList?: string[];
 }
