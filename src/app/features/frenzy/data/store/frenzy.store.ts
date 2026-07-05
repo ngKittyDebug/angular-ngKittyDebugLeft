@@ -24,12 +24,7 @@ import { FrenzySocketService } from '../services/frenzy-socket.service';
 import { PlayerPersistenceService } from '../services/player-persistence.service';
 
 export type ConnectionStatus =
-  | 'idle'
-  | 'connecting'
-  | 'open'
-  | 'closed'
-  | 'roomFull'
-  | 'reconnecting';
+  'idle' | 'connecting' | 'open' | 'closed' | 'roomFull' | 'reconnecting';
 
 interface FrenzyState {
   state: ServerState | null;

@@ -26,5 +26,13 @@
   "cycles": "cycles",
   "from": "from",
   "no-evolution": "Evolution data for this Pokémon form are missing from the database",
-  "no-species": "Breeding data for this Pokémon form are missing from the database"
+  "no-species": "Breeding data for this Pokémon form are missing from the database",
+  "tamagotchiSelection": {
+    "selectButton": "Use in Tamagotchi",
+    "alreadySelected": "Selected for Tamagotchi",
+    "openTamagotchi": "Open Tamagotchi",
+    "savedMessage": "{{name}} is ready for Tamagotchi care!",
+    "evolvedPokemonError": "Only first-stage Pokémon can join the tamagotchi.",
+    "loadFailedError": "Could not prepare this Pokémon for Tamagotchi."
+  }
 }

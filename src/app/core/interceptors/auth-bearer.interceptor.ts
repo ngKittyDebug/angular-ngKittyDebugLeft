@@ -1,9 +1,17 @@
+import { inject } from '@angular/core';
 import type { HttpInterceptorFn } from '@angular/common/http';
-import { ACCESS_TOKEN_KEY, AUTH_SERVER_URL } from '@core/constants/auth-constants';
+import { AUTH_SERVER_URL } from '@core/constants/auth-constants';
+import { AuthService } from '@core/services/auth.service';
 
 export const authBearerInterceptor: HttpInterceptorFn = (request, next) => {
+  const authService = inject(AuthService);
+
   if (request.url.includes(AUTH_SERVER_URL)) {
-    const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+    if (request.url.includes('auth/refresh')) {
+      return next(request);
+    }
+
+    const token = authService.token();
 
     if (!token) {
       return next(request);

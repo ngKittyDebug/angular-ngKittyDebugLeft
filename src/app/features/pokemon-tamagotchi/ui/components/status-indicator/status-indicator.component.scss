@@ -1,0 +1,47 @@
+:host {
+  display: block;
+  inline-size: 100%;
+}
+
+.status-indicator {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.status-indicator__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.5rem;
+}
+
+.status-indicator__label {
+  flex: 1 1 auto;
+  font: var(--tui-font-text-s);
+  color: var(--tui-text-secondary);
+}
+
+.status-indicator__badge {
+  flex-shrink: 0;
+}
+
+.status-indicator__value {
+  flex-shrink: 0;
+  font: var(--tui-font-text-xs);
+  color: var(--tui-text-primary);
+}
+
+.status-indicator__bar {
+  display: block;
+  inline-size: 100%;
+  min-block-size: 0.5rem;
+}
+
+.status-indicator--warning .status-indicator__label {
+  color: var(--tui-status-warning);
+}
+
+.status-indicator--critical .status-indicator__label {
+  color: var(--tui-status-negative);
+}

@@ -6,7 +6,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 import { Router } from '@angular/router';
 import { AuthService } from '@core/services/auth.service';
-import { ACCESS_TOKEN_KEY } from '@core/constants/auth-constants';
 
 @Service({ autoProvided: false })
 export class LoginFacade {
@@ -31,9 +30,7 @@ export class LoginFacade {
       )
       .subscribe({
         next: (data) => {
-          //TODO тут будем сетапить в отдельный AuthService вместо локал стораджа
-          localStorage.setItem(ACCESS_TOKEN_KEY, data.accessToken);
-          this.tokenService.saveToken(data.accessToken);
+          this.tokenService.handleSuccessfulAuth(data.accessToken);
           this.router.navigateByUrl(returnUrl);
         },
       });

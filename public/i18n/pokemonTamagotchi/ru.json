@@ -1,0 +1,102 @@
+{
+  "page": {
+    "title": "Покемон Тамагочи",
+    "levelBadge": "Ур. {{level}}",
+    "noSelectionTitle": "Покемон не выбран",
+    "noSelectionHint": "Выберите покемона первой стадии в профиле и вернитесь сюда.",
+    "goToProfile": "Открыть профиль",
+    "evolvedPokemonError": "В тамагочи можно взять только покемона первой стадии.",
+    "loadFailedError": "Не удалось загрузить выбранного покемона. Попробуйте снова из профиля.",
+    "loading": "Загрузка тамагочи…",
+    "saveFailedError": "Не удалось сохранить прогресс. Сессия всё ещё активна.",
+    "stateLoadFailedError": "Не удалось загрузить сохранённый прогресс. Начинаем заново.",
+    "stateRecoveredWarning": "Прогресс восстановлен из резервной копии.",
+    "dismissNotice": "Закрыть",
+    "resetProgress": "Сбросить прогресс",
+    "statusPanelAria": "Индикаторы состояния покемона",
+    "ariaLabel": "Экран ухода за покемоном-тамагочи",
+    "performanceLabel": "Производительность",
+    "performanceAria": "Режим производительности",
+    "performanceEffective": "Используется профиль «{{mode}}»",
+    "performanceModes": {
+      "auto": "Авто",
+      "high": "Высокая",
+      "balanced": "Сбалансированная",
+      "low": "Экономия"
+    }
+  },
+  "status": {
+    "health": "Здоровье",
+    "hunger": "Сытость",
+    "mood": "Настроение",
+    "energy": "Энергия",
+    "hydration": "Гидратация",
+    "experience": "Опыт",
+    "tooltip": "{{label}}: {{value}} / {{max}}",
+    "levelTooltip": "Уровень {{level}} · {{experience}} опыта"
+  },
+  "actions": {
+    "feed": "Кормить",
+    "water": "Поить",
+    "care": "Ухаживать",
+    "play": "Играть",
+    "train": "Тренировать",
+    "sleep": "Спать",
+    "wakeUp": "Разбудить",
+    "cooldown": "Доступно через {{seconds}}с",
+    "disabledSleeping": "Покемон спит",
+    "disabledLowEnergy": "Мало энергии",
+    "disabledCooldown": "Перезарядка",
+    "disabledTraining": "Идёт тренировка"
+  },
+  "notifications": {
+    "empty": "Уведомлений пока нет",
+    "hideHistory": "Скрыть историю",
+    "showHistory": "Показать историю",
+    "alerts": {
+      "hungerLow": {
+        "title": "Покемон голоден",
+        "message": "Сытость низкая. Покормите покемона."
+      },
+      "hungerCritical": {
+        "title": "Очень голоден!",
+        "message": "Покемону срочно нужна еда."
+      },
+      "hydrationLow": {
+        "title": "Хочет пить",
+        "message": "Гидратация низкая. Дайте покемону воды."
+      },
+      "hydrationCritical": {
+        "title": "Обезвожен!",
+        "message": "Покемону срочно нужна вода."
+      },
+      "moodLow": {
+        "title": "Грустит",
+        "message": "Настроение низкое. Уделите покемону внимание."
+      },
+      "moodCritical": {
+        "title": "Очень грустный",
+        "message": "Покемону нужна забота как можно скорее."
+      },
+      "energyLow": {
+        "title": "Мало энергии",
+        "message": "Покемон устал. Дайте ему отдохнуть."
+      },
+      "energyCritical": {
+        "title": "Истощён!",
+        "message": "У покемона почти не осталось энергии."
+      },
+      "evolutionReady": {
+        "title": "Готов к эволюции!",
+        "message": "Все условия эволюции выполнены."
+      }
+    },
+    "evolution": {
+      "readyTitle": "Пора эволюционировать!"
+    }
+  },
+  "evolution": {
+    "evolving": "Эволюция…",
+    "evolvingAria": "{{name}} эволюционирует"
+  }
+}

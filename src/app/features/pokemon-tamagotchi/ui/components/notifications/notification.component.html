@@ -1,0 +1,42 @@
+<section
+  *transloco="let t; prefix: 'pokemonTamagotchi.notifications'"
+  class="tamagotchi-notifications"
+  aria-live="polite"
+>
+  @if (hasHistory()) {
+    <div class="tamagotchi-notifications__history">
+      <button appearance="flat" size="s" tuiButton type="button" (click)="toggleHistory()">
+        {{ historyOpen() ? t('hideHistory') : t('showHistory') }}
+        ({{ historyNotifications().length }})
+      </button>
+
+      @if (historyOpen()) {
+        <ul class="tamagotchi-notifications__history-list">
+          @for (notification of historyNotifications(); track notification.id) {
+            <li
+              class="tamagotchi-notifications__history-item"
+              [class.tamagotchi-notifications__history-item--unread]="!notification.read"
+            >
+              <span class="tamagotchi-notifications__history-title">
+                @if (isTranslationKey(notification.title)) {
+                  {{ t(notification.title) }}
+                } @else {
+                  {{ notification.title }}
+                }
+              </span>
+              <span class="tamagotchi-notifications__history-message">
+                @if (isTranslationKey(notification.message)) {
+                  {{ t(notification.message) }}
+                } @else {
+                  {{ notification.message }}
+                }
+              </span>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  } @else {
+    <p class="tamagotchi-notifications__empty">{{ t('empty') }}</p>
+  }
+</section>

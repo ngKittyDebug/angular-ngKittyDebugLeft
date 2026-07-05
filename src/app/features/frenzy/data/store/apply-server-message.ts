@@ -92,13 +92,7 @@ type StatelessMessage = Extract<
   ServerMessage,
   {
     type:
-      | 'rejoined'
-      | 'roomFull'
-      | 'joinRejected'
-      | 'joined'
-      | 'identifyRejected'
-      | 'bumped'
-      | 'ping';
+      'rejoined' | 'roomFull' | 'joinRejected' | 'joined' | 'identifyRejected' | 'bumped' | 'ping';
   }
 >;
 
