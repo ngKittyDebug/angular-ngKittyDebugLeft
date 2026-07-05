@@ -1,18 +1,93 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { TuiButton } from '@taiga-ui/core';
-import { TuiBadge, TuiProgress } from '@taiga-ui/kit';
-import { TuiCard } from '@taiga-ui/layout';
+import { TuiBadge } from '@taiga-ui/kit';
+import { catchError, finalize, map, of } from 'rxjs';
+import { TAMAGOTCHI_PATH } from '@shared/constants/tamagotchi-routes';
+import { TAMAGOTCHI_SELECTION_PORT } from '@shared/constants/tamagotchi-selection.token';
 import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
 import { DivideByTenPipe } from '@shared/pipes/divide-by-ten.pipe';
+import {
+  PokemonTamagotchiSelectionComponent,
+  type TamagotchiSelectionFeedback,
+} from '@shared/ui/components/pokemon-tamagotchi-selection/pokemon-tamagotchi-selection.component';
 
 @Component({
   selector: 'left-paw-pokemon-profile-info',
-  imports: [TuiBadge, TuiButton, TuiProgress, TuiCard, TranslocoDirective, DivideByTenPipe],
+  imports: [
+    DivideByTenPipe,
+    PokemonTamagotchiSelectionComponent,
+    TranslocoDirective,
+    TuiBadge,
+    TuiButton,
+  ],
   templateUrl: './pokemon-profile-info.component.html',
   styleUrl: './pokemon-profile-info.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PokemonProfileInfoComponent {
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly selectionPort = inject(TAMAGOTCHI_SELECTION_PORT);
+
   public readonly pokemonProfileData = input.required<PokemonDetailApiData>();
+
+  protected readonly tamagotchiRoute = `/${TAMAGOTCHI_PATH}`;
+  protected readonly selectionFeedback = signal<TamagotchiSelectionFeedback>(null);
+  protected readonly isSelectionLoading = signal(false);
+  protected readonly selectedPokemonName = signal<string | null>(
+    this.selectionPort.getSelectedPokemonReference()?.name ?? null,
+  );
+
+  protected readonly isCurrentTamagotchiSelection = computed(() => {
+    const selected = this.selectedPokemonName();
+    const currentName = this.pokemonProfileData()?.name;
+
+    if (!selected || !currentName) {
+      return false;
+    }
+
+    return selected.toLowerCase() === currentName.toLowerCase();
+  });
+
+  protected onTamagotchiSelectRequested(): void {
+    const pokemonName = this.pokemonProfileData()?.name;
+
+    if (!pokemonName || this.isSelectionLoading()) {
+      return;
+    }
+
+    this.isSelectionLoading.set(true);
+    this.selectionFeedback.set(null);
+
+    this.selectionPort
+      .loadPokemonByName(pokemonName)
+      .pipe(
+        map((pokemon) => this.selectionPort.validatePokemonSelection(pokemon)),
+        catchError(() => of({ error: 'loadFailed' as const, valid: false as const })),
+        finalize(() => this.isSelectionLoading.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((validation) => {
+        if (validation.valid && validation.pokemon) {
+          this.selectionPort.saveSelectedPokemon(validation.pokemon);
+          this.selectedPokemonName.set(validation.pokemon.name);
+          this.selectionFeedback.set('saved');
+
+          return;
+        }
+
+        this.selectionFeedback.set(
+          validation.error === 'evolvedPokemon' ? 'evolvedPokemon' : 'loadFailed',
+        );
+      });
+  }
 }

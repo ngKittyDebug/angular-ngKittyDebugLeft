@@ -21,7 +21,8 @@
 
   <div class="tamagotchi-selection__actions">
     <button
-      appearance="primary"
+      class="tamagotchi-selection__button"
+      appearance="brand-accent"
       size="m"
       tuiButton
       type="button"
@@ -32,7 +33,14 @@
     </button>
 
     @if (isCurrentSelection()) {
-      <a [routerLink]="tamagotchiRoute()" appearance="outline" tuiButton type="button">
+      <a
+        [routerLink]="tamagotchiRoute()"
+        class="tamagotchi-selection__button"
+        size="m"
+        appearance="outline"
+        tuiButton
+        type="button"
+      >
         {{ t('openTamagotchi') }}
       </a>
     }

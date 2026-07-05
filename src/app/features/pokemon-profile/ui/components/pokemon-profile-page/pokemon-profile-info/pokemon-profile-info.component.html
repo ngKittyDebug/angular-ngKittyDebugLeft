@@ -48,8 +48,13 @@
     <button class="pokemon__info_button" tuiButton size="m" appearance="brand-primary">
       {{ t('pokemonProfile.favorites') }}
     </button>
-    <button class="pokemon__info_button" tuiButton size="m" appearance="brand-accent">
-      {{ t('pokemonProfile.catch') }}
-    </button>
+    <left-paw-pokemon-tamagotchi-selection
+      [feedback]="selectionFeedback()"
+      [isCurrentSelection]="isCurrentTamagotchiSelection()"
+      [loading]="isSelectionLoading()"
+      [pokemonName]="pokemonProfileData().name"
+      [tamagotchiRoute]="tamagotchiRoute"
+      (selectRequested)="onTamagotchiSelectRequested()"
+    />
   </figcaption>
 </figure>
