@@ -1,0 +1,18 @@
+@use 'utility/mixins';
+
+:host {
+  @include mixins.flex_container_function($direction: column, $gap: 5px);
+}
+
+.games-container {
+  @include mixins.flex_container_function($direction: column, $gap: 10px);
+  max-width: 600px;
+  padding: 0 10px;
+}
+
+.games-heading,
+.games-text {
+  margin: 0;
+  text-align: center;
+  color: var(--tui-text-primary);
+}

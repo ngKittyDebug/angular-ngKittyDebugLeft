@@ -8,6 +8,7 @@ import { profileRoutes } from './profile/profile.routes';
 import { pokemonProfileRoutes } from './pokemon-profile/pokemon-profile.routes';
 import { pokemonBattleRoutes } from './pokemon-battle/pokemon-battle.routes';
 import { pokemonTamagotchiRoutes } from './pokemon-tamagotchi/pokemon-tamagotchi.routes';
+import { gamesRoutes } from './games/games.routes';
 
 export const ChildrenRouts: Routes = [
   ...mainCatalogRoutes,
@@ -18,5 +19,6 @@ export const ChildrenRouts: Routes = [
   ...frenzyRoutes,
   ...pokemonBattleRoutes,
   ...pokemonTamagotchiRoutes,
+  ...gamesRoutes,
   ...notFoundRoutes,
 ];
