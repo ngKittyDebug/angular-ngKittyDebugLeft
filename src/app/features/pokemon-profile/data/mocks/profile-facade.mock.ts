@@ -15,8 +15,6 @@ export function createProfileFacadeMock(options: ProfileFacadeMockOptions = {}) 
     isLoading,
     loadFavorites: vi.fn(),
     toggleFavorite: vi.fn(),
-    addToFavorites: vi.fn(),
-    removeFromFavorites: vi.fn(),
   };
 }
 

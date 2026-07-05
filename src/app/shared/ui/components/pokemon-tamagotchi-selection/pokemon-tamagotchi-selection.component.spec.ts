@@ -18,10 +18,7 @@ describe('PokemonTamagotchiSelectionComponent', () => {
               pokemonProfile: {
                 tamagotchiSelection: {
                   alreadySelected: 'Selected for Tamagotchi',
-                  evolvedPokemonError: 'Only first-stage Pokémon can join.',
-                  loadFailedError: 'Could not prepare this Pokémon.',
                   openTamagotchi: 'Open Tamagotchi',
-                  savedMessage: '{{name}} is ready!',
                   selectButton: 'Use in Tamagotchi',
                 },
               },
@@ -34,7 +31,6 @@ describe('PokemonTamagotchiSelectionComponent', () => {
     }).compileComponents();
 
     fixture = TestBed.createComponent(PokemonTamagotchiSelectionComponent);
-    fixture.componentRef.setInput('pokemonName', 'Pikachu');
     fixture.componentRef.setInput('tamagotchiRoute', '/tamagotchi');
     fixture.detectChanges();
   });

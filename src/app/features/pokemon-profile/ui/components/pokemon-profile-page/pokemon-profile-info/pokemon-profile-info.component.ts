@@ -9,19 +9,19 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { TranslocoDirective } from '@jsverse/transloco';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { TuiButton } from '@taiga-ui/core';
 import { TuiBadge, TuiButtonLoading } from '@taiga-ui/kit';
 import { catchError, finalize, map, of } from 'rxjs';
+import { AppNotificationService } from '@core/services/app-notification.service';
 import { ProfileFacade } from '@features/profile/data/facades/profile.facade';
 import { TAMAGOTCHI_PATH } from '@shared/constants/tamagotchi-routes';
 import { TAMAGOTCHI_SELECTION_PORT } from '@shared/constants/tamagotchi-selection.token';
 import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
 import { DivideByTenPipe } from '@shared/pipes/divide-by-ten.pipe';
-import {
-  PokemonTamagotchiSelectionComponent,
-  type TamagotchiSelectionFeedback,
-} from '@shared/ui/components/pokemon-tamagotchi-selection/pokemon-tamagotchi-selection.component';
+import { PokemonTamagotchiSelectionComponent } from '@shared/ui/components/pokemon-tamagotchi-selection/pokemon-tamagotchi-selection.component';
+
+const TAMAGOTCHI_SELECTION_SCOPE = 'pokemonProfile.tamagotchiSelection';
 
 @Component({
   selector: 'left-paw-pokemon-profile-info',
@@ -39,13 +39,14 @@ import {
 })
 export class PokemonProfileInfoComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
+  private readonly notifications = inject(AppNotificationService);
   private readonly selectionPort = inject(TAMAGOTCHI_SELECTION_PORT);
+  private readonly transloco = inject(TranslocoService);
 
   public readonly pokemonProfileData = input.required<PokemonDetailApiData>();
 
   protected readonly profileFacade = inject(ProfileFacade);
   protected readonly tamagotchiRoute = `/${TAMAGOTCHI_PATH}`;
-  protected readonly selectionFeedback = signal<TamagotchiSelectionFeedback>(null);
   protected readonly isSelectionLoading = signal(false);
   protected readonly selectedPokemonName = signal<string | null>(
     this.selectionPort.getSelectedPokemonReference()?.name ?? null,
@@ -96,7 +97,6 @@ export class PokemonProfileInfoComponent implements OnInit {
     }
 
     this.isSelectionLoading.set(true);
-    this.selectionFeedback.set(null);
 
     this.selectionPort
       .loadPokemonByName(pokemonName)
@@ -110,13 +110,20 @@ export class PokemonProfileInfoComponent implements OnInit {
         if (validation.valid && validation.pokemon) {
           this.selectionPort.saveSelectedPokemon(validation.pokemon);
           this.selectedPokemonName.set(validation.pokemon.name);
-          this.selectionFeedback.set('saved');
+          this.notifications.showPositiveNotification(
+            this.transloco.translate(`${TAMAGOTCHI_SELECTION_SCOPE}.savedMessage`, {
+              name: validation.pokemon.name,
+            }),
+          );
 
           return;
         }
 
-        this.selectionFeedback.set(
-          validation.error === 'evolvedPokemon' ? 'evolvedPokemon' : 'loadFailed',
+        const errorKey =
+          validation.error === 'evolvedPokemon' ? 'evolvedPokemonError' : 'loadFailedError';
+
+        this.notifications.showErrorNotification(
+          this.transloco.translate(`${TAMAGOTCHI_SELECTION_SCOPE}.${errorKey}`),
         );
       });
   }

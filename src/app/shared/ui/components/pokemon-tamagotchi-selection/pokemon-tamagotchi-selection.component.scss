@@ -4,13 +4,6 @@
 
 .tamagotchi-selection {
   display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  width: 100%;
-}
-
-.tamagotchi-selection__actions {
-  display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
   width: 100%;
