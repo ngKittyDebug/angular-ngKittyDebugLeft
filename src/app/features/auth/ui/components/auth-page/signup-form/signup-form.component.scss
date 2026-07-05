@@ -46,6 +46,14 @@
   width: 100%;
 }
 
+.signup__error {
+  width: 100%;
+  padding: 0 0.25rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  text-align: left;
+}
+
 .signup__title-wrapper {
   @include mixins.flex_container_function($direction: column, $gap: 0.8rem);
 }

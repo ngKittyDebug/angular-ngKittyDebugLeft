@@ -2,7 +2,16 @@ import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { TuiButton, TuiError, TuiInput, TuiLabel, TuiTextfieldComponent } from '@taiga-ui/core';
+import {
+  TuiButton,
+  TuiError,
+  TuiIcon,
+  TuiInput,
+  TuiLabel,
+  TuiTextfieldComponent,
+  TuiTextfieldOptionsDirective,
+} from '@taiga-ui/core';
+import { TuiPassword } from '@taiga-ui/kit';
 import { TuiForm } from '@taiga-ui/layout';
 import type { Field } from '@angular/forms/signals';
 import { FormField } from '@angular/forms/signals';
@@ -16,9 +25,12 @@ import { AUTH_SERVER_URL } from '@core/constants/auth-constants';
   imports: [
     RouterLink,
     TuiTextfieldComponent,
+    TuiTextfieldOptionsDirective,
     TuiButton,
+    TuiIcon,
     TuiInput,
     TuiLabel,
+    TuiPassword,
     TuiForm,
     TuiError,
     TranslocoDirective,
