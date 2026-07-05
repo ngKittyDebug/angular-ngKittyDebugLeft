@@ -7,7 +7,7 @@ import type { PokemonStatusModel } from '../models/pokemon-status.model';
 
 export type StatusSpriteKey = keyof PokemonSpriteUrlsModel;
 
-export const DEFAULT_SPRITE_VARIATION: SpriteVariation = 'default';
+const DEFAULT_SPRITE_VARIATION: SpriteVariation = 'default';
 
 export function resolveStatusSpriteKey(
   isEvolving: boolean,
@@ -33,7 +33,7 @@ export function resolveStatusSpriteKey(
   return 'normal';
 }
 
-export function spriteSetForVariation(
+function spriteSetForVariation(
   pokemon: PokemonModel,
   variation: SpriteVariation,
 ): PokemonSpriteUrlsModel {

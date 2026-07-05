@@ -12,7 +12,7 @@ export function toActivityDateKey(timestamp: number): string {
   return new Date(timestamp).toISOString().slice(0, 10);
 }
 
-export function totalRoutineActions(activityCounts: Record<string, number>): number {
+function totalRoutineActions(activityCounts: Record<string, number>): number {
   return activityCounts['total'] ?? 0;
 }
 

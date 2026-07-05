@@ -21,7 +21,7 @@ export function isFirstStageInEvolutionChain(
   return chainRoot.species.name.toLowerCase() === speciesName.toLowerCase();
 }
 
-export function findEvolutionChainNode(
+function findEvolutionChainNode(
   node: EvolutionChainItemApiData,
   speciesName: string,
 ): EvolutionChainItemApiData | null {
@@ -40,7 +40,7 @@ export function findEvolutionChainNode(
   return null;
 }
 
-export function countEvolutionStages(node: EvolutionChainItemApiData): number {
+function countEvolutionStages(node: EvolutionChainItemApiData): number {
   if (!node.evolves_to?.length) {
     return 1;
   }
@@ -48,7 +48,7 @@ export function countEvolutionStages(node: EvolutionChainItemApiData): number {
   return 1 + Math.max(...node.evolves_to.map((child) => countEvolutionStages(child)));
 }
 
-export function findEvolutionStageIndex(
+function findEvolutionStageIndex(
   node: EvolutionChainItemApiData,
   speciesName: string,
   depth = 1,
@@ -68,7 +68,7 @@ export function findEvolutionStageIndex(
   return null;
 }
 
-export function buildSpriteSet(primary: string): PokemonSpriteUrlsModel {
+function buildSpriteSet(primary: string): PokemonSpriteUrlsModel {
   return {
     eating: primary,
     evolving: primary,
@@ -79,7 +79,7 @@ export function buildSpriteSet(primary: string): PokemonSpriteUrlsModel {
   };
 }
 
-export function convertApiSpritesToSpriteVariations(
+function convertApiSpritesToSpriteVariations(
   sprites: PokemonSpritesApiData,
 ): Record<SpriteVariation, PokemonSpriteUrlsModel> {
   const pixelFront = sprites.front_default ?? '';
@@ -117,7 +117,7 @@ export function buildNextEvolutionStep(
   };
 }
 
-export function buildEvolutionChain(
+function buildEvolutionChain(
   detail: PokemonDetailApiData,
   evolutionResponse: EvolutionChainApiResponse,
   chainNode: EvolutionChainItemApiData,

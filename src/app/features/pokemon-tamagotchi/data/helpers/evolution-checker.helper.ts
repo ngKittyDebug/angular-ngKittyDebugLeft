@@ -8,11 +8,11 @@ import type {
 import type { PokemonModel } from '../models/pokemon.model';
 import type { PokemonStatusModel } from '../models/pokemon-status.model';
 
-export function computeCareScore(status: PokemonStatusModel): number {
+function computeCareScore(status: PokemonStatusModel): number {
   return Math.round((status.health + status.hunger + status.mood + status.hydration) / 4);
 }
 
-export function computeTrainingScore(achievementList: AchievementModel[]): number {
+function computeTrainingScore(achievementList: AchievementModel[]): number {
   return achievementList
     .filter((achievement) => achievement.category === 'training' && achievement.unlocked)
     .reduce((total, achievement) => total + achievement.reward.experience, 0);

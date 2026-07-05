@@ -1,10 +1,6 @@
 import type { EvolutionRequirementModel } from '../models/evolution.model';
 import { GAME_BALANCE } from './game-balance.constants';
 
-export const EVOLUTION_CRITERIA = {
-  ...GAME_BALANCE.EVOLUTION,
-} as const;
-
 export const EVOLUTION_ANIMATION_DURATION_MS = 3000;
 
 export const EVOLUTION_REQUIREMENTS: EvolutionRequirementModel[] = [
