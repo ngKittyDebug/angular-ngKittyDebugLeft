@@ -1,0 +1,23 @@
+<div *transloco="let t; prefix: 'pokemonTamagotchi.actions'" class="action-buttons">
+  @for (button of buttons(); track button.action) {
+    <button
+      appearance="secondary"
+      size="m"
+      tuiButton
+      type="button"
+      class="action-buttons__btn"
+      [disabled]="button.disabled"
+      [iconStart]="button.icon"
+      [tuiHint]="
+        button.cooldownSeconds
+          ? t('cooldown', { seconds: button.cooldownSeconds })
+          : button.disabledReasonKey
+            ? t(button.disabledReasonKey)
+            : ''
+      "
+      (click)="onAction(button.action)"
+    >
+      {{ t(button.labelKey) }}
+    </button>
+  }
+</div>
