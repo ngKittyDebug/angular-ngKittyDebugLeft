@@ -26,12 +26,16 @@
       />
     </tui-textfield>
 
+    @if (nameOrEmailFormControl.errors?.['required'] && nameOrEmailFormControl.touched) {
+      <tui-error class="login__error" [error]="t('auth.errorMessages.usernameRequired')" />
+    }
+
     @if (nameOrEmailFormControl.errors?.['invalidEmail'] && nameOrEmailFormControl.touched) {
-      <tui-error [error]="t('auth.errorMessages.email')" />
+      <tui-error class="login__error" [error]="t('auth.errorMessages.email')" />
     }
 
     @if (nameOrEmailFormControl.errors?.['invalidUserName'] && nameOrEmailFormControl.touched) {
-      <tui-error [error]="t('auth.errorMessages.username')" />
+      <tui-error class="login__error" [error]="t('auth.errorMessages.username')" />
     }
 
     <tui-textfield class="login__textfield" iconStart="@tui.lock">
@@ -46,8 +50,12 @@
       />
     </tui-textfield>
 
+    @if (passwordFormControl.errors?.['required'] && passwordFormControl.touched) {
+      <tui-error class="login__error" [error]="t('auth.errorMessages.passwordRequired')" />
+    }
+
     @if (passwordFormControl.errors?.['pattern'] && passwordFormControl.touched) {
-      <tui-error [error]="t('auth.errorMessages.password')" />
+      <tui-error class="login__error" [error]="t('auth.errorMessages.password')" />
     }
   </div>
   <button
