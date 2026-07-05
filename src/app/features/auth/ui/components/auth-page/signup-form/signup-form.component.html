@@ -34,7 +34,7 @@
     </tui-textfield>
     @let userEmailError = firstErrorKey(signupFacade.signupForm.email);
     <tui-error class="signup__error" [error]="userEmailError ? t(userEmailError) : null" />
-    <tui-textfield class="signup__textfield" iconStart="@tui.lock">
+    <tui-textfield class="signup__textfield" iconStart="@tui.lock" [tuiTextfieldCleaner]="false">
       <label tuiLabel for="password">{{ t('auth.signup.password') }}</label>
       <input
         [formField]="signupFacade.signupForm.password"
@@ -43,10 +43,11 @@
         type="password"
         id="password"
       />
+      <tui-icon tuiPassword />
     </tui-textfield>
     @let userPasswordError = firstErrorKey(signupFacade.signupForm.password);
     <tui-error class="signup__error" [error]="userPasswordError ? t(userPasswordError) : null" />
-    <tui-textfield class="signup__textfield" iconStart="@tui.lock">
+    <tui-textfield class="signup__textfield" iconStart="@tui.lock" [tuiTextfieldCleaner]="false">
       <label tuiLabel for="passwordRepeat">{{ t('auth.signup.passwordRepeat') }}</label>
       <input
         [formField]="signupFacade.signupForm.repeatPassword"
@@ -55,6 +56,7 @@
         type="password"
         id="passwordRepeat"
       />
+      <tui-icon tuiPassword />
     </tui-textfield>
     @let userRepeatPasswordError = firstErrorKey(signupFacade.signupForm.repeatPassword);
     <tui-error

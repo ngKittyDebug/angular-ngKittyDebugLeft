@@ -5,7 +5,16 @@ import { AuthApiService } from '@features/auth/api/auth-api.service';
 import { AUTH_SERVER_URL_TOKEN } from '@core/tokens/auth-server-url.token';
 import { LoginFacade } from '@features/auth/data/facades/login.facade';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { TuiButton, TuiError, TuiInput, TuiLabel, TuiTextfieldComponent } from '@taiga-ui/core';
+import {
+  TuiButton,
+  TuiError,
+  TuiIcon,
+  TuiInput,
+  TuiLabel,
+  TuiTextfieldComponent,
+  TuiTextfieldOptionsDirective,
+} from '@taiga-ui/core';
+import { TuiPassword } from '@taiga-ui/kit';
 import { TuiForm } from '@taiga-ui/layout';
 import { AUTH_SERVER_URL } from '@core/constants/auth-constants';
 
@@ -15,9 +24,12 @@ import { AUTH_SERVER_URL } from '@core/constants/auth-constants';
     RouterLink,
     ReactiveFormsModule,
     TuiTextfieldComponent,
+    TuiTextfieldOptionsDirective,
     TuiButton,
+    TuiIcon,
     TuiInput,
     TuiLabel,
+    TuiPassword,
     TuiForm,
     TuiError,
     TranslocoDirective,

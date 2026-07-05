@@ -38,7 +38,7 @@
       <tui-error class="login__error" [error]="t('auth.errorMessages.username')" />
     }
 
-    <tui-textfield class="login__textfield" iconStart="@tui.lock">
+    <tui-textfield class="login__textfield" iconStart="@tui.lock" [tuiTextfieldCleaner]="false">
       <label tuiLabel for="password">{{ t('auth.login.password') }}</label>
       <input
         formControlName="password"
@@ -48,6 +48,7 @@
         type="password"
         id="password"
       />
+      <tui-icon tuiPassword />
     </tui-textfield>
 
     @if (passwordFormControl.errors?.['required'] && passwordFormControl.touched) {
