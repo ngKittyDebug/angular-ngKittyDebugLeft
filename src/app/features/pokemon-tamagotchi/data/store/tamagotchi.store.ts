@@ -26,6 +26,7 @@ import {
   playWithPokemonState,
   putToSleepState,
   resetStateTransition,
+  restartTrainingTimerState,
   saveStateSuccessState,
   selectPokemonState,
   setErrorState,
@@ -203,6 +204,10 @@ export const TamagotchiStore = signalStore(
 
         completeTraining(now: number, experienceGain: number): void {
           mutateAndSave((state) => completeTrainingState(state, now, experienceGain));
+        },
+
+        restartTrainingTimer(now: number): void {
+          mutateAndSave((state) => restartTrainingTimerState(state, now));
         },
 
         putToSleep(now: number): void {

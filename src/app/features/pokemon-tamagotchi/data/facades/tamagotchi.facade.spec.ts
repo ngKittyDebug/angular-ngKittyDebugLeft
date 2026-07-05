@@ -33,6 +33,7 @@ type TamagotchiStoreMethodsMock = MockedObject<
     | 'play'
     | 'putToSleep'
     | 'resetState'
+    | 'restartTrainingTimer'
     | 'startEvolution'
     | 'startTraining'
     | 'updateStatus'
@@ -63,6 +64,7 @@ function createStoreMock(
     play: vi.fn(),
     putToSleep: vi.fn(),
     resetState: vi.fn(),
+    restartTrainingTimer: vi.fn(),
     startEvolution: vi.fn(),
     startTraining: vi.fn(),
     updateStatus: vi.fn(),
@@ -126,11 +128,8 @@ describe('TamagotchiFacade', () => {
 
     const mockPerformanceMethods = {
       getProfile: vi.fn(() => PERFORMANCE_PROFILES.balanced),
-      resolveEffectiveMode: vi.fn(() => 'balanced' as const),
       setMode: vi.fn(),
-    } as const satisfies MockedObject<
-      Pick<PerformanceService, 'getProfile' | 'resolveEffectiveMode' | 'setMode'>
-    >;
+    } as const satisfies MockedObject<Pick<PerformanceService, 'getProfile' | 'setMode'>>;
 
     const mockPerformanceService = {
       ...mockPerformanceMethods,
@@ -178,11 +177,33 @@ describe('TamagotchiFacade', () => {
         expect(mockStore.checkEvolution).toHaveBeenCalledTimes(1);
       });
 
-      it('должен блокировать действия во время тренировки', () => {
+      it('должен блокировать действия кроме play во время тренировки', () => {
         mockStore.isTraining.set(true);
         facade.onAction('feed');
 
         expect(mockStore.feed).not.toHaveBeenCalled();
+      });
+
+      it('должен перезапускать таймер тренировки при play во время тренировки', () => {
+        mockStore.isTraining.set(true);
+        facade.onAction('play');
+
+        expect(mockStore.play).toHaveBeenCalledTimes(1);
+        expect(mockStore.restartTrainingTimer).toHaveBeenCalledTimes(1);
+        expect(mockStore.checkEvolution).toHaveBeenCalledTimes(1);
+      });
+
+      it('должен обрабатывать взаимодействие с покемоном во время тренировки', () => {
+        mockStore.isTraining.set(true);
+        facade.onInteraction({
+          intensity: 1,
+          moodIncrease: 5,
+          timestamp: Date.now(),
+          type: 'click',
+        });
+
+        expect(mockStore.interactWithPokemon).toHaveBeenCalledTimes(1);
+        expect(mockStore.restartTrainingTimer).not.toHaveBeenCalled();
       });
     });
 
@@ -253,7 +274,6 @@ describe('TamagotchiFacade', () => {
             useValue: {
               getProfile: vi.fn(() => PERFORMANCE_PROFILES.balanced),
               mode: signal('balanced' as const),
-              resolveEffectiveMode: vi.fn(() => 'balanced' as const),
               setMode: vi.fn(),
             },
           },

@@ -110,11 +110,12 @@ export class ActionButtonsComponent {
     const cooldownMs = cooldowns[action];
     const cooldownSeconds = cooldownMs ? Math.ceil(cooldownMs / 1000) : null;
     const onCooldown = cooldownSeconds !== null && cooldownSeconds > 0;
-    const allowed = meta.canInput() && !onCooldown && !actionsLocked;
+    const blockedByTraining = actionsLocked && action !== 'play';
+    const allowed = meta.canInput() && !onCooldown && !blockedByTraining;
 
     let disabledReasonKey: string | null = null;
 
-    if (actionsLocked) {
+    if (blockedByTraining) {
       disabledReasonKey = 'disabledTraining';
     } else if (onCooldown) {
       disabledReasonKey = 'disabledCooldown';

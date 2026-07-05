@@ -7,7 +7,11 @@ import { TamagotchiErrorRecoveryService } from '../services/tamagotchi-error-rec
 import { TamagotchiPersistenceService } from '../services/tamagotchi-persistence.service';
 import { TEST_POKEMON } from '../fixtures/tamagotchi-arbitraries';
 import type { PokemonModel } from '../models/pokemon.model';
-import { selectPokemonState, startTrainingState } from './tamagotchi-state-transitions';
+import {
+  restartTrainingTimerState,
+  selectPokemonState,
+  startTrainingState,
+} from './tamagotchi-state-transitions';
 import { createInitialTamagotchiState, initialTamagotchiState } from './tamagotchi-initial';
 import { TamagotchiStore } from './tamagotchi.store';
 
@@ -185,6 +189,15 @@ describe('tamagotchiStateTransitions', () => {
         expect(first).toEqual(second);
         expect(first.trainingExperienceReward).toBe(fixedReward);
         expect(first.trainingStartedAt).toBe(fixedNow);
+      });
+
+      it('должен перезапускать таймер тренировки без изменения награды', () => {
+        const selected = selectPokemonState(initialTamagotchiState, TEST_POKEMON);
+        const training = startTrainingState(selected, fixedNow, fixedReward);
+        const restarted = restartTrainingTimerState(training, fixedNow + 10_000);
+
+        expect(restarted.trainingStartedAt).toBe(fixedNow + 10_000);
+        expect(restarted.trainingExperienceReward).toBe(fixedReward);
       });
     });
   });

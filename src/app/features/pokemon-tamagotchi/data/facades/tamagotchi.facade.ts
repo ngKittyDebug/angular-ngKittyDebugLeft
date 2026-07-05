@@ -1,4 +1,4 @@
-import { computed, DestroyRef, effect, inject, Service, signal } from '@angular/core';
+import { computed, DestroyRef, effect, inject, Service, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { GAME_BALANCE } from '../constants/game-balance.constants';
 import { isTamagotchiSelectionError } from '../constants/selection-errors.constants';
@@ -100,10 +100,7 @@ export class TamagotchiFacade {
   );
 
   public readonly performanceMode = this.performanceService.mode;
-  public readonly effectivePerformanceMode = computed(() =>
-    this.performanceService.resolveEffectiveMode(),
-  );
-  public readonly performanceModes: PerformanceMode[] = ['auto', 'high', 'balanced', 'low'];
+  public readonly performanceModes: PerformanceMode[] = ['high', 'balanced', 'low'];
   public readonly performanceModeIndex = computed(() =>
     this.performanceModes.indexOf(this.performanceMode()),
   );
@@ -154,7 +151,8 @@ export class TamagotchiFacade {
 
       const remaining = GAME_BALANCE.ACTION_EFFECTS.TRAIN.durationMs - (Date.now() - startedAt);
       const delay = Math.max(0, remaining);
-      const experienceGain = this.store.trainingExperienceReward() ?? rollTrainingExperienceGain();
+      const experienceGain =
+        untracked(() => this.store.trainingExperienceReward()) ?? rollTrainingExperienceGain();
 
       const timeoutId = setTimeout(() => {
         this.store.completeTraining(Date.now(), experienceGain);
@@ -168,14 +166,28 @@ export class TamagotchiFacade {
   }
 
   public onAction(action: ActionType): void {
-    if (this.isTraining()) {
-      return;
-    }
-
     const now = Date.now();
 
     if (this.isSleeping() && action === 'sleep') {
       this.store.wakeUp(now);
+      this.store.checkEvolution();
+
+      return;
+    }
+
+    if (this.isTraining()) {
+      if (action !== 'play') {
+        return;
+      }
+
+      const validation = this.tamagotchiService.validateActionFromState(this.state(), action);
+
+      if (!validation.allowed) {
+        return;
+      }
+
+      this.store.play(now);
+      this.store.restartTrainingTimer(now);
       this.store.checkEvolution();
 
       return;
@@ -222,10 +234,6 @@ export class TamagotchiFacade {
   }
 
   public onInteraction(interaction: InteractionEventModel): void {
-    if (this.isTraining()) {
-      return;
-    }
-
     this.store.interactWithPokemon(interaction, Date.now());
     this.store.checkEvolution();
   }

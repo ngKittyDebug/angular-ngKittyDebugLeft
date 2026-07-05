@@ -255,6 +255,24 @@ export function completeTrainingState(
   );
 }
 
+export function restartTrainingTimerState(
+  state: TamagotchiStateModel,
+  now: number,
+): TamagotchiStateModel {
+  return withPokemon(state, (current) =>
+    whenAwake(current, (awake) => {
+      if (awake.trainingStartedAt === null) {
+        return awake;
+      }
+
+      return {
+        ...awake,
+        trainingStartedAt: now,
+      };
+    }),
+  );
+}
+
 export function putToSleepState(state: TamagotchiStateModel, now: number): TamagotchiStateModel {
   return withPokemon(state, (current) => {
     if (current.isSleeping) {

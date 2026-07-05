@@ -17,9 +17,7 @@
     "ariaLabel": "Pokémon tamagotchi care screen",
     "performanceLabel": "Performance",
     "performanceAria": "Performance mode",
-    "performanceEffective": "Using {{mode}} profile",
     "performanceModes": {
-      "auto": "Auto",
       "high": "High",
       "balanced": "Balanced",
       "low": "Low power"

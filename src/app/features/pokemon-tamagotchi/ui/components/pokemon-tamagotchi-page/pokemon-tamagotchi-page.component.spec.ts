@@ -31,6 +31,7 @@ type TamagotchiStorePageMethodsMock = MockedObject<
     | 'play'
     | 'putToSleep'
     | 'resetState'
+    | 'restartTrainingTimer'
     | 'startEvolution'
     | 'startTraining'
     | 'updateStatus'
@@ -79,9 +80,7 @@ const PAGE_TRANSLATIONS = {
   resetProgress: 'Reset',
   performanceLabel: 'Performance',
   performanceAria: 'Performance mode',
-  performanceEffective: 'Using {{mode}} profile',
   performanceModes: {
-    auto: 'Auto',
     balanced: 'Balanced',
     high: 'High',
     low: 'Low power',
@@ -110,6 +109,7 @@ function createStoreMock(
     play: vi.fn(),
     putToSleep: vi.fn(),
     resetState: vi.fn(),
+    restartTrainingTimer: vi.fn(),
     startEvolution: vi.fn(),
     startTraining: vi.fn(),
     updateStatus: vi.fn(),

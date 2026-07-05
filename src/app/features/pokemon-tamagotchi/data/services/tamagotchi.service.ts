@@ -40,7 +40,7 @@ export class TamagotchiService {
       return { allowed: false, reason: 'noPokemon' };
     }
 
-    if (context.isTraining) {
+    if (context.isTraining && action !== 'play') {
       return { allowed: false, reason: 'training' };
     }
 

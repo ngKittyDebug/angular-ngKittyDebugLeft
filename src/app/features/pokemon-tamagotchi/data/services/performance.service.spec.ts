@@ -1,7 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { PERFORMANCE_MODE_STORAGE_KEY } from '../constants/performance-mode.constants';
+import {
+  DEFAULT_PERFORMANCE_MODE,
+  PERFORMANCE_MODE_STORAGE_KEY,
+} from '../constants/performance-mode.constants';
 import {
   createTamagotchiStorageMock,
   type TamagotchiStorageMock,
@@ -23,6 +26,11 @@ describe('PerformanceService', () => {
   });
 
   describe('Happy Path', () => {
+    it('должен использовать high-профиль по умолчанию', () => {
+      expect(service.mode()).toBe(DEFAULT_PERFORMANCE_MODE);
+      expect(service.getProfile().complexAnimations).toBe(true);
+    });
+
     it('должен сохранять выбранный режим производительности', () => {
       service.setMode('low');
 
@@ -31,37 +39,24 @@ describe('PerformanceService', () => {
       expect(service.getProfile().decayIntervalMs).toBe(30_000);
     });
 
-    it('должен резолвить явный режим без автоопределения', () => {
+    it('должен возвращать профиль выбранного режима', () => {
       service.setMode('high');
 
-      expect(service.resolveEffectiveMode()).toBe('high');
       expect(service.getProfile().complexAnimations).toBe(true);
     });
   });
 
   describe('Edge Cases', () => {
-    it('должен переключаться на low-профиль при prefers-reduced-motion', () => {
-      const previous = globalThis.matchMedia;
-
-      Object.defineProperty(globalThis, 'matchMedia', {
-        configurable: true,
-        value: vi.fn().mockReturnValue({
-          matches: true,
-          media: '(prefers-reduced-motion: reduce)',
-          onchange: null,
-          addEventListener: vi.fn(),
-          removeEventListener: vi.fn(),
-          addListener: vi.fn(),
-          removeListener: vi.fn(),
-          dispatchEvent: vi.fn(),
-        } as MediaQueryList),
+    it('должен игнорировать устаревшее значение auto в storage', () => {
+      storageMock.setItem(PERFORMANCE_MODE_STORAGE_KEY, 'auto');
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [{ provide: TamagotchiStorageService, useValue: storageMock }],
       });
 
-      service.setMode('auto');
+      const reloadedService = TestBed.inject(PerformanceService);
 
-      expect(service.resolveEffectiveMode()).toBe('low');
-
-      Object.defineProperty(globalThis, 'matchMedia', { configurable: true, value: previous });
+      expect(reloadedService.mode()).toBe('high');
     });
   });
 });

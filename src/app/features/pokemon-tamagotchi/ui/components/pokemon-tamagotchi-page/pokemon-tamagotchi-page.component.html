@@ -28,15 +28,6 @@
             <button type="button">{{ t('performanceModes.' + mode) }}</button>
           }
         </tui-segmented>
-        @if (facade.performanceMode() === 'auto') {
-          <span class="tamagotchi-page__performance-effective">
-            {{
-              t('performanceEffective', {
-                mode: t('performanceModes.' + facade.effectivePerformanceMode()),
-              })
-            }}
-          </span>
-        }
       </div>
     </div>
   </div>

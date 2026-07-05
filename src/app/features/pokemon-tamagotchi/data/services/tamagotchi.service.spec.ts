@@ -126,21 +126,22 @@ describe('TamagotchiService', () => {
         expect(result.reason).toBe('sleeping');
       });
 
-      it('должен отклонять все действия во время тренировки', () => {
-        const result = service.validateAction(
-          {
-            hasPokemon: true,
-            isSleeping: false,
-            isTraining: true,
-            lastActionTime: now,
-            status: createInitialPokemonStatus(),
-            now,
-          },
-          'water',
-        );
+      it('должен отклонять действия кроме play во время тренировки', () => {
+        const context = {
+          hasPokemon: true,
+          isSleeping: false,
+          isTraining: true,
+          lastActionTime: now,
+          status: createInitialPokemonStatus(),
+          now,
+        };
 
-        expect(result.allowed).toBe(false);
-        expect(result.reason).toBe('training');
+        const waterResult = service.validateAction(context, 'water');
+        const playResult = service.validateAction(context, 'play');
+
+        expect(waterResult.allowed).toBe(false);
+        expect(waterResult.reason).toBe('training');
+        expect(playResult.allowed).toBe(true);
       });
 
       it('должен отклонять игру и тренировку, когда энергия на уровне или ниже warning-порога', () => {

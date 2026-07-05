@@ -11,6 +11,7 @@
 
 .tamagotchi-page__header {
   display: flex;
+  flex-direction: column;
   flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
@@ -34,11 +35,6 @@
 .tamagotchi-page__performance-label {
   color: var(--tui-text-secondary);
   font: var(--tui-font-text-s);
-}
-
-.tamagotchi-page__performance-effective {
-  color: var(--tui-text-secondary);
-  font: var(--tui-font-text-xs);
 }
 
 .tamagotchi-page__title {

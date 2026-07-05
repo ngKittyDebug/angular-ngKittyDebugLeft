@@ -79,19 +79,54 @@ function buildSpriteSet(primary: string): PokemonSpriteUrlsModel {
   };
 }
 
+function firstNonEmptySprite(...candidates: (string | null | undefined)[]): string {
+  for (const candidate of candidates) {
+    if (candidate) {
+      return candidate;
+    }
+  }
+
+  return '';
+}
+
+function resolveDefaultSpriteUrl(sprites: PokemonSpritesApiData): string {
+  return firstNonEmptySprite(
+    sprites.other?.showdown?.front_default,
+    sprites.other?.['official-artwork']?.front_default,
+    sprites.front_default,
+  );
+}
+
+function resolveShinySpriteUrl(sprites: PokemonSpritesApiData, fallback: string): string {
+  return firstNonEmptySprite(
+    sprites.other?.showdown?.front_shiny,
+    sprites.other?.['official-artwork']?.front_shiny,
+    sprites.front_shiny,
+    fallback,
+  );
+}
+
+function resolveRetroSpriteUrl(
+  sprites: PokemonSpritesApiData,
+  primary: string,
+  pixelFront: string,
+  artwork: string | null | undefined,
+): string {
+  if (pixelFront && pixelFront !== primary) {
+    return pixelFront;
+  }
+
+  return firstNonEmptySprite(sprites.back_default, artwork, pixelFront, primary);
+}
+
 function convertApiSpritesToSpriteVariations(
   sprites: PokemonSpritesApiData,
 ): Record<SpriteVariation, PokemonSpriteUrlsModel> {
   const pixelFront = sprites.front_default ?? '';
   const artwork = sprites.other?.['official-artwork']?.front_default;
-  const primary = artwork ?? pixelFront;
-  const shinyArtwork = sprites.other?.['official-artwork']?.front_shiny;
-  const shinyPixel = sprites.front_shiny ?? '';
-  const shinyPrimary = shinyArtwork ?? (shinyPixel || primary);
-  const retroPrimary =
-    artwork && pixelFront && pixelFront !== artwork
-      ? pixelFront
-      : (sprites.back_default ?? (pixelFront || primary));
+  const primary = resolveDefaultSpriteUrl(sprites);
+  const shinyPrimary = resolveShinySpriteUrl(sprites, primary);
+  const retroPrimary = resolveRetroSpriteUrl(sprites, primary, pixelFront, artwork);
 
   return {
     default: buildSpriteSet(primary),

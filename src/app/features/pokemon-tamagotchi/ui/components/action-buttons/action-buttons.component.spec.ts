@@ -125,6 +125,23 @@ describe('ActionButtonsComponent', () => {
       expect(trainButton.disabled).toBe(true);
     });
 
+    it('должен оставлять play доступным во время блокировки тренировки', () => {
+      const fixture = createFixture();
+
+      fixture.componentRef.setInput('actionsLocked', true);
+      fixture.detectChanges();
+
+      const playButton = [
+        ...(fixture.nativeElement as HTMLElement).querySelectorAll('.action-buttons__btn'),
+      ].find((node) => node.textContent?.trim() === 'Play') as HTMLButtonElement;
+      const feedButton = [
+        ...(fixture.nativeElement as HTMLElement).querySelectorAll('.action-buttons__btn'),
+      ].find((node) => node.textContent?.trim() === 'Feed') as HTMLButtonElement;
+
+      expect(playButton.disabled).toBe(false);
+      expect(feedButton.disabled).toBe(true);
+    });
+
     it('должен эмитить sleep при клике по Wake up во время сна', () => {
       const fixture = createFixture({ isSleeping: true });
       const emitSpy = vi.spyOn(fixture.componentInstance.actionSelected, 'emit');

@@ -149,7 +149,7 @@ export class PokemonSpriteComponent {
   }
 
   private canInteract(): boolean {
-    return !this.isSleeping() && !this.isEvolving() && !this.isTraining();
+    return !this.isSleeping() && !this.isEvolving();
   }
 
   private applyGestureResult(result: {
