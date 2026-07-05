@@ -16,7 +16,7 @@ function createService(options: SetupOptions = {}) {
   const activeLangSignal = signal(options.activeLang ?? 'ru');
 
   const translocoMock: Partial<TranslocoService> = {
-    getAvailableLangs: () => options.availableLangs ?? ['ru', 'en'],
+    getAvailableLangs: vi.fn().mockReturnValue(options.availableLangs ?? ['ru', 'en']),
     setActiveLang: setActiveLangSpy,
     activeLang: activeLangSignal,
   };
@@ -67,6 +67,6 @@ describe('LanguageSwitcherService', () => {
 
     service.languageSwitch('en');
 
-    expect(setActiveLangSpy).toHaveBeenCalledWith('en');
+    expect(setActiveLangSpy).toHaveBeenNthCalledWith(1, 'en');
   });
 });
