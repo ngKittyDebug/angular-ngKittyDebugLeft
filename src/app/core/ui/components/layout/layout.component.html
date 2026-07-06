@@ -20,3 +20,7 @@
 </div>
 
 <left-paw-footer />
+
+@if (!immersive()) {
+  <left-paw-mascot *leftPawResponsiveRender="`(min-width:${tableBreakpoint}px)`" />
+}
