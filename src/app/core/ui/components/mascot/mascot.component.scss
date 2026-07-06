@@ -17,8 +17,6 @@
 .mascot_sprite--idle {
   width: 11rem;
   height: 16rem;
-  // The wait scene carries transparent padding at its bottom — nudge it down to keep
-  // the ghost on the same ground line as the other states.
   transform: translateY(16px);
 }
 
