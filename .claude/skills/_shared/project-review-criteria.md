@@ -157,6 +157,8 @@ The tools (full playbook in `pr-review/reference/taiga-mcp.md`):
 - `mcp__taiga-ui__get_component_example` (`names`) — real usage snippets to ground a fix.
 - `mcp__taiga-ui__get_migration_guide` — only when the work is a Taiga version bump.
 
+**Scope check — the MCP answers _API_, not _computed CSS_.** `get_overview`/`get_component_example` give the symbol → package map, inputs/outputs, and usage snippets — enough to settle _"which import, which component, which input."_ They do **not** expose a component's compiled `:host` styles, its `display`, its transitions, or its internal DOM. So any verdict about **rendered behavior** — does this animate, is the host `grid`/`flex`, which child clips, and especially a "this CSS line is dead / a no-op" call that hinges on it — is _not_ settled by the MCP or by memory. Read the **compiled install**: the inline `styles:` array + template in `node_modules/@taiga-ui/<pkg>/fesm2022/*.mjs`. A CSS/behavior verdict from memory is as much a liability as a wrong-package import.
+
 If the MCP is unavailable, fall back to `CLAUDE.md` Taiga conventions and say in the finding that you couldn't verify against the docs — don't assert an API you can't confirm.
 
 ---

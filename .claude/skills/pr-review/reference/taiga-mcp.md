@@ -19,6 +19,10 @@ If a change has nothing to do with Taiga, don't call it — no need to slow the 
 | `mcp__taiga-ui__get_component_example` | `names: string[]` | Real usage snippets for one or more components — copy the shape into your `suggestion` block.                                                          |
 | `mcp__taiga-ui__get_migration_guide`   | —                 | Step-by-step version migration; only for Taiga upgrade PRs.                                                                                            |
 
+## Scope — what the MCP can't answer
+
+The docs cover the **API surface**: packages, inputs/outputs, usage snippets. They do **not** expose a component's compiled styles or internal DOM. So a verdict about **rendered behavior** — does this animate, is the host `grid`/`flex`, is a CSS line targeting the component a no-op — can't be confirmed here, and asserting it from memory is the same liability as a wrong-package import. Ground truth for those lives in the compiled install: the inline `styles:` array + template in `node_modules/@taiga-ui/<pkg>/fesm2022/*.mjs`.
+
 ## Typical review flows
 
 **Flagging raw HTML that should be Taiga:**
