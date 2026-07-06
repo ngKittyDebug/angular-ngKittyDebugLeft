@@ -58,11 +58,11 @@ export class PokemonPickerComponent {
     this.name.set(target.value);
   }
 
-  protected select(line: Line): void {
+  protected onSelect(line: Line): void {
     this.selectedLine.set(line);
   }
 
-  protected submit(): void {
+  protected onSubmit(): void {
     const line = this.selectedLine();
 
     if (line === null || !this.canSubmit()) {

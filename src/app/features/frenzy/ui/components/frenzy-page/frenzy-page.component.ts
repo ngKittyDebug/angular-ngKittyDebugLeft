@@ -69,31 +69,31 @@ export class FrenzyPageComponent implements OnInit {
     this.facade.connect();
   }
 
-  protected handleChooseNew(): void {
+  protected onChooseNew(): void {
     this.facade.chooseNew();
   }
 
-  protected handleItemClick(event: ItemClick): void {
+  protected onItemClick(event: ItemClick): void {
     this.facade.click(event);
   }
 
-  protected handlePickerSubmit(payload: PickerSubmission): void {
+  protected onPickerSubmit(payload: PickerSubmission): void {
     this.facade.join(payload);
   }
 
-  protected handleRespawn(): void {
+  protected onRespawn(): void {
     this.facade.respawn();
   }
 
-  protected handleSelfPoke(): void {
+  protected onSelfPoke(): void {
     this.facade.pokeSelf();
   }
 
-  protected handlePokeNpc(npcId: string): void {
+  protected onPokeNpc(npcId: string): void {
     this.facade.pokeNpc(npcId);
   }
 
-  protected handleSteer(point: { x: number; y: number }): void {
+  protected onSteer(point: { x: number; y: number }): void {
     this.facade.steer(point);
   }
 }

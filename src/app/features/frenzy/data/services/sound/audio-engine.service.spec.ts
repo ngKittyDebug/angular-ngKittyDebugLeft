@@ -65,13 +65,19 @@ describe('AudioEngineService', () => {
   it('emits a tone while sound is enabled', () => {
     engine.playTone({ frequency: 200, durationMs: 280, gain: 0.3 });
 
-    expect(createOscillator).toHaveBeenCalled();
+    expect(createOscillator).toHaveBeenCalledTimes(1);
   });
 
   it('stays silent while sound is disabled', () => {
     enabled.set(false);
 
     engine.playTone({ frequency: 200, durationMs: 280, gain: 0.3 });
+
+    expect(createOscillator).not.toHaveBeenCalled();
+  });
+
+  it('skips an inaudible tone (peak collapses to silence) without opening the context', () => {
+    engine.playTone({ frequency: 200, durationMs: 280, gain: 0 });
 
     expect(createOscillator).not.toHaveBeenCalled();
   });

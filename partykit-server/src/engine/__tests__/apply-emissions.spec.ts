@@ -279,6 +279,30 @@ describe('applyEmissions', () => {
     expect(spawned[0].vx).toBeCloseTo(-FRENZY.easterEgg.emitBackSpeed, 5);
   });
 
+  it('launches a heavy item at its own emitLaunchSpeed override, not the aura backSpeed', () => {
+    // Sweep the poop pool until it sprays a bomb; the bomb carries physics.emitLaunchSpeed (gentle) instead of the
+    // aura's shared poop emitBackSpeed, and its own fallSpeed — so it eases out near its drift cap, not overshoots.
+    let bomb: { vx?: number; vy: number } | undefined;
+
+    for (let i = 0; i < 100 && bomb === undefined; i++) {
+      const { spawned } = applyEmissionsPass(
+        FRENZY_DEFINITION,
+        EMITTERS,
+        stateWith([player('p1', POOPING)]),
+        0,
+        dueAt('p1'),
+        sequenceRng([i / 100, 0.5]),
+        () => 'bomb-1',
+      );
+
+      bomb = spawned.find((item) => item.type === 'bomb');
+    }
+
+    expect(bomb?.vx).toBeCloseTo(-FRENZY.bomb.emitBackSpeed, 5);
+    expect(bomb?.vy).toBeCloseTo(FRENZY.fallSpeed.bomb, 5);
+    expect(FRENZY.bomb.emitBackSpeed).not.toBeCloseTo(FRENZY.poop.emitBackSpeed, 5);
+  });
+
   it('jitters the launch angle so successive emissions fan out instead of lining up (speed preserved)', () => {
     const speedOf = (s: { vx?: number; vy: number }): number => Math.hypot(s.vx ?? 0, s.vy);
     const base = Math.hypot(FRENZY.easterEgg.emitBackSpeed, FRENZY.fallSpeed.food);

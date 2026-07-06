@@ -2,55 +2,177 @@
   <div class="user">
     <div class="user-info">
       <div tuiAvatar size="xxl" [round]="true">
-        <img src="images/team/PavelCat.jpg" alt="user" />
+        <img [src]="facade.profile()?.avatar || 'images/team/PavelCat.jpg'" alt="user" />
       </div>
       <div class="user-content">
-        <h2 class="name">Name</h2>
-        <p class="email">email@sobaka.com</p>
-      </div>
-    </div>
-    <div class="achievements">
-      <h4>{{ t('profile.achievements.heading') }}</h4>
-      <span class="line-mini"></span>
-      <div class="achievement-box">
-        @for (item of achievementsList; track $index) {
-          <figure class="achievement-icon">
-            <tui-icon icon="@tui.star" />
-            <figcaption class="achievement-text">
-              {{ t(`profile.achievements.achievement.${item}`) }}
-            </figcaption>
-          </figure>
-        }
+        <h2 class="name">{{ facade.profile()?.username }}</h2>
+        <p class="email">{{ facade.profile()?.email }}</p>
+        <div class="setting-row setting-row--avatar">
+          <button
+            tuiButton
+            type="button"
+            size="xs"
+            appearance="secondary"
+            class="avatar-upload-btn"
+            [loading]="facade.isLoading()"
+            (click)="openAvatarPicker(t('profile.settings.avatarPicker.title'))"
+          >
+            {{ t('profile.settings.uploadAvatar') }}
+          </button>
+        </div>
       </div>
     </div>
     <div class="settings">
       <h4>{{ t('profile.settings.heading') }}</h4>
       <span class="line-mini"></span>
-      <div></div>
-    </div>
-  </div>
-  <div class="caught">
-    <h3>{{ t('profile.caught.heading') }}</h3>
-    <span class="line"></span>
-    <div class="card-container">
-      @for (item of caughtList.results; track item) {
-        <left-paw-pokemon-card-profile [pokemonName]="item.name" />
-      } @empty {
-        <div class="caught-text">{{ t('profile.caught.empty') }}</div>
-        <img class="gif" src="images/gif/hide.gif" alt="ups" />
-      }
+
+      <left-paw-setting-row
+        [label]="t('profile.settings.username')"
+        [displayValue]="facade.profile()?.username ?? ''"
+        [control]="usernameFormControl"
+        [passwordControl]="usernamePasswordControl"
+        [passwordPlaceholder]="t('profile.settings.currentPassword')"
+        (save)="onSaveUsername()"
+      />
+
+      <left-paw-setting-row
+        [label]="t('profile.settings.email')"
+        [displayValue]="facade.profile()?.email ?? ''"
+        [control]="emailFormControl"
+        [inputType]="'email'"
+        [passwordControl]="emailPasswordControl"
+        [passwordPlaceholder]="t('profile.settings.currentPassword')"
+        (save)="onSaveEmail()"
+      />
+
+      <div class="setting-row setting-row--password">
+        <span class="setting-label">{{ t('profile.settings.password') }}:</span>
+        @if (passwordEditing()) {
+          <div class="password-inputs">
+            <input
+              class="password-input"
+              type="password"
+              autocomplete="current-password"
+              [placeholder]="t('profile.settings.currentPassword')"
+              [formControl]="passwordForm.controls.currentPassword"
+            />
+            @if (
+              passwordForm.controls.currentPassword.invalid &&
+              passwordForm.controls.currentPassword.touched
+            ) {
+              <span class="field-error">{{ t('profile.settings.errors.password') }}</span>
+            }
+            <input
+              class="password-input"
+              type="password"
+              autocomplete="new-password"
+              [placeholder]="t('profile.settings.newPassword')"
+              [formControl]="passwordForm.controls.newPassword"
+            />
+            @if (
+              passwordForm.controls.newPassword.invalid && passwordForm.controls.newPassword.touched
+            ) {
+              <span class="field-error">{{ t('profile.settings.errors.password') }}</span>
+            }
+          </div>
+          <button
+            iconStart="@tui.check"
+            size="xs"
+            tuiIconButton
+            type="button"
+            [disabled]="passwordForm.invalid || facade.isLoading()"
+            (click)="onSavePassword()"
+          >
+            {{ t('profile.settings.save') }}
+          </button>
+          <button
+            iconStart="@tui.x"
+            size="xs"
+            tuiIconButton
+            type="button"
+            (click)="cancelPasswordEdit()"
+          >
+            {{ t('profile.settings.cancel') }}
+          </button>
+        } @else {
+          @if (facade.isPasswordChangedSuccess()) {
+            <span class="password-success">{{ t('profile.settings.passwordChanged') }}</span>
+          } @else {
+            <span class="password-dots">••••••••</span>
+          }
+          <button
+            iconStart="@tui.settings"
+            size="xs"
+            tuiIconButton
+            type="button"
+            (click)="passwordEditing.set(true)"
+          >
+            {{ t('profile.settings.edit') }}
+          </button>
+        }
+      </div>
+
+      <div class="setting-row setting-row--actions">
+        @if (!showDeleteConfirm()) {
+          <button
+            tuiButton
+            type="button"
+            size="s"
+            appearance="secondary"
+            (click)="showDeleteConfirm.set(true)"
+          >
+            {{ t('profile.settings.delete.button') }}
+          </button>
+        } @else {
+          <p class="delete-warning">{{ t('profile.settings.delete.confirm') }}</p>
+          <button
+            tuiButton
+            type="button"
+            size="s"
+            appearance="secondary"
+            (click)="showDeleteConfirm.set(false)"
+          >
+            {{ t('profile.settings.delete.cancel') }}
+          </button>
+          <button
+            tuiButton
+            type="button"
+            size="s"
+            appearance="outline"
+            class="logout-btn"
+            [loading]="facade.isLoading()"
+            (click)="onDeleteAccount()"
+          >
+            {{ t('profile.settings.delete.button') }}
+          </button>
+        }
+        <button
+          tuiButton
+          type="button"
+          size="s"
+          appearance="outline"
+          class="logout-btn"
+          (click)="onLogout()"
+        >
+          {{ t('profile.settings.logout') }}
+        </button>
+      </div>
     </div>
   </div>
   <div class="favorite">
     <h3>{{ t('profile.favorite.heading') }}</h3>
     <span class="line"></span>
     <div class="card-container">
-      @for (item of favoritesList.results; track item) {
-        <left-paw-pokemon-card-profile [pokemonName]="item.name" />
+      @for (name of facade.profile()?.pokemonNameFavoriteList ?? []; track name) {
+        <left-paw-pokemon-card-profile [pokemonName]="name" />
       } @empty {
         <div class="caught-text">{{ t('profile.favorite.empty') }}</div>
         <img class="gif" src="images/gif/hide.gif" alt="ups" />
       }
     </div>
   </div>
+
+  <ng-template #pickerTemplate let-observer>
+    <left-paw-avatar-picker (avatarSelected)="observer.next($event); observer.complete()" />
+  </ng-template>
 </div>

@@ -12,10 +12,10 @@
     [hitBursts]="hitBursts()"
     [ownedSparks]="ownedSparks()"
     [ownedShieldBlocks]="ownedShieldBlocks()"
-    (itemClick)="handleItemClick($event)"
-    (selfPoke)="handleSelfPoke()"
-    (pokeNpc)="handlePokeNpc($event)"
-    (steer)="handleSteer($event)"
+    (itemClick)="onItemClick($event)"
+    (selfPoke)="onSelfPoke()"
+    (pokeNpc)="onPokeNpc($event)"
+    (steer)="onSteer($event)"
   />
 
   @if (isReconnecting()) {
@@ -82,8 +82,8 @@
           [epitaph]="faintedEpitaph()"
           [respawnReady]="respawnReady()"
           [cooldownSeconds]="cooldownSeconds()"
-          (respawn)="handleRespawn()"
-          (chooseNew)="handleChooseNew()"
+          (respawn)="onRespawn()"
+          (chooseNew)="onChooseNew()"
         />
       }
       @case ('picking') {
@@ -91,7 +91,7 @@
           [error]="joinError()"
           [initialName]="savedName"
           [initialAppearance]="savedAppearance"
-          (submitPicker)="handlePickerSubmit($event)"
+          (submitPicker)="onPickerSubmit($event)"
         />
       }
     }

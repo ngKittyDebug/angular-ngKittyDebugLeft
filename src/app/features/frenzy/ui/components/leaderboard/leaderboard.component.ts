@@ -43,8 +43,8 @@ interface LeaderboardRow {
   // A click anywhere on the open panel collapses it (a big, forgiving close target); a click OUTSIDE closes it too.
   // Mirrors the item legend. The toggle buttons stopPropagation so opening from the pill never reaches either.
   host: {
-    '(click)': 'collapseIfOpen()',
-    '(document:click)': 'collapseOnOutsideClick($event)',
+    '(click)': 'onCollapseIfOpen()',
+    '(document:click)': 'onCollapseOnOutsideClick($event)',
   },
 })
 export class LeaderboardComponent {
@@ -79,14 +79,14 @@ export class LeaderboardComponent {
   // toggle persists (via the signal's write-through) and thereafter wins over the default.
   protected readonly collapsed = persistedCollapse(COLLAPSE_KEY.leaderboard, () => false);
 
-  protected toggle(event: Event): void {
-    // Keep the button's click from bubbling to the host `collapseIfOpen` — otherwise opening from the pill would
+  protected onToggle(event: Event): void {
+    // Keep the button's click from bubbling to the host `onCollapseIfOpen` — otherwise opening from the pill would
     // immediately bubble up and close again.
     event.stopPropagation();
     this.collapsed.update((value) => !value);
   }
 
-  protected collapseIfOpen(): void {
+  protected onCollapseIfOpen(): void {
     if (this.collapsed()) {
       return;
     }
@@ -94,7 +94,7 @@ export class LeaderboardComponent {
     this.collapsed.set(true);
   }
 
-  protected collapseOnOutsideClick(event: Event): void {
+  protected onCollapseOnOutsideClick(event: Event): void {
     if (this.collapsed() || this.host.nativeElement.contains(event.target as Node)) {
       return;
     }

@@ -1,0 +1,102 @@
+{
+  "page": {
+    "title": "Pokémon Tamagotchi",
+    "levelBadge": "Lv. {{level}}",
+    "noSelectionTitle": "No Pokémon selected",
+    "noSelectionHint": "Choose a first-stage Pokémon in your profile, then come back here.",
+    "goToProfile": "Open profile",
+    "evolvedPokemonError": "Only first-stage Pokémon can join the tamagotchi.",
+    "loadFailedError": "Could not load your selected Pokémon. Try again from the profile.",
+    "loading": "Loading your tamagotchi…",
+    "saveFailedError": "Could not save progress. Your session is still active.",
+    "stateLoadFailedError": "Could not load saved progress. Starting fresh.",
+    "stateRecoveredWarning": "Progress was recovered from a backup.",
+    "dismissNotice": "Dismiss",
+    "resetProgress": "Reset progress",
+    "statusPanelAria": "Pokémon status indicators",
+    "ariaLabel": "Pokémon tamagotchi care screen",
+    "performanceLabel": "Performance",
+    "performanceAria": "Performance mode",
+    "performanceEffective": "Using {{mode}} profile",
+    "performanceModes": {
+      "auto": "Auto",
+      "high": "High",
+      "balanced": "Balanced",
+      "low": "Low power"
+    }
+  },
+  "status": {
+    "health": "Health",
+    "hunger": "Hunger",
+    "mood": "Mood",
+    "energy": "Energy",
+    "hydration": "Hydration",
+    "experience": "Experience",
+    "tooltip": "{{label}}: {{value}} / {{max}}",
+    "levelTooltip": "Level {{level}} · {{experience}} XP"
+  },
+  "actions": {
+    "feed": "Feed",
+    "water": "Water",
+    "care": "Care",
+    "play": "Play",
+    "train": "Train",
+    "sleep": "Sleep",
+    "wakeUp": "Wake up",
+    "cooldown": "Available in {{seconds}}s",
+    "disabledSleeping": "Pokémon is sleeping",
+    "disabledLowEnergy": "Not enough energy",
+    "disabledCooldown": "On cooldown",
+    "disabledTraining": "Training in progress"
+  },
+  "notifications": {
+    "empty": "No notifications yet",
+    "hideHistory": "Hide history",
+    "showHistory": "Show history",
+    "alerts": {
+      "hungerLow": {
+        "title": "Getting hungry",
+        "message": "Your Pokémon's hunger is low. Try feeding it."
+      },
+      "hungerCritical": {
+        "title": "Starving!",
+        "message": "Your Pokémon is very hungry and needs food right away."
+      },
+      "hydrationLow": {
+        "title": "Getting thirsty",
+        "message": "Hydration is low. Give your Pokémon some water."
+      },
+      "hydrationCritical": {
+        "title": "Dehydrated!",
+        "message": "Your Pokémon urgently needs water."
+      },
+      "moodLow": {
+        "title": "Feeling down",
+        "message": "Your Pokémon's mood is low. Spend some time caring for it."
+      },
+      "moodCritical": {
+        "title": "Very unhappy",
+        "message": "Your Pokémon needs attention soon."
+      },
+      "energyLow": {
+        "title": "Low energy",
+        "message": "Your Pokémon is tired. Consider letting it rest."
+      },
+      "energyCritical": {
+        "title": "Exhausted!",
+        "message": "Your Pokémon has almost no energy left."
+      },
+      "evolutionReady": {
+        "title": "Evolution ready!",
+        "message": "All evolution criteria are met."
+      }
+    },
+    "evolution": {
+      "readyTitle": "Ready to evolve!"
+    }
+  },
+  "evolution": {
+    "evolving": "Evolving…",
+    "evolvingAria": "{{name}} is evolving"
+  }
+}

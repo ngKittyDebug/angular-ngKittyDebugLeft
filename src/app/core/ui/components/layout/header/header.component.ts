@@ -18,7 +18,6 @@ const POKEMON_ICON_SRC = 'images/svg/pokeball.svg';
     TuiLink,
     TuiIcon,
     TuiButton,
-    TuiIcon,
     FormsModule,
     TranslocoDirective,
     TuiButtonSelect,

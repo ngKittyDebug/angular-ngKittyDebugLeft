@@ -32,6 +32,12 @@ describe('DeathEpitaphService', () => {
     });
   });
 
+  it('maps a lethal mushroom to its own bucket', () => {
+    const cause: FaintCause = { by: 'item', itemType: 'mushroom' };
+
+    expect(service.compose(cause, null, false, firstVariant).textKey).toBe('obituary.mushroom.0');
+  });
+
   it('falls back to the generic item bucket for an unlisted item type', () => {
     const cause: FaintCause = { by: 'item', itemType: 'poop' };
 

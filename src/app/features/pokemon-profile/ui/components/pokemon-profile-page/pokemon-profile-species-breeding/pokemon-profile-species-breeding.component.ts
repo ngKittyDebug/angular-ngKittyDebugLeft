@@ -4,9 +4,11 @@ import { TuiHeader } from '@taiga-ui/layout';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { PokemonSpeciesApiData } from '@shared/models/pokemon-species-api-data-interface';
 import { PercentagePipe } from '@shared/pipes/percentage.pipe';
-
-export const MAX_SPECIES_VALUE = 255;
-export const MAX_CYCLE_VALUE = 40;
+import {
+  MAX_HATCH_COUNTER,
+  MAX_SPECIES_STAT,
+  STEPS_PER_HATCH_CYCLE,
+} from '@features/pokemon-profile/data/constants/pokemon-profile.constants';
 
 @Component({
   selector: 'left-paw-pokemon-profile-species-breeding',
@@ -18,6 +20,7 @@ export const MAX_CYCLE_VALUE = 40;
 export class PokemonProfileSpeciesBreedingComponent {
   public readonly pokemonProfileDataSpecies = input.required<PokemonSpeciesApiData>();
 
-  protected readonly maxSpeciesValue = MAX_SPECIES_VALUE;
-  protected readonly maxCycleValue = MAX_CYCLE_VALUE;
+  protected readonly maxSpeciesStat = MAX_SPECIES_STAT;
+  protected readonly stepsPerHatchCycle = STEPS_PER_HATCH_CYCLE;
+  protected readonly maxHatchCounter = MAX_HATCH_COUNTER;
 }

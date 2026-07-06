@@ -98,6 +98,37 @@ describe('ItemExtrapolatorService', () => {
     expect(service.rendered()[0].landed).toBe(true);
   });
 
+  it('re-anchors a plain faller horizontally without disturbing its vertical fall clock', () => {
+    const service = new ItemExtrapolatorService();
+
+    // A launched item drifting right while falling; the vertical clock starts here.
+    service.ingest([item({ id: 'i1', x: 0.3, y: 0, vx: 0.1, vy: 0.2 })], 0);
+
+    // 1s later the server reports it advanced rightward (x re-anchored to 0.4) — the horizontal clock resets, but
+    // the independent vertical clock keeps running from spawn (y ≈ 0.2 at +1s, unaffected by the x re-anchor).
+    service.ingest([item({ id: 'i1', x: 0.4, y: 0, vx: 0.1, vy: 0.2 })], 1000);
+
+    expect(service.rendered()[0].x).toBeCloseTo(0.4, 5);
+    expect(service.rendered()[0].y).toBeCloseTo(0.2, 5);
+  });
+
+  it('freezes the horizontal drift the instant a launched item lands', () => {
+    const service = new ItemExtrapolatorService();
+
+    // Launched fast rightward and falling toward its seabed line.
+    service.ingest([item({ id: 'i1', x: 0.2, y: 0.5, vx: 0.5, vy: 0.5 })], 0);
+
+    // Well past the landing instant the item has settled; its x must stop where it touched down rather than keep
+    // sliding along the floor for the full elapsed time.
+    service.tick([item({ id: 'i1', x: 0.2, y: 0.5, vx: 0.5, vy: 0.5 })], 100_000);
+    const landedX = service.rendered()[0].x;
+
+    expect(service.rendered()[0].landed).toBe(true);
+    // A faller that kept sliding for the full 100s would pin to the right wall (~0.97); freezing at the landing
+    // instant leaves it mid-scene instead.
+    expect(landedX).toBeLessThan(0.9);
+  });
+
   it('drops items absent from the latest snapshot', () => {
     const service = new ItemExtrapolatorService();
 

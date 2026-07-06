@@ -1,0 +1,22 @@
+<button
+  type="button"
+  class="pokemon-sprite"
+  [class.pokemon-sprite--sleeping]="isSleeping()"
+  [class.pokemon-sprite--evolving]="isEvolving()"
+  [class.pokemon-sprite--training]="isTraining()"
+  [attr.aria-label]="pokemon().name"
+  (click)="onClick()"
+  (pointercancel)="onPointerCancel($event)"
+  (pointerdown)="onPointerDown($event)"
+  (pointermove)="onPointerMove($event)"
+  (pointerup)="onPointerUp($event)"
+>
+  <img
+    #spriteImage
+    [class]="'pokemon-sprite__image ' + animationClass()"
+    [class.pokemon-sprite__image--reduced]="!useComplexAnimations()"
+    [src]="spriteUrl()"
+    [alt]="pokemon().name"
+    draggable="false"
+  />
+</button>

@@ -90,7 +90,7 @@ describe('EffectRouter', () => {
 
     router.dispatch(eaten, context);
 
-    expect(handle).toHaveBeenCalledWith(eaten, context);
+    expect(handle).toHaveBeenNthCalledWith(1, eaten, context);
   });
 
   it('ignores a message type no handler declared', () => {

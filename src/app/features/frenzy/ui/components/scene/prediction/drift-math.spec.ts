@@ -1,12 +1,28 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  clamp,
   decayedOffset,
   frameAwareTau,
   MAX_OFFSET_COLLAPSE_PER_FRAME,
   OFFSET_DECAY_TAU_MS,
   reflect,
+  reflectDirection,
 } from './drift-math';
+
+describe('clamp', () => {
+  it('passes through a value already inside the range', () => {
+    expect(clamp(0.5, 0, 1)).toBe(0.5);
+  });
+
+  it('pins a value below the range to the min', () => {
+    expect(clamp(-3, 0, 1)).toBe(0);
+  });
+
+  it('pins a value above the range to the max', () => {
+    expect(clamp(4, 0, 1)).toBe(1);
+  });
+});
 
 describe('reflect', () => {
   it('returns the start position at elapsed 0', () => {
@@ -24,6 +40,38 @@ describe('reflect', () => {
 
   it('collapses to min for a degenerate span', () => {
     expect(reflect(0.5, 0.05, 3, 0.4, 0.4)).toBe(0.4);
+  });
+});
+
+describe('reflectDirection', () => {
+  it('is 0 for a stationary drift', () => {
+    expect(reflectDirection(0.5, 0, 1, 0.1, 0.9)).toBe(0);
+  });
+
+  it('is 0 for a degenerate span', () => {
+    expect(reflectDirection(0.5, 0.05, 1, 0.4, 0.4)).toBe(0);
+  });
+
+  it('follows the velocity sign before the first wall bounce', () => {
+    expect(reflectDirection(0.5, 0.07, 0.1, 0.1, 0.9)).toBe(1);
+    expect(reflectDirection(0.5, -0.07, 0.1, 0.1, 0.9)).toBe(-1);
+  });
+
+  it('flips sign after a wall bounce', () => {
+    // span 0.8, v 0.5 → reaches the max wall at t = (0.9-0.5)/0.5 = 0.8s, then reflects back leftward.
+    expect(reflectDirection(0.5, 0.5, 0.5, 0.1, 0.9)).toBe(1);
+    expect(reflectDirection(0.5, 0.5, 1.2, 0.1, 0.9)).toBe(-1);
+  });
+
+  it('agrees in sign with the derivative of reflect across a bounce', () => {
+    const epsilon = 1e-4;
+
+    for (const t of [0.2, 0.7, 0.9, 1.5, 2.3]) {
+      const slope =
+        reflect(0.5, 0.5, t + epsilon, 0.1, 0.9) - reflect(0.5, 0.5, t - epsilon, 0.1, 0.9);
+
+      expect(reflectDirection(0.5, 0.5, t, 0.1, 0.9)).toBe(Math.sign(slope));
+    }
   });
 });
 

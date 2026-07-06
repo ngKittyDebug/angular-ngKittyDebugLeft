@@ -1,5 +1,5 @@
 import type { GameDefinition } from '@game/engine/definition';
-import { halfExtentNorm, restYFor } from '@game/engine/geometry';
+import { halfExtentNorm, rescaleVelocity, restYFor } from '@game/engine/geometry';
 import type { Item } from '@game/engine/types';
 
 /** Whether an item declares an ACTIONABLE landing verb (explosives) — they get `restMs: 0` and detonate the
@@ -56,10 +56,7 @@ function driftItem<TItemId extends string>(
   const speed = Math.hypot(vx, vy);
 
   if (speed > maxDriftSpeed) {
-    const scale = maxDriftSpeed / speed;
-
-    vx *= scale;
-    vy *= scale;
+    ({ vx, vy } = rescaleVelocity(vx, vy, maxDriftSpeed));
   }
 
   const restY = restYFor(item.id, restYRange);

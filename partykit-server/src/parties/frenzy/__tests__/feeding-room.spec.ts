@@ -5,6 +5,7 @@ import { FRENZY } from '@game/frenzy/config';
 import type { ClientMessage, ServerMessage, ServerState } from '@game/frenzy/types';
 
 import FeedingRoom from '../index';
+import { NAME_MAX_LENGTH } from '../validate-join';
 import { TEST_BODY } from '../../../engine/__tests__/test-body';
 
 const TICK_MS = 1000 / FRENZY.tickRateHz;
@@ -130,6 +131,22 @@ describe('FeedingRoom orchestration', () => {
     expect(latestSnapshot(room)?.state.players).toHaveLength(FRENZY.maxPlayers);
   });
 
+  it('truncates an over-long player name to NAME_MAX_LENGTH on join', () => {
+    const { room, server } = setup();
+    const conn = new FakeConnection('c1');
+
+    server.onConnect(asParty(conn));
+    send(server, conn, { type: 'identify', sessionToken: 'long-name-token' });
+    send(server, conn, {
+      type: 'join',
+      name: 'x'.repeat(NAME_MAX_LENGTH + 16),
+      appearance: 'caterpie',
+      body: TEST_BODY,
+    });
+
+    expect(humanPlayers(room)[0].name).toHaveLength(NAME_MAX_LENGTH);
+  });
+
   it('lets a player eat a spawned item (click path works end to end)', () => {
     // Pin the spawn roll to food — without it the random type can be a bomb/vitamin, which is batted/granted
     // rather than eaten, so no `eaten` event is emitted and the assertion below flakes.
@@ -227,6 +244,41 @@ describe('FeedingRoom orchestration', () => {
     expect(Math.hypot(steered[0].vx, steered[0].vy)).toBeGreaterThan(0);
     // The whole point: player input no longer multiplies full-snapshot traffic.
     expect(byType(room, 'snapshot')).toHaveLength(snapshotsBefore);
+  });
+
+  it('ignores a non-string (binary) message without touching game state', () => {
+    const { room, server } = setup();
+    const conn = new FakeConnection('c1');
+
+    server.onConnect(asParty(conn));
+    joinPlayer(server, conn, 'token-1');
+
+    const before = room.broadcasts.length;
+
+    // A binary frame is never a valid client message — the adapter drops it before parsing, no broadcast, no throw.
+    expect(() => server.onMessage(new ArrayBuffer(8), asParty(conn))).not.toThrow();
+    expect(room.broadcasts).toHaveLength(before);
+  });
+
+  it('drops player input once the per-session click budget is spent within the window', () => {
+    const { room, server } = setup();
+    const conn = new FakeConnection('c1');
+
+    server.onConnect(asParty(conn));
+    joinPlayer(server, conn, 'token-1');
+
+    // Frozen fake time → every steer shares one rate-limit window. Alternating the target keeps each accepted
+    // steer changing velocity (so it broadcasts), proving the cap is hit on count, not on a saturated no-op.
+    for (let i = 0; i < FRENZY.clickRateLimitMax; i += 1) {
+      send(server, conn, { type: 'steer', x: i % 2 === 0 ? 0.9 : 0.1, y: 0.5 });
+    }
+
+    const accepted = byType(room, 'steered').length;
+
+    send(server, conn, { type: 'steer', x: 0.1, y: 0.9 });
+
+    expect(accepted).toBe(FRENZY.clickRateLimitMax);
+    expect(byType(room, 'steered')).toHaveLength(FRENZY.clickRateLimitMax);
   });
 
   it('broadcasts slim snapshots on the scheduled cadence and full ones on roster changes', () => {

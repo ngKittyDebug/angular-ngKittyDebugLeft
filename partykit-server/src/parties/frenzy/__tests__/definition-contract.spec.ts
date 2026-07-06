@@ -93,6 +93,14 @@ describe('frenzy definition contract', () => {
     expect(ANGRY_BOMB_NPC).toMatchSnapshot();
   });
 
+  it('keeps the effect-modifier values stable (the flat FRENZY read-model does not project them)', () => {
+    // `FRENZY` only projects the laying/pooping EMISSION tuning; the behavioral modifiers — shield's invulnerability
+    // map, wellFed's decay pause, cactus's contact-ram damage and the `emitter` exclusive group — ride only on the
+    // definition. The golden master exercises some of these paths but not cactus's `contactRam`, so pin them here:
+    // a silent retune (e.g. shield ceasing to ward bump damage, cactus's scratch/ram split drifting) fails this.
+    expect(FRENZY_DEFINITION.effects).toMatchSnapshot();
+  });
+
   it('pins the separation-impulse speed cap to the historical global blast cap', () => {
     // `playerCollision.impulseMaxFactor` is NOT projected into flat FRENZY, so the snapshot above cannot pin it.
     // Historically applyImpulses capped EVERY knockback (incl. bump/separation kicks) at the bomb blast's

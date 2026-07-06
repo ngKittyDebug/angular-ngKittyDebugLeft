@@ -21,7 +21,7 @@ import { parseClientMessage } from './parse-client-message';
 import { restoreConnected } from './restore-connected';
 import { RoomSession } from './room-session';
 import { serializeServerMessage } from './serialize-server-message';
-import { validateJoin } from './validate-join';
+import { NAME_MAX_LENGTH, validateJoin } from './validate-join';
 
 const HEARTBEAT_INTERVAL_MS = FRENZY.heartbeatMs;
 const TICK_INTERVAL_MS = 1000 / FRENZY.tickRateHz;
@@ -480,7 +480,7 @@ export default class FeedingRoom implements Party.Server {
 
     const now = Date.now();
     const player = frenzyEngine.createPlayer({
-      name: name.trim().slice(0, 24),
+      name: name.trim().slice(0, NAME_MAX_LENGTH),
       appearance,
       body,
       now,

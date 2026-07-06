@@ -70,6 +70,14 @@ describe('CurrentPokemonStatusComponent', () => {
     expect(text).toContain('to evolve 588');
   });
 
+  it('counts down to the first evolution gate on stage 1', () => {
+    const element = createFixture({ name: 'Sparky', hp: 100, stage: 1 })
+      .nativeElement as HTMLElement;
+
+    // hp 100, stage 1 → first gate 500 → 400 remaining.
+    expect(element.textContent ?? '').toContain('to evolve 400');
+  });
+
   it('marks both evolution thresholds on a non-final stage', () => {
     const element = createFixture().nativeElement as HTMLElement;
 

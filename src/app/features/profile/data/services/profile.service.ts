@@ -7,9 +7,11 @@ import type {
   PokemonFavoriteResponse,
   UpdateAvatar,
   UpdateUserModel,
-  UserProfile,
+  UserProfileApiData,
+  UserProfileModel,
 } from '../models/profile.model';
 
+import { convertUserProfileApiDataToUserProfileModel } from '../helpers/convert-user-profile-api-data-to-user-profile-model';
 import { getFullUrl } from '../helpers/full-url';
 import { USER_PATH } from '../constants/user-path.constants';
 
@@ -18,15 +20,19 @@ export class ProfileService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = AUTH_SERVER_URL;
 
-  public getUser(): Observable<UserProfile> {
-    return this.http.get<UserProfile>(getFullUrl(this.baseUrl, USER_PATH.BASE));
+  public getUser(): Observable<UserProfileModel> {
+    return this.http
+      .get<UserProfileApiData>(getFullUrl(this.baseUrl, USER_PATH.BASE))
+      .pipe(map(convertUserProfileApiDataToUserProfileModel));
   }
 
-  public updateUser(data: UpdateUserModel): Observable<UserProfile> {
-    return this.http.patch<UserProfile>(
-      getFullUrl(this.baseUrl, `${USER_PATH.BASE}${USER_PATH.PROFILE}`),
-      data,
-    );
+  public updateUser(data: UpdateUserModel): Observable<UserProfileModel> {
+    return this.http
+      .patch<UserProfileApiData>(
+        getFullUrl(this.baseUrl, `${USER_PATH.BASE}${USER_PATH.PROFILE}`),
+        data,
+      )
+      .pipe(map(convertUserProfileApiDataToUserProfileModel));
   }
 
   public changePassword(data: ChangePasswordModel): Observable<void> {
@@ -42,7 +48,7 @@ export class ProfileService {
 
   public updateAvatar(data: UpdateAvatar): Observable<UpdateAvatar> {
     return this.http.patch<UpdateAvatar>(
-      getFullUrl(this.baseUrl, `${USER_PATH.BASE}${USER_PATH.AVATAR}`),
+      getFullUrl(this.baseUrl, `${USER_PATH.BASE}/${USER_PATH.AVATAR}`),
       data,
     );
   }

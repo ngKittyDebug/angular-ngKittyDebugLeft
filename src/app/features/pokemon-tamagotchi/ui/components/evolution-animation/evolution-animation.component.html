@@ -1,0 +1,21 @@
+@if (visible()) {
+  <div
+    *transloco="let t; prefix: 'pokemonTamagotchi.evolution'"
+    class="evolution-animation"
+    role="status"
+    [attr.aria-label]="t('evolvingAria', { name: fromPokemon().name })"
+  >
+    <div class="evolution-animation__backdrop"></div>
+    <div class="evolution-animation__content">
+      <img
+        class="evolution-animation__sprite"
+        [class.evolution-animation__sprite--flash]="phase() === 'flash'"
+        [class.evolution-animation__sprite--reveal]="phase() === 'reveal'"
+        [src]="displaySprite()"
+        [alt]="fromPokemon().name"
+        draggable="false"
+      />
+      <p class="evolution-animation__label">{{ t('evolving') }}</p>
+    </div>
+  </div>
+}

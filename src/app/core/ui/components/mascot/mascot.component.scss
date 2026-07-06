@@ -1,0 +1,25 @@
+:host {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.mascot_sprite {
+  display: block;
+  width: 5rem;
+  height: 5rem;
+  object-fit: contain;
+  object-position: bottom;
+}
+
+.mascot_sprite--idle {
+  width: 11rem;
+  height: 16rem;
+  transform: translateY(16px);
+}
+
+.mascot_sprite--mirrored {
+  transform: scaleX(-1);
+}

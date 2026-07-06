@@ -10,7 +10,7 @@
         type="button"
         class="leaderboard__pill"
         [attr.aria-label]="t('expand')"
-        (click)="toggle($event)"
+        (click)="onToggle($event)"
       >
         <!-- rows().length > 1 guarantees a leader, so no empty-state branch is needed here. -->
         @if (leader(); as top) {
@@ -31,7 +31,7 @@
           type="button"
           class="leaderboard__header"
           [attr.aria-label]="t('collapse')"
-          (click)="toggle($event)"
+          (click)="onToggle($event)"
         >
           <tui-icon icon="@tui.crown" class="leaderboard__crown" />
           <h3 class="leaderboard__title">{{ t('title') }}</h3>

@@ -141,6 +141,7 @@ export default defineConfig(
           facade: 'off',
           guard: 'off',
           store: 'off',
+          helper: 'off',
           interceptor: 'off'
         },
       ],

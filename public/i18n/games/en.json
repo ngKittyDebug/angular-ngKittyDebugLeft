@@ -1,0 +1,21 @@
+{
+  "title": "Games",
+  "cards": {
+    "frenzy": {
+      "name": "Frenzy",
+      "description": "Real-time multiplayer arena: grab items, feed your pokémon and outpace your rivals"
+    },
+    "tamagotchi": {
+      "name": "My Pokemon",
+      "description": "Take care of your pokémon: feed it, heal it and watch its mood"
+    },
+    "pokemonBattle": {
+      "name": "Pokémon Battle",
+      "description": "Turn-based one-on-one battle: pick your pokémon and defeat your opponent"
+    },
+    "comingSoon": {
+      "name": "New game",
+      "description": "This game is still in development — our kitties are hard at work writing code to open a new adventure for you as soon as possible"
+    }
+  }
+}

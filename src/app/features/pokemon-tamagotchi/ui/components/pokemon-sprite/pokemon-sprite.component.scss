@@ -1,0 +1,214 @@
+.pokemon-sprite {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+}
+
+.pokemon-sprite__image {
+  inline-size: min(16rem, 40vw);
+  block-size: min(16rem, 40vw);
+  object-fit: contain;
+  image-rendering: pixelated;
+  contain: layout style paint;
+  backface-visibility: hidden;
+}
+
+.pokemon-sprite__image.tamagotchi-gpu-layer {
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+}
+
+.pokemon-sprite__image--reduced {
+  animation: none !important;
+  filter: none;
+  opacity: 1;
+}
+
+.pokemon-sprite__image--variation-default {
+  filter: none;
+}
+
+.pokemon-sprite__image--variation-shiny:not(.pokemon-sprite__image--reduced):not(
+    .pokemon-sprite__image--evolving
+  ) {
+  filter: saturate(1.45) brightness(1.14) hue-rotate(-12deg)
+    drop-shadow(0 0 0.45rem color-mix(in srgb, gold 55%, transparent));
+}
+
+.pokemon-sprite__image--variation-retro:not(.pokemon-sprite__image--reduced) {
+  image-rendering: pixelated;
+  filter: contrast(1.12) saturate(0.82);
+}
+
+.pokemon-sprite__image--idle {
+  animation: sprite-bob 2.4s ease-in-out infinite;
+}
+
+.pokemon-sprite__image--happy {
+  animation: sprite-bounce 0.9s ease-in-out infinite;
+}
+
+.pokemon-sprite__image--sleeping {
+  animation: sprite-sway 3.5s ease-in-out infinite;
+  opacity: 0.85;
+}
+
+.pokemon-sprite__image--evolving {
+  animation: sprite-evolve 1.2s ease-in-out infinite;
+  filter: brightness(1.2);
+}
+
+.sprite-pop {
+  animation: sprite-pop 0.45s ease-out;
+}
+
+.sprite-wiggle {
+  animation: sprite-wiggle 0.55s ease-in-out;
+}
+
+.sprite-pet {
+  animation: sprite-pet 0.65s ease-in-out;
+}
+
+.sprite-sparkle {
+  animation: sprite-sparkle 0.65s ease-in-out;
+}
+
+.pokemon-sprite__image--training {
+  animation: sprite-train 3s ease-in-out infinite;
+  opacity: 0.92;
+}
+
+.pokemon-sprite--training {
+  cursor: default;
+}
+
+.pokemon-sprite--sleeping {
+  cursor: default;
+}
+
+.pokemon-sprite--evolving {
+  cursor: wait;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pokemon-sprite__image {
+    animation: none !important;
+    filter: none;
+    opacity: 1;
+  }
+}
+
+@keyframes sprite-bob {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(0, -0.35rem, 0);
+  }
+}
+
+@keyframes sprite-bounce {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate3d(0, -0.6rem, 0) scale(1.04);
+  }
+}
+
+@keyframes sprite-sway {
+  0%,
+  100% {
+    transform: rotate(-2deg) translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: rotate(2deg) translate3d(0, 0, 0);
+  }
+}
+
+@keyframes sprite-train {
+  0%,
+  100% {
+    transform: rotate(-1deg) translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: rotate(1deg) translate3d(0, -0.18rem, 0);
+  }
+}
+
+@keyframes sprite-evolve {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate3d(0, 0, 0) scale(1.08);
+  }
+}
+
+@keyframes sprite-pop {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  40% {
+    transform: translate3d(0, 0, 0) scale(1.1);
+  }
+
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes sprite-wiggle {
+  0%,
+  100% {
+    transform: rotate(0deg) translate3d(0, 0, 0);
+  }
+
+  25% {
+    transform: rotate(-6deg) translate3d(0, 0, 0);
+  }
+
+  75% {
+    transform: rotate(6deg) translate3d(0, 0, 0);
+  }
+}
+
+@keyframes sprite-pet {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(0.35rem, 0, 0);
+  }
+}
+
+@keyframes sprite-sparkle {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: translate3d(0, 0, 0) scale(1.12);
+    opacity: 0.92;
+  }
+}

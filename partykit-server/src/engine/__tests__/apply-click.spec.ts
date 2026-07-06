@@ -264,6 +264,37 @@ describe('applyClick', () => {
     ]);
   });
 
+  it('eating a gamble item (mushroom) rolls its hp delta off the injected rng and consumes it', () => {
+    const state = stateWith([PLAYER], [makeItem({ type: 'mushroom' })]);
+
+    // rng → 0 picks the floor of the gamble range (mushroom minDelta = -20), so the roll is deterministic.
+    const { state: next, events } = applyClick(
+      FRENZY_DEFINITION,
+      state,
+      PLAYER.id,
+      'i1',
+      undefined,
+      undefined,
+      () => 0,
+    );
+
+    expect(next.items).toHaveLength(0);
+    expect(next.players[0].hp).toBe(80);
+    expect(events).toEqual([
+      {
+        type: 'eaten',
+        itemId: 'i1',
+        itemType: 'mushroom',
+        playerId: 'p1',
+        newHp: 80,
+        delta: -20,
+        x: 0.5,
+        y: 0.5,
+        via: 'click',
+      },
+    ]);
+  });
+
   it('rock leaves hp unchanged but still removes item', () => {
     const state = stateWith([PLAYER], [makeItem({ type: 'rock' })]);
 

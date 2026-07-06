@@ -123,6 +123,31 @@ describe('EatEffect', () => {
     expect(last().tone).toBe('negative');
   });
 
+  it('uses a positive tone and carries the delta for a nourishing eat', () => {
+    effect.handle(eaten({ delta: 10 }), context);
+
+    expect(last().tone).toBe('positive');
+    expect(last().delta).toBe(10);
+  });
+
+  it('uses a neutral tone for a delta-0 eat', () => {
+    effect.handle(eaten({ itemType: 'rock' as ItemType, delta: 0 }), context);
+
+    expect(last().tone).toBe('neutral');
+  });
+
+  it('passes the server-stamped priority through to the float', () => {
+    effect.handle(eaten({ priority: 99 }), context);
+
+    expect(last().priority).toBe(99);
+  });
+
+  it('falls back to the default eaten priority when the event carries none', () => {
+    effect.handle(eaten({ priority: undefined }), context);
+
+    expect(last().priority).toBe(40);
+  });
+
   it('labels other players floats with their name and stays silent', () => {
     effect.handle(eaten({ playerId: 'other' }), context);
 

@@ -1,5 +1,5 @@
 import type { GameDefinition } from '@game/engine/definition';
-import { halfExtentNorm } from '@game/engine/geometry';
+import { halfExtentNorm, rescaleVelocity } from '@game/engine/geometry';
 import type { Player } from '@game/engine/types';
 
 /**
@@ -65,8 +65,7 @@ export function movePlayers<
       const cruise = stageBody.speed;
 
       if (speed > 0 && speed < cruise) {
-        vx = (vx / speed) * cruise;
-        vy = (vy / speed) * cruise;
+        ({ vx, vy } = rescaleVelocity(vx, vy, cruise));
       }
     }
 

@@ -27,6 +27,22 @@
   width: 100%;
 }
 
+.login__error {
+  width: 100%;
+  padding: 0 0.25rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  text-align: left;
+  animation: login-error-appear var(--tui-duration, 0.3s) ease-in-out;
+}
+
+@keyframes login-error-appear {
+  from {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+}
+
 .login__title-wrapper {
   @include mixins.flex_container_function($direction: column, $gap: 0.8rem);
 }

@@ -117,6 +117,21 @@ describe('parseClientMessage', () => {
     expect(parseClientMessage(JSON.stringify({ type: 'steer', x: 0.3, y: null }))).toBeNull();
   });
 
+  it('parses pokeNpc with a non-empty npcId', () => {
+    expect(parseClientMessage(JSON.stringify({ type: 'pokeNpc', npcId: 'npc-1' }))).toEqual({
+      type: 'pokeNpc',
+      npcId: 'npc-1',
+    });
+  });
+
+  it('rejects pokeNpc with a missing, empty or over-long npcId (anti-tamper cap at 64)', () => {
+    expect(parseClientMessage(JSON.stringify({ type: 'pokeNpc' }))).toBeNull();
+    expect(parseClientMessage(JSON.stringify({ type: 'pokeNpc', npcId: '' }))).toBeNull();
+    expect(
+      parseClientMessage(JSON.stringify({ type: 'pokeNpc', npcId: 'x'.repeat(65) })),
+    ).toBeNull();
+  });
+
   it('parses leave', () => {
     expect(parseClientMessage(JSON.stringify({ type: 'leave' }))).toEqual({ type: 'leave' });
   });

@@ -39,6 +39,28 @@ describe('applyServerMessage', () => {
     expect(next).toEqual(SNAPSHOT_STATE);
   });
 
+  it('appends a spawned item to the existing items', () => {
+    const next = applyServerMessage(BOMB_STATE, {
+      type: 'spawned',
+      item: { id: 'r1', type: 'rock', x: 0.1, y: 0.2, vy: 0.1 },
+    });
+
+    expect(next?.items.map((item) => item.id)).toEqual(['b1', 'r1']);
+  });
+
+  it('bootstraps from an empty state when a spawned arrives before the first snapshot', () => {
+    const next = applyServerMessage(null, {
+      type: 'spawned',
+      item: { id: 'r1', type: 'rock', x: 0.1, y: 0.2, vy: 0.1 },
+    });
+
+    expect(next).toEqual({
+      players: [],
+      items: [{ id: 'r1', type: 'rock', x: 0.1, y: 0.2, vy: 0.1 }],
+      tick: 0,
+    });
+  });
+
   it('updates player hp on eaten', () => {
     const next = applyServerMessage(SNAPSHOT_STATE, {
       type: 'eaten',

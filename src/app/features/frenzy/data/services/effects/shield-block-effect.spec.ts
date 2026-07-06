@@ -146,6 +146,22 @@ describe('ShieldBlockEffect', () => {
     expect(blocks[0].ownerId).toBe('shielded-near');
   });
 
+  it('skips a player whose shield has already expired inside the blast radius', () => {
+    state.set(
+      stateWith([
+        player('lapsed', {
+          x: 0.5,
+          y: 0.5,
+          effects: [{ kind: 'shield', expiresAt: Date.now() - 1 }],
+        }),
+      ]),
+    );
+
+    dispatch(detonated({ x: 0.5, y: 0.5, radius: 0.18 }));
+
+    expect(effect.ownedShieldBlocks()).toHaveLength(0);
+  });
+
   it('skips a dead shielded player caught in the blast radius', () => {
     state.set(
       stateWith([player('ghost', { x: 0.5, y: 0.5, status: 'disconnected', effects: [SHIELD] })]),

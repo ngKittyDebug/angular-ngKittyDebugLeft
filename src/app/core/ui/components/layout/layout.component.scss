@@ -1,4 +1,6 @@
 :host {
+  --mobile-nav-height: 3.5rem;
+
   display: flex;
   flex-direction: column;
   // `dvh` tracks the *visible* viewport (mobile browser chrome shows/hides). Plain `100vh` is the LARGE viewport
@@ -8,6 +10,16 @@
   min-height: 100vh;
   min-height: 100dvh;
   height: 100%;
+}
+
+.root-wrapper {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+left-paw-footer {
+  margin-top: auto;
 }
 
 // Immersive routes (e.g. Frenzy) opt in via `data: { immersive: true }`; LayoutComponent then sets this
@@ -26,12 +38,14 @@
 }
 
 .mobile_nav-bar {
+  height: var(--mobile-nav-height);
   background: var(--gradient-bg);
   border-top: 1px solid var(--border);
   position: fixed;
   right: 0;
   left: 0;
   bottom: 0;
+  z-index: 1;
   transition: all 0.3s;
 }
 .hide {

@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "skills": {
+    "angular-best-practices-signalstore": {
+      "source": "alfredoperez/angular-best-practices",
+      "sourceType": "github",
+      "skillPath": "skills/angular-best-practices-signalstore/SKILL.md",
+      "computedHash": "08b30f59d0205215720e6a057e4bd94db544d3b3eaccfe064768c9c8713d9bb2"
+    },
+    "angular-best-practices-transloco": {
+      "source": "alfredoperez/angular-best-practices",
+      "sourceType": "github",
+      "skillPath": "skills/angular-best-practices-transloco/SKILL.md",
+      "computedHash": "a48a7414b082426948dcd1a18797a1764b3f716aba498a6f8d652cd0ce9a666e"
+    },
+    "angular-developer": {
+      "source": "angular/skills",
+      "sourceType": "github",
+      "skillPath": "angular-developer/SKILL.md",
+      "computedHash": "71ec40398a5194a446b23dbaf46c00d8f9f7fa6b944b69a0ea7f36893302a2fa"
+    }
+  }
+}

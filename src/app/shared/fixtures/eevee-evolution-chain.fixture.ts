@@ -1,4 +1,4 @@
-import type { EvolutionChainResponse } from '@shared/models/pokemon-evolution-chain-api-data-interface';
+import type { EvolutionChainApiResponse } from '@shared/models/pokemon-evolution-chain-api-data-interface';
 
 export const POKEMON_EVOLUTION_CHAIN_FIXTURE = {
   baby_trigger_item: null,
@@ -582,4 +582,4 @@ export const POKEMON_EVOLUTION_CHAIN_FIXTURE = {
     },
   },
   id: 67,
-} as const satisfies EvolutionChainResponse;
+} as const satisfies EvolutionChainApiResponse;

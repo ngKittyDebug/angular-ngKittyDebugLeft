@@ -5,6 +5,7 @@ import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
 import { NgxEchartsDirective } from 'ngx-echarts';
 import { createRadarChartOptions } from '@features/pokemon-profile/data/helpers/pokemon-profile-radar';
+import { STAT_PROGRESS_MAX } from '@features/pokemon-profile/data/constants/pokemon-profile.constants';
 
 @Component({
   selector: 'left-paw-pokemon-profile-stats',
@@ -17,6 +18,8 @@ export class PokemonProfileStatsComponent {
   private readonly transloco = inject(TranslocoService);
 
   public readonly pokemonProfileData = input.required<PokemonDetailApiData>();
+
+  protected readonly statProgressMax = STAT_PROGRESS_MAX;
 
   protected readonly pokemonTotalStats = computed(() => {
     const stats = this.pokemonProfileData()?.stats ?? [];

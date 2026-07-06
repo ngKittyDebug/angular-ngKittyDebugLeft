@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { DebugSettingsStore } from './debug-settings.store';
 import { PerfSampleStore } from './perf-sample.store';
@@ -37,6 +37,32 @@ function stores(): { settings: DebugSettingsStore; store: PerfSampleStore } {
 describe('PerfSampleStore', () => {
   beforeEach(() => {
     localStorage.clear();
+  });
+
+  afterEach(() => {
+    // Tests that stamp a ?perf-label query param restore a clean URL so they don't bleed into each other.
+    history.replaceState(null, '', location.pathname);
+  });
+
+  it('falls back to the ?perf-label query param when the panel label is empty', () => {
+    history.replaceState(null, '', `${location.pathname}?perf-label=tablet-run`);
+
+    const { store } = stores();
+
+    store.capture(snapshot(), 1);
+
+    expect(store.samples()[0].label).toBe('tablet-run');
+  });
+
+  it('prefers the panel label over the ?perf-label query param', () => {
+    history.replaceState(null, '', `${location.pathname}?perf-label=from-url`);
+
+    const { settings, store } = stores();
+
+    settings.updatePerfLog({ label: 'from-panel' });
+    store.capture(snapshot(), 1);
+
+    expect(store.samples()[0].label).toBe('from-panel');
   });
 
   it('captures a sample carrying label/build/device/timestamp and the enabled metrics', () => {

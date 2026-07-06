@@ -1,0 +1,31 @@
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { TranslocoDirective } from '@jsverse/transloco';
+import { TuiButton, TuiNotification } from '@taiga-ui/core';
+
+export type TamagotchiSelectionFeedback = 'evolvedPokemon' | 'loadFailed' | 'saved' | null;
+
+@Component({
+  selector: 'left-paw-pokemon-tamagotchi-selection',
+  imports: [RouterLink, TranslocoDirective, TuiButton, TuiNotification],
+  templateUrl: './pokemon-tamagotchi-selection.component.html',
+  styleUrl: './pokemon-tamagotchi-selection.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class PokemonTamagotchiSelectionComponent {
+  public readonly feedback = input<TamagotchiSelectionFeedback>(null);
+  public readonly isCurrentSelection = input(false);
+  public readonly loading = input(false);
+  public readonly pokemonName = input.required<string>();
+  public readonly tamagotchiRoute = input.required<string>();
+
+  public readonly selectRequested = output<void>();
+
+  protected onSelectClick(): void {
+    if (this.loading() || this.isCurrentSelection()) {
+      return;
+    }
+
+    this.selectRequested.emit();
+  }
+}
