@@ -58,7 +58,8 @@ src/app/
 │   ├── features.routes.ts # Aggregates all feature route arrays
 │   ├── main-catalog/      # Default route (''), behind authGuard: pokemon catalog with filter + pagination + cards
 │   ├── auth/              # /auth (children /login, /signup), behind guestGuard: localStorage-based login/signup
-│   ├── frenzy/            # /frenzy (data: { immersive: true }): realtime PartyKit game (see docs/frenzy-architecture.md)
+│   ├── games/             # /games: hub page (authGuard) + child game routes (/games/frenzy — public; /games/tamagotchi, /games/pokemon-battle — authGuard)
+│   ├── frenzy/            # /games/frenzy (data: { immersive: true }): realtime PartyKit game (see docs/frenzy-architecture.md)
 │   ├── pokemon-profile/   # /pokemon/:id — pokemon detail page
 │   ├── profile/           # /profile — user profile page
 │   ├── about/             # /about route
@@ -80,7 +81,7 @@ src/app/
 
 **Don't invent new aliases on the fly.** Sharing code between Angular and `partykit-server/` → extend `shared-game/` under `@game/*`. Inside Angular → extend `@core/*`, `@features/*`, `@shared/*`.
 
-**Routing:** all routes lazy-load via `loadComponent`. The root route loads `LayoutComponent`, which renders child feature routes in its `<router-outlet>` (children in `features.routes.ts`; `frenzy` carries `data: { immersive: true }` for full-bleed layout and has no guard — public game). Auth state lives in localStorage (key `loginFormData`); `authGuard`/`guestGuard` read it and cross-redirect.
+**Routing:** all routes lazy-load via `loadComponent`. The root route loads `LayoutComponent`, which renders child feature routes in its `<router-outlet>` (children in `features.routes.ts`). Games (frenzy, tamagotchi, pokemon-battle) are child routes of `/games` (`games.routes.ts`); `authGuard` sits on each game's own route (and on the hub page), not on the `/games` parent — except `frenzy`, which stays guard-free (public game) and carries `data: { immersive: true }` for full-bleed layout. Auth state lives in localStorage (key `loginFormData`); `authGuard`/`guestGuard` read it and cross-redirect.
 
 **Auth forms are intentionally mixed-paradigm** (teaching demo of both form APIs): `login-form` — Reactive Forms, `signup-form` — Signal Forms (`@angular/forms/signals`). Accepted trade-off, not tech debt — recorded in `.claude/skills/_shared/project-review-criteria.md` §5 (slug `mixed-form-paradigms`), so the review skills don't flag it.
 

@@ -1,0 +1,35 @@
+@use 'utility/mixins';
+@use 'screens-width';
+
+:host {
+  @include mixins.flex_container_function($direction: column, $gap: 5px);
+  width: 100%;
+}
+
+.games-container {
+  @include mixins.flex_container_function($direction: column, $flex_wrap: nowrap, $gap: 1.5rem);
+  width: 100%;
+  padding: 1rem;
+}
+
+.games-heading {
+  margin: 0;
+  text-align: center;
+  color: var(--tui-text-primary);
+}
+
+.games-grid {
+  @include mixins.grid_container_function($grid_template_columns: 1fr, $gap: 2rem);
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  @include mixins.respond-to(screens-width.$screen-medium) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @include mixins.respond-to(screens-width.$screen-x-large) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

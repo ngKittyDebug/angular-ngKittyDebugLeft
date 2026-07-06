@@ -1,0 +1,20 @@
+<ng-container *transloco="let t; prefix: 'games.cards'">
+  @if (game().routePath; as routePath) {
+    <a class="card" [routerLink]="routePath">
+      <ng-container [ngTemplateOutlet]="cardContent" />
+    </a>
+  } @else {
+    <div class="card card--static">
+      <ng-container [ngTemplateOutlet]="cardContent" />
+    </div>
+  }
+
+  <ng-template #cardContent>
+    <img class="card__gif" [src]="game().gifSource" alt="" />
+    <div class="card__overlay"></div>
+    <div class="card__caption">
+      <h3 class="card__name">{{ t(game().id + '.name') }}</h3>
+      <p class="card__description">{{ t(game().id + '.description') }}</p>
+    </div>
+  </ng-template>
+</ng-container>
