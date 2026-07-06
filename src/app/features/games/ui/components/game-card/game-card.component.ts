@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
-import type { GameCard } from '../../../data/models/game-card.model';
+import type { GameCardModel } from '../../../data/models/game-card.model';
 
 @Component({
   selector: 'left-paw-game-card',
@@ -12,5 +12,5 @@ import type { GameCard } from '../../../data/models/game-card.model';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GameCardComponent {
-  public readonly game = input.required<GameCard>();
+  public readonly game = input.required<GameCardModel>();
 }
