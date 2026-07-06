@@ -1,8 +1,8 @@
-@if (!reducedMotion) {
+@if (!isReducedMotion) {
   <img
     class="mascot_sprite"
-    [class.mascot_sprite--mirrored]="mirrored()"
-    [class.mascot_sprite--idle]="idle()"
+    [class.mascot_sprite--mirrored]="isMirrored()"
+    [class.mascot_sprite--idle]="isIdle()"
     [src]="gifSource()"
     alt=""
   />
