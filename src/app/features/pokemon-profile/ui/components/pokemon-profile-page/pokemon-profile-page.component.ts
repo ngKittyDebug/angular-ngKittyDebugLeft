@@ -18,6 +18,7 @@ import { PokemonProfileSpeciesBreedingComponent } from './pokemon-profile-specie
 import { TranslocoDirective } from '@jsverse/transloco';
 import { PokemonDataService } from '@shared/services/pokemon-data.service';
 import { convertEvolutionChainToNodeModel } from '@features/pokemon-profile/data/helpers/convert-evolution-chain';
+import { GAMES_PATH } from '@features/games/games.routes';
 import { TAMAGOTCHI_PATH } from '@shared/constants/tamagotchi-routes';
 import { TAMAGOTCHI_SELECTION_PORT } from '@shared/constants/tamagotchi-selection.token';
 import {
@@ -58,7 +59,7 @@ export class PokemonProfilePageComponent {
     return data ? convertEvolutionChainToNodeModel(data) : null;
   });
 
-  protected readonly tamagotchiRoute = `/${TAMAGOTCHI_PATH}`;
+  protected readonly tamagotchiRoute = `/${GAMES_PATH}/${TAMAGOTCHI_PATH}`;
   protected readonly selectionFeedback = signal<TamagotchiSelectionFeedback>(null);
   protected readonly selectionLoading = signal(false);
   protected readonly selectedPokemonName = signal<string | null>(

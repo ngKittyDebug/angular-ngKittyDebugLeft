@@ -14,6 +14,10 @@
 
 ---
 
+## Демо видео
+
+[Link](https://drive.google.com/file/d/1X7ImDig6_gF3N0RaQpH4Rlb5Du2chQUu/view?usp=sharing)
+
 ## 👥 Команда
 
 Наша команда состоит из трех человек:
