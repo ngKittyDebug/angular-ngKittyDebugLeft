@@ -12,10 +12,7 @@ describe('LoginFormComponent', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [LoginFormComponent, TranslocoTestingMock],
-      providers: [
-        LoginFormService,
-        provideRouter([{ path: 'auth/login', component: LoginFormService }]),
-      ],
+      providers: [LoginFormService, provideRouter([])],
     });
 
     fixture = TestBed.createComponent(LoginFormComponent);
@@ -24,9 +21,7 @@ describe('LoginFormComponent', () => {
     fixture.detectChanges();
   });
 
-  describe('Компонент должен инициализироваться', () => {
-    it('должен инициализироваться', () => {
-      expect(component).toBeTruthy();
-    });
+  it('должен инициализироваться', () => {
+    expect(component).toBeTruthy();
   });
 });

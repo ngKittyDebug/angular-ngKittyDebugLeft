@@ -36,7 +36,7 @@ describe('LoginFormService', () => {
       expect(service.loginForm.controls.nameOrEmail.valid).toBe(true);
     });
 
-    it('должна быть ошибка при некорректным username', () => {
+    it('должна быть ошибка при некорректном username', () => {
       service.loginForm.setValue({
         nameOrEmail: 'TeSt,1-*',
         password: 'StrongPass1!',
@@ -45,7 +45,7 @@ describe('LoginFormService', () => {
       expect(service.loginForm.controls.nameOrEmail.valid).toBe(false);
     });
 
-    it('должна быть ошибка при некорректным email', () => {
+    it('должна быть ошибка при некорректном email', () => {
       service.loginForm.setValue({
         nameOrEmail: '123@1',
         password: 'StrongPass1!',
