@@ -1,8 +1,9 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { TuiButton, TuiLoader, tuiLoaderOptionsProvider } from '@taiga-ui/core';
+import { TuiButton, TuiLoader, TuiNotification, TuiTitle } from '@taiga-ui/core';
 import { TuiBadge, TuiSegmented } from '@taiga-ui/kit';
+import { TuiBlockStatus } from '@taiga-ui/layout';
 import { TamagotchiFacade } from '../../../data/facades/tamagotchi.facade';
 import { ActionButtonsComponent } from '../action-buttons/action-buttons.component';
 import { EvolutionAnimationComponent } from '../evolution-animation/evolution-animation.component';
@@ -21,14 +22,17 @@ import { StatusIndicatorComponent } from '../status-indicator/status-indicator.c
     StatusIndicatorComponent,
     TranslocoDirective,
     TuiBadge,
+    TuiBlockStatus,
     TuiButton,
     TuiLoader,
+    TuiNotification,
     TuiSegmented,
+    TuiTitle,
   ],
   templateUrl: './pokemon-tamagotchi-page.component.html',
   styleUrl: './pokemon-tamagotchi-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [TamagotchiFacade, tuiLoaderOptionsProvider({ size: 'l' })],
+  providers: [TamagotchiFacade],
 })
 export class PokemonTamagotchiPageComponent {
   public readonly facade = inject(TamagotchiFacade);

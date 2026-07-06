@@ -1,3 +1,5 @@
+@use 'utility/tamagotchi-sprite' as sprite;
+
 :host {
   display: contents;
 }
@@ -29,18 +31,13 @@
 }
 
 .evolution-animation__sprite {
-  inline-size: min(14rem, 36vw);
-  block-size: min(14rem, 36vw);
-  object-fit: contain;
-  image-rendering: pixelated;
-  contain: layout style paint;
-  backface-visibility: hidden;
+  @include sprite.pixel_sprite(14rem, 36vw);
+
   animation: evolution-pulse 0.9s ease-in-out infinite;
 }
 
 .evolution-animation__sprite.tamagotchi-gpu-layer {
-  will-change: transform, opacity;
-  transform: translate3d(0, 0, 0);
+  @include sprite.gpu_layer((transform, opacity));
 }
 
 .evolution-animation__sprite--flash {
@@ -62,10 +59,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .evolution-animation__sprite {
-    animation: none !important;
-    filter: none;
-    opacity: 1;
-    transform: none;
+    @include sprite.reduced_motion_reset($reset-transform: true);
   }
 }
 

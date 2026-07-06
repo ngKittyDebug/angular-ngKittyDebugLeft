@@ -94,14 +94,7 @@
 }
 
 .tamagotchi-page__empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 2rem 1rem;
-  text-align: center;
-  border-radius: var(--tui-radius-l);
-  background: var(--tui-background-neutral-1);
+  inline-size: 100%;
 }
 
 .tamagotchi-page__empty-title {
@@ -140,20 +133,7 @@
 }
 
 .tamagotchi-page__system-notice {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  border-radius: var(--tui-radius-m);
-  background: var(--tui-status-negative-pale);
-  color: var(--tui-text-primary);
-  font: var(--tui-font-text-m);
-
-  &--warning {
-    background: var(--tui-status-warning-pale);
-  }
+  inline-size: 100%;
 
   p {
     margin: 0;

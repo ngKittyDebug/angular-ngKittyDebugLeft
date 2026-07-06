@@ -11,7 +11,6 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { ANIMATION_PERFORMANCE } from '../../../data/constants/animation-performance.constants';
 import {
   resolveSpriteUrl,
   resolveStatusSpriteKey,
@@ -35,7 +34,6 @@ export class PokemonSpriteComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly gestureService = inject(GestureService);
   private readonly spriteImage = viewChild<ElementRef<HTMLImageElement>>('spriteImage');
-  private feedbackTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private pointerHandledInteraction = false;
 
   public readonly interacted = output<InteractionEventModel>();
@@ -148,6 +146,14 @@ export class PokemonSpriteComponent {
     this.gestureService.handlePointerCancel(event);
   }
 
+  protected onFeedbackAnimationEnd(event: AnimationEvent): void {
+    if (event.animationName !== this.feedbackAnimation()) {
+      return;
+    }
+
+    this.feedbackAnimation.set(null);
+  }
+
   private canInteract(): boolean {
     return !this.isSleeping() && !this.isEvolving();
   }
@@ -165,15 +171,12 @@ export class PokemonSpriteComponent {
   }
 
   private triggerFeedbackAnimation(animationClass: string): void {
-    this.feedbackAnimation.set(animationClass);
+    if (!this.useComplexAnimations()) {
+      this.feedbackAnimation.set(null);
 
-    if (this.feedbackTimeoutId !== null) {
-      clearTimeout(this.feedbackTimeoutId);
+      return;
     }
 
-    this.feedbackTimeoutId = setTimeout(() => {
-      this.feedbackAnimation.set(null);
-      this.feedbackTimeoutId = null;
-    }, ANIMATION_PERFORMANCE.FEEDBACK_ANIMATION_MS);
+    this.feedbackAnimation.set(animationClass);
   }
 }
