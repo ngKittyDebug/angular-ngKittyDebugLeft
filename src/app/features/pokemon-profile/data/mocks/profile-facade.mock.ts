@@ -1,5 +1,6 @@
 import { signal } from '@angular/core';
 import { vi } from 'vitest';
+import type { ProfileFacade } from '@features/profile/data/facades/profile.facade';
 
 interface ProfileFacadeMockOptions {
   favorites?: string[];
@@ -15,7 +16,7 @@ export function createProfileFacadeMock(options: ProfileFacadeMockOptions = {}) 
     isLoading,
     loadFavorites: vi.fn(),
     toggleFavorite: vi.fn(),
-  };
+  } satisfies Partial<Record<keyof ProfileFacade, unknown>>;
 }
 
 export type ProfileFacadeMock = ReturnType<typeof createProfileFacadeMock>;

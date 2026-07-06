@@ -2,26 +2,19 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  DestroyRef,
   inject,
   input,
   type OnInit,
-  signal,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
+import { TranslocoDirective } from '@jsverse/transloco';
 import { TuiButton } from '@taiga-ui/core';
 import { TuiBadge, TuiButtonLoading } from '@taiga-ui/kit';
-import { catchError, finalize, map, of } from 'rxjs';
-import { AppNotificationService } from '@core/services/app-notification.service';
+import { TamagotchiSelectionFacade } from '@features/pokemon-profile/data/facades/tamagotchi-selection.facade';
 import { ProfileFacade } from '@features/profile/data/facades/profile.facade';
 import { TAMAGOTCHI_PATH } from '@shared/constants/tamagotchi-routes';
-import { TAMAGOTCHI_SELECTION_PORT } from '@shared/constants/tamagotchi-selection.token';
 import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
 import { DivideByTenPipe } from '@shared/pipes/divide-by-ten.pipe';
 import { PokemonTamagotchiSelectionComponent } from '@shared/ui/components/pokemon-tamagotchi-selection/pokemon-tamagotchi-selection.component';
-
-const TAMAGOTCHI_SELECTION_SCOPE = 'pokemonProfile.tamagotchiSelection';
 
 @Component({
   selector: 'left-paw-pokemon-profile-info',
@@ -38,19 +31,11 @@ const TAMAGOTCHI_SELECTION_SCOPE = 'pokemonProfile.tamagotchiSelection';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PokemonProfileInfoComponent implements OnInit {
-  private readonly destroyRef = inject(DestroyRef);
-  private readonly notifications = inject(AppNotificationService);
-  private readonly selectionPort = inject(TAMAGOTCHI_SELECTION_PORT);
-  private readonly transloco = inject(TranslocoService);
-
   public readonly pokemonProfileData = input.required<PokemonDetailApiData>();
 
   protected readonly profileFacade = inject(ProfileFacade);
+  protected readonly selectionFacade = inject(TamagotchiSelectionFacade);
   protected readonly tamagotchiRoute = `/${TAMAGOTCHI_PATH}`;
-  protected readonly isSelectionLoading = signal(false);
-  protected readonly selectedPokemonName = signal<string | null>(
-    this.selectionPort.getSelectedPokemonReference()?.name ?? null,
-  );
 
   protected readonly isFavorite = computed(() => {
     const currentName = this.pokemonProfileData()?.name;
@@ -65,7 +50,7 @@ export class PokemonProfileInfoComponent implements OnInit {
   });
 
   protected readonly isCurrentTamagotchiSelection = computed(() => {
-    const selected = this.selectedPokemonName();
+    const selected = this.selectionFacade.selectedPokemonName();
     const currentName = this.pokemonProfileData()?.name;
 
     if (!selected || !currentName) {
@@ -90,41 +75,6 @@ export class PokemonProfileInfoComponent implements OnInit {
   }
 
   protected onTamagotchiSelectRequested(): void {
-    const pokemonName = this.pokemonProfileData()?.name;
-
-    if (!pokemonName || this.isSelectionLoading()) {
-      return;
-    }
-
-    this.isSelectionLoading.set(true);
-
-    this.selectionPort
-      .loadPokemonByName(pokemonName)
-      .pipe(
-        map((pokemon) => this.selectionPort.validatePokemonSelection(pokemon)),
-        catchError(() => of({ error: 'loadFailed' as const, valid: false as const })),
-        finalize(() => this.isSelectionLoading.set(false)),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe((validation) => {
-        if (validation.valid && validation.pokemon) {
-          this.selectionPort.saveSelectedPokemon(validation.pokemon);
-          this.selectedPokemonName.set(validation.pokemon.name);
-          this.notifications.showPositiveNotification(
-            this.transloco.translate(`${TAMAGOTCHI_SELECTION_SCOPE}.savedMessage`, {
-              name: validation.pokemon.name,
-            }),
-          );
-
-          return;
-        }
-
-        const errorKey =
-          validation.error === 'evolvedPokemon' ? 'evolvedPokemonError' : 'loadFailedError';
-
-        this.notifications.showErrorNotification(
-          this.transloco.translate(`${TAMAGOTCHI_SELECTION_SCOPE}.${errorKey}`),
-        );
-      });
+    this.selectionFacade.selectForTamagotchi(this.pokemonProfileData()?.name);
   }
 }

@@ -59,7 +59,7 @@
     </button>
     <left-paw-pokemon-tamagotchi-selection
       [isCurrentSelection]="isCurrentTamagotchiSelection()"
-      [loading]="isSelectionLoading()"
+      [loading]="selectionFacade.isSelectionLoading()"
       [tamagotchiRoute]="tamagotchiRoute"
       (selectRequested)="onTamagotchiSelectRequested()"
     />

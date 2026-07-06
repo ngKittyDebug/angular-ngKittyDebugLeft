@@ -2,20 +2,18 @@ import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { TranslocoTestingModule } from '@jsverse/transloco';
-import { beforeEach, describe, expect, it, type MockedObject, vi } from 'vitest';
-import { throwError } from 'rxjs';
-import { AppNotificationService } from '@core/services/app-notification.service';
+import { beforeEach, describe, expect, it } from 'vitest';
 import {
   createProfileFacadeMock,
   type ProfileFacadeMock,
 } from '@features/pokemon-profile/data/mocks/profile-facade.mock';
 import { PIKACHU_SELECTION_FIXTURE } from '@features/pokemon-profile/data/fixtures/tamagotchi-selection.fixture';
-import { createTamagotchiSelectionPortMock } from '@features/pokemon-profile/data/mocks/tamagotchi-selection-port.mock';
-import { ProfileFacade } from '@features/profile/data/facades/profile.facade';
 import {
-  TAMAGOTCHI_SELECTION_PORT,
-  type TamagotchiSelectionPort,
-} from '@shared/constants/tamagotchi-selection.token';
+  createTamagotchiSelectionFacadeMock,
+  type TamagotchiSelectionFacadeMock,
+} from '@features/pokemon-profile/data/mocks/tamagotchi-selection-facade.mock';
+import { TamagotchiSelectionFacade } from '@features/pokemon-profile/data/facades/tamagotchi-selection.facade';
+import { ProfileFacade } from '@features/profile/data/facades/profile.facade';
 import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
 import { PokemonTamagotchiSelectionComponent } from '@shared/ui/components/pokemon-tamagotchi-selection/pokemon-tamagotchi-selection.component';
 import { PokemonProfileInfoComponent } from './pokemon-profile-info.component';
@@ -31,38 +29,23 @@ const TAMAGOTCHI_SELECTION_UI_TRANSLATIONS = {
   selectButton: 'Use in Tamagotchi',
 };
 
-const TAMAGOTCHI_SELECTION_NOTIFICATION_TRANSLATIONS = {
-  evolvedPokemonError: 'Only first-stage Pokémon can join.',
-  loadFailedError: 'Could not prepare this Pokémon.',
-  savedMessage: '{{name}} is ready!',
-};
-
 const TAMAGOTCHI_SELECTION_TEMPLATE = `
   <left-paw-pokemon-tamagotchi-selection
     [isCurrentSelection]="isCurrentTamagotchiSelection()"
-    [loading]="isSelectionLoading()"
+    [loading]="selectionFacade.isSelectionLoading()"
     tamagotchiRoute="/tamagotchi"
     (selectRequested)="onTamagotchiSelectRequested()"
   />
 `;
 
-function createAppNotificationServiceMock(): MockedObject<
-  Pick<AppNotificationService, 'showErrorNotification' | 'showPositiveNotification'>
-> {
-  return {
-    showErrorNotification: vi.fn(),
-    showPositiveNotification: vi.fn(),
-  };
-}
-
 describe('PokemonProfileInfoComponent', () => {
   describe('Happy Path', () => {
     describe('Покемон ещё не выбран для тамагочи', () => {
       let fixture: ComponentFixture<PokemonProfileInfoComponent>;
-      let selectionPortMock: MockedObject<Partial<TamagotchiSelectionPort>>;
+      let selectionFacadeMock: TamagotchiSelectionFacadeMock;
 
       beforeEach(async () => {
-        selectionPortMock = createTamagotchiSelectionPortMock();
+        selectionFacadeMock = createTamagotchiSelectionFacadeMock();
 
         await TestBed.configureTestingModule({
           imports: [
@@ -80,9 +63,8 @@ describe('PokemonProfileInfoComponent', () => {
           ],
           providers: [
             provideRouter([]),
-            { provide: TAMAGOTCHI_SELECTION_PORT, useValue: selectionPortMock },
+            { provide: TamagotchiSelectionFacade, useValue: selectionFacadeMock },
             { provide: ProfileFacade, useValue: createProfileFacadeMock() },
-            { provide: AppNotificationService, useValue: createAppNotificationServiceMock() },
           ],
         })
           .overrideComponent(PokemonProfileInfoComponent, {
@@ -111,19 +93,26 @@ describe('PokemonProfileInfoComponent', () => {
 
         expect(button?.textContent?.trim()).toBe('Use in Tamagotchi');
       });
+
+      it('должен делегировать выбор в selection facade', () => {
+        const selectButton = fixture.nativeElement.querySelector(
+          '.tamagotchi-selection__button',
+        ) as HTMLButtonElement;
+
+        selectButton.click();
+
+        expect(selectionFacadeMock.selectForTamagotchi).toHaveBeenCalledTimes(1);
+        expect(selectionFacadeMock.selectForTamagotchi).toHaveBeenNthCalledWith(
+          1,
+          PIKACHU_SELECTION_FIXTURE.name,
+        );
+      });
     });
 
-    describe('После выбора покемона для тамагочи', () => {
+    describe('Покемон уже выбран для тамагочи', () => {
       let fixture: ComponentFixture<PokemonProfileInfoComponent>;
-      let selectionPortMock: MockedObject<Partial<TamagotchiSelectionPort>>;
-      let appNotifications: MockedObject<
-        Pick<AppNotificationService, 'showErrorNotification' | 'showPositiveNotification'>
-      >;
 
       beforeEach(async () => {
-        selectionPortMock = createTamagotchiSelectionPortMock();
-        appNotifications = createAppNotificationServiceMock();
-
         await TestBed.configureTestingModule({
           imports: [
             PokemonProfileInfoComponent,
@@ -131,10 +120,7 @@ describe('PokemonProfileInfoComponent', () => {
               langs: {
                 en: {
                   pokemonProfile: {
-                    tamagotchiSelection: {
-                      ...TAMAGOTCHI_SELECTION_UI_TRANSLATIONS,
-                      ...TAMAGOTCHI_SELECTION_NOTIFICATION_TRANSLATIONS,
-                    },
+                    tamagotchiSelection: TAMAGOTCHI_SELECTION_UI_TRANSLATIONS,
                   },
                 },
               },
@@ -143,9 +129,13 @@ describe('PokemonProfileInfoComponent', () => {
           ],
           providers: [
             provideRouter([]),
-            { provide: TAMAGOTCHI_SELECTION_PORT, useValue: selectionPortMock },
+            {
+              provide: TamagotchiSelectionFacade,
+              useValue: createTamagotchiSelectionFacadeMock({
+                selectedName: PIKACHU_SELECTION_FIXTURE.name,
+              }),
+            },
             { provide: ProfileFacade, useValue: createProfileFacadeMock() },
-            { provide: AppNotificationService, useValue: appNotifications },
           ],
         })
           .overrideComponent(PokemonProfileInfoComponent, {
@@ -161,32 +151,9 @@ describe('PokemonProfileInfoComponent', () => {
           name: PIKACHU_SELECTION_FIXTURE.name,
         } as PokemonDetailApiData);
         fixture.detectChanges();
-
-        const selectButton = fixture.nativeElement.querySelector(
-          '.tamagotchi-selection__button',
-        ) as HTMLButtonElement;
-
-        selectButton.click();
-        fixture.detectChanges();
       });
 
-      it('должен сохранить покемона через selection port', () => {
-        expect(selectionPortMock.saveSelectedPokemon).toHaveBeenCalledTimes(1);
-        expect(selectionPortMock.saveSelectedPokemon).toHaveBeenNthCalledWith(
-          1,
-          PIKACHU_SELECTION_FIXTURE,
-        );
-      });
-
-      it('должен показать positive toast после сохранения', () => {
-        expect(appNotifications.showPositiveNotification).toHaveBeenCalledTimes(1);
-        expect(appNotifications.showPositiveNotification).toHaveBeenNthCalledWith(
-          1,
-          'Pikachu is ready!',
-        );
-      });
-
-      it('должен заблокировать кнопку выбора после сохранения', () => {
+      it('должен заблокировать кнопку выбора', () => {
         const button = fixture.nativeElement.querySelector('.tamagotchi-selection__button');
 
         expect(button?.disabled).toBe(true);
@@ -216,9 +183,11 @@ describe('PokemonProfileInfoComponent', () => {
           ],
           providers: [
             provideRouter([]),
-            { provide: TAMAGOTCHI_SELECTION_PORT, useValue: createTamagotchiSelectionPortMock() },
+            {
+              provide: TamagotchiSelectionFacade,
+              useValue: createTamagotchiSelectionFacadeMock(),
+            },
             { provide: ProfileFacade, useValue: profileFacadeMock },
-            { provide: AppNotificationService, useValue: createAppNotificationServiceMock() },
           ],
         })
           .overrideComponent(PokemonProfileInfoComponent, {
@@ -274,96 +243,6 @@ describe('PokemonProfileInfoComponent', () => {
         const button = fixture.nativeElement.querySelector('.pokemon__info_button');
 
         expect(button?.textContent?.trim()).toBe('Remove from favorites');
-      });
-    });
-  });
-
-  describe('Edge Cases', () => {
-    describe('Ошибки выбора тамагочи', () => {
-      let fixture: ComponentFixture<PokemonProfileInfoComponent>;
-      let selectionPortMock: MockedObject<Partial<TamagotchiSelectionPort>>;
-      let appNotifications: MockedObject<
-        Pick<AppNotificationService, 'showErrorNotification' | 'showPositiveNotification'>
-      >;
-
-      beforeEach(async () => {
-        selectionPortMock = createTamagotchiSelectionPortMock();
-        appNotifications = createAppNotificationServiceMock();
-
-        await TestBed.configureTestingModule({
-          imports: [
-            PokemonProfileInfoComponent,
-            TranslocoTestingModule.forRoot({
-              langs: {
-                en: {
-                  pokemonProfile: {
-                    tamagotchiSelection: {
-                      ...TAMAGOTCHI_SELECTION_UI_TRANSLATIONS,
-                      ...TAMAGOTCHI_SELECTION_NOTIFICATION_TRANSLATIONS,
-                    },
-                  },
-                },
-              },
-              translocoConfig: { availableLangs: ['en'], defaultLang: 'en' },
-            }),
-          ],
-          providers: [
-            provideRouter([]),
-            { provide: TAMAGOTCHI_SELECTION_PORT, useValue: selectionPortMock },
-            { provide: ProfileFacade, useValue: createProfileFacadeMock() },
-            { provide: AppNotificationService, useValue: appNotifications },
-          ],
-        })
-          .overrideComponent(PokemonProfileInfoComponent, {
-            set: {
-              imports: [PokemonTamagotchiSelectionComponent],
-              template: TAMAGOTCHI_SELECTION_TEMPLATE,
-            },
-          })
-          .compileComponents();
-
-        fixture = TestBed.createComponent(PokemonProfileInfoComponent);
-        fixture.componentRef.setInput('pokemonProfileData', {
-          name: PIKACHU_SELECTION_FIXTURE.name,
-        } as PokemonDetailApiData);
-        fixture.detectChanges();
-      });
-
-      it('должен показать error toast при evolvedPokemon', () => {
-        selectionPortMock.validatePokemonSelection = vi.fn(() => ({
-          error: 'evolvedPokemon' as const,
-          valid: false as const,
-        }));
-
-        const selectButton = fixture.nativeElement.querySelector(
-          '.tamagotchi-selection__button',
-        ) as HTMLButtonElement;
-
-        selectButton.click();
-        fixture.detectChanges();
-
-        expect(appNotifications.showErrorNotification).toHaveBeenCalledTimes(1);
-        expect(appNotifications.showErrorNotification).toHaveBeenNthCalledWith(
-          1,
-          'Only first-stage Pokémon can join.',
-        );
-      });
-
-      it('должен показать error toast при loadFailed', () => {
-        selectionPortMock.loadPokemonByName = vi.fn(() => throwError(() => new Error('network')));
-
-        const selectButton = fixture.nativeElement.querySelector(
-          '.tamagotchi-selection__button',
-        ) as HTMLButtonElement;
-
-        selectButton.click();
-        fixture.detectChanges();
-
-        expect(appNotifications.showErrorNotification).toHaveBeenCalledTimes(1);
-        expect(appNotifications.showErrorNotification).toHaveBeenNthCalledWith(
-          1,
-          'Could not prepare this Pokémon.',
-        );
       });
     });
   });
