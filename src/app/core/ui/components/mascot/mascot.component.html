@@ -1,3 +1,8 @@
 @if (!reducedMotion) {
-  <img class="mascot_sprite" [src]="danceGifSource" alt="" />
+  <img
+    class="mascot_sprite"
+    [class.mascot_sprite--mirrored]="mirrored()"
+    [src]="gifSource()"
+    alt=""
+  />
 }
