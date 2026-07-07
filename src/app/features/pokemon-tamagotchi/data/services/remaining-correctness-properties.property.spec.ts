@@ -205,11 +205,11 @@ describe('TamagotchiService', () => {
           (priorities) => {
             const notificationList = priorities.map((priority, index) => ({
               id: `notification-${index}`,
-              message: 'message',
+              message: { kind: 'plainText' as const, text: 'message' },
               priority,
               read: false,
               timestamp: index,
-              title: 'title',
+              title: { kind: 'plainText' as const, text: 'title' },
             }));
             const sorted = [...notificationList].sort(compareNotificationsByPriority);
 

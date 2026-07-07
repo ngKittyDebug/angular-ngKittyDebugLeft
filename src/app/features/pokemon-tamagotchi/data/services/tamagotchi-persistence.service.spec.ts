@@ -115,6 +115,36 @@ describe('TamagotchiPersistenceService', () => {
       expect(loaded?.state.trainingStartedAt).toBe(1_700_000_000_000);
     });
 
+    it('должен мигрировать legacy notification strings в явный text-контракт', () => {
+      const legacyState = {
+        ...createInitialTamagotchiState(),
+        notificationList: [
+          {
+            id: 'notification-1',
+            message: 'Mr. Mime',
+            priority: 'achievement',
+            read: false,
+            timestamp: 1_700_000_000_000,
+            title: 'evolution.readyTitle',
+          },
+        ],
+      } as unknown as TamagotchiStateModel;
+
+      storageMock.setItem(
+        TAMAGOTCHI_STORAGE_KEY,
+        JSON.stringify({ state: legacyState, version: 6 }),
+      );
+
+      const loaded = service.load();
+
+      expect(loaded?.state.notificationList[0]).toEqual(
+        expect.objectContaining({
+          message: { kind: 'plainText', text: 'Mr. Mime' },
+          title: { key: 'evolution.readyTitle', kind: 'translationKey' },
+        }),
+      );
+    });
+
     it('должен восстанавливаться из backup при повреждённом основном хранилище', () => {
       const state = createInitialTamagotchiState();
       const payload = JSON.stringify({ state, version: TAMAGOTCHI_STATE_VERSION });

@@ -42,7 +42,6 @@
     "sleep": "Sleep",
     "wakeUp": "Wake up",
     "cooldown": "Available in {{seconds}}s",
-    "disabledSleeping": "Pokémon is sleeping",
     "disabledLowEnergy": "Not enough energy",
     "disabledCooldown": "On cooldown",
     "disabledTraining": "Training in progress"
@@ -83,10 +82,6 @@
       "energyCritical": {
         "title": "Exhausted!",
         "message": "Your Pokémon has almost no energy left."
-      },
-      "evolutionReady": {
-        "title": "Evolution ready!",
-        "message": "All evolution criteria are met."
       }
     },
     "evolution": {

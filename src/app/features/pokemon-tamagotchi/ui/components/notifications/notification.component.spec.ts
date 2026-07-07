@@ -7,11 +7,20 @@ import { NotificationComponent } from './notification.component';
 
 const SAMPLE_NOTIFICATION: NotificationModel = {
   id: 'notification-1',
-  message: 'alerts.hungerLow.message',
+  message: { key: 'alerts.hungerLow.message', kind: 'translationKey' },
   priority: 'warning',
   read: false,
   timestamp: Date.now(),
-  title: 'alerts.hungerLow.title',
+  title: { key: 'alerts.hungerLow.title', kind: 'translationKey' },
+};
+
+const PLAIN_TEXT_NOTIFICATION: NotificationModel = {
+  id: 'notification-2',
+  message: { kind: 'plainText', text: 'Progress saved.' },
+  priority: 'info',
+  read: false,
+  timestamp: Date.now(),
+  title: { kind: 'plainText', text: 'Mr. Mime' },
 };
 
 function createFixture(
@@ -74,6 +83,18 @@ describe('NotificationComponent', () => {
 
       expect(element.textContent).toContain('Getting hungry');
       expect(element.textContent).toContain('Your Pokémon is hungry.');
+    });
+
+    it('должен показывать plain text без попытки перевода', () => {
+      const fixture = createFixture([PLAIN_TEXT_NOTIFICATION]);
+      const element = fixture.nativeElement as HTMLElement;
+      const toggle = element.querySelector('button');
+
+      toggle?.dispatchEvent(new Event('click'));
+      fixture.detectChanges();
+
+      expect(element.textContent).toContain('Mr. Mime');
+      expect(element.textContent).toContain('Progress saved.');
     });
   });
 

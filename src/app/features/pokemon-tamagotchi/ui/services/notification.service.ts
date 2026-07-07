@@ -1,5 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { TranslocoService } from '@jsverse/transloco';
+import { firstValueFrom, take } from 'rxjs';
 import { AppNotificationService } from '@core/services/app-notification.service';
 import {
   notificationFromEvolutionReady,
@@ -10,11 +11,13 @@ import { TamagotchiStore } from '../../data/store/tamagotchi.store';
 import type {
   NotificationModel,
   NotificationPriority,
+  NotificationText,
   StatusAlertType,
 } from '../../data/models/notification.model';
 import type { PokemonStatusModel } from '../../data/models/pokemon-status.model';
 
-const NOTIFICATION_SCOPE = 'pokemonTamagotchi.notifications';
+const NOTIFICATION_KEY_PREFIX = 'notifications';
+const TRANSLATION_SCOPE = 'pokemonTamagotchi';
 
 export interface StatusAlertNotificationContext {
   status: PokemonStatusModel;
@@ -65,23 +68,32 @@ export class TamagotchiNotificationService {
 
   private publish(notification: NotificationModel): void {
     this.store.addNotification(notification);
+    void this.showNotification(notification);
+  }
 
-    const label = this.resolveText(notification.title);
-    const message = this.resolveText(notification.message);
+  private async showNotification(notification: NotificationModel): Promise<void> {
+    const [label, message] = await Promise.all([
+      this.resolveText(notification.title),
+      this.resolveText(notification.message),
+    ]);
 
     this.showByPriority(notification.priority, message, label);
   }
 
-  private resolveText(value: string): string {
-    if (!value.includes('.')) {
-      return value;
+  private resolveText(value: NotificationText): Promise<string> {
+    if (value.kind === 'plainText') {
+      return Promise.resolve(value.text);
     }
 
-    return this.translate(value);
+    return this.translate(value.key);
   }
 
-  private translate(key: string): string {
-    return this.transloco.translate(`${NOTIFICATION_SCOPE}.${key}`);
+  private translate(key: string): Promise<string> {
+    return firstValueFrom(
+      this.transloco
+        .selectTranslate<string>(`${NOTIFICATION_KEY_PREFIX}.${key}`, {}, TRANSLATION_SCOPE)
+        .pipe(take(1)),
+    );
   }
 
   private showByPriority(priority: NotificationPriority, message: string, label: string): void {

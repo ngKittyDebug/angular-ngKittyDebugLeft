@@ -1,9 +1,19 @@
 export type NotificationPriority = 'info' | 'warning' | 'critical' | 'achievement';
 
+export type NotificationText =
+  | {
+      kind: 'plainText';
+      text: string;
+    }
+  | {
+      key: string;
+      kind: 'translationKey';
+    };
+
 export interface NotificationModel {
   id: string;
-  title: string;
-  message: string;
+  title: NotificationText;
+  message: NotificationText;
   priority: NotificationPriority;
   timestamp: number;
   read: boolean;
@@ -17,5 +27,4 @@ export type StatusAlertType =
   | 'energyLow'
   | 'energyCritical'
   | 'hydrationLow'
-  | 'hydrationCritical'
-  | 'evolutionReady';
+  | 'hydrationCritical';

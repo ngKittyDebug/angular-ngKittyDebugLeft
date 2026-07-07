@@ -21,10 +21,6 @@ export class NotificationComponent {
 
   protected readonly hasHistory = computed(() => this.historyNotifications().length > 0);
 
-  protected isTranslationKey(value: string): boolean {
-    return value.includes('.');
-  }
-
   protected toggleHistory(): void {
     this.historyOpen.update((open) => !open);
   }
