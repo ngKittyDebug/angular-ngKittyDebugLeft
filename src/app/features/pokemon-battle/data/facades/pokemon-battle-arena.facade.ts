@@ -1,13 +1,13 @@
 import { computed, inject, Service, signal } from '@angular/core';
 import { Subject } from 'rxjs';
-import { BattleEngine } from '@game/pokemon-battle/battle-engine';
+import { BattleEngine } from '../services/battle-engine';
 import type {
   BattleCommand,
   BattleEvent,
   BattlePokemon,
   BattleState,
   PokemonMove,
-} from '@game/pokemon-battle/types';
+} from '../models/battle.model';
 import { BotPlayerService } from '../services/bot-player.service';
 import { AudioManagerService } from '../services/audio-manager.service';
 import { PokemonBattleStore } from '../store/pokemon-battle.store';

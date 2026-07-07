@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, inject, viewChild } fro
 import { CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslocoDirective } from '@jsverse/transloco';
-import type { BattleEvent, BattlePokemon, PokemonMove } from '@game/pokemon-battle/types';
+import type { BattleEvent, BattlePokemon, PokemonMove } from '../../../../data/models/battle.model';
 import { CanvasRendererComponent } from '../canvas-renderer/canvas-renderer.component';
 import { PokemonBattleArenaFacade } from '../../../../data/facades/pokemon-battle-arena.facade';
 

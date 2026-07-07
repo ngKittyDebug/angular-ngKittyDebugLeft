@@ -1,5 +1,5 @@
 import { inject, Service } from '@angular/core';
-import type { BattlePokemon } from '@game/pokemon-battle/types';
+import type { BattlePokemon } from '../models/battle.model';
 import { PokemonBattleStore } from '../store/pokemon-battle.store';
 import { CHARMANDER_FIXTURE, IVYSAUR_FIXTURE } from '../fixtures/pokemon.fixture';
 

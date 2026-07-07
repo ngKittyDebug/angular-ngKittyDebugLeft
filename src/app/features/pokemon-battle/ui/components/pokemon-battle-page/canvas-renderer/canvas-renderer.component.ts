@@ -9,7 +9,7 @@ import {
   viewChild,
 } from '@angular/core';
 
-import type { BattleEvent, BattlePokemon, BattleState } from '@game/pokemon-battle/types';
+import type { BattleEvent, BattlePokemon, BattleState } from '../../../../data/models/battle.model';
 import { AudioManagerService } from '../../../../data/services/audio-manager.service';
 
 const CRY_STAGGER_MS = 400;

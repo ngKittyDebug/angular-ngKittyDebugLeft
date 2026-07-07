@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { describe, expect, it } from 'vitest';
 
 import { BotPlayerService } from './bot-player.service';
-import type { BattleState } from '@game/pokemon-battle/types';
+import type { BattleState } from '../models/battle.model';
 
 describe('BotPlayerService', () => {
   let service: BotPlayerService;

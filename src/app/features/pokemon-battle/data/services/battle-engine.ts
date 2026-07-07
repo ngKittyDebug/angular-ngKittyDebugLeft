@@ -1,4 +1,9 @@
-import type { BattleCommand, BattleEvent, BattlePokemon, BattleState } from './types';
+import type {
+  BattleCommand,
+  BattleEvent,
+  BattlePokemon,
+  BattleState,
+} from '../models/battle.model';
 
 export const TYPE_CHART: Record<string, Record<string, number>> = {
   fire: { grass: 2, fire: 0.5, water: 0.5 },

@@ -1,4 +1,4 @@
-import type { BattlePokemon, PokemonMove } from '@game/pokemon-battle/types';
+import type { BattlePokemon, PokemonMove } from '../../../models/battle.model';
 import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
 
 export function convertPokemonDetailApiDataToBattlePokemon(
