@@ -4,12 +4,15 @@ import { TEST_POKEMON } from '../fixtures/tamagotchi-arbitraries';
 import type { PokemonModel } from '../models/pokemon.model';
 import { createInitialTamagotchiState } from '../store/tamagotchi-initial';
 import { TamagotchiErrorRecoveryService } from './tamagotchi-error-recovery.service';
+import { TamagotchiLoggerService } from './tamagotchi-logger.service';
 
 describe('TamagotchiErrorRecoveryService', () => {
   let service: TamagotchiErrorRecoveryService;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({
+      providers: [TamagotchiErrorRecoveryService, TamagotchiLoggerService],
+    });
     service = TestBed.inject(TamagotchiErrorRecoveryService);
   });
 

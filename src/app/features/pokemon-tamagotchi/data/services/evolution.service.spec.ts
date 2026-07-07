@@ -40,7 +40,7 @@ describe('EvolutionService', () => {
   };
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({ providers: [EvolutionService] });
     service = TestBed.inject(EvolutionService);
   });
 

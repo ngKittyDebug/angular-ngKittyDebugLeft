@@ -1,11 +1,11 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Service } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { defer, filter, map, type Observable, of, switchMap, take } from 'rxjs';
 import type { PokemonSelectionValidation as FeaturePokemonSelectionValidation } from '../models/pokemon-selection.model';
 import { TamagotchiStore } from '../store/tamagotchi.store';
 import { TamagotchiSelectionService } from './tamagotchi-selection.service';
 
-@Injectable({ providedIn: 'root' })
+@Service({ autoProvided: false })
 export class TamagotchiInitService {
   private readonly selection = inject(TamagotchiSelectionService);
   private readonly store = inject(TamagotchiStore);

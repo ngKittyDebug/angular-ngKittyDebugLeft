@@ -8,6 +8,7 @@ import { TEST_POKEMON } from '../../../data/fixtures/tamagotchi-arbitraries';
 import type { PerformanceMode } from '../../../data/models/performance-mode.model';
 import { PerformanceService } from '../../../data/services/performance.service';
 import { createInitialPokemonStatus } from '../../../data/store/tamagotchi-initial';
+import { AnimationService } from '../../services/animation.service';
 import { PokemonSpriteComponent } from './pokemon-sprite.component';
 
 type PerformanceServiceSpriteMock = Pick<PerformanceService, 'getProfile' | 'mode'>;
@@ -25,7 +26,10 @@ async function createFixture(
 
   await TestBed.configureTestingModule({
     imports: [PokemonSpriteComponent],
-    providers: [{ provide: PerformanceService, useValue: performanceServiceMock }],
+    providers: [
+      AnimationService,
+      { provide: PerformanceService, useValue: performanceServiceMock },
+    ],
   }).compileComponents();
 
   const fixture = TestBed.createComponent(PokemonSpriteComponent);

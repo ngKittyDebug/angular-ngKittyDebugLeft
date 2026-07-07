@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Service } from '@angular/core';
 import {
   EVOLUTION_ANIMATION_DURATION_MS,
   EVOLUTION_REQUIREMENTS,
@@ -23,7 +23,7 @@ import type { PokemonModel } from '../models/pokemon.model';
 import type { PokemonStatusModel } from '../models/pokemon-status.model';
 import type { DailyRoutine } from '../models/tamagotchi-state.model';
 
-@Injectable({ providedIn: 'root' })
+@Service({ autoProvided: false })
 export class EvolutionService {
   public checkEvolutionCriteria(
     pokemon: PokemonModel,

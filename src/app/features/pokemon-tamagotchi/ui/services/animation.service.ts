@@ -1,11 +1,11 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Service } from '@angular/core';
 
 import { ANIMATION_PERFORMANCE } from '../../data/constants/animation-performance.constants';
 import { PerformanceService } from '../../data/services/performance.service';
 
 const GPU_COMPOSITING_CLASS = 'tamagotchi-gpu-layer';
 
-@Injectable({ providedIn: 'root' })
+@Service({ autoProvided: false })
 export class AnimationService {
   private readonly performanceService = inject(PerformanceService);
 

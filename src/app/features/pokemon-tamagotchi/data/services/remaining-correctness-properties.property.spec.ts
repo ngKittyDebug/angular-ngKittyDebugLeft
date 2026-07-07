@@ -18,6 +18,7 @@ import {
   TEST_POKEMON,
 } from '../fixtures/tamagotchi-arbitraries';
 import { TamagotchiErrorRecoveryService } from '../services/tamagotchi-error-recovery.service';
+import { TamagotchiLoggerService } from '../services/tamagotchi-logger.service';
 import { TamagotchiPersistenceService } from '../services/tamagotchi-persistence.service';
 import { TamagotchiService } from '../services/tamagotchi.service';
 import {
@@ -56,7 +57,12 @@ describe('TamagotchiService', () => {
   beforeEach(() => {
     localStorage.clear();
     TestBed.configureTestingModule({
-      providers: [TamagotchiErrorRecoveryService, TamagotchiPersistenceService, TamagotchiService],
+      providers: [
+        TamagotchiErrorRecoveryService,
+        TamagotchiLoggerService,
+        TamagotchiPersistenceService,
+        TamagotchiService,
+      ],
     });
   });
 

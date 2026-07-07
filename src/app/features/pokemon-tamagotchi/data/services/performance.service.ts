@@ -1,4 +1,4 @@
-import { inject, Injectable, signal } from '@angular/core';
+import { inject, Service, signal } from '@angular/core';
 
 import {
   DEFAULT_PERFORMANCE_MODE,
@@ -8,7 +8,7 @@ import {
 import type { PerformanceMode, PerformanceProfileModel } from '../models/performance-mode.model';
 import { TamagotchiStorageService } from './tamagotchi-storage.service';
 
-@Injectable({ providedIn: 'root' })
+@Service({ autoProvided: false })
 export class PerformanceService {
   private readonly storage = inject(TamagotchiStorageService);
   private readonly selectedMode = signal<PerformanceMode>(this.readStoredMode());

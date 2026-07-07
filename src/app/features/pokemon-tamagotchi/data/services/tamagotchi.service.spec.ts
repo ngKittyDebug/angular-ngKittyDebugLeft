@@ -9,7 +9,7 @@ describe('TamagotchiService', () => {
   let service: TamagotchiService;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({ providers: [TamagotchiService] });
     service = TestBed.inject(TamagotchiService);
   });
 

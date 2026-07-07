@@ -8,6 +8,7 @@ import { TEST_POKEMON } from '../fixtures/tamagotchi-arbitraries';
 import type { PokemonModel } from '../models/pokemon.model';
 import { TamagotchiErrorRecoveryService } from './tamagotchi-error-recovery.service';
 import { TamagotchiInitService } from './tamagotchi-init.service';
+import { TamagotchiLoggerService } from './tamagotchi-logger.service';
 import { TamagotchiSelectionService } from './tamagotchi-selection.service';
 import { TAMAGOTCHI_SYSTEM_ERRORS } from '../constants/system-errors.constants';
 
@@ -243,7 +244,9 @@ describe('TamagotchiErrorRecoveryService', () => {
   let service: TamagotchiErrorRecoveryService;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({
+      providers: [TamagotchiErrorRecoveryService, TamagotchiLoggerService],
+    });
     service = TestBed.inject(TamagotchiErrorRecoveryService);
   });
 

@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Service } from '@angular/core';
 
 import { TAMAGOTCHI_SYSTEM_ERRORS } from '../constants/system-errors.constants';
 import { clampStatusValue } from '../helpers/status-bounds.helper';
@@ -13,7 +13,7 @@ export interface TamagotchiRecoveryResult {
   state: TamagotchiStateModel;
 }
 
-@Injectable({ providedIn: 'root' })
+@Service({ autoProvided: false })
 export class TamagotchiErrorRecoveryService {
   private readonly logger = inject(TamagotchiLoggerService);
 

@@ -1,4 +1,9 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Service } from '@angular/core';
+import {
+  clearTamagotchiProgressStorage,
+  TAMAGOTCHI_BACKUP_KEY,
+  TAMAGOTCHI_STORAGE_KEY,
+} from '../helpers/tamagotchi-progress-storage.helper';
 import { normalizePokemonStatus } from '../helpers/status-bounds.helper';
 import { ensurePokemonSpriteVariations } from '../helpers/sprite-variation.helper';
 import type { NotificationModel, NotificationText } from '../models/notification.model';
@@ -11,9 +16,8 @@ import {
 import { syncEvolutionProgressWithPokemon } from '../store/tamagotchi-state-transitions';
 import { TamagotchiStorageService } from './tamagotchi-storage.service';
 
-export const TAMAGOTCHI_STORAGE_KEY = 'pokemon-tamagotchi-state';
-export const TAMAGOTCHI_BACKUP_KEY = 'pokemon-tamagotchi-state-backup';
 export const TAMAGOTCHI_STATE_VERSION = 7;
+export { TAMAGOTCHI_BACKUP_KEY, TAMAGOTCHI_STORAGE_KEY };
 
 const TAMAGOTCHI_TRAINING_STATE_VERSION = 5;
 const TAMAGOTCHI_NOTIFICATION_TEXT_STATE_VERSION = 7;
@@ -62,7 +66,7 @@ function migrateNotificationList(
   }));
 }
 
-@Injectable({ providedIn: 'root' })
+@Service({ autoProvided: false })
 export class TamagotchiPersistenceService {
   private readonly storage = inject(TamagotchiStorageService);
 
@@ -107,8 +111,7 @@ export class TamagotchiPersistenceService {
   }
 
   public clear(): void {
-    this.remove(TAMAGOTCHI_STORAGE_KEY);
-    this.remove(TAMAGOTCHI_BACKUP_KEY);
+    clearTamagotchiProgressStorage(this.storage);
   }
 
   private readPayload(key: string): TamagotchiStateModel | null {
@@ -225,9 +228,5 @@ export class TamagotchiPersistenceService {
 
   private writeRaw(key: string, value: string): void {
     this.storage.setItem(key, value);
-  }
-
-  private remove(key: string): void {
-    this.storage.removeItem(key);
   }
 }

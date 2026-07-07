@@ -32,8 +32,11 @@ import { StatusIndicatorComponent } from '../status-indicator/status-indicator.c
   templateUrl: './pokemon-tamagotchi-page.component.html',
   styleUrl: './pokemon-tamagotchi-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [TamagotchiFacade],
 })
 export class PokemonTamagotchiPageComponent {
   public readonly facade = inject(TamagotchiFacade);
+
+  public constructor() {
+    this.facade.bootstrapFromProfile();
+  }
 }

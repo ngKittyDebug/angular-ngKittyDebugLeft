@@ -107,8 +107,6 @@ export class TamagotchiFacade {
   );
 
   public constructor() {
-    this.initService.bootstrapFromProfile().pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
-
     effect((onCleanup) => {
       if (!this.isInitialized() || !this.hasPokemon()) {
         return;
@@ -164,6 +162,10 @@ export class TamagotchiFacade {
         clearTimeout(timeoutId);
       });
     });
+  }
+
+  public bootstrapFromProfile(): void {
+    this.initService.bootstrapFromProfile().pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
   }
 
   public onAction(action: ActionType): void {

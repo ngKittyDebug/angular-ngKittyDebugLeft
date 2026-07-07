@@ -134,7 +134,7 @@ describe('TamagotchiPersistenceService', () => {
 
     beforeEach(() => {
       localStorage.clear();
-      TestBed.configureTestingModule({});
+      TestBed.configureTestingModule({ providers: [TamagotchiPersistenceService] });
       service = TestBed.inject(TamagotchiPersistenceService);
     });
 

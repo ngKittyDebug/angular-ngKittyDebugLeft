@@ -6,13 +6,20 @@ import { TranslocoTestingModule } from '@jsverse/transloco';
 import { of } from 'rxjs';
 import { beforeEach, describe, expect, it, type MockedObject, vi } from 'vitest';
 import { TamagotchiSelectionService } from '../../../data/services/tamagotchi-selection.service';
+import { EvolutionService } from '../../../data/services/evolution.service';
+import { PerformanceService } from '../../../data/services/performance.service';
 import { TamagotchiInitService } from '../../../data/services/tamagotchi-init.service';
+import { TamagotchiService } from '../../../data/services/tamagotchi.service';
+import { TimerService } from '../../../data/services/timer.service';
 import { TEST_POKEMON } from '../../../data/fixtures/tamagotchi-arbitraries';
 import {
   createInitialPokemonStatus,
   createInitialTamagotchiState,
 } from '../../../data/store/tamagotchi-initial';
 import { snapshotState, TamagotchiStore } from '../../../data/store/tamagotchi.store';
+import { TamagotchiFacade } from '../../../data/facades/tamagotchi.facade';
+import { AnimationService } from '../../services/animation.service';
+import { TamagotchiNotificationService } from '../../services/notification.service';
 import { PokemonTamagotchiPageComponent } from './pokemon-tamagotchi-page.component';
 
 type TamagotchiStoreInstance = InstanceType<typeof TamagotchiStore>;
@@ -146,11 +153,51 @@ function createStoreMock(
   };
 }
 
+function createFacadeProviders() {
+  return [
+    TamagotchiFacade,
+    TamagotchiService,
+    AnimationService,
+    {
+      provide: EvolutionService,
+      useValue: {
+        buildEvolutionData: vi.fn(() => null),
+        triggerEvolution: vi.fn(),
+      },
+    },
+    {
+      provide: PerformanceService,
+      useValue: {
+        getProfile: vi.fn(() => ({ decayIntervalMs: 30_000 })),
+        mode: signal('balanced' as const),
+        setMode: vi.fn(),
+      },
+    },
+    {
+      provide: TimerService,
+      useValue: {
+        startTimer: vi.fn(() => ({ cleanup: vi.fn() })),
+        stopTimer: vi.fn(),
+      },
+    },
+    {
+      provide: TamagotchiNotificationService,
+      useValue: {
+        notifyEvolutionReady: vi.fn(),
+        processStatusAlerts: vi.fn(),
+      },
+    },
+  ];
+}
+
 describe('PokemonTamagotchiPageComponent', () => {
   describe('Happy Path', () => {
     let fixture: ComponentFixture<PokemonTamagotchiPageComponent>;
+    let initService: TamagotchiInitPageMock;
 
     beforeEach(async () => {
+      initService = createInitPageMock();
+
       await TestBed.configureTestingModule({
         imports: [
           PokemonTamagotchiPageComponent,
@@ -196,8 +243,9 @@ describe('PokemonTamagotchiPageComponent', () => {
         ],
         providers: [
           provideRouter([]),
+          ...createFacadeProviders(),
           { provide: TamagotchiStore, useValue: createStoreMock() },
-          { provide: TamagotchiInitService, useValue: createInitPageMock() },
+          { provide: TamagotchiInitService, useValue: initService },
           { provide: TamagotchiSelectionService, useValue: createSelectionPageMock() },
         ],
       }).compileComponents();
@@ -208,6 +256,22 @@ describe('PokemonTamagotchiPageComponent', () => {
 
     it('должен создаваться', () => {
       expect(fixture.componentInstance).toBeTruthy();
+    });
+
+    it('должен синхронизировать store с выбранным покемоном при создании страницы', () => {
+      expect(initService.bootstrapFromProfile).toHaveBeenCalledTimes(1);
+    });
+
+    it('должен повторно синхронизировать store при новом создании страницы с тем же facade', () => {
+      fixture.destroy();
+
+      const nextFixture = TestBed.createComponent(PokemonTamagotchiPageComponent);
+
+      nextFixture.detectChanges();
+
+      expect(initService.bootstrapFromProfile).toHaveBeenCalledTimes(2);
+
+      nextFixture.destroy();
     });
 
     it('должен отображать заголовок страницы', () => {
@@ -265,6 +329,7 @@ describe('PokemonTamagotchiPageComponent', () => {
         ],
         providers: [
           provideRouter([]),
+          ...createFacadeProviders(),
           {
             provide: TamagotchiStore,
             useValue: createStoreMock({ initialized: false, pokemon: null }),

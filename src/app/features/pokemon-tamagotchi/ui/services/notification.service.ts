@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Service } from '@angular/core';
 import { TranslocoService } from '@jsverse/transloco';
 import { firstValueFrom, take } from 'rxjs';
 import { AppNotificationService } from '@core/services/app-notification.service';
@@ -25,7 +25,7 @@ export interface StatusAlertNotificationContext {
   timestamp?: number;
 }
 
-@Injectable({ providedIn: 'root' })
+@Service({ autoProvided: false })
 export class TamagotchiNotificationService {
   private readonly appNotifications = inject(AppNotificationService);
   private readonly store = inject(TamagotchiStore);

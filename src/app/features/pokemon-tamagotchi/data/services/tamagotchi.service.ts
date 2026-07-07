@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Service } from '@angular/core';
 import { STATUS_THRESHOLDS } from '../constants/status-thresholds.constants';
 import { rollTrainingExperienceGain } from '../helpers/training-reward.helper';
 import {
@@ -26,7 +26,7 @@ export interface TamagotchiActionContext {
 const AWAKE_ONLY_ACTIONS = new Set<ActionType>(['feed', 'play', 'train']);
 const GAME_ACTIONS = new Set<ActionType>(['play', 'train']);
 
-@Injectable({ providedIn: 'root' })
+@Service({ autoProvided: false })
 export class TamagotchiService {
   public calculateStatusUpdate(
     currentStatus: PokemonStatusModel,

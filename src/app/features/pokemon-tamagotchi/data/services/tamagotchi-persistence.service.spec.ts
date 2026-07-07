@@ -19,7 +19,10 @@ describe('TamagotchiPersistenceService', () => {
   beforeEach(() => {
     storageMock = createTamagotchiStorageMock();
     TestBed.configureTestingModule({
-      providers: [{ provide: TamagotchiStorageService, useValue: storageMock }],
+      providers: [
+        TamagotchiPersistenceService,
+        { provide: TamagotchiStorageService, useValue: storageMock },
+      ],
     });
     service = TestBed.inject(TamagotchiPersistenceService);
   });

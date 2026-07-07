@@ -10,7 +10,7 @@ describe('StatusDecayService', () => {
   let service: StatusDecayService;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({ providers: [StatusDecayService] });
     service = TestBed.inject(StatusDecayService);
   });
 

@@ -79,7 +79,6 @@ export function snapshotState(store: {
 }
 
 export const TamagotchiStore = signalStore(
-  { providedIn: 'root' },
   withState(initialTamagotchiState),
   withComputed((store) => ({
     hasPokemon: computed(() => store.pokemon() !== null),

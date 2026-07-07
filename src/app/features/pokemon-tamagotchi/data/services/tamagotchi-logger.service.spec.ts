@@ -11,7 +11,7 @@ describe('TamagotchiLoggerService', () => {
   });
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({ providers: [TamagotchiLoggerService] });
   });
 
   describe('Edge Cases', () => {

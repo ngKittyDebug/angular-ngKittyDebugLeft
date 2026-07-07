@@ -20,7 +20,7 @@ describe('PerformanceService', () => {
     storageMock = createTamagotchiStorageMock();
     vi.restoreAllMocks();
     TestBed.configureTestingModule({
-      providers: [{ provide: TamagotchiStorageService, useValue: storageMock }],
+      providers: [PerformanceService, { provide: TamagotchiStorageService, useValue: storageMock }],
     });
     service = TestBed.inject(PerformanceService);
   });
@@ -51,7 +51,10 @@ describe('PerformanceService', () => {
       storageMock.setItem(PERFORMANCE_MODE_STORAGE_KEY, 'auto');
       TestBed.resetTestingModule();
       TestBed.configureTestingModule({
-        providers: [{ provide: TamagotchiStorageService, useValue: storageMock }],
+        providers: [
+          PerformanceService,
+          { provide: TamagotchiStorageService, useValue: storageMock },
+        ],
       });
 
       const reloadedService = TestBed.inject(PerformanceService);

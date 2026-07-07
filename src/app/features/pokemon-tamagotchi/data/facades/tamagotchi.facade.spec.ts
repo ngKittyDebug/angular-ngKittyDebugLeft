@@ -163,8 +163,14 @@ describe('TamagotchiFacade', () => {
 
   describe('Happy Path', () => {
     describe('Инициализация', () => {
-      it('должен создаваться и загружать состояние из профиля', () => {
+      it('должен создаваться без автоматической загрузки профиля', () => {
         expect(facade).toBeDefined();
+        expect(mockInitService.bootstrapFromProfile).not.toHaveBeenCalled();
+      });
+
+      it('должен загружать состояние из профиля по команде страницы', () => {
+        facade.bootstrapFromProfile();
+
         expect(mockInitService.bootstrapFromProfile).toHaveBeenCalledTimes(1);
       });
 
@@ -234,7 +240,7 @@ describe('TamagotchiFacade', () => {
 
         expect(mockStore.resetState).toHaveBeenCalledTimes(1);
         expect(mockStore.clearError).toHaveBeenCalledTimes(1);
-        expect(mockInitService.bootstrapFromProfile).toHaveBeenCalledTimes(2);
+        expect(mockInitService.bootstrapFromProfile).toHaveBeenCalledTimes(1);
       });
     });
   });

@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Service } from '@angular/core';
 import { TIMER_CONFIG } from '../constants/timer.constants';
 import { applyRoutineBonusIfEligible } from '../helpers/routine.helper';
 import type { StatusDecayContext } from './status-decay.service';
@@ -29,7 +29,7 @@ export interface TimerHandle {
   cleanup: () => void;
 }
 
-@Injectable({ providedIn: 'root' })
+@Service({ autoProvided: false })
 export class TimerService {
   private readonly statusDecayService = inject(StatusDecayService);
 
