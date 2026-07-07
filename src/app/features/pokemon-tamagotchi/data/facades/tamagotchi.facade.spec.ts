@@ -32,6 +32,7 @@ type TamagotchiStoreMethodsMock = MockedObject<
     | 'completeTraining'
     | 'feed'
     | 'interactWithPokemon'
+    | 'markEvolutionReadyNotified'
     | 'play'
     | 'putToSleep'
     | 'resetState'
@@ -65,6 +66,7 @@ function createStoreMock(
     completeTraining: vi.fn(),
     feed: vi.fn(),
     interactWithPokemon: vi.fn(),
+    markEvolutionReadyNotified: vi.fn(),
     play: vi.fn(),
     putToSleep: vi.fn(),
     resetState: vi.fn(),
@@ -108,6 +110,9 @@ function createStoreMock(
 describe('TamagotchiFacade', () => {
   let mockStore: ReturnType<typeof createStoreMock>;
   let mockInitService: MockedObject<Pick<TamagotchiInitService, 'bootstrapFromProfile'>>;
+  let mockNotificationService: MockedObject<
+    Pick<TamagotchiNotificationService, 'notifyEvolutionReady' | 'processStatusAlerts'>
+  >;
   let facade: TamagotchiFacade;
 
   beforeEach(() => {
@@ -116,7 +121,7 @@ describe('TamagotchiFacade', () => {
       bootstrapFromProfile: vi.fn(() => of(undefined)),
     } as const satisfies MockedObject<Pick<TamagotchiInitService, 'bootstrapFromProfile'>>;
 
-    const mockNotificationService = {
+    mockNotificationService = {
       notifyEvolutionReady: vi.fn(),
       processStatusAlerts: vi.fn(),
     } as const satisfies MockedObject<
@@ -241,6 +246,38 @@ describe('TamagotchiFacade', () => {
         expect(mockStore.resetState).toHaveBeenCalledTimes(1);
         expect(mockStore.clearError).toHaveBeenCalledTimes(1);
         expect(mockInitService.bootstrapFromProfile).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('Уведомление об эволюции', () => {
+      it('должен помечать готовность к эволюции после первого уведомления', () => {
+        mockStore.evolutionProgress.set({
+          ...mockStore.evolutionProgress(),
+          isReady: true,
+          readyNotifiedAt: null,
+        });
+        mockStore.canEvolve.set(true);
+
+        TestBed.flushEffects();
+
+        expect(mockNotificationService.notifyEvolutionReady).toHaveBeenCalledTimes(1);
+        expect(mockStore.markEvolutionReadyNotified).toHaveBeenCalledTimes(1);
+        expect(mockStore.startEvolution).toHaveBeenCalledTimes(1);
+      });
+
+      it('не должен повторять уведомление после восстановления уже помеченного ready-state', () => {
+        mockStore.evolutionProgress.set({
+          ...mockStore.evolutionProgress(),
+          isReady: true,
+          readyNotifiedAt: 1_700_000_000_000,
+        });
+        mockStore.canEvolve.set(true);
+
+        TestBed.flushEffects();
+
+        expect(mockNotificationService.notifyEvolutionReady).not.toHaveBeenCalled();
+        expect(mockStore.markEvolutionReadyNotified).not.toHaveBeenCalled();
+        expect(mockStore.startEvolution).not.toHaveBeenCalled();
       });
     });
   });

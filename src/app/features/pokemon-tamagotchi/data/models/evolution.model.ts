@@ -22,6 +22,7 @@ export interface EvolutionProgressModel {
   requirements: EvolutionRequirementModel[];
   currentProgress: Record<string, number>;
   isReady: boolean;
+  readyNotifiedAt: number | null;
 }
 
 export interface EvolutionDataModel {

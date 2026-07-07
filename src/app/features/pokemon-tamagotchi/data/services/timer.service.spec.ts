@@ -2,6 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createInitialPokemonStatus } from '../store/tamagotchi-initial';
 import { createInitialDailyRoutine } from '../store/tamagotchi-initial';
+import { GAME_BALANCE } from '../constants/game-balance.constants';
+import { STATUS_THRESHOLDS } from '../constants/status-thresholds.constants';
 import { TIMER_CONFIG } from '../constants/timer.constants';
 import { TimerService } from './timer.service';
 import { StatusDecayService } from './status-decay.service';
@@ -83,6 +85,30 @@ describe('TimerService', () => {
         expect(bonuses.filter((bonus) => bonus > 0)).toHaveLength(1);
         expect(bonuses[0]).toBe(TIMER_CONFIG.ROUTINE.BONUS_MOOD);
         expect(third.dailyRoutine.bonusAppliedDate).toBe('2026-07-03');
+      });
+
+      it('должен возвращать alert при offline decay, который пересекает warning-порог', () => {
+        const fixedNow = 1_700_000_000_000;
+        const beforeHunger = STATUS_THRESHOLDS.hungerWarning + 5;
+        const targetHunger = STATUS_THRESHOLDS.hungerWarning - 1;
+        const elapsedMs =
+          ((beforeHunger - targetHunger) / GAME_BALANCE.STATUS_DECAY.HUNGER) * (60 * 60 * 1000);
+
+        const result = service.processTick(
+          {
+            dailyRoutine: createInitialDailyRoutine(),
+            isSleeping: false,
+            lastActionTime: null,
+            lastDecayTime: fixedNow - elapsedMs,
+            status: {
+              ...createInitialPokemonStatus(),
+              hunger: beforeHunger,
+            },
+          },
+          fixedNow,
+        );
+
+        expect(result.alerts).toContain('hungerLow');
       });
     });
 

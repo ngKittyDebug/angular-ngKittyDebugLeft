@@ -40,6 +40,7 @@ describe('TamagotchiErrorRecoveryService', () => {
         evolutionProgress: {
           currentProgress: { level: 50 },
           isReady: false,
+          readyNotifiedAt: null,
           requirements: [
             {
               type: 'level' as const,

@@ -64,6 +64,29 @@ describe('StatusDecayService', () => {
         expect(service.detectCriticalAlerts(before, after)).toContain('hydrationCritical');
       });
     });
+
+    describe('processDecayTick', () => {
+      it('должен алертить при offline decay, который пересекает warning-порог за один тик', () => {
+        const fixedNow = 1_700_000_000_000;
+        const beforeHunger = STATUS_THRESHOLDS.hungerWarning + 5;
+        const targetHunger = STATUS_THRESHOLDS.hungerWarning - 1;
+        const elapsedMs =
+          ((beforeHunger - targetHunger) / GAME_BALANCE.STATUS_DECAY.HUNGER) * ONE_HOUR_MS;
+
+        const result = service.processDecayTick({
+          isSleeping: false,
+          lastActionTime: null,
+          lastDecayTime: fixedNow - elapsedMs,
+          now: fixedNow,
+          status: {
+            ...createInitialPokemonStatus(),
+            hunger: beforeHunger,
+          },
+        });
+
+        expect(result.alerts).toContain('hungerLow');
+      });
+    });
   });
 
   describe('Edge Cases', () => {

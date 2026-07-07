@@ -71,7 +71,13 @@ export class TamagotchiErrorRecoveryService {
       dailyRoutine: state.dailyRoutine ?? createInitialTamagotchiState().dailyRoutine,
       error: null,
       evolutionProgress:
-        state.evolutionProgress ?? createInitialTamagotchiState().evolutionProgress,
+        state.evolutionProgress === undefined
+          ? createInitialTamagotchiState().evolutionProgress
+          : {
+              ...createInitialTamagotchiState().evolutionProgress,
+              ...state.evolutionProgress,
+              readyNotifiedAt: state.evolutionProgress.readyNotifiedAt ?? null,
+            },
       initialized: true,
       interactionHistory: state.interactionHistory ?? [],
       notificationList: state.notificationList ?? [],

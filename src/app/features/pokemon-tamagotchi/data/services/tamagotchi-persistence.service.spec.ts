@@ -78,6 +78,7 @@ describe('TamagotchiPersistenceService', () => {
         evolutionProgress: {
           currentProgress: { level: 50 },
           isReady: false,
+          readyNotifiedAt: null,
           requirements: staleRequirements,
         },
         initialized: true,

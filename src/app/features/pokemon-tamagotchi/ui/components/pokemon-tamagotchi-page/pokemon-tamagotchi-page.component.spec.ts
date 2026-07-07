@@ -35,6 +35,7 @@ type TamagotchiStorePageMethodsMock = MockedObject<
     | 'completeTraining'
     | 'feed'
     | 'interactWithPokemon'
+    | 'markEvolutionReadyNotified'
     | 'play'
     | 'putToSleep'
     | 'resetState'
@@ -113,6 +114,7 @@ function createStoreMock(
     completeTraining: vi.fn(),
     feed: vi.fn(),
     interactWithPokemon: vi.fn(),
+    markEvolutionReadyNotified: vi.fn(),
     play: vi.fn(),
     putToSleep: vi.fn(),
     resetState: vi.fn(),

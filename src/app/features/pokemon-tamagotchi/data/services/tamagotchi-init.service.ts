@@ -13,7 +13,9 @@ export class TamagotchiInitService {
 
   public bootstrapFromProfile(): Observable<void> {
     return defer(() => {
-      this.store.loadFromPersistence();
+      if (!this.store.initialized()) {
+        this.store.loadFromPersistence();
+      }
 
       if (this.store.initialized()) {
         return of(this.store.hasPokemon());

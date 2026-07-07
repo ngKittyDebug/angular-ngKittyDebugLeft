@@ -1,5 +1,14 @@
-import { computed, inject } from '@angular/core';
-import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
+import { computed, DestroyRef, inject } from '@angular/core';
+import {
+  patchState,
+  signalStore,
+  withComputed,
+  withHooks,
+  withMethods,
+  withState,
+} from '@ngrx/signals';
+import { rxMethod } from '@ngrx/signals/rxjs-interop';
+import { debounceTime, pipe, tap } from 'rxjs';
 import { TAMAGOTCHI_SYSTEM_ERRORS } from '../constants/system-errors.constants';
 import { calculateBondLevel } from '../helpers/gesture.helper';
 import { sortNotificationsByPriority } from '../helpers/notification-factory.helper';
@@ -16,13 +25,13 @@ import {
   careForPokemonState,
   checkEvolutionState,
   clearErrorState,
-  clearPokemonState,
   completeEvolutionState,
   completeTrainingState,
   feedPokemonState,
   initializeTamagotchiState,
   interactWithPokemonState,
   loadStateSuccessState,
+  markEvolutionReadyNotifiedState,
   playWithPokemonState,
   putToSleepState,
   resetStateTransition,
@@ -98,7 +107,7 @@ export const TamagotchiStore = signalStore(
       errorRecovery = inject(TamagotchiErrorRecoveryService),
       persistence = inject(TamagotchiPersistenceService),
     ) => {
-      let saveTimer: ReturnType<typeof setTimeout> | null = null;
+      let pendingSave = false;
 
       const performSave = (): void => {
         if (!store.initialized()) {
@@ -120,19 +129,27 @@ export const TamagotchiStore = signalStore(
         }
       };
 
+      const saveStateDebounced = rxMethod<void>(
+        pipe(
+          debounceTime(SAVE_DEBOUNCE_MS),
+          tap(() => {
+            if (!pendingSave) {
+              return;
+            }
+
+            pendingSave = false;
+            performSave();
+          }),
+        ),
+      );
+
       const scheduleSave = (): void => {
         if (!store.initialized()) {
           return;
         }
 
-        if (saveTimer !== null) {
-          clearTimeout(saveTimer);
-        }
-
-        saveTimer = setTimeout(() => {
-          saveTimer = null;
-          performSave();
-        }, SAVE_DEBOUNCE_MS);
+        pendingSave = true;
+        saveStateDebounced();
       };
 
       const mutateAndSave = (
@@ -143,6 +160,15 @@ export const TamagotchiStore = signalStore(
       };
 
       return {
+        flushSave(): void {
+          if (!pendingSave) {
+            return;
+          }
+
+          pendingSave = false;
+          performSave();
+        },
+
         loadFromPersistence(): void {
           try {
             const loaded = persistence.load();
@@ -173,12 +199,6 @@ export const TamagotchiStore = signalStore(
 
         selectPokemon(pokemon: PokemonModel): void {
           mutateAndSave((state) => selectPokemonState(state, pokemon));
-        },
-
-        clearPokemon(): void {
-          persistence.clear();
-          patchState(store, clearPokemonState);
-          scheduleSave();
         },
 
         feed(now: number): void {
@@ -237,6 +257,10 @@ export const TamagotchiStore = signalStore(
           mutateAndSave(checkEvolutionState);
         },
 
+        markEvolutionReadyNotified(notifiedAt: number): void {
+          mutateAndSave((state) => markEvolutionReadyNotifiedState(state, notifiedAt));
+        },
+
         startEvolution(): void {
           patchState(store, startEvolutionState);
         },
@@ -265,4 +289,37 @@ export const TamagotchiStore = signalStore(
       };
     },
   ),
+  withHooks({
+    onInit(store) {
+      const destroyReference = inject(DestroyRef);
+      const flushSave = (): void => {
+        store.flushSave();
+      };
+      const flushOnHidden = (): void => {
+        if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+          flushSave();
+        }
+      };
+
+      if (typeof document !== 'undefined') {
+        document.addEventListener('visibilitychange', flushOnHidden);
+      }
+
+      if (typeof window !== 'undefined') {
+        window.addEventListener('pagehide', flushSave);
+      }
+
+      destroyReference.onDestroy(() => {
+        flushSave();
+
+        if (typeof document !== 'undefined') {
+          document.removeEventListener('visibilitychange', flushOnHidden);
+        }
+
+        if (typeof window !== 'undefined') {
+          window.removeEventListener('pagehide', flushSave);
+        }
+      });
+    },
+  }),
 );

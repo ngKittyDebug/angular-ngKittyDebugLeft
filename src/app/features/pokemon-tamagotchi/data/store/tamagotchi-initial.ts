@@ -34,6 +34,7 @@ export function createInitialEvolutionProgress(): EvolutionProgressModel {
     requirements: [...EVOLUTION_REQUIREMENTS],
     currentProgress,
     isReady: false,
+    readyNotifiedAt: null,
   };
 }
 

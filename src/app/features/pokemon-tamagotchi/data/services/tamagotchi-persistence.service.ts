@@ -163,7 +163,13 @@ export class TamagotchiPersistenceService {
         ...(state.dailyRoutine ?? {}),
       },
       evolutionProgress:
-        state.evolutionProgress ?? createInitialTamagotchiState().evolutionProgress,
+        state.evolutionProgress === undefined
+          ? createInitialTamagotchiState().evolutionProgress
+          : {
+              ...createInitialTamagotchiState().evolutionProgress,
+              ...state.evolutionProgress,
+              readyNotifiedAt: state.evolutionProgress.readyNotifiedAt ?? null,
+            },
       interactionHistory: state.interactionHistory ?? [],
       notificationList:
         version >= TAMAGOTCHI_NOTIFICATION_TEXT_STATE_VERSION

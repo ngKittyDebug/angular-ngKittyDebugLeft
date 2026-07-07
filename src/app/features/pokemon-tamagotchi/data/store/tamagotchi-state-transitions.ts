@@ -68,6 +68,7 @@ export function computeEvolutionProgress(state: TamagotchiStateModel): Evolution
     ...state.evolutionProgress,
     currentProgress,
     isReady,
+    readyNotifiedAt: state.evolutionProgress.readyNotifiedAt ?? null,
   };
 }
 
@@ -93,14 +94,6 @@ export function selectPokemonState(
     initialized: true,
     pokemon,
     evolutionProgress: buildEvolutionProgressForPokemon(pokemon),
-  };
-}
-
-export function clearPokemonState(state: TamagotchiStateModel): TamagotchiStateModel {
-  return {
-    ...initialTamagotchiState,
-    initialized: state.initialized,
-    lastSaveTime: state.lastSaveTime,
   };
 }
 
@@ -364,6 +357,7 @@ export function syncEvolutionProgressWithPokemon(
     evolutionProgress: {
       ...buildEvolutionProgressForPokemon(state.pokemon),
       currentProgress: state.evolutionProgress.currentProgress,
+      readyNotifiedAt: state.evolutionProgress.readyNotifiedAt ?? null,
     },
   };
 
@@ -381,6 +375,23 @@ export function startEvolutionState(state: TamagotchiStateModel): TamagotchiStat
   return {
     ...state,
     isEvolving: true,
+  };
+}
+
+export function markEvolutionReadyNotifiedState(
+  state: TamagotchiStateModel,
+  notifiedAt: number,
+): TamagotchiStateModel {
+  if (!state.evolutionProgress.isReady) {
+    return state;
+  }
+
+  return {
+    ...state,
+    evolutionProgress: {
+      ...state.evolutionProgress,
+      readyNotifiedAt: notifiedAt,
+    },
   };
 }
 

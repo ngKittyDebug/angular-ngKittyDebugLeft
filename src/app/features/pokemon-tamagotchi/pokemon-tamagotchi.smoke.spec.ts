@@ -185,10 +185,12 @@ describe('PokemonTamagotchi — интеграция', () => {
   describe('Bootstrap из профиля покемона', () => {
     it('должен записывать ошибку выбора эволюционировавшего покемона в store', async () => {
       const error = signal<string | null>(null);
-      const initialized = signal(true);
+      const initialized = signal(false);
       const hasPokemon = signal(false);
       const storeMethods = {
-        loadFromPersistence: vi.fn(),
+        loadFromPersistence: vi.fn(() => {
+          initialized.set(true);
+        }),
         selectPokemon: vi.fn(),
         setError: vi.fn((value: string) => {
           error.set(value);

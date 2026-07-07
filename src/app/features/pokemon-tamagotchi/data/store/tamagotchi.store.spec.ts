@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { describe, expect, it, type MockedObject, vi } from 'vitest';
+import { afterEach, describe, expect, it, type MockedObject, vi } from 'vitest';
 import { GAME_BALANCE } from '../constants/game-balance.constants';
 import { EVOLUTION_REQUIREMENTS } from '../constants/evolution-criteria.constants';
 import { TAMAGOTCHI_SYSTEM_ERRORS } from '../constants/system-errors.constants';
@@ -50,19 +50,32 @@ const EVOLVABLE_TEST_POKEMON: PokemonModel = {
   },
 };
 
-function createStoreTestBed(): InstanceType<typeof TamagotchiStore> {
+function createStoreTestBedWithMocks(
+  persistence: TamagotchiPersistenceMock = createPersistenceMock(),
+): {
+  persistence: TamagotchiPersistenceMock;
+  store: InstanceType<typeof TamagotchiStore>;
+} {
   TestBed.configureTestingModule({
     providers: [
       TamagotchiStore,
-      { provide: TamagotchiPersistenceService, useValue: createPersistenceMock() },
+      { provide: TamagotchiPersistenceService, useValue: persistence },
       { provide: TamagotchiErrorRecoveryService, useValue: createErrorRecoveryMock() },
     ],
   });
 
-  return TestBed.inject(TamagotchiStore);
+  return { persistence, store: TestBed.inject(TamagotchiStore) };
+}
+
+function createStoreTestBed(): InstanceType<typeof TamagotchiStore> {
+  return createStoreTestBedWithMocks().store;
 }
 
 describe('TamagotchiStore', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   describe('loadFromPersistence', () => {
     describe('Negative Cases', () => {
       it('должен установить ошибку и остаться инициализированным, когда загрузка persistence бросает исключение', () => {
@@ -134,6 +147,53 @@ describe('TamagotchiStore', () => {
   });
 
   describe('Happy Path', () => {
+    describe('сохранение состояния', () => {
+      it('должен схлопывать несколько изменений в один debounced save', () => {
+        vi.useFakeTimers();
+        const { persistence, store } = createStoreTestBedWithMocks();
+        const fixedNow = 1_700_000_000_000;
+
+        store.selectPokemon(TEST_POKEMON);
+        store.feed(fixedNow);
+
+        vi.advanceTimersByTime(299);
+        expect(persistence.save).not.toHaveBeenCalled();
+
+        vi.advanceTimersByTime(1);
+
+        expect(persistence.save).toHaveBeenCalledTimes(1);
+      });
+
+      it('должен сохранять pending state при flushSave', () => {
+        vi.useFakeTimers();
+        const { persistence, store } = createStoreTestBedWithMocks();
+
+        store.selectPokemon(TEST_POKEMON);
+        store.flushSave();
+        vi.advanceTimersByTime(300);
+
+        expect(persistence.save).toHaveBeenCalledTimes(1);
+        expect(persistence.save).toHaveBeenNthCalledWith(
+          1,
+          expect.objectContaining({ pokemon: TEST_POKEMON }),
+        );
+      });
+
+      it('не должен записывать пустой payload после resetState', () => {
+        vi.useFakeTimers();
+        const { persistence, store } = createStoreTestBedWithMocks();
+
+        store.selectPokemon(TEST_POKEMON);
+        persistence.save.mockClear();
+        store.resetState();
+        store.flushSave();
+        vi.advanceTimersByTime(300);
+
+        expect(persistence.clear).toHaveBeenCalledTimes(1);
+        expect(persistence.save).not.toHaveBeenCalled();
+      });
+    });
+
     describe('интеграция эволюции', () => {
       const fixedNow = 1_700_000_000_000;
       const experienceGain = GAME_BALANCE.EVOLUTION.MIN_EXPERIENCE;

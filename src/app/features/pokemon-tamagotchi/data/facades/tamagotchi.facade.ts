@@ -1,4 +1,4 @@
-import { computed, DestroyRef, effect, inject, Service, signal, untracked } from '@angular/core';
+import { computed, DestroyRef, effect, inject, Service, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { GAME_BALANCE } from '../constants/game-balance.constants';
 import { isTamagotchiSelectionError } from '../constants/selection-errors.constants';
@@ -37,7 +37,6 @@ export class TamagotchiFacade {
   private readonly store = inject(TamagotchiStore);
   private readonly tamagotchiService = inject(TamagotchiService);
   private readonly timerService = inject(TimerService);
-  private readonly wasEvolutionReady = signal(false);
   private readonly isInitialized = computed(() => this.store.initialized());
   private readonly state = this.store.snapshot;
 
@@ -132,13 +131,13 @@ export class TamagotchiFacade {
     effect(() => {
       const ready = this.canEvolve();
       const species = this.pokemon();
+      const readyNotifiedAt = this.store.evolutionProgress().readyNotifiedAt;
 
-      if (ready && !this.wasEvolutionReady() && species) {
+      if (ready && readyNotifiedAt === null && species) {
         this.notificationService.notifyEvolutionReady(species.name);
+        this.store.markEvolutionReadyNotified(Date.now());
         this.store.startEvolution();
       }
-
-      this.wasEvolutionReady.set(ready);
     });
 
     effect((onCleanup) => {
@@ -235,7 +234,6 @@ export class TamagotchiFacade {
 
   public onEvolutionComplete(evolvedPokemon: PokemonModel): void {
     this.store.completeEvolution(evolvedPokemon);
-    this.wasEvolutionReady.set(false);
   }
 
   public onInteraction(interaction: InteractionEventModel): void {

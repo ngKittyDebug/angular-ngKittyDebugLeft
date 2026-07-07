@@ -9,6 +9,7 @@ import {
   completeTrainingState,
   feedPokemonState,
   interactWithPokemonState,
+  markEvolutionReadyNotifiedState,
   putToSleepState,
   selectPokemonState,
   startTrainingState,
@@ -188,6 +189,16 @@ describe('tamagotchiStateTransitions', () => {
 
       expect(completed.evolutionProgress.requirements[0]?.value).toBe(99);
       expect(completed.evolutionProgress.isReady).toBe(false);
+      expect(completed.evolutionProgress.readyNotifiedAt).toBeNull();
+    });
+
+    it('должен сохранять timestamp уведомления о готовности к эволюции', () => {
+      const selected = selectPokemonState(initialTamagotchiState, stage2Pokemon);
+      const checked = checkEvolutionState(updateStatusState(selected, { level: 99 }));
+      const notifiedAt = 1_700_000_000_000;
+      const notified = markEvolutionReadyNotifiedState(checked, notifiedAt);
+
+      expect(notified.evolutionProgress.readyNotifiedAt).toBe(notifiedAt);
     });
   });
 });
