@@ -34,7 +34,6 @@ describe('TimerService', () => {
             isSleeping: false,
             lastActionTime: fixedNow - TIMER_CONFIG.DECAY_INTERVAL_MS - 1000,
             lastDecayTime: null,
-            sleepStartedAt: null,
             status: { ...createInitialPokemonStatus(), mood: 70 },
           },
           fixedNow,
@@ -58,7 +57,6 @@ describe('TimerService', () => {
           isSleeping: false,
           lastActionTime: fixedNow - TIMER_CONFIG.DECAY_INTERVAL_MS - 1000,
           lastDecayTime: null,
-          sleepStartedAt: null,
           status: { ...createInitialPokemonStatus(), mood: 70 },
         };
 
@@ -86,20 +84,6 @@ describe('TimerService', () => {
         expect(bonuses[0]).toBe(TIMER_CONFIG.ROUTINE.BONUS_MOOD);
         expect(third.dailyRoutine.bonusAppliedDate).toBe('2026-07-03');
       });
-
-      it('должен сообщать бонус восстановления энергии за длительный сон', () => {
-        const startedAt = Date.now() - TIMER_CONFIG.SLEEP.MIN_DURATION_MS - 1000;
-        const result = service.processTick({
-          dailyRoutine: createInitialDailyRoutine(),
-          isSleeping: true,
-          lastActionTime: startedAt,
-          lastDecayTime: startedAt,
-          sleepStartedAt: startedAt,
-          status: { ...createInitialPokemonStatus(), energy: 20 },
-        });
-
-        expect(result.sleepBonusEnergy).toBe(TIMER_CONFIG.SLEEP.BONUS_ENERGY);
-      });
     });
 
     describe('startTimer / stopTimer', () => {
@@ -124,7 +108,6 @@ describe('TimerService', () => {
             isSleeping: false,
             lastActionTime: Date.now() - TIMER_CONFIG.DECAY_INTERVAL_MS - 1000,
             lastDecayTime: null,
-            sleepStartedAt: null,
             status: createInitialPokemonStatus(),
           }),
           callback,
@@ -169,7 +152,6 @@ describe('TimerService', () => {
           isSleeping: false,
           lastActionTime: Date.now() - TIMER_CONFIG.DECAY_INTERVAL_MS - 1000,
           lastDecayTime: null,
-          sleepStartedAt: null,
           status: createInitialPokemonStatus(),
         }),
         callback,

@@ -130,16 +130,14 @@ export class PokemonSpriteComponent {
   }
 
   protected onPointerUp(event: PointerEvent): void {
-    if (!this.canInteract()) {
+    const result = this.gestureService.handlePointerUp(event);
+
+    if (!this.canInteract() || !result) {
       return;
     }
 
-    const result = this.gestureService.handlePointerUp(event);
-
-    if (result) {
-      this.pointerHandledInteraction = true;
-      this.applyGestureResult(result);
-    }
+    this.pointerHandledInteraction = true;
+    this.applyGestureResult(result);
   }
 
   protected onPointerCancel(event: PointerEvent): void {

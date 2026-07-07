@@ -123,7 +123,7 @@ export class TamagotchiService {
     context: TamagotchiActionContext,
     action: ActionType,
   ): number | null {
-    const { lastActionTime, status } = context;
+    const { status } = context;
 
     switch (action) {
       case 'feed':
@@ -139,10 +139,10 @@ export class TamagotchiService {
         return status.lastSleepTime;
 
       case 'care':
-        return lastActionTime;
+        return status.lastCareTime;
 
       case 'train':
-        return lastActionTime;
+        return status.lastTrainTime;
     }
   }
 }

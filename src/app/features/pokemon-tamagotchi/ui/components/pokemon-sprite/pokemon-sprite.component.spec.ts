@@ -44,6 +44,22 @@ function dispatchAnimationEnd(image: HTMLImageElement, animationName: string): v
   image.dispatchEvent(event);
 }
 
+function dispatchPointerEvent(
+  button: HTMLButtonElement,
+  type: 'pointerdown' | 'pointerup',
+  pointerId: number,
+): void {
+  button.dispatchEvent(
+    new PointerEvent(type, {
+      bubbles: true,
+      clientX: 10,
+      clientY: 10,
+      pointerId,
+      pointerType: 'touch',
+    }),
+  );
+}
+
 describe('PokemonSpriteComponent', () => {
   describe('Happy Path', () => {
     it('должен держать feedback-класс до завершения соответствующей анимации', async () => {
@@ -75,6 +91,23 @@ describe('PokemonSpriteComponent', () => {
       fixture.detectChanges();
 
       expect(image.classList.contains('sprite-pop')).toBe(false);
+    });
+
+    it('должен очищать pointer-сессию, если эволюция началась до pointer up', async () => {
+      const fixture = await createFixture();
+      const button = fixture.nativeElement.querySelector('button') as HTMLButtonElement;
+      const image = fixture.nativeElement.querySelector('img') as HTMLImageElement;
+
+      dispatchPointerEvent(button, 'pointerdown', 1);
+      fixture.componentRef.setInput('isEvolving', true);
+      fixture.detectChanges();
+      dispatchPointerEvent(button, 'pointerup', 1);
+      fixture.componentRef.setInput('isEvolving', false);
+      fixture.detectChanges();
+      dispatchPointerEvent(button, 'pointerdown', 2);
+      fixture.detectChanges();
+
+      expect(image.classList.contains('sprite-sparkle')).toBe(false);
     });
   });
 });

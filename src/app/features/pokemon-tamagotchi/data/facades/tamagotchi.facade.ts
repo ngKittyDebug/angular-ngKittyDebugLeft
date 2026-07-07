@@ -8,6 +8,7 @@ import {
   maxValueForStatusType,
   statusValueForType,
 } from '../helpers/status-indicator-sync.helper';
+import { calculateSleepRestorationBonus } from '../helpers/sleep-restoration.helper';
 import { rollTrainingExperienceGain } from '../helpers/training-reward.helper';
 import { EvolutionService } from '../services/evolution.service';
 import { PerformanceService } from '../services/performance.service';
@@ -169,7 +170,9 @@ export class TamagotchiFacade {
     const now = Date.now();
 
     if (this.isSleeping() && action === 'sleep') {
-      this.store.wakeUp(now);
+      const bonusEnergy = calculateSleepRestorationBonus(this.status().lastSleepTime, now);
+
+      this.store.wakeUp(now, bonusEnergy);
       this.store.checkEvolution();
 
       return;
@@ -234,7 +237,7 @@ export class TamagotchiFacade {
   }
 
   public onInteraction(interaction: InteractionEventModel): void {
-    this.store.interactWithPokemon(interaction, Date.now());
+    this.store.interactWithPokemon(interaction);
     this.store.checkEvolution();
   }
 
@@ -276,7 +279,6 @@ export class TamagotchiFacade {
       isSleeping: current.isSleeping,
       lastActionTime: current.lastActionTime,
       lastDecayTime: current.lastDecayTime,
-      sleepStartedAt: current.isSleeping ? current.status.lastSleepTime : null,
       status: current.status,
     };
   }

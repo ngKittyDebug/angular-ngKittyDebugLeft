@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { TEST_POKEMON } from '../fixtures/tamagotchi-arbitraries';
 import type { PokemonModel } from '../models/pokemon.model';
+import type { TamagotchiStateModel } from '../models/tamagotchi-state.model';
 import { createInitialTamagotchiState } from '../store/tamagotchi-initial';
 import { createTamagotchiStorageMock } from '../fixtures/tamagotchi-storage.mock';
 import { TamagotchiStorageService } from './tamagotchi-storage.service';
@@ -88,6 +89,32 @@ describe('TamagotchiPersistenceService', () => {
   });
 
   describe('Edge Cases', () => {
+    it('должен мигрировать v5 состояние без timestamp-полей care и train', () => {
+      const state = createInitialTamagotchiState();
+      const { lastCareTime, lastTrainTime, ...legacyStatus } = state.status;
+      const legacyState = {
+        ...state,
+        status: legacyStatus,
+        trainingExperienceReward: 25,
+        trainingStartedAt: 1_700_000_000_000,
+      } as unknown as TamagotchiStateModel;
+
+      void lastCareTime;
+      void lastTrainTime;
+
+      storageMock.setItem(
+        TAMAGOTCHI_STORAGE_KEY,
+        JSON.stringify({ state: legacyState, version: 5 }),
+      );
+
+      const loaded = service.load();
+
+      expect(loaded?.state.status.lastCareTime).toBeNull();
+      expect(loaded?.state.status.lastTrainTime).toBeNull();
+      expect(loaded?.state.trainingExperienceReward).toBe(25);
+      expect(loaded?.state.trainingStartedAt).toBe(1_700_000_000_000);
+    });
+
     it('должен восстанавливаться из backup при повреждённом основном хранилище', () => {
       const state = createInitialTamagotchiState();
       const payload = JSON.stringify({ state, version: TAMAGOTCHI_STATE_VERSION });

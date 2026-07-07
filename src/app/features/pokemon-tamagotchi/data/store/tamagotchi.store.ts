@@ -214,12 +214,12 @@ export const TamagotchiStore = signalStore(
           mutateAndSave((state) => putToSleepState(state, now));
         },
 
-        wakeUp(now: number): void {
-          mutateAndSave((state) => wakeUpState(state, now));
+        wakeUp(now: number, bonusEnergy = 0): void {
+          mutateAndSave((state) => wakeUpState(state, now, bonusEnergy));
         },
 
-        interactWithPokemon(interaction: InteractionEventModel, now: number): void {
-          mutateAndSave((state) => interactWithPokemonState(state, interaction, now));
+        interactWithPokemon(interaction: InteractionEventModel): void {
+          mutateAndSave((state) => interactWithPokemonState(state, interaction));
         },
 
         updateStatus(statusUpdate: StatusUpdateModel): void {

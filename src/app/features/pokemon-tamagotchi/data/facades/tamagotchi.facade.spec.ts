@@ -15,6 +15,8 @@ import {
 import { snapshotState, TamagotchiStore } from '../store/tamagotchi.store';
 import { TamagotchiNotificationService } from '../../ui/services/notification.service';
 import { PERFORMANCE_PROFILES } from '../constants/performance-mode.constants';
+import { TIMER_CONFIG } from '../constants/timer.constants';
+import type { PokemonStatusModel } from '../models/pokemon-status.model';
 import { TamagotchiFacade } from './tamagotchi.facade';
 
 type TamagotchiStoreInstance = InstanceType<typeof TamagotchiStore>;
@@ -47,7 +49,9 @@ function createStoreMock(
     error?: string | null;
     initialized?: boolean;
     pokemon?: typeof TEST_POKEMON | null;
+    isSleeping?: boolean;
     isTraining?: boolean;
+    status?: PokemonStatusModel;
   } = {},
 ) {
   const initial = createInitialTamagotchiState();
@@ -82,14 +86,14 @@ function createStoreMock(
     initialized: signal(overrides.initialized ?? true),
     interactionHistory: signal(initial.interactionHistory),
     isEvolving: signal(false),
-    isSleeping: signal(false),
+    isSleeping: signal(overrides.isSleeping ?? false),
     isTraining: signal(overrides.isTraining ?? false),
     lastActionTime: signal(initial.lastActionTime),
     lastDecayTime: signal(initial.lastDecayTime),
     lastSaveTime: signal(initial.lastSaveTime),
     notificationList: signal(initial.notificationList),
     pokemon: signal(overrides.pokemon ?? TEST_POKEMON),
-    status: signal(createInitialPokemonStatus()),
+    status: signal(overrides.status ?? createInitialPokemonStatus()),
     trainingExperienceReward: signal<number | null>(null),
     trainingStartedAt: signal<number | null>(null),
   };
@@ -190,6 +194,23 @@ describe('TamagotchiFacade', () => {
 
         expect(mockStore.play).toHaveBeenCalledTimes(1);
         expect(mockStore.restartTrainingTimer).toHaveBeenCalledTimes(1);
+        expect(mockStore.checkEvolution).toHaveBeenCalledTimes(1);
+      });
+
+      it('должен применять бонус энергии при пробуждении после полноценного сна', () => {
+        mockStore.isSleeping.set(true);
+        mockStore.status.set({
+          ...createInitialPokemonStatus(),
+          lastSleepTime: Date.now() - TIMER_CONFIG.SLEEP.MIN_DURATION_MS - 1_000,
+        });
+
+        facade.onAction('sleep');
+
+        expect(mockStore.wakeUp).toHaveBeenNthCalledWith(
+          1,
+          expect.any(Number),
+          TIMER_CONFIG.SLEEP.BONUS_ENERGY,
+        );
         expect(mockStore.checkEvolution).toHaveBeenCalledTimes(1);
       });
 

@@ -45,7 +45,7 @@ function applyCareAction(state: TamagotchiStateModel, action: CareAction): Tamag
       return feedPokemonState(state, FIXED_NOW);
 
     case 'interact':
-      return interactWithPokemonState(state, action.interaction!, FIXED_NOW);
+      return interactWithPokemonState(state, action.interaction!);
 
     case 'play':
       return playWithPokemonState(state, FIXED_NOW);
@@ -186,11 +186,13 @@ describe('status-indicator-sync.helper', () => {
                 health: before,
                 hunger: before,
                 hydration: before,
+                lastCareTime: null,
                 lastFeedTime: null,
                 lastHydrationTime: null,
                 lastPlayTime: null,
                 lastSaveTime: null,
                 lastSleepTime: null,
+                lastTrainTime: null,
                 level: 1,
                 mood: before,
               };

@@ -3,11 +3,17 @@ import { EVOLUTION_REQUIREMENTS } from '../constants/evolution-criteria.constant
 import { TEST_POKEMON } from '../fixtures/tamagotchi-arbitraries';
 import type { PokemonModel } from '../models/pokemon.model';
 import {
+  careForPokemonState,
   checkEvolutionState,
   completeEvolutionState,
+  completeTrainingState,
   feedPokemonState,
+  interactWithPokemonState,
+  putToSleepState,
   selectPokemonState,
+  startTrainingState,
   updateStatusState,
+  wakeUpState,
   waterPokemonState,
 } from './tamagotchi-state-transitions';
 import { initialTamagotchiState } from './tamagotchi-initial';
@@ -56,6 +62,45 @@ describe('tamagotchiStateTransitions', () => {
       const second = feedPokemonState(prepared, FIXED_NOW);
 
       expect(first).toEqual(second);
+    });
+
+    it('должен записывать отдельную метку времени ухода', () => {
+      const selected = selectPokemonState(initialTamagotchiState, pokemon);
+      const cared = careForPokemonState(selected, FIXED_NOW);
+
+      expect(cared.status.lastCareTime).toBe(FIXED_NOW);
+    });
+
+    it('должен записывать отдельную метку времени тренировки после завершения', () => {
+      const selected = selectPokemonState(initialTamagotchiState, pokemon);
+      const started = startTrainingState(selected, FIXED_NOW, 25);
+      const completed = completeTrainingState(started, FIXED_NOW + 1_000, 25);
+
+      expect(completed.status.lastTrainTime).toBe(FIXED_NOW + 1_000);
+    });
+
+    it('не должен двигать общий якорь действий при взаимодействии со спрайтом', () => {
+      const selected = {
+        ...selectPokemonState(initialTamagotchiState, pokemon),
+        lastActionTime: FIXED_NOW - 1_000,
+      };
+      const interacted = interactWithPokemonState(selected, {
+        intensity: 1,
+        moodIncrease: 5,
+        timestamp: FIXED_NOW,
+        type: 'click',
+      });
+
+      expect(interacted.lastActionTime).toBe(selected.lastActionTime);
+    });
+
+    it('должен применять бонус энергии при пробуждении в допустимых пределах', () => {
+      const selected = selectPokemonState(initialTamagotchiState, pokemon);
+      const prepared = updateStatusState(selected, { energy: -5 });
+      const sleeping = putToSleepState(prepared, FIXED_NOW - 1_000);
+      const awake = wakeUpState(sleeping, FIXED_NOW, 15);
+
+      expect(awake.status.energy).toBe(GAME_BALANCE.THRESHOLDS.MAXIMUM);
     });
   });
 

@@ -29,7 +29,6 @@ import { createInitialTamagotchiState } from '../store/tamagotchi-initial';
 import type { NotificationPriority } from '../models/notification.model';
 
 const PROPERTY_RUNS = 100;
-const FIXED_NOW = 1_700_000_000_000;
 
 function collectTranslationKeys(value: unknown, prefix = ''): string[] {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
@@ -134,7 +133,7 @@ describe('TamagotchiService', () => {
 
             const moodBefore = state.status.mood;
 
-            state = interactWithPokemonState(state, high, FIXED_NOW);
+            state = interactWithPokemonState(state, high);
 
             const moodAfter = state.status.mood;
             const tracked = state.interactionHistory.some(

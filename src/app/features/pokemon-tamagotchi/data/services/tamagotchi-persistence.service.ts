@@ -4,6 +4,7 @@ import { ensurePokemonSpriteVariations } from '../helpers/sprite-variation.helpe
 import type { TamagotchiStateModel } from '../models/tamagotchi-state.model';
 import {
   createInitialDailyRoutine,
+  createInitialPokemonStatus,
   createInitialTamagotchiState,
 } from '../store/tamagotchi-initial';
 import { syncEvolutionProgressWithPokemon } from '../store/tamagotchi-state-transitions';
@@ -11,7 +12,9 @@ import { TamagotchiStorageService } from './tamagotchi-storage.service';
 
 export const TAMAGOTCHI_STORAGE_KEY = 'pokemon-tamagotchi-state';
 export const TAMAGOTCHI_BACKUP_KEY = 'pokemon-tamagotchi-state-backup';
-export const TAMAGOTCHI_STATE_VERSION = 5;
+export const TAMAGOTCHI_STATE_VERSION = 6;
+
+const TAMAGOTCHI_TRAINING_STATE_VERSION = 5;
 
 export interface PersistedTamagotchiPayload {
   version: number;
@@ -123,10 +126,16 @@ export class TamagotchiPersistenceService {
       interactionHistory: state.interactionHistory ?? [],
       notificationList: state.notificationList ?? legacy.notifications ?? [],
       pokemon: state.pokemon ? ensurePokemonSpriteVariations(state.pokemon) : null,
+      status: {
+        ...createInitialPokemonStatus(),
+        ...state.status,
+      },
       trainingExperienceReward:
-        version >= TAMAGOTCHI_STATE_VERSION ? (state.trainingExperienceReward ?? null) : null,
+        version >= TAMAGOTCHI_TRAINING_STATE_VERSION
+          ? (state.trainingExperienceReward ?? null)
+          : null,
       trainingStartedAt:
-        version >= TAMAGOTCHI_STATE_VERSION ? (state.trainingStartedAt ?? null) : null,
+        version >= TAMAGOTCHI_TRAINING_STATE_VERSION ? (state.trainingStartedAt ?? null) : null,
     };
 
     if (!migrated.pokemon) {

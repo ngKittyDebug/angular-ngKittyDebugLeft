@@ -8,7 +8,9 @@ export interface PokemonStatusModel {
   hydration: number;
   experience: number;
   level: number;
+  lastCareTime: number | null;
   lastFeedTime: number | null;
+  lastTrainTime: number | null;
   lastPlayTime: number | null;
   lastSleepTime: number | null;
   lastHydrationTime: number | null;
