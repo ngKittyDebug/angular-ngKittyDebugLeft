@@ -246,7 +246,7 @@ describe('TamagotchiFacade', () => {
         expect(mockStore.restartTrainingTimer).not.toHaveBeenCalled();
       });
 
-      it('должен разблокировать действие по ближайшему cooldown-deadline', () => {
+      it('должен разблокировать действие через активный cooldown ticker', () => {
         vi.useFakeTimers();
 
         const startedAt = Date.now();

@@ -28,6 +28,7 @@ import type { ActionCooldowns, ActionType } from '../models/tamagotchi-state.mod
 import { TamagotchiNotificationService } from '../../ui/services/notification.service';
 
 const COOLDOWN_ACTIONS: ActionType[] = ['feed', 'water', 'care', 'play', 'train', 'sleep'];
+const COOLDOWN_REFRESH_INTERVAL_MS = 1_000;
 
 @Service({ autoProvided: false })
 export class TamagotchiFacade {
@@ -162,18 +163,16 @@ export class TamagotchiFacade {
     });
 
     effect((onCleanup) => {
-      const delay = this.nextCooldownRefreshDelay(this.cooldowns());
-
-      if (delay === null) {
+      if (!this.hasActiveCooldown(this.cooldowns())) {
         return;
       }
 
-      const timeoutId = setTimeout(() => {
+      const intervalId = setInterval(() => {
         this.now.set(Date.now());
-      }, delay);
+      }, COOLDOWN_REFRESH_INTERVAL_MS);
 
       onCleanup(() => {
-        clearTimeout(timeoutId);
+        clearInterval(intervalId);
       });
     });
   }
@@ -344,15 +343,11 @@ export class TamagotchiFacade {
     };
   }
 
-  private nextCooldownRefreshDelay(cooldowns: ActionCooldowns): number | null {
-    const remainingList = COOLDOWN_ACTIONS.map((action) => cooldowns[action]).filter(
-      (remaining): remaining is number => remaining !== null && remaining > 0,
-    );
+  private hasActiveCooldown(cooldowns: ActionCooldowns): boolean {
+    return COOLDOWN_ACTIONS.some((action) => {
+      const remaining = cooldowns[action];
 
-    if (remainingList.length === 0) {
-      return null;
-    }
-
-    return Math.max(0, Math.min(...remainingList));
+      return remaining !== null && remaining > 0;
+    });
   }
 }
