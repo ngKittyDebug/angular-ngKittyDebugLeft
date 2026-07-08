@@ -14,6 +14,8 @@ import type {
   SpriteVariation,
 } from '../../../models/pokemon.model';
 
+const POKEMON_SPRITE_FALLBACK_URL = '/images/svg/pokeball.svg';
+
 export function isFirstStageInEvolutionChain(
   speciesName: string,
   chainRoot: EvolutionChainItemApiData,
@@ -86,7 +88,7 @@ function firstNonEmptySprite(...candidates: (string | null | undefined)[]): stri
     }
   }
 
-  return '';
+  return POKEMON_SPRITE_FALLBACK_URL;
 }
 
 function resolveDefaultSpriteUrl(sprites: PokemonSpritesApiData): string {

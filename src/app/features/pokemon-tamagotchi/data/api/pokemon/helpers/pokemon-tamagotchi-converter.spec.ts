@@ -13,6 +13,7 @@ import {
 const SHOWDOWN_SPRITE = '/sprites/showdown.gif';
 const ARTWORK_SPRITE = '/sprites/artwork.png';
 const PIXEL_SPRITE = '/sprites/pixel.png';
+const POKEMON_SPRITE_FALLBACK_URL = '/images/svg/pokeball.svg';
 
 function detailWithSprites(): PokemonDetailApiData {
   return {
@@ -70,6 +71,29 @@ function detailWithSprites(): PokemonDetailApiData {
   } as unknown as PokemonDetailApiData;
 }
 
+function detailWithoutSprites(): PokemonDetailApiData {
+  const detail = detailWithSprites();
+
+  return {
+    ...detail,
+    sprites: {
+      ...detail.sprites,
+      back_default: null,
+      front_default: null,
+      front_shiny: null,
+      other: {
+        ...detail.sprites.other,
+        'official-artwork': { front_default: null, front_shiny: null },
+        showdown: {
+          ...detail.sprites.other.showdown,
+          front_default: null,
+          front_shiny: null,
+        },
+      },
+    },
+  };
+}
+
 describe('pokemonTamagotchiConverter', () => {
   describe('convertPokemonDetailApiDataToTamagotchiPokemon', () => {
     it('должен использовать showdown-спрайт как основной, как в цепочке эволюции', () => {
@@ -83,6 +107,17 @@ describe('pokemonTamagotchiConverter', () => {
       expect(pokemon.spriteUrls.normal).toBe(SHOWDOWN_SPRITE);
       expect(pokemon.spriteVariations.default.normal).toBe(SHOWDOWN_SPRITE);
       expect(pokemon.spriteVariations.retro.normal).toBe(PIXEL_SPRITE);
+    });
+
+    it('должен использовать fallback-спрайт, если API не вернул изображения', () => {
+      const chain = buildLinearEvolutionChain(1);
+      const pokemon = convertPokemonDetailApiDataToTamagotchiPokemon(detailWithoutSprites(), {
+        baby_trigger_item: null,
+        chain,
+        id: 1,
+      });
+
+      expect(pokemon.spriteUrls.normal).toBe(POKEMON_SPRITE_FALLBACK_URL);
     });
   });
 
