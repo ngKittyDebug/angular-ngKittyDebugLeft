@@ -13,7 +13,7 @@ import ruTranslations from '../../../../public/i18n/pokemonTamagotchi/ru.json';
 import { ChildrenRouts } from '../features.routes';
 import { feedPokemonState, selectPokemonState } from './data/store/tamagotchi-state-transitions';
 import { createInitialTamagotchiState } from './data/store/tamagotchi-initial';
-import { snapshotState, TamagotchiStore } from './data/store/tamagotchi.store';
+import { TamagotchiStore } from './data/store/tamagotchi.store';
 import { TamagotchiFacade } from './data/facades/tamagotchi.facade';
 import { EvolutionService } from './data/services/evolution.service';
 import { PerformanceService } from './data/services/performance.service';
@@ -64,8 +64,8 @@ function createFacadeSmokeProviders() {
     {
       provide: PerformanceService,
       useValue: {
-        getProfile: vi.fn(() => ({ decayIntervalMs: 30_000 })),
-        mode: signal('balanced' as const),
+        mode: signal('balanced' as const).asReadonly(),
+        profile: computed(() => ({ decayIntervalMs: 30_000 })),
         setMode: vi.fn(),
       },
     },
@@ -300,7 +300,6 @@ describe('PokemonTamagotchi — интеграция', () => {
             provide: TamagotchiStore,
             useValue: {
               ...storeSignals,
-              snapshot: computed(() => snapshotState(storeSignals)),
               ...storeMethods,
             },
           },

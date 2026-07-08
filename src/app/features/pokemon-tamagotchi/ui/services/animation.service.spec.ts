@@ -13,8 +13,8 @@ describe('AnimationService', () => {
         {
           provide: PerformanceService,
           useValue: {
-            getProfile: () => ({ complexAnimations: true }),
             mode: () => 'high',
+            profile: () => ({ complexAnimations: true }),
           },
         },
       ],

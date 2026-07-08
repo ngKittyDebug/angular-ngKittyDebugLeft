@@ -49,7 +49,7 @@ import { initialTamagotchiState } from './tamagotchi-initial';
 
 const SAVE_DEBOUNCE_MS = 300;
 
-export function snapshotState(store: {
+function snapshotState(store: {
   achievementList: () => TamagotchiStateModel['achievementList'];
   dailyRoutine: () => TamagotchiStateModel['dailyRoutine'];
   error: () => TamagotchiStateModel['error'];
@@ -93,7 +93,6 @@ export const TamagotchiStore = signalStore(
     hasPokemon: computed(() => store.pokemon() !== null),
     isTraining: computed(() => store.trainingStartedAt() !== null),
     canEvolve: computed(() => store.evolutionProgress().isReady && !store.isEvolving()),
-    snapshot: computed(() => snapshotState(store)),
     unreadNotifications: computed(() =>
       sortNotificationsByPriority(
         store.notificationList().filter((notification) => !notification.read),

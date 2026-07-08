@@ -1,7 +1,8 @@
-import { computed, signal } from '@angular/core';
+import { computed, signal, type WritableSignal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Observable, of } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, type MockedObject, vi } from 'vitest';
+import { GAME_BALANCE } from '../constants/game-balance.constants';
 import { EvolutionService } from '../services/evolution.service';
 import { PerformanceService } from '../services/performance.service';
 import { TamagotchiInitService } from '../services/tamagotchi-init.service';
@@ -12,10 +13,11 @@ import {
   createInitialPokemonStatus,
   createInitialTamagotchiState,
 } from '../store/tamagotchi-initial';
-import { snapshotState, TamagotchiStore } from '../store/tamagotchi.store';
+import { TamagotchiStore } from '../store/tamagotchi.store';
 import { TamagotchiNotificationService } from '../../ui/services/notification.service';
 import { PERFORMANCE_PROFILES } from '../constants/performance-mode.constants';
 import { TIMER_CONFIG } from '../constants/timer.constants';
+import type { PerformanceMode } from '../models/performance-mode.model';
 import type { PokemonStatusModel } from '../models/pokemon-status.model';
 import { TamagotchiFacade } from './tamagotchi.facade';
 
@@ -102,7 +104,6 @@ function createStoreMock(
 
   return {
     ...storeSignals,
-    snapshot: computed(() => snapshotState(storeSignals)),
     ...methods,
   };
 }
@@ -113,6 +114,8 @@ describe('TamagotchiFacade', () => {
   let mockNotificationService: MockedObject<
     Pick<TamagotchiNotificationService, 'notifyEvolutionReady' | 'processStatusAlerts'>
   >;
+  let mockPerformanceMode: WritableSignal<PerformanceMode>;
+  let mockTimerService: MockedObject<Pick<TimerService, 'startTimer' | 'stopTimer'>>;
   let facade: TamagotchiFacade;
 
   beforeEach(() => {
@@ -135,17 +138,18 @@ describe('TamagotchiFacade', () => {
       Pick<EvolutionService, 'buildEvolutionData' | 'triggerEvolution'>
     >;
 
+    mockPerformanceMode = signal<PerformanceMode>('balanced');
     const mockPerformanceMethods = {
-      getProfile: vi.fn(() => PERFORMANCE_PROFILES.balanced),
       setMode: vi.fn(),
-    } as const satisfies MockedObject<Pick<PerformanceService, 'getProfile' | 'setMode'>>;
+    } as const satisfies MockedObject<Pick<PerformanceService, 'setMode'>>;
 
     const mockPerformanceService = {
       ...mockPerformanceMethods,
-      mode: signal('balanced' as const),
+      mode: mockPerformanceMode.asReadonly(),
+      profile: computed(() => PERFORMANCE_PROFILES[mockPerformanceMode()]),
     };
 
-    const mockTimerService = {
+    mockTimerService = {
       startTimer: vi.fn(() => ({ cleanup: vi.fn() })),
       stopTimer: vi.fn(),
     } as const satisfies MockedObject<Pick<TimerService, 'startTimer' | 'stopTimer'>>;
@@ -164,6 +168,10 @@ describe('TamagotchiFacade', () => {
     });
 
     facade = TestBed.inject(TamagotchiFacade);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   describe('Happy Path', () => {
@@ -236,6 +244,43 @@ describe('TamagotchiFacade', () => {
 
         expect(mockStore.interactWithPokemon).toHaveBeenCalledTimes(1);
         expect(mockStore.restartTrainingTimer).not.toHaveBeenCalled();
+      });
+
+      it('должен разблокировать действие по ближайшему cooldown-deadline', () => {
+        vi.useFakeTimers();
+
+        const startedAt = Date.now();
+
+        mockStore.status.set({
+          ...createInitialPokemonStatus(),
+          lastFeedTime: startedAt,
+        });
+        TestBed.flushEffects();
+
+        expect(facade.canFeed()).toBe(false);
+
+        vi.advanceTimersByTime(GAME_BALANCE.ACTION_EFFECTS.FEED.cooldown + 1_000);
+        TestBed.flushEffects();
+
+        expect(facade.canFeed()).toBe(true);
+      });
+    });
+
+    describe('Performance mode', () => {
+      it('должен перезапускать таймер при смене профиля производительности', () => {
+        TestBed.flushEffects();
+
+        const firstHandle = mockTimerService.startTimer.mock.results[0]?.value;
+
+        mockPerformanceMode.set('low');
+        TestBed.flushEffects();
+
+        expect(mockTimerService.stopTimer).toHaveBeenNthCalledWith(1, firstHandle);
+        expect(mockTimerService.startTimer).toHaveBeenCalledTimes(2);
+        expect(mockTimerService.startTimer.mock.calls[1]?.[2]).toEqual({
+          intervalMs: PERFORMANCE_PROFILES.low.decayIntervalMs,
+          pauseWhenHidden: true,
+        });
       });
     });
 
@@ -336,8 +381,8 @@ describe('TamagotchiFacade', () => {
           {
             provide: PerformanceService,
             useValue: {
-              getProfile: vi.fn(() => PERFORMANCE_PROFILES.balanced),
-              mode: signal('balanced' as const),
+              mode: signal<PerformanceMode>('balanced').asReadonly(),
+              profile: computed(() => PERFORMANCE_PROFILES.balanced),
               setMode: vi.fn(),
             },
           },

@@ -21,9 +21,7 @@ export class AnimationService {
   }
 
   public shouldUseComplexAnimations(): boolean {
-    this.performanceService.mode();
-
-    return this.performanceService.getProfile().complexAnimations && !this.prefersReducedMotion();
+    return this.performanceService.profile().complexAnimations && !this.prefersReducedMotion();
   }
 
   public enableGpuCompositing(element: HTMLElement): void {

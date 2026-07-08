@@ -28,7 +28,7 @@ describe('PerformanceService', () => {
   describe('Happy Path', () => {
     it('должен использовать high-профиль по умолчанию', () => {
       expect(service.mode()).toBe(DEFAULT_PERFORMANCE_MODE);
-      expect(service.getProfile().complexAnimations).toBe(true);
+      expect(service.profile().complexAnimations).toBe(true);
     });
 
     it('должен сохранять выбранный режим производительности', () => {
@@ -36,13 +36,13 @@ describe('PerformanceService', () => {
 
       expect(storageMock.getItem(PERFORMANCE_MODE_STORAGE_KEY)).toBe('low');
       expect(service.mode()).toBe('low');
-      expect(service.getProfile().decayIntervalMs).toBe(30_000);
+      expect(service.profile().decayIntervalMs).toBe(30_000);
     });
 
     it('должен возвращать профиль выбранного режима', () => {
       service.setMode('high');
 
-      expect(service.getProfile().complexAnimations).toBe(true);
+      expect(service.profile().complexAnimations).toBe(true);
     });
   });
 

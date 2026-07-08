@@ -1,4 +1,4 @@
-import { computed, DestroyRef, effect, inject, Service, untracked } from '@angular/core';
+import { computed, DestroyRef, effect, inject, Service, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { GAME_BALANCE } from '../constants/game-balance.constants';
 import { isTamagotchiSelectionError } from '../constants/selection-errors.constants';
@@ -13,7 +13,7 @@ import { rollTrainingExperienceGain } from '../helpers/training-reward.helper';
 import { EvolutionService } from '../services/evolution.service';
 import { PerformanceService } from '../services/performance.service';
 import { TamagotchiInitService } from '../services/tamagotchi-init.service';
-import { TamagotchiService } from '../services/tamagotchi.service';
+import { type TamagotchiActionContext, TamagotchiService } from '../services/tamagotchi.service';
 import {
   type TamagotchiTimerContext,
   TimerService,
@@ -24,8 +24,10 @@ import type { InteractionEventModel } from '../models/interaction.model';
 import type { PerformanceMode } from '../models/performance-mode.model';
 import type { PokemonModel } from '../models/pokemon.model';
 import type { StatusType } from '../models/pokemon-status.model';
-import type { ActionType, TamagotchiStateModel } from '../models/tamagotchi-state.model';
+import type { ActionCooldowns, ActionType } from '../models/tamagotchi-state.model';
 import { TamagotchiNotificationService } from '../../ui/services/notification.service';
+
+const COOLDOWN_ACTIONS: ActionType[] = ['feed', 'water', 'care', 'play', 'train', 'sleep'];
 
 @Service({ autoProvided: false })
 export class TamagotchiFacade {
@@ -38,7 +40,8 @@ export class TamagotchiFacade {
   private readonly tamagotchiService = inject(TamagotchiService);
   private readonly timerService = inject(TimerService);
   private readonly isInitialized = computed(() => this.store.initialized());
-  private readonly state = this.store.snapshot;
+  private readonly now = signal(Date.now());
+  private readonly actionContext = computed(() => this.buildActionContext(this.now()));
 
   public readonly displayedStatusTypes = DISPLAYED_STATUS_TYPES;
 
@@ -84,9 +87,7 @@ export class TamagotchiFacade {
   });
 
   public readonly cooldowns = computed(() => {
-    const current = this.state();
-
-    return this.tamagotchiService.getActionCooldowns(this.toActionContext(current));
+    return this.tamagotchiService.getActionCooldowns(this.actionContext());
   });
 
   public readonly canCare = computed(() => this.isActionAllowed('care'));
@@ -111,9 +112,7 @@ export class TamagotchiFacade {
         return;
       }
 
-      this.performanceService.mode();
-
-      const profile = this.performanceService.getProfile();
+      const profile = this.performanceService.profile();
       const handle = this.timerService.startTimer(
         () => this.buildTimerContext(),
         (result) => this.handleTimerTick(result),
@@ -131,7 +130,7 @@ export class TamagotchiFacade {
     effect(() => {
       const ready = this.canEvolve();
       const species = this.pokemon();
-      const readyNotifiedAt = this.store.evolutionProgress().readyNotifiedAt;
+      const readyNotifiedAt = untracked(() => this.store.evolutionProgress().readyNotifiedAt);
 
       if (ready && readyNotifiedAt === null && species) {
         this.notificationService.notifyEvolutionReady(species.name);
@@ -161,6 +160,22 @@ export class TamagotchiFacade {
         clearTimeout(timeoutId);
       });
     });
+
+    effect((onCleanup) => {
+      const delay = this.nextCooldownRefreshDelay(this.cooldowns());
+
+      if (delay === null) {
+        return;
+      }
+
+      const timeoutId = setTimeout(() => {
+        this.now.set(Date.now());
+      }, delay);
+
+      onCleanup(() => {
+        clearTimeout(timeoutId);
+      });
+    });
   }
 
   public bootstrapFromProfile(): void {
@@ -169,6 +184,9 @@ export class TamagotchiFacade {
 
   public onAction(action: ActionType): void {
     const now = Date.now();
+    const actionContext = this.buildActionContext(now);
+
+    this.now.set(now);
 
     if (this.isSleeping() && action === 'sleep') {
       const bonusEnergy = calculateSleepRestorationBonus(this.status().lastSleepTime, now);
@@ -184,7 +202,7 @@ export class TamagotchiFacade {
         return;
       }
 
-      const validation = this.tamagotchiService.validateActionFromState(this.state(), action);
+      const validation = this.tamagotchiService.validateAction(actionContext, action);
 
       if (!validation.allowed) {
         return;
@@ -197,7 +215,7 @@ export class TamagotchiFacade {
       return;
     }
 
-    const validation = this.tamagotchiService.validateActionFromState(this.state(), action);
+    const validation = this.tamagotchiService.validateAction(actionContext, action);
 
     if (!validation.allowed) {
       return;
@@ -272,14 +290,12 @@ export class TamagotchiFacade {
   }
 
   private buildTimerContext(): TamagotchiTimerContext {
-    const current = this.state();
-
     return {
-      dailyRoutine: current.dailyRoutine,
-      isSleeping: current.isSleeping,
-      lastActionTime: current.lastActionTime,
-      lastDecayTime: current.lastDecayTime,
-      status: current.status,
+      dailyRoutine: this.store.dailyRoutine(),
+      isSleeping: this.isSleeping(),
+      lastActionTime: this.store.lastActionTime(),
+      lastDecayTime: this.store.lastDecayTime(),
+      status: this.status(),
     };
   }
 
@@ -300,7 +316,7 @@ export class TamagotchiFacade {
   }
 
   private isActionAllowed(action: ActionType): boolean {
-    return this.tamagotchiService.validateActionFromState(this.state(), action).allowed;
+    return this.tamagotchiService.validateAction(this.actionContext(), action).allowed;
   }
 
   private resolveEvolvedPokemon(species: PokemonModel | null): PokemonModel | null {
@@ -317,13 +333,26 @@ export class TamagotchiFacade {
     return this.evolutionService.triggerEvolution(species, evolutionData)?.evolvedPokemon ?? null;
   }
 
-  private toActionContext(state: TamagotchiStateModel) {
+  private buildActionContext(now: number): TamagotchiActionContext {
     return {
-      hasPokemon: state.pokemon !== null,
-      isSleeping: state.isSleeping,
-      isTraining: state.trainingStartedAt !== null,
-      lastActionTime: state.lastActionTime,
-      status: state.status,
+      hasPokemon: this.hasPokemon(),
+      isSleeping: this.isSleeping(),
+      isTraining: this.trainingStartedAt() !== null,
+      lastActionTime: this.store.lastActionTime(),
+      now,
+      status: this.status(),
     };
+  }
+
+  private nextCooldownRefreshDelay(cooldowns: ActionCooldowns): number | null {
+    const remainingList = COOLDOWN_ACTIONS.map((action) => cooldowns[action]).filter(
+      (remaining): remaining is number => remaining !== null && remaining > 0,
+    );
+
+    if (remainingList.length === 0) {
+      return null;
+    }
+
+    return Math.max(0, Math.min(...remainingList));
   }
 }

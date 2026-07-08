@@ -1,10 +1,9 @@
 import type { ElementRef } from '@angular/core';
 import {
-  afterNextRender,
+  afterRenderEffect,
   ChangeDetectionStrategy,
   Component,
   computed,
-  DestroyRef,
   inject,
   input,
   output,
@@ -31,7 +30,6 @@ import { GestureService } from '../../services/gesture.service';
 })
 export class PokemonSpriteComponent {
   private readonly animationService = inject(AnimationService);
-  private readonly destroyRef = inject(DestroyRef);
   private readonly gestureService = inject(GestureService);
   private readonly spriteImage = viewChild<ElementRef<HTMLImageElement>>('spriteImage');
   private pointerHandledInteraction = false;
@@ -84,18 +82,26 @@ export class PokemonSpriteComponent {
   });
 
   public constructor() {
-    afterNextRender(() => {
-      const image = this.spriteImage()?.nativeElement;
+    afterRenderEffect({
+      write: (onCleanup) => {
+        const image = this.spriteImage()?.nativeElement;
 
-      if (!image || !this.useComplexAnimations()) {
-        return;
-      }
+        if (!image) {
+          return;
+        }
 
-      this.animationService.enableGpuCompositing(image);
+        if (!this.useComplexAnimations()) {
+          this.animationService.releaseGpuCompositing(image);
 
-      this.destroyRef.onDestroy(() => {
-        this.animationService.releaseGpuCompositing(image);
-      });
+          return;
+        }
+
+        this.animationService.enableGpuCompositing(image);
+
+        onCleanup(() => {
+          this.animationService.releaseGpuCompositing(image);
+        });
+      },
     });
   }
 

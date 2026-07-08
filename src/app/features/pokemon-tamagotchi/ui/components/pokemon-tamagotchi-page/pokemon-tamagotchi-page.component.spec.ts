@@ -16,7 +16,7 @@ import {
   createInitialPokemonStatus,
   createInitialTamagotchiState,
 } from '../../../data/store/tamagotchi-initial';
-import { snapshotState, TamagotchiStore } from '../../../data/store/tamagotchi.store';
+import { TamagotchiStore } from '../../../data/store/tamagotchi.store';
 import { TamagotchiFacade } from '../../../data/facades/tamagotchi.facade';
 import { AnimationService } from '../../services/animation.service';
 import { TamagotchiNotificationService } from '../../services/notification.service';
@@ -150,7 +150,6 @@ function createStoreMock(
 
   return {
     ...storeSignals,
-    snapshot: computed(() => snapshotState(storeSignals)),
     ...methods,
   };
 }
@@ -170,8 +169,8 @@ function createFacadeProviders() {
     {
       provide: PerformanceService,
       useValue: {
-        getProfile: vi.fn(() => ({ decayIntervalMs: 30_000 })),
-        mode: signal('balanced' as const),
+        mode: signal('balanced' as const).asReadonly(),
+        profile: computed(() => ({ decayIntervalMs: 30_000 })),
         setMode: vi.fn(),
       },
     },

@@ -1,7 +1,7 @@
-import { signal } from '@angular/core';
+import { computed, signal, type WritableSignal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import type { ComponentFixture } from '@angular/core/testing';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { PERFORMANCE_PROFILES } from '../../../data/constants/performance-mode.constants';
 import { TEST_POKEMON } from '../../../data/fixtures/tamagotchi-arbitraries';
@@ -11,17 +11,19 @@ import { createInitialPokemonStatus } from '../../../data/store/tamagotchi-initi
 import { AnimationService } from '../../services/animation.service';
 import { PokemonSpriteComponent } from './pokemon-sprite.component';
 
-type PerformanceServiceSpriteMock = Pick<PerformanceService, 'getProfile' | 'mode'>;
+type PerformanceServiceSpriteMock = Pick<PerformanceService, 'mode' | 'profile'>;
 
 async function createFixture(
   complexAnimations = true,
+  options: { complexAnimationsSignal?: WritableSignal<boolean> } = {},
 ): Promise<ComponentFixture<PokemonSpriteComponent>> {
+  const complexAnimationsSignal = options.complexAnimationsSignal ?? signal(complexAnimations);
   const performanceServiceMock = {
-    getProfile: vi.fn(() => ({
-      ...PERFORMANCE_PROFILES.high,
-      complexAnimations,
-    })),
     mode: signal<PerformanceMode>('high').asReadonly(),
+    profile: computed(() => ({
+      ...PERFORMANCE_PROFILES.high,
+      complexAnimations: complexAnimationsSignal(),
+    })),
   } as const satisfies PerformanceServiceSpriteMock;
 
   await TestBed.configureTestingModule({
@@ -95,6 +97,22 @@ describe('PokemonSpriteComponent', () => {
       fixture.detectChanges();
 
       expect(image.classList.contains('sprite-pop')).toBe(false);
+    });
+
+    it('должен синхронизировать gpu compositing при смене режима производительности', async () => {
+      const complexAnimations = signal(true);
+      const fixture = await createFixture(true, { complexAnimationsSignal: complexAnimations });
+      const image = fixture.nativeElement.querySelector('img') as HTMLImageElement;
+
+      await fixture.whenStable();
+
+      expect(image.classList.contains('tamagotchi-gpu-layer')).toBe(true);
+
+      complexAnimations.set(false);
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(image.classList.contains('tamagotchi-gpu-layer')).toBe(false);
     });
 
     it('должен очищать pointer-сессию, если эволюция началась до pointer up', async () => {
