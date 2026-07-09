@@ -11,6 +11,7 @@ import enTranslations from '../../../../public/i18n/pokemonTamagotchi/en.json';
 // eslint-disable-next-line import/extensions -- JSON fixtures must be imported with their extension.
 import ruTranslations from '../../../../public/i18n/pokemonTamagotchi/ru.json';
 import { ChildrenRouts } from '../features.routes';
+import { GAMES_PATH } from '../games/games.routes';
 import { feedPokemonState, selectPokemonState } from './data/store/tamagotchi-state-transitions';
 import { createInitialTamagotchiState } from './data/store/tamagotchi-initial';
 import { TamagotchiStore } from './data/store/tamagotchi.store';
@@ -126,8 +127,10 @@ describe('PokemonTamagotchi — смоук', () => {
       expect(loaded).toBe(PokemonTamagotchiPageComponent);
     });
 
-    it('должен быть подключён в общих роутах приложения', () => {
-      const registered = ChildrenRouts.some((entry) => entry.path === TAMAGOTCHI_PATH);
+    it('должен быть подключён дочерним роутом раздела games', () => {
+      const gamesRoute = ChildrenRouts.find((entry) => entry.path === GAMES_PATH);
+
+      const registered = gamesRoute?.children?.some((entry) => entry.path === TAMAGOTCHI_PATH);
 
       expect(registered).toBe(true);
     });

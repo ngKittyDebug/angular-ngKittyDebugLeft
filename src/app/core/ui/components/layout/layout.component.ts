@@ -11,6 +11,7 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import { ResponsiveRenderDirective } from '@shared/directives/responsive-render.directive';
 import { TABLE_BREAKPOINT } from './constants/breakpoints';
 import { HideContentDirective } from '@shared/directives/hide-content.directive';
+import { MascotComponent } from '../mascot/mascot.component';
 
 @Component({
   selector: 'left-paw-layout',
@@ -23,6 +24,7 @@ import { HideContentDirective } from '@shared/directives/hide-content.directive'
     TranslocoDirective,
     ResponsiveRenderDirective,
     HideContentDirective,
+    MascotComponent,
   ],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss',
