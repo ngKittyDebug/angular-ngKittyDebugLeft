@@ -33,7 +33,7 @@ const TAMAGOTCHI_SELECTION_TEMPLATE = `
   <left-paw-pokemon-tamagotchi-selection
     [isCurrentSelection]="isCurrentTamagotchiSelection()"
     [loading]="selectionFacade.isSelectionLoading()"
-    tamagotchiRoute="/tamagotchi"
+    [tamagotchiRoute]="tamagotchiRoute"
     (selectRequested)="onTamagotchiSelectRequested()"
   />
 `;
@@ -163,6 +163,12 @@ describe('PokemonProfileInfoComponent', () => {
         const button = fixture.nativeElement.querySelector('.tamagotchi-selection__button');
 
         expect(button?.textContent?.trim()).toBe('Selected for Tamagotchi');
+      });
+
+      it('должен вести к актуальному маршруту тамагочи', () => {
+        const link = fixture.nativeElement.querySelector('a');
+
+        expect(link?.getAttribute('href')).toBe('/games/tamagotchi');
       });
     });
 

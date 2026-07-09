@@ -104,6 +104,7 @@ function createStoreMock(
   } = {},
 ) {
   const initial = createInitialTamagotchiState();
+  const pokemon = overrides.pokemon === undefined ? TEST_POKEMON : overrides.pokemon;
 
   const methods = {
     applyStatusDecay: vi.fn(),
@@ -132,7 +133,7 @@ function createStoreMock(
     dailyRoutine: signal(initial.dailyRoutine),
     error: signal(overrides.error ?? initial.error),
     evolutionProgress: signal(initial.evolutionProgress),
-    hasPokemon: signal((overrides.pokemon ?? TEST_POKEMON) !== null),
+    hasPokemon: signal(pokemon !== null),
     initialized: signal(overrides.initialized ?? true),
     interactionHistory: signal(initial.interactionHistory),
     isEvolving: signal(false),
@@ -142,7 +143,7 @@ function createStoreMock(
     lastDecayTime: signal(initial.lastDecayTime),
     lastSaveTime: signal(initial.lastSaveTime),
     notificationList: signal(initial.notificationList),
-    pokemon: signal(overrides.pokemon ?? TEST_POKEMON),
+    pokemon: signal(pokemon),
     status: signal(createInitialPokemonStatus()),
     trainingExperienceReward: signal<number | null>(null),
     trainingStartedAt: signal<number | null>(null),
@@ -349,6 +350,79 @@ describe('PokemonTamagotchiPageComponent', () => {
 
       expect(loading).toBeTruthy();
       expect(loading?.textContent).toContain('Loading…');
+    });
+  });
+
+  describe('Negative Cases', () => {
+    let fixture: ComponentFixture<PokemonTamagotchiPageComponent>;
+    let storeMock: ReturnType<typeof createStoreMock>;
+
+    beforeEach(async () => {
+      storeMock = createStoreMock({
+        error: 'noSelection',
+        initialized: true,
+        pokemon: null,
+      });
+
+      await TestBed.configureTestingModule({
+        imports: [
+          PokemonTamagotchiPageComponent,
+          TranslocoTestingModule.forRoot({
+            langs: {
+              en: {
+                pokemonTamagotchi: {
+                  page: PAGE_TRANSLATIONS,
+                },
+              },
+            },
+            translocoConfig: {
+              availableLangs: ['en'],
+              defaultLang: 'en',
+            },
+          }),
+        ],
+        providers: [
+          provideRouter([]),
+          ...createFacadeProviders(),
+          {
+            provide: TamagotchiStore,
+            useValue: storeMock,
+          },
+          { provide: TamagotchiInitService, useValue: createInitPageMock() },
+          { provide: TamagotchiSelectionService, useValue: createSelectionPageMock() },
+        ],
+      }).compileComponents();
+
+      fixture = TestBed.createComponent(PokemonTamagotchiPageComponent);
+      fixture.detectChanges();
+    });
+
+    it('должен показывать пустое состояние, когда покемон не выбран', () => {
+      const title = fixture.nativeElement.querySelector('.tamagotchi-page__empty-title');
+      const hint = fixture.nativeElement.querySelector('.tamagotchi-page__empty-hint');
+      const link = fixture.nativeElement.querySelector('a[routerLink="/profile"]');
+
+      expect(title?.textContent?.trim()).toBe('No Pokémon selected');
+      expect(hint?.textContent?.trim()).toBe('Choose a Pokémon');
+      expect(link?.textContent?.trim()).toBe('Open profile');
+    });
+
+    it('должен показывать ошибку эволюционировавшего покемона', () => {
+      storeMock.error.set('evolvedPokemon');
+      fixture.detectChanges();
+
+      const error = fixture.nativeElement.querySelector('.tamagotchi-page__error');
+
+      expect(error?.textContent?.trim()).toBe('Evolved');
+    });
+
+    it('должен показывать ошибку загрузки выбранного покемона', () => {
+      storeMock.error.set('loadFailed');
+      fixture.detectChanges();
+
+      const error = fixture.nativeElement.querySelector('.tamagotchi-page__error');
+
+      expect(error?.textContent?.trim()).toBe('Load failed');
     });
   });
 });

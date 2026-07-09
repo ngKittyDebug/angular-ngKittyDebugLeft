@@ -9,6 +9,7 @@ import {
 import { TranslocoDirective } from '@jsverse/transloco';
 import { TuiButton } from '@taiga-ui/core';
 import { TuiBadge, TuiButtonLoading } from '@taiga-ui/kit';
+import { GAMES_PATH } from '@features/games/games.routes';
 import { TamagotchiSelectionFacade } from '@features/pokemon-profile/data/facades/tamagotchi-selection.facade';
 import { ProfileFacade } from '@features/profile/data/facades/profile.facade';
 import { TAMAGOTCHI_PATH } from '@shared/constants/tamagotchi-routes';
@@ -35,7 +36,7 @@ export class PokemonProfileInfoComponent implements OnInit {
 
   protected readonly profileFacade = inject(ProfileFacade);
   protected readonly selectionFacade = inject(TamagotchiSelectionFacade);
-  protected readonly tamagotchiRoute = `/${TAMAGOTCHI_PATH}`;
+  protected readonly tamagotchiRoute = `/${GAMES_PATH}/${TAMAGOTCHI_PATH}`;
 
   protected readonly isFavorite = computed(() => {
     const currentName = this.pokemonProfileData()?.name;
