@@ -192,6 +192,8 @@ The repo is a `pnpm-workspace.yaml` monorepo: the root Angular app + `partykit-s
 
 The config the skills read is **committed** in `docs/agents/` — same reasoning as the skills themselves: shared skills need shared config, or they behave differently for each of us. Read the file when a skill sends you there.
 
+> **If a skill tells you to write agent config into `CLAUDE.md` — write it here instead.** `setup-matt-pocock-skills` picks `CLAUDE.md` over `AGENTS.md` when both exist, a rule that predates our layout: here `CLAUDE.md` is a five-line import stub, so obeying it would split the config across two files and undo the single source of truth.
+
 - **[Issue tracker](docs/agents/issue-tracker.md):** local markdown — PRDs and issues under `.scratch/<feature-slug>/`, one directory per feature. The GitHub Projects board is a **separate** flow (`pr-review` / `codebase-audit` routines), not this one.
 - **[Triage labels](docs/agents/triage-labels.md):** each triage role string equals its canonical name (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`).
 - **[Domain docs](docs/agents/domain.md):** single-context — one `CONTEXT.md` + `docs/adr/` at the repo root.
