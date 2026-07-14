@@ -81,6 +81,8 @@ src/app/
 
 **Don't invent new aliases on the fly.** Sharing code between Angular and `partykit-server/` → extend `shared-game/` under `@game/*`. Inside Angular → extend `@core/*`, `@features/*`, `@shared/*`.
 
+**`shared-game/<game>/` is warranted ONLY when the code is consumed by BOTH the client AND `partykit-server/`** — a genuine wire/logic contract (like `frenzy`: types + tuning config + deterministic helpers both sides run). A client-only game (no partykit party, e.g. a bot opponent computed in the browser) lives ENTIRELY in its feature — `pokemon-tamagotchi` and `pokemon-battle` are the model: types in `data/models/`, engine/logic in `data/services/`. Do not park a single-side game's implementation in `shared-game/` — the `@game` alias is a contract layer, not a dumping ground for "game-ish" code.
+
 **Routing:** all routes lazy-load via `loadComponent`. The root route loads `LayoutComponent`, which renders child feature routes in its `<router-outlet>` (children in `features.routes.ts`). Games (frenzy, tamagotchi, pokemon-battle) are child routes of `/games` (`games.routes.ts`); `authGuard` sits on each game's own route (and on the hub page), not on the `/games` parent — except `frenzy`, which stays guard-free (public game) and carries `data: { immersive: true }` for full-bleed layout. Auth state lives in localStorage (key `loginFormData`); `authGuard`/`guestGuard` read it and cross-redirect.
 
 **Auth forms are intentionally mixed-paradigm** (teaching demo of both form APIs): `login-form` — Reactive Forms, `signup-form` — Signal Forms (`@angular/forms/signals`). Accepted trade-off, not tech debt — recorded in `.claude/skills/_shared/project-review-criteria.md` §5 (slug `mixed-form-paradigms`), so the review skills don't flag it.

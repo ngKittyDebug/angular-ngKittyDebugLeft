@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { BattleEngine } from '@game/pokemon-battle/battle-engine';
-import type { BattleCommand, BattlePokemon } from '@game/pokemon-battle/types';
+import { BattleEngine } from './battle-engine';
+import type { BattleCommand, BattlePokemon } from '../models/battle.model';
 
 describe('BattleEngine', () => {
   describe('Happy Path', () => {

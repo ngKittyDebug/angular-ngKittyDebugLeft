@@ -5,7 +5,7 @@ import { EMPTY, pipe } from 'rxjs';
 import { catchError, switchMap, tap } from 'rxjs/operators';
 import { PokemonBattleApiService } from '../api/pokemon/services/pokemon-battle-api.service';
 import { convertPokemonDetailApiDataToBattlePokemon } from '../api/pokemon/helpers/pokemon-converter';
-import type { BattlePokemon } from '@game/pokemon-battle/types';
+import type { BattlePokemon } from '../models/battle.model';
 
 export interface PokemonBattleStoreState {
   pokemonList: BattlePokemon[];

@@ -1,4 +1,4 @@
-import type { BattlePokemon } from '@game/pokemon-battle/types';
+import type { BattlePokemon } from '../models/battle.model';
 
 export const BULBASAUR_FIXTURE = {
   id: 1,

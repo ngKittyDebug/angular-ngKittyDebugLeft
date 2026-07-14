@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslocoDirective } from '@jsverse/transloco';
-import type { BattlePokemon } from '@game/pokemon-battle/types';
+import type { BattlePokemon } from '../../../../data/models/battle.model';
 import { PokemonTeamSelectionFacade } from '../../../../data/facades/pokemon-team-selection.facade';
 
 @Component({

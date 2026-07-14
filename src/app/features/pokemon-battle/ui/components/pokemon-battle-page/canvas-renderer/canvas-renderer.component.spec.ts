@@ -2,7 +2,7 @@ import { NgZone } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { BattleState } from '@game/pokemon-battle/types';
+import type { BattleState } from '../../../../data/models/battle.model';
 import { CanvasRendererComponent } from './canvas-renderer.component';
 import { AudioManagerService } from '../../../../data/services/audio-manager.service';
 

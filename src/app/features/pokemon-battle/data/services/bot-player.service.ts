@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import type { BattleCommand, BattleState } from '@game/pokemon-battle/types';
+import type { BattleCommand, BattleState } from '../models/battle.model';
 
 @Injectable({
   providedIn: 'root',
