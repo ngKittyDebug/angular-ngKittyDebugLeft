@@ -2,7 +2,7 @@
 
 This file provides guidance to coding agents working in this repository.
 
-**This is the single source of truth.** `CLAUDE.md`, `GEMINI.md` and `AGENT.md` are symlinks to this file — edit `AGENTS.md`, never a symlink, and every agent picks the change up. Don't re-fork them into standalone copies; that is exactly the drift this layout removes.
+**This is the single source of truth. Edit this file — never `CLAUDE.md` or `GEMINI.md`.** Those two hold nothing but an import directive that pulls this file in (`@AGENTS.md` for Claude Code, `@./AGENTS.md` for Gemini CLI), so a change here reaches every agent. Deliberately not symlinks: Git for Windows checks symlinks out as plain text files unless the user enabled Developer Mode, which would silently reduce a teammate's project memory to the literal string `AGENTS.md`. Don't re-fork them into standalone copies — that drift is what this layout removes.
 
 ## Working principles
 
