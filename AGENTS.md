@@ -183,7 +183,7 @@ The repo is a `pnpm-workspace.yaml` monorepo: the root Angular app + `partykit-s
 
 ## Common pitfalls (learned the hard way)
 
-- **Not every config path is tracked:** `.planning/`, `.scratch/`, `docs/adr/` and `.claude/settings.local.json` are gitignored — check `.gitignore` before assuming an edit lands in the repo (cloud routines only see what's committed). Tracked config changes go through the normal commit → PR flow.
+- **Not every config path is tracked:** `.planning/`, `.scratch/` and `.claude/settings.local.json` are gitignored — check `.gitignore` before assuming an edit lands in the repo (cloud routines only see what's committed). Tracked config changes go through the normal commit → PR flow.
 - **Relative path counting:** deep `../../../../../` chains are fragile — use a path alias (`@environments/*`, `@game/frenzy/*`). If you count a relative path anyway and doubt it — `pnpm typecheck` first.
 - **`pnpm typecheck`** uses `tsc -b --noEmit` (project references) and **does not check Angular templates** — verify template bindings with `pnpm build`. New non-`src/` folders aren't checked automatically either; add them to `tsconfig.app.json` `include` (e.g. `shared-game/**/*.ts`).
 - **Vitest exits 1 when no tests are found.** Either add a smoke spec or use `--passWithNoTests`. Keep at least one spec per workspace.
@@ -200,4 +200,6 @@ The config the skills read is **committed** in `docs/agents/` — same reasoning
 
 **[CONTEXT.md](CONTEXT.md) is the ubiquitous language — committed, and binding.** When your output names a domain concept (an issue title, a test name, a variable, a hypothesis), use the term as the glossary defines it and avoid the synonyms it explicitly rejects. It is precise about distinctions the code keeps blurring — owned vs orphan float, decor vs kelp, aura vs badge, HUD vs debug overlay. If a concept you need isn't there yet, that's a signal: either you're inventing language the project doesn't use, or there's a real gap worth filling.
 
-Per-developer and gitignored: `.scratch/` (issue drafts), `docs/adr/`, `.planning/`. If they're absent, proceed silently — the producer skills create them lazily.
+**`docs/adr/` records decisions that are already settled — committed, and binding the same way.** Read the ADRs touching the area you're about to work in; several of them _forbid_ things (ADR-0006 rules out quality tiers for weak devices — visually-neutral fixes only). If your proposal contradicts an accepted ADR, say so out loud and argue for reopening it — never quietly override it.
+
+Per-developer and gitignored: `.scratch/` (issue and spec drafts), `.planning/`. If they're absent, proceed silently — the producer skills create them lazily.
