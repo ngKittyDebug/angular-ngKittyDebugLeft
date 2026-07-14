@@ -52,10 +52,8 @@ Thumbs.db
 # Local markdown issue tracker for agent skills (see docs/agents/issue-tracker.md)
 .scratch/
 
-# docs/agents/ is COMMITTED — the skills are shared, so the config they read is too.
-
-# Local domain glossary for grill-with-docs (per-developer, not for merge)
-CONTEXT.md
+# docs/agents/ and CONTEXT.md are COMMITTED — the skills are shared, so the config
+# they read and the ubiquitous language they speak are shared too.
 
 # Local architecture decision records (per-developer, not for merge)
 docs/adr/
