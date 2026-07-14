@@ -146,7 +146,9 @@ Test structure/naming rules live in `docs/Стайлгайд тестирова�
 
 ## Skills (project-scoped)
 
-Skills live **committed** in `.agents/skills/` and are symlinked into `.claude/skills/`, so fresh clones and cloud environments get them out of the box. The lockfile `skills-lock.json` at the repo root tracks every one (source repo + path + content hash). Both are tracked — changes land through the normal commit → PR flow.
+Skills live **committed** in `.agents/skills/` (the source of truth, read directly by Codex/Copilot/Gemini-class agents) and are mirrored into `.claude/skills/`, which is the only place Claude Code looks. Fresh clones and cloud environments get them out of the box. The lockfile `skills-lock.json` at the repo root tracks every one (source repo + path + content hash). All three are tracked — changes land through the normal commit → PR flow.
+
+**`.claude/skills/` holds real copies, NOT symlinks — keep it that way.** The `skills` CLI symlinks by default, but Git for Windows probes NTFS and sets `core.symlinks=false`, so a symlink is checked out as a plain text file containing the target path. Claude Code then finds a file where it expects a skill folder and silently loads nothing — a teammate on Windows would have no skills at all and no error to tell them. The duplication is the price of that; it is markdown, not binaries.
 
 **25 skills from two sources:**
 
@@ -161,12 +163,13 @@ Project-specific skills (`pr-review`, `codebase-audit`, `codebase-audit-workspac
 
 > Don't re-add granular per-topic Angular skills (`angular-component`, `angular-signals`, …) — their content lives inside `angular-developer/references/`.
 
-**Upgrading:** `npx skills update -p` in the repo root refreshes every locked skill from its source and updates `.agents/skills/` + `skills-lock.json` together.
+**Upgrading — use `pnpm skills:update`, not the bare CLI.** It runs `skills update -p` (refreshing `.agents/skills/` + `skills-lock.json`) and then `pnpm skills:sync`, which re-mirrors every locked skill into `.claude/skills/` as a real directory. Running the CLI alone leaves the `.claude/skills/` copies stale or re-symlinked, and hand-authored skills are never touched either way.
 
-**Two traps:**
+**Three traps:**
 
 - **The mattpocock set is deliberately curated — don't restore what was cut.** `npx skills add mattpocock/skills` installs all 39 upstream skills; 17 were removed as irrelevant here: everything under upstream `deprecated/` and `in-progress/`, Matt's `personal/` ones (`obsidian-vault`, `edit-article`), course-authoring ones (`scaffold-exercises`, `migrate-to-shoehorn`), and the setup-only pair (`setup-pre-commit`, `git-guardrails-claude-code`). Re-running `add` brings them all back — prune again, and delete them from `skills-lock.json` too, or `update -p` reinstates them. `setup-pre-commit` is the sharp one: it is model-invocable and this repo already has Husky + lint-staged + typecheck + tests, so it can re-scaffold a working config.
-- **Personal skills shadow project skills.** Same-named skills in `~/.claude/skills/` (a separate global lockfile, `~/.agents/.skill-lock.json`) win over the project copies. Updating only the project set leaves your stale global copy in charge. Update both: `npx skills update -p` here, and refresh the global set separately.
+- **Personal skills shadow project skills.** Same-named skills in `~/.claude/skills/` (a separate global lockfile, `~/.agents/.skill-lock.json`) win over the project copies. Updating only the project set leaves your stale global copy in charge. Update both: `pnpm skills:update` here, and refresh the global set separately.
+- **`skills <command> --help` RUNS the command.** The CLI does not treat `--help` on a subcommand as a help request — `skills update --help` performs an update, `skills experimental_install --help` performs an install. Only the bare `skills --help` prints usage. Don't probe subcommands for flags on a dirty tree.
 
 ## MCP servers (`.mcp.json`)
 
