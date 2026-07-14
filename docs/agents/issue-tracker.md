@@ -32,7 +32,3 @@ Used by `/wayfinder`. The **map** is a file with one **child** file per ticket.
 ## Note on GitHub
 
 This repo also has GitHub Issues + a Projects board (used by the `pr-review` / `codebase-audit` routines). Those flows are separate — the engineering skills covered by this file (`to-spec`, `to-tickets`, `triage`, `wayfinder`) work against `.scratch/` unless the user explicitly points them at GitHub.
-
-## Legacy
-
-`.scratch/frenzy-decor-perf/` still carries a `PRD.md` from before the `to-prd` → `to-spec` rename. New efforts use `spec.md`.
