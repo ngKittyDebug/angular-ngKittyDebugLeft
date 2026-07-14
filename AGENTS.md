@@ -183,15 +183,17 @@ The repo is a `pnpm-workspace.yaml` monorepo: the root Angular app + `partykit-s
 
 ## Common pitfalls (learned the hard way)
 
-- **Not every config path is tracked:** `.planning/`, `docs/agents/`, `docs/adr/`, `CONTEXT.md` and `.claude/settings.local.json` are gitignored — check `.gitignore` before assuming an edit lands in the repo (cloud routines only see what's committed). Tracked config changes go through the normal commit → PR flow.
+- **Not every config path is tracked:** `.planning/`, `.scratch/`, `docs/adr/`, `CONTEXT.md` and `.claude/settings.local.json` are gitignored — check `.gitignore` before assuming an edit lands in the repo (cloud routines only see what's committed). Tracked config changes go through the normal commit → PR flow.
 - **Relative path counting:** deep `../../../../../` chains are fragile — use a path alias (`@environments/*`, `@game/frenzy/*`). If you count a relative path anyway and doubt it — `pnpm typecheck` first.
 - **`pnpm typecheck`** uses `tsc -b --noEmit` (project references) and **does not check Angular templates** — verify template bindings with `pnpm build`. New non-`src/` folders aren't checked automatically either; add them to `tsconfig.app.json` `include` (e.g. `shared-game/**/*.ts`).
 - **Vitest exits 1 when no tests are found.** Either add a smoke spec or use `--passWithNoTests`. Keep at least one spec per workspace.
 
 ## Agent skills
 
-`docs/agents/` is **local-only (gitignored)**, like `.planning/` — absent in a fresh clone; fall back to the one-line summaries below.
+The config the skills read is **committed** in `docs/agents/` — same reasoning as the skills themselves: shared skills need shared config, or they behave differently for each of us. Read the file when a skill sends you there.
 
-- **Issue tracker:** local markdown — issues and PRDs live under `.scratch/<feature-slug>/` (gitignored). See `docs/agents/issue-tracker.md`.
-- **Triage labels:** default vocabulary — each triage role string equals its canonical name. See `docs/agents/triage-labels.md`.
-- **Domain docs:** single-context — one `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+- **[Issue tracker](docs/agents/issue-tracker.md):** local markdown — PRDs and issues under `.scratch/<feature-slug>/`, one directory per feature. The GitHub Projects board is a **separate** flow (`pr-review` / `codebase-audit` routines), not this one.
+- **[Triage labels](docs/agents/triage-labels.md):** each triage role string equals its canonical name (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`).
+- **[Domain docs](docs/agents/domain.md):** single-context — one `CONTEXT.md` + `docs/adr/` at the repo root.
+
+The **outputs** stay per-developer and gitignored: `.scratch/` (issue drafts), `CONTEXT.md` (domain glossary), `docs/adr/`, `.planning/`. If they're absent, proceed silently — the producer skills create them lazily.

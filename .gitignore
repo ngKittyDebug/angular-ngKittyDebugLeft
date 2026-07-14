@@ -52,8 +52,7 @@ Thumbs.db
 # Local markdown issue tracker for agent skills (see docs/agents/issue-tracker.md)
 .scratch/
 
-# Per-developer agent-skills config (issue tracker, triage labels, domain docs)
-docs/agents/
+# docs/agents/ is COMMITTED — the skills are shared, so the config they read is too.
 
 # Local domain glossary for grill-with-docs (per-developer, not for merge)
 CONTEXT.md
