@@ -38,23 +38,21 @@
       <p class="tamagotchi-page__loading-text">{{ t('loading') }}</p>
     </section>
   } @else if (facade.selectionBlocked()) {
-    @if (facade.error() === 'noSelection') {
-      <tui-block-status class="tamagotchi-page__empty" role="status" size="m">
-        <h2 class="tamagotchi-page__empty-title">{{ t('noSelectionTitle') }}</h2>
-        <p class="tamagotchi-page__empty-hint">{{ t('noSelectionHint') }}</p>
-        <a appearance="primary" routerLink="/profile" tuiButton type="button">
-          {{ t('goToProfile') }}
-        </a>
-      </tui-block-status>
-    } @else if (facade.error() === 'evolvedPokemon') {
-      <tui-block-status class="tamagotchi-page__empty" role="status" size="m">
+    <tui-block-status class="tamagotchi-page__empty" role="status" size="m">
+      @if (facade.error() === 'noSelection') {
+        <ng-container>
+          <h2 class="tamagotchi-page__empty-title">{{ t('noSelectionTitle') }}</h2>
+          <p class="tamagotchi-page__empty-hint">{{ t('noSelectionHint') }}</p>
+          <a appearance="primary" routerLink="/profile" tuiButton type="button">
+            {{ t('goToProfile') }}
+          </a>
+        </ng-container>
+      } @else if (facade.error() === 'evolvedPokemon') {
         <p class="tamagotchi-page__error">{{ t('evolvedPokemonError') }}</p>
-      </tui-block-status>
-    } @else if (facade.error() === 'loadFailed') {
-      <tui-block-status class="tamagotchi-page__empty" role="status" size="m">
+      } @else if (facade.error() === 'loadFailed') {
         <p class="tamagotchi-page__error">{{ t('loadFailedError') }}</p>
-      </tui-block-status>
-    }
+      }
+    </tui-block-status>
   } @else if (facade.pokemon(); as species) {
     @if (facade.systemErrorMessageKey(); as messageKey) {
       <div
