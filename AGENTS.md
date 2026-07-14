@@ -1,8 +1,8 @@
 # AGENTS.md
 
-This file provides guidance to coding agents working in this repository.
+Guidance for coding agents working in this repository.
 
-**This is the single source of truth. Edit this file — never `CLAUDE.md` or `GEMINI.md`.** Those two hold nothing but an import directive that pulls this file in (`@AGENTS.md` for Claude Code, `@./AGENTS.md` for Gemini CLI), so a change here reaches every agent. Deliberately not symlinks: Git for Windows checks symlinks out as plain text files unless the user enabled Developer Mode, which would silently reduce a teammate's project memory to the literal string `AGENTS.md`. Don't re-fork them into standalone copies — that drift is what this layout removes.
+**Single source of truth — edit this file, never `CLAUDE.md` or `GEMINI.md`.** Those two hold only an import directive pointing here, so a change lands for every agent at once. Rationale and the Windows caveat: [docs/skills.md](docs/skills.md).
 
 ## Working principles
 
@@ -17,18 +17,20 @@ Tasks and issues are tracked on GitHub Projects: https://github.com/orgs/ngKitty
 
 ## Commands
 
+**Node 24 (`.nvmrc`) — run `nvm use` first.** There is no `engines` field to enforce it, and an older Node makes the Angular CLI fail in ways that don't name the real cause.
+
 ```bash
 pnpm start          # dev server at http://localhost:4200
 pnpm dev            # Angular (4200) + PartyKit (1999) via concurrently
 pnpm build          # production build
 pnpm test           # run tests once (Vitest via Angular builder)
 pnpm test:cov       # tests with coverage report
-pnpm lint           # ESLint check
-pnpm lint:fix       # ESLint auto-fix
-pnpm format         # Prettier check
-pnpm format:fix     # Prettier auto-fix
-pnpm typecheck      # strict TypeScript check (tsc --noEmit)
+pnpm test:party     # partykit-server tests only
+pnpm lint           # ESLint check          (lint:fix   — auto-fix)
+pnpm format         # Prettier check        (format:fix — auto-fix)
+pnpm typecheck      # strict TypeScript check (tsc -b --noEmit)
 pnpm preflight      # typecheck + lint + format + test in one shot (run before pushing)
+pnpm skills:update  # refresh agent skills (see docs/skills.md — never the bare CLI)
 ```
 
 Run a single test file: `pnpm ng test --include="**/main-catalog-page.component.spec.ts"`
@@ -36,7 +38,7 @@ Any workspace script: `pnpm --filter @ng-kitty/partykit-server <script>`
 
 ## Git conventions
 
-**Branch naming** (enforced by `validate-branch-name` on pre-push):
+**Branch naming** (enforced by `validate-branch-name` on pre-push) — note the separator is required **after** the prefix: `feat/foo_bar` ✓, `feat/foo` ✗.
 
 ```
 (chore|feat|fix|docs|style|refactor|perf)/<word>[-_]<word>
@@ -46,8 +48,8 @@ Any workspace script: `pnpm --filter @ng-kitty/partykit-server <script>`
 
 **Hooks:**
 
-- `pre-commit`: lint-staged (ESLint + Prettier on staged files) + `typecheck`
-- `pre-push`: validate-branch-name + `pnpm lint` + `pnpm test`
+- `pre-commit` — lint-staged + `typecheck`. lint-staged runs `format:fix` on staged JSON/MD and **modifies** them: if the commit fails (e.g. on typecheck), re-stage before retrying.
+- `pre-push` — validate-branch-name + full `pnpm lint` + full `pnpm test`. Don't bypass with `--no-verify` unless explicitly authorized.
 
 ## Architecture
 
@@ -130,6 +132,8 @@ In tests use `TranslocoTestingModule.forRoot(...)` (see `fainted-modal.component
 - **Signals preferred** over observables for local state (`@angular-eslint/prefer-signals` warn)
 - **File suffixes:** `.component.ts`, `.service.ts`, `.directive.ts`, `.pipe.ts`, `.resolver.ts`
 - **Styles:** SCSS per component; the global style preprocessor includes `src/styles`, so partials import without relative paths
+- **Code comments are English**, whatever language the conversation is in. Only write one to state a constraint the code can't show — not to narrate what the next line does.
+- **Lazy-feature services are provided at the route level**, not `root` — a service only one lazy feature uses has no business in the root injector. When a component's logic outgrows it, extract a same-named facade rather than fattening the component.
 
 ## Frenzy deep-dives (docs/)
 
@@ -144,43 +148,16 @@ Consult them BEFORE changing `shared-game/`, `partykit-server/`, or `features/fr
 
 Test structure/naming rules live in `docs/Стайлгайд тестирование.md` (AAA, one meaning per test, `describe` hierarchy, mocks/fixtures conventions). The other `docs/Стайлгайд *.md` files cover PR, commits, naming and folder structure — the review skills enforce them.
 
-## Skills (project-scoped)
+## Skills & MCP servers — consult before writing code
 
-Skills live **committed** in `.agents/skills/` (the source of truth, read directly by Codex/Copilot/Gemini-class agents) and are mirrored into `.claude/skills/`, which is the only place Claude Code looks. Fresh clones and cloud environments get them out of the box. The lockfile `skills-lock.json` at the repo root tracks every one (source repo + path + content hash). All three are tracked — changes land through the normal commit → PR flow.
+**Order for Angular/Taiga work:** the matching skill first (`angular-developer` is an umbrella — read the `references/*.md` it points to) → the `angular-cli` MCP for version-correct Angular APIs the skill doesn't settle → the `taiga-ui` MCP for any `Tui*` symbol/package/snippet. **Don't assert a v22 Angular or Taiga v5 API from memory — both drift from training data.** If an MCP is unavailable, fall back to this file and say you couldn't verify against live docs; don't assert an API you can't confirm.
 
-**`.claude/skills/` holds real copies, NOT symlinks — keep it that way.** The `skills` CLI symlinks by default, but Git for Windows probes NTFS and sets `core.symlinks=false`, so a symlink is checked out as a plain text file containing the target path. Claude Code then finds a file where it expects a skill folder and silently loads nothing — a teammate on Windows would have no skills at all and no error to tell them. The duplication is the price of that; it is markdown, not binaries.
+| MCP (`.mcp.json`) | Use it for                                                                                                                                               |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `taiga-ui`        | Which package a `Tui*` symbol comes from, the right component for a use case, usage snippets, migration guides. Check **before** writing any Taiga code. |
+| `angular-cli`     | `list_projects` (run first), `get_best_practices` (load before writing Angular code), `search_documentation`, `onpush_zoneless_migration`.               |
 
-**25 skills from two sources:**
-
-| Source                                                      | Count | Skills                                                                                                                                                                                                                                                                                                                                                                                               |
-| ----------------------------------------------------------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `angular/skills` + `alfredoperez/angular-best-practices`    | 3     | `angular-developer` (umbrella — components, signals, forms, DI, routing, ARIA, styling, testing; body is an index into `references/*.md`), `angular-best-practices-signalstore` (NgRx SignalStore), `angular-best-practices-transloco` (Transloco i18n)                                                                                                                                              |
-| [`mattpocock/skills`](https://github.com/mattpocock/skills) | 22    | **engineering:** `tdd`, `triage`, `code-review`, `research`, `prototype`, `implement`, `diagnosing-bugs`, `codebase-design`, `domain-modeling`, `improve-codebase-architecture`, `resolving-merge-conflicts`, `to-spec`, `to-tickets`, `wayfinder`, `grill-with-docs`, `ask-matt`, `setup-matt-pocock-skills` — **productivity:** `grilling`, `grill-me`, `handoff`, `teach`, `writing-great-skills` |
-
-Project-specific skills (`pr-review`, `codebase-audit`, `codebase-audit-workspace`, `_shared`) are hand-authored and live directly in `.claude/skills/` — they are not in the lockfile and `skills update` never touches them.
-
-**When writing or reviewing Angular/Taiga code, consult in this order:** the matching skill (read the `angular-developer/references/*.md` file the umbrella points to) → the `angular-cli` MCP for version-correct Angular APIs the skill doesn't settle → the `taiga-ui` MCP for any `Tui*` symbol/package/snippet. Don't assert a v22 Angular or Taiga v5 API from memory — both drift from training data.
-
-> Don't re-add granular per-topic Angular skills (`angular-component`, `angular-signals`, …) — their content lives inside `angular-developer/references/`.
-
-**Upgrading — use `pnpm skills:update`, not the bare CLI.** It runs `skills update -p` (refreshing `.agents/skills/` + `skills-lock.json`) and then `pnpm skills:sync`, which re-mirrors every locked skill into `.claude/skills/` as a real directory. Running the CLI alone leaves the `.claude/skills/` copies stale or re-symlinked, and hand-authored skills are never touched either way.
-
-**Three traps:**
-
-- **The mattpocock set is deliberately curated — don't restore what was cut.** `npx skills add mattpocock/skills` installs all 39 upstream skills; 17 were removed as irrelevant here: everything under upstream `deprecated/` and `in-progress/`, Matt's `personal/` ones (`obsidian-vault`, `edit-article`), course-authoring ones (`scaffold-exercises`, `migrate-to-shoehorn`), and the setup-only pair (`setup-pre-commit`, `git-guardrails-claude-code`). Re-running `add` brings them all back — prune again, and delete them from `skills-lock.json` too, or `update -p` reinstates them. `setup-pre-commit` is the sharp one: it is model-invocable and this repo already has Husky + lint-staged + typecheck + tests, so it can re-scaffold a working config.
-- **Personal skills shadow project skills.** Same-named skills in `~/.claude/skills/` (a separate global lockfile, `~/.agents/.skill-lock.json`) win over the project copies. Updating only the project set leaves your stale global copy in charge. Update both: `pnpm skills:update` here, and refresh the global set separately.
-- **`skills <command> --help` RUNS the command.** The CLI does not treat `--help` on a subcommand as a help request — `skills update --help` performs an update, `skills experimental_install --help` performs an install. Only the bare `skills --help` prints usage. Don't probe subcommands for flags on a dirty tree.
-
-## MCP servers (`.mcp.json`)
-
-Two MCP servers are configured — prefer them over memory for library-version-sensitive questions, since both Taiga v5 and Angular v22+ APIs drift from training data.
-
-| Server        | Command                           | Use it for                                                                                                                                                                                 |
-| ------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `taiga-ui`    | `@taiga-ui/mcp` (`llms-full.txt`) | Source of truth for Taiga UI — which package a `Tui*` symbol comes from, the right component for a use case, usage snippets, migration guides. Check it **before** writing any Taiga code. |
-| `angular-cli` | `@angular/cli mcp`                | Workspace + version-correct guidance — `list_projects` (run first), `get_best_practices` (load before writing Angular code), `search_documentation`, `onpush_zoneless_migration`.          |
-
-When an MCP server is unavailable, fall back to the conventions in this file and say you couldn't verify against live docs — don't assert an API you can't confirm.
+Skills are committed in `.agents/skills/` and mirrored into `.claude/skills/`, locked by `skills-lock.json`. Your agent already lists them with descriptions — no inventory here on purpose, it only goes stale. Upgrade with `pnpm skills:update`, **never the bare CLI**; the set is deliberately curated and the CLI has sharp edges — [docs/skills.md](docs/skills.md).
 
 ## Workspace structure (pnpm)
 
@@ -208,10 +185,7 @@ The repo is a `pnpm-workspace.yaml` monorepo: the root Angular app + `partykit-s
 
 - **Not every config path is tracked:** `.planning/`, `docs/agents/`, `docs/adr/`, `CONTEXT.md` and `.claude/settings.local.json` are gitignored — check `.gitignore` before assuming an edit lands in the repo (cloud routines only see what's committed). Tracked config changes go through the normal commit → PR flow.
 - **Relative path counting:** deep `../../../../../` chains are fragile — use a path alias (`@environments/*`, `@game/frenzy/*`). If you count a relative path anyway and doubt it — `pnpm typecheck` first.
-- **Husky `pre-commit`** runs `lint-staged + typecheck`. lint-staged includes `format:fix` on staged JSON/MD, which **modifies** them. If the commit fails (e.g. typecheck) — re-stage the modified files before retrying.
-- **Husky `pre-push`** runs `pnpm lint + pnpm test` — full lint + full test suite. Don't bypass with `--no-verify` unless explicitly authorized.
-- **`pnpm typecheck`** uses `tsc -b --noEmit` (project references). New non-`src/` folders aren't checked automatically — add them to `tsconfig.app.json` `include` (e.g. `shared-game/**/*.ts`).
-- **Branch naming pattern** requires at least one `_` or `-` separator AFTER the type prefix: `feat/foo_bar` ✓, `feat/foo` ✗.
+- **`pnpm typecheck`** uses `tsc -b --noEmit` (project references) and **does not check Angular templates** — verify template bindings with `pnpm build`. New non-`src/` folders aren't checked automatically either; add them to `tsconfig.app.json` `include` (e.g. `shared-game/**/*.ts`).
 - **Vitest exits 1 when no tests are found.** Either add a smoke spec or use `--passWithNoTests`. Keep at least one spec per workspace.
 
 ## Agent skills
