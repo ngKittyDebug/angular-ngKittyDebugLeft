@@ -128,12 +128,12 @@ describe('PokemonBattleStore', () => {
 
     vi.mocked(mockApiService.getPokemonList!).mockReturnValue(
       of({
-        results: [MOCK_RAW_POKEMON],
-        total: 1,
+        pokemonList: [MOCK_RAW_POKEMON],
+        totalCount: 1,
       }),
     );
 
-    store.loadPokemons({ page: 0, limit: 10 });
+    store.loadPokemonList({ page: 0, limit: 10 });
 
     expect(mockApiService.getPokemonList).toHaveBeenCalledWith(10, 0);
 
@@ -151,7 +151,7 @@ describe('PokemonBattleStore', () => {
       throwError(() => new Error('API Error')),
     );
 
-    store.loadPokemons({ page: 0, limit: 10 });
+    store.loadPokemonList({ page: 0, limit: 10 });
 
     expect(store.isLoading()).toBe(false);
     expect(store.error()).toBe('API Error');

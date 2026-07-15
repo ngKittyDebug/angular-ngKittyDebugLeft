@@ -17,18 +17,18 @@ export class PokemonTeamSelectionComponent {
 
   // Event handlers starting with "on" as per styleguide
   public onPokemonClick(pokemon: BattlePokemon): void {
-    this.facade.onSelectPokemon(pokemon);
+    this.facade.selectPokemon(pokemon);
   }
 
   public onPrevClick(): void {
-    this.facade.onPrevPage();
+    this.facade.prevPage();
   }
 
   public onNextClick(): void {
-    this.facade.onNextPage();
+    this.facade.nextPage();
   }
 
   public onStartBattleClick(): void {
-    this.facade.onStartBattleClick();
+    this.facade.startBattle();
   }
 }

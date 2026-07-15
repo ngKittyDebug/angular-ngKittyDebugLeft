@@ -34,11 +34,11 @@ export class PokemonBattleArenaComponent {
 
   // Event handlers starting with "on" as per styleguide
   public onSelectMove(move: PokemonMove): void {
-    this.facade.onSelectMove(move);
+    this.facade.selectMove(move);
   }
 
   public onSelectTarget(target: BattlePokemon): void {
-    this.facade.onSelectTarget(target);
+    this.facade.selectTarget(target);
   }
 
   public onCancelMoveSelection(): void {
@@ -58,10 +58,10 @@ export class PokemonBattleArenaComponent {
   }
 
   public onEventTriggered(event: BattleEvent): void {
-    this.facade.onEventTriggered(event);
+    this.facade.triggerEvent(event);
   }
 
   public onAnimationFinished(): void {
-    this.facade.onAnimationFinished();
+    this.facade.finishAnimation();
   }
 }

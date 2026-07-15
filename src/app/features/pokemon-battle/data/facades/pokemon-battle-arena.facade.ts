@@ -34,15 +34,15 @@ export class PokemonBattleArenaFacade {
 
   // Battle play state
   public readonly battleState = signal<BattleState | null>(null);
-  public readonly textLog = signal<{ key: string; params?: Record<string, unknown> }[]>([]);
+  public readonly textLogList = signal<{ key: string; params?: Record<string, unknown> }[]>([]);
   public readonly isAnimating = signal<boolean>(false);
 
   // Doubles selection state
-  public readonly pendingCommands = signal<BattleCommand[]>([]);
+  public readonly pendingCommandList = signal<BattleCommand[]>([]);
   public readonly currentSelectingPokemonIndex = signal<number>(0);
   public readonly selectedMove = signal<PokemonMove | null>(null);
 
-  public readonly activeAlivePlayerPokemons = computed(() => {
+  public readonly activeAlivePlayerPokemonList = computed(() => {
     const state = this.battleState();
 
     if (!state) {
@@ -54,7 +54,7 @@ export class PokemonBattleArenaFacade {
       .filter((p): p is BattlePokemon => !!p && p.hp > 0);
   });
 
-  public readonly activeAliveOpponentPokemons = computed(() => {
+  public readonly activeAliveOpponentPokemonList = computed(() => {
     const state = this.battleState();
 
     if (!state) {
@@ -67,7 +67,7 @@ export class PokemonBattleArenaFacade {
   });
 
   public readonly currentSelectingPokemon = computed(() => {
-    const pokemons = this.activeAlivePlayerPokemons();
+    const pokemons = this.activeAlivePlayerPokemonList();
     const index = this.currentSelectingPokemonIndex();
 
     if (index >= 0 && index < pokemons.length) {
@@ -81,7 +81,7 @@ export class PokemonBattleArenaFacade {
     this.resetBattle();
   }
 
-  public onSelectMove(move: PokemonMove): void {
+  public selectMove(move: PokemonMove): void {
     const state = this.battleState();
 
     if (!state || state.status !== 'waiting-for-commands' || this.isAnimating()) {
@@ -96,14 +96,14 @@ export class PokemonBattleArenaFacade {
 
     this.selectedMove.set(move);
 
-    const targets = this.activeAliveOpponentPokemons();
+    const targets = this.activeAliveOpponentPokemonList();
 
     if (targets.length === 1) {
-      this.onSelectTarget(targets[0]);
+      this.selectTarget(targets[0]);
     }
   }
 
-  public onSelectTarget(target: BattlePokemon): void {
+  public selectTarget(target: BattlePokemon): void {
     const state = this.battleState();
     const currentPokemon = this.currentSelectingPokemon();
     const move = this.selectedMove();
@@ -118,14 +118,14 @@ export class PokemonBattleArenaFacade {
       targetId: target.id,
     };
 
-    this.pendingCommands.update((cmds) => [...cmds, command]);
+    this.pendingCommandList.update((cmds) => [...cmds, command]);
     this.selectedMove.set(null);
 
     const nextIndex = this.currentSelectingPokemonIndex() + 1;
 
     this.currentSelectingPokemonIndex.set(nextIndex);
 
-    if (nextIndex >= this.activeAlivePlayerPokemons().length) {
+    if (nextIndex >= this.activeAlivePlayerPokemonList().length) {
       this.resolveTurnSequence();
     }
   }
@@ -135,7 +135,7 @@ export class PokemonBattleArenaFacade {
   }
 
   public resetSelection(): void {
-    this.pendingCommands.set([]);
+    this.pendingCommandList.set([]);
     this.currentSelectingPokemonIndex.set(0);
     this.selectedMove.set(null);
   }
@@ -144,17 +144,20 @@ export class PokemonBattleArenaFacade {
     this.audioManager.toggle();
   }
 
-  public onVolumeChange(volume: number): void {
+  public changeVolume(volume: number): void {
     this.audioManager.setVolume(volume);
   }
 
-  public onEventTriggered(event: BattleEvent): void {
+  public triggerEvent(event: BattleEvent): void {
     if (event.message) {
-      this.textLog.update((logs) => [...logs, { key: 'raw', params: { message: event.message } }]);
+      this.textLogList.update((logs) => [
+        ...logs,
+        { key: 'raw', params: { message: event.message } },
+      ]);
     }
   }
 
-  public onAnimationFinished(): void {
+  public finishAnimation(): void {
     this.isAnimating.set(false);
   }
 
@@ -174,10 +177,10 @@ export class PokemonBattleArenaFacade {
       this.battleState.set(null);
     }
 
-    this.textLog.set([]);
+    this.textLogList.set([]);
     this.isAnimating.set(false);
 
-    this.pendingCommands.set([]);
+    this.pendingCommandList.set([]);
     this.currentSelectingPokemonIndex.set(0);
     this.selectedMove.set(null);
   }
@@ -191,10 +194,13 @@ export class PokemonBattleArenaFacade {
 
     const currentTurn = state.turn;
 
-    const botCommands = this.botPlayerService.getCommands(state);
-    const events = this.engine.resolveTurn(this.pendingCommands(), botCommands);
+    const botCommands = this.botPlayerService.getCommandList(state);
+    const events = this.engine.resolveTurn(this.pendingCommandList(), botCommands);
 
-    this.textLog.update((logs) => [...logs, { key: 'roundHeader', params: { turn: currentTurn } }]);
+    this.textLogList.update((logs) => [
+      ...logs,
+      { key: 'roundHeader', params: { turn: currentTurn } },
+    ]);
 
     this.isAnimating.set(true);
 
@@ -204,7 +210,7 @@ export class PokemonBattleArenaFacade {
     this.battleState.set(structuredClone(this.engine.getState()));
 
     // Reset selection state for next turn
-    this.pendingCommands.set([]);
+    this.pendingCommandList.set([]);
     this.currentSelectingPokemonIndex.set(0);
     this.selectedMove.set(null);
   }

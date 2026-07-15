@@ -11,7 +11,7 @@ export function convertPokemonDetailApiDataToBattlePokemon(
     speed: raw.stats.find((s) => s.stat.name === 'speed')?.base_stat ?? 50,
   };
 
-  const types = raw.types.map((t) => t.type.name);
+  const typeList = raw.types.map((t) => t.type.name);
 
   // We map the sprites using standard front_default and back_default.
   // Gifs are preferred if available in raw.sprites.other.showdown, but front_default is guaranteed.
@@ -23,7 +23,7 @@ export function convertPokemonDetailApiDataToBattlePokemon(
   const backSprite =
     raw.sprites.other.showdown?.back_default || raw.sprites.back_default || frontSprite;
 
-  const moves = convertPokemonDetailApiDataToMoves(raw);
+  const moveList = convertPokemonDetailApiDataToPokemonMoveList(raw);
 
   return {
     id: raw.id,
@@ -31,18 +31,20 @@ export function convertPokemonDetailApiDataToBattlePokemon(
     maxHp: stats.hp,
     hp: stats.hp,
     stats,
-    types,
+    types: typeList,
     sprites: {
       front: frontSprite,
       back: backSprite,
     },
-    moves,
+    moves: moveList,
   };
 }
 
-export function convertPokemonDetailApiDataToMoves(raw: PokemonDetailApiData): PokemonMove[] {
-  const pokemonTypes = raw.types.map((t) => t.type.name.toLowerCase());
-  const primaryType = pokemonTypes[0] || 'normal';
+export function convertPokemonDetailApiDataToPokemonMoveList(
+  raw: PokemonDetailApiData,
+): PokemonMove[] {
+  const pokemonTypeList = raw.types.map((t) => t.type.name.toLowerCase());
+  const primaryType = pokemonTypeList[0] || 'normal';
 
   // Move dictionary mapping common move names to type and power
   const moveDict: Record<string, { type: string; power: number }> = {
@@ -104,44 +106,44 @@ export function convertPokemonDetailApiDataToMoves(raw: PokemonDetailApiData): P
     return { name, type, power: 40 };
   };
 
-  const moves: PokemonMove[] = [];
+  const moveList: PokemonMove[] = [];
 
   // 1. Add tackle or a normal move
-  moves.push(defaultNormalMove);
+  moveList.push(defaultNormalMove);
 
   // 2. Add type matching move
   const typeMatchingMove = raw.moves.find((m) => {
     const inferred = inferMove(m.move.name);
 
-    return pokemonTypes.includes(inferred.type);
+    return pokemonTypeList.includes(inferred.type);
   });
 
   if (typeMatchingMove) {
-    moves.push(inferMove(typeMatchingMove.move.name));
+    moveList.push(inferMove(typeMatchingMove.move.name));
   } else if (raw.moves.length > 0) {
-    moves.push(inferMove(raw.moves[0].move.name));
+    moveList.push(inferMove(raw.moves[0].move.name));
   } else {
     if (primaryType === 'fire') {
-      moves.push({ name: 'ember', type: 'fire', power: 40 });
+      moveList.push({ name: 'ember', type: 'fire', power: 40 });
     } else if (primaryType === 'water') {
-      moves.push({ name: 'water-gun', type: 'water', power: 40 });
+      moveList.push({ name: 'water-gun', type: 'water', power: 40 });
     } else if (primaryType === 'grass') {
-      moves.push({ name: 'vine-whip', type: 'grass', power: 45 });
+      moveList.push({ name: 'vine-whip', type: 'grass', power: 45 });
     } else if (primaryType === 'poison') {
-      moves.push({ name: 'poison-sting', type: 'poison', power: 30 });
+      moveList.push({ name: 'poison-sting', type: 'poison', power: 30 });
     }
   }
 
-  // Ensure unique moves
-  const uniqueMoves: PokemonMove[] = [];
+  // Ensure unique moveList
+  const uniqueMoveList: PokemonMove[] = [];
   const seenNames = new Set<string>();
 
-  for (const mv of moves) {
+  for (const mv of moveList) {
     if (!seenNames.has(mv.name.toLowerCase())) {
       seenNames.add(mv.name.toLowerCase());
-      uniqueMoves.push(mv);
+      uniqueMoveList.push(mv);
     }
   }
 
-  return uniqueMoves;
+  return uniqueMoveList;
 }

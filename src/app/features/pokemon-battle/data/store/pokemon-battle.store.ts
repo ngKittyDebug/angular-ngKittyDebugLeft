@@ -35,7 +35,7 @@ export const PokemonBattleStore = signalStore(
   { providedIn: 'root' },
   withState(initialState),
   withMethods((store, api = inject(PokemonBattleApiService)) => ({
-    loadPokemons: rxMethod<{ page: number; limit: number }>(
+    loadPokemonList: rxMethod<{ page: number; limit: number }>(
       pipe(
         tap(({ page, limit }) =>
           patchState(store, { isLoading: true, error: null, currentPage: page, limit }),
@@ -45,13 +45,13 @@ export const PokemonBattleStore = signalStore(
 
           return api.getPokemonList(limit, offset).pipe(
             tap((data) => {
-              const mapped = data.results.map((raw) =>
+              const mapped = data.pokemonList.map((raw) =>
                 convertPokemonDetailApiDataToBattlePokemon(raw),
               );
 
               patchState(store, {
                 pokemonList: mapped,
-                totalCount: data.total,
+                totalCount: data.totalCount,
                 isLoading: false,
               });
             }),

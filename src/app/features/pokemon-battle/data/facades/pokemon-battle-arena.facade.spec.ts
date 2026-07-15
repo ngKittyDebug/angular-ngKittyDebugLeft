@@ -37,7 +37,7 @@ describe('PokemonBattleArenaFacade', () => {
       limit: signal(10),
       isLoading: signal(false),
       error: signal(null),
-      loadPokemons: vi.fn() as unknown as StoreType['loadPokemons'],
+      loadPokemonList: vi.fn() as unknown as StoreType['loadPokemonList'],
       selectPokemonForTeam: vi.fn() as unknown as StoreType['selectPokemonForTeam'],
       clearSelectedTeam: vi.fn() as unknown as StoreType['clearSelectedTeam'],
       startBattle: vi.fn() as unknown as StoreType['startBattle'],
@@ -54,7 +54,7 @@ describe('PokemonBattleArenaFacade', () => {
     } as const satisfies MockedObject<Partial<AudioManagerService>>;
 
     mockBotPlayerService = {
-      getCommands: vi.fn().mockReturnValue([]),
+      getCommandList: vi.fn().mockReturnValue([]),
     } as const satisfies MockedObject<Partial<BotPlayerService>>;
 
     TestBed.configureTestingModule({
@@ -75,7 +75,7 @@ describe('PokemonBattleArenaFacade', () => {
         expect(facade).toBeDefined();
         expect(facade.battleState()).not.toBeNull();
         expect(facade.battleState()?.playerSide.pokemons[0].name).toBe('bulbasaur');
-        expect(facade.activeAlivePlayerPokemons().length).toBe(2);
+        expect(facade.activeAlivePlayerPokemonList().length).toBe(2);
       });
     });
 
@@ -86,7 +86,7 @@ describe('PokemonBattleArenaFacade', () => {
       });
 
       it('должен изменять громкость', () => {
-        facade.onVolumeChange(0.5);
+        facade.changeVolume(0.5);
         expect(mockAudioManager.setVolume).toHaveBeenCalledWith(0.5);
       });
     });
@@ -95,23 +95,23 @@ describe('PokemonBattleArenaFacade', () => {
       it('должен переходить к следующему покемону при выборе приема и цели', () => {
         expect(facade.selectedMove()).toBeNull();
 
-        const move = facade.activeAlivePlayerPokemons()[0].moves[0];
+        const move = facade.activeAlivePlayerPokemonList()[0].moves[0];
 
-        facade.onSelectMove(move);
+        facade.selectMove(move);
         expect(facade.selectedMove()?.name).toBe(move.name);
 
-        const target = facade.activeAliveOpponentPokemons()[0];
+        const target = facade.activeAliveOpponentPokemonList()[0];
 
-        facade.onSelectTarget(target);
+        facade.selectTarget(target);
 
         expect(facade.currentSelectingPokemonIndex()).toBe(1);
         expect(facade.selectedMove()).toBeNull();
       });
 
       it('должен сбрасывать выбранный прием', () => {
-        const move = facade.activeAlivePlayerPokemons()[0].moves[0];
+        const move = facade.activeAlivePlayerPokemonList()[0].moves[0];
 
-        facade.onSelectMove(move);
+        facade.selectMove(move);
         expect(facade.selectedMove()?.name).toBe(move.name);
 
         facade.cancelMoveSelection();
@@ -119,18 +119,18 @@ describe('PokemonBattleArenaFacade', () => {
       });
 
       it('должен очищать выбор раунда', () => {
-        const move = facade.activeAlivePlayerPokemons()[0].moves[0];
+        const move = facade.activeAlivePlayerPokemonList()[0].moves[0];
 
-        facade.onSelectMove(move);
-        facade.onSelectTarget(facade.activeAliveOpponentPokemons()[0]);
+        facade.selectMove(move);
+        facade.selectTarget(facade.activeAliveOpponentPokemonList()[0]);
 
         expect(facade.currentSelectingPokemonIndex()).toBe(1);
-        expect(facade.pendingCommands().length).toBe(1);
+        expect(facade.pendingCommandList().length).toBe(1);
 
         facade.resetSelection();
 
         expect(facade.currentSelectingPokemonIndex()).toBe(0);
-        expect(facade.pendingCommands().length).toBe(0);
+        expect(facade.pendingCommandList().length).toBe(0);
         expect(facade.selectedMove()).toBeNull();
       });
 
@@ -144,30 +144,30 @@ describe('PokemonBattleArenaFacade', () => {
         opponentTeamSignal.set(opponentTeam);
         facade.resetBattle();
 
-        expect(facade.activeAliveOpponentPokemons().length).toBe(2);
+        expect(facade.activeAliveOpponentPokemonList().length).toBe(2);
 
-        const firstActivePlayer = facade.activeAlivePlayerPokemons()[0];
+        const firstActivePlayer = facade.activeAlivePlayerPokemonList()[0];
         const move1 = firstActivePlayer.moves[0];
 
-        facade.onSelectMove(move1);
+        facade.selectMove(move1);
 
-        const target1 = facade.activeAliveOpponentPokemons()[0];
+        const target1 = facade.activeAliveOpponentPokemonList()[0];
 
-        facade.onSelectTarget(target1);
+        facade.selectTarget(target1);
 
-        const secondActivePlayer = facade.activeAlivePlayerPokemons()[1];
+        const secondActivePlayer = facade.activeAlivePlayerPokemonList()[1];
         const move2 = secondActivePlayer.moves[0];
 
-        facade.onSelectMove(move2);
+        facade.selectMove(move2);
 
-        const target2 = facade.activeAliveOpponentPokemons()[0];
+        const target2 = facade.activeAliveOpponentPokemonList()[0];
 
-        facade.onSelectTarget(target2);
+        facade.selectTarget(target2);
 
         const state = facade.battleState();
 
         expect(state?.opponentSide.pokemons[0].hp).toBe(0);
-        expect(facade.activeAliveOpponentPokemons().length).toBe(1);
+        expect(facade.activeAliveOpponentPokemonList().length).toBe(1);
       });
     });
   });

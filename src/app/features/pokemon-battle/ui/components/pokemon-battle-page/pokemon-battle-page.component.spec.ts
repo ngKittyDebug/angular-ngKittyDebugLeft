@@ -35,7 +35,7 @@ describe('PokemonBattlePageComponent', () => {
       limit: signal(10),
       isLoading: signal(false),
       error: signal(null),
-      loadPokemons: vi.fn() as unknown as StoreType['loadPokemons'],
+      loadPokemonList: vi.fn() as unknown as StoreType['loadPokemonList'],
       selectPokemonForTeam: vi.fn() as unknown as StoreType['selectPokemonForTeam'],
       clearSelectedTeam: vi.fn() as unknown as StoreType['clearSelectedTeam'],
       startBattle: vi.fn() as unknown as StoreType['startBattle'],

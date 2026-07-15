@@ -33,7 +33,7 @@ describe('PokemonTeamSelectionFacade', () => {
       limit: signal(10),
       isLoading: signal(false),
       error: signal(null),
-      loadPokemons: vi.fn() as unknown as StoreType['loadPokemons'],
+      loadPokemonList: vi.fn() as unknown as StoreType['loadPokemonList'],
       selectPokemonForTeam: vi.fn() as unknown as StoreType['selectPokemonForTeam'],
       clearSelectedTeam: vi.fn() as unknown as StoreType['clearSelectedTeam'],
       startBattle: vi.fn() as unknown as StoreType['startBattle'],
@@ -49,15 +49,15 @@ describe('PokemonTeamSelectionFacade', () => {
 
   describe('Happy Path', () => {
     describe('Инициализация', () => {
-      it('должен вызывать loadPokemons на старте', () => {
+      it('должен вызывать loadPokemonList на старте', () => {
         expect(facade).toBeDefined();
-        expect(mockStore.loadPokemons).toHaveBeenCalledTimes(1);
+        expect(mockStore.loadPokemonList).toHaveBeenCalledTimes(1);
       });
     });
 
     describe('Выбор покемонов', () => {
       it('должен вызывать selectPokemonForTeam в сторе при клике', () => {
-        facade.onSelectPokemon(BULBASAUR_FIXTURE);
+        facade.selectPokemon(BULBASAUR_FIXTURE);
 
         expect(mockStore.selectPokemonForTeam).toHaveBeenNthCalledWith(1, BULBASAUR_FIXTURE);
       });
@@ -67,13 +67,13 @@ describe('PokemonTeamSelectionFacade', () => {
       it('должен загружать следующую страницу если есть куда листать', () => {
         (mockStore.totalCount as unknown as WritableSignal<number>).set(15);
         (mockStore.limit as unknown as WritableSignal<number>).set(10);
-        facade.onNextPage();
-        expect(mockStore.loadPokemons).toHaveBeenCalledWith({ page: 1, limit: 10 });
+        facade.nextPage();
+        expect(mockStore.loadPokemonList).toHaveBeenCalledWith({ page: 1, limit: 10 });
       });
 
       it('не должен перелистывать назад с первой страницы', () => {
-        facade.onPrevPage();
-        expect(mockStore.loadPokemons).not.toHaveBeenCalledWith({ page: -1, limit: 10 });
+        facade.prevPage();
+        expect(mockStore.loadPokemonList).not.toHaveBeenCalledWith({ page: -1, limit: 10 });
       });
     });
   });

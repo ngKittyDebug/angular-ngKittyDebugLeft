@@ -1,6 +1,6 @@
 @let state = facade.battleState();
 @let pokemon = facade.currentSelectingPokemon();
-@let textLog = facade.textLog();
+@let textLogList = facade.textLogList();
 
 <main class="battle-main" *transloco="let t; prefix: 'pokemonBattle.arena'">
   <div class="battle-arena">
@@ -20,7 +20,7 @@
           <h3 class="controls-title">
             {{ t('controls.turn') }} {{ facade.currentSelectingPokemonIndex() + 1 }}
             {{ t('controls.of') }}
-            {{ facade.activeAlivePlayerPokemons().length }}
+            {{ facade.activeAlivePlayerPokemonList().length }}
           </h3>
           @if (facade.currentSelectingPokemonIndex() > 0) {
             <button class="reset-selection-button" (click)="onResetSelection()">
@@ -50,7 +50,7 @@
             }}):
           </div>
           <div class="targets-grid">
-            @for (target of facade.activeAliveOpponentPokemons(); track target.id) {
+            @for (target of facade.activeAliveOpponentPokemonList(); track target.id) {
               <button class="target-button" (click)="onSelectTarget(target)">
                 <span class="target-name">{{ target.name | uppercase }}</span>
                 <span class="target-hp"
@@ -89,7 +89,7 @@
     <div class="log-panel">
       <h3 class="log-title">{{ t('log.title') }}</h3>
       <div class="log-box">
-        @for (log of textLog; track $index) {
+        @for (log of textLogList; track $index) {
           <p class="log-entry" [class.round-header]="log.key === 'roundHeader'">
             @if (log.key === 'roundHeader') {
               {{ t('log.' + log.key, log.params) }}

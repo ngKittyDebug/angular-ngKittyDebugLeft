@@ -17,14 +17,14 @@ export class PokemonTeamSelectionFacade {
   public readonly limit = this.pokemonBattleStore.limit;
 
   constructor() {
-    this.pokemonBattleStore.loadPokemons({ page: 0, limit: 10 });
+    this.pokemonBattleStore.loadPokemonList({ page: 0, limit: 10 });
   }
 
-  public onSelectPokemon(pokemon: BattlePokemon): void {
+  public selectPokemon(pokemon: BattlePokemon): void {
     this.pokemonBattleStore.selectPokemonForTeam(pokemon);
   }
 
-  public onStartBattleClick(): void {
+  public startBattle(): void {
     const selected = this.pokemonBattleStore.selectedTeam();
 
     if (selected.length !== 2) {
@@ -48,21 +48,21 @@ export class PokemonTeamSelectionFacade {
     this.pokemonBattleStore.startBattle(opponents);
   }
 
-  public onPrevPage(): void {
+  public prevPage(): void {
     const current = this.pokemonBattleStore.currentPage();
 
     if (current > 0) {
-      this.pokemonBattleStore.loadPokemons({ page: current - 1, limit: 10 });
+      this.pokemonBattleStore.loadPokemonList({ page: current - 1, limit: 10 });
     }
   }
 
-  public onNextPage(): void {
+  public nextPage(): void {
     const current = this.pokemonBattleStore.currentPage();
     const total = this.pokemonBattleStore.totalCount();
     const limit = this.pokemonBattleStore.limit();
 
     if ((current + 1) * limit < total) {
-      this.pokemonBattleStore.loadPokemons({ page: current + 1, limit: 10 });
+      this.pokemonBattleStore.loadPokemonList({ page: current + 1, limit: 10 });
     }
   }
 }

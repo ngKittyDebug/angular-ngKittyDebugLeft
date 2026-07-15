@@ -36,10 +36,10 @@ const LUNGE_DISTANCE_PX = 40;
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CanvasRendererComponent implements OnInit, OnDestroy {
-  private readonly canvasRef = viewChild<ElementRef<HTMLCanvasElement>>('battleCanvas');
+  private readonly canvasReference = viewChild<ElementRef<HTMLCanvasElement>>('battleCanvas');
   private readonly ngZone = inject(NgZone);
   private readonly audioManager = inject(AudioManagerService);
-  private ctx!: CanvasRenderingContext2D;
+  private context!: CanvasRenderingContext2D;
   private animationFrameId: number | null = null;
   private readonly imageCache = new Map<string, HTMLImageElement>();
   private readonly cryTimers: ReturnType<typeof setTimeout>[] = [];
@@ -58,7 +58,7 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
   public readonly animationFinished = output<void>();
 
   public ngOnInit(): void {
-    const canvas = this.canvasRef()?.nativeElement;
+    const canvas = this.canvasReference()?.nativeElement;
 
     if (!canvas) {
       return;
@@ -67,7 +67,7 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
     // Set standard high resolution coordinates
     canvas.width = CANVAS_WIDTH;
     canvas.height = CANVAS_HEIGHT;
-    this.ctx = canvas.getContext('2d')!;
+    this.context = canvas.getContext('2d')!;
 
     // Play initial cries at the start of battle
     this.playInitialCries();
@@ -202,8 +202,8 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
   }
 
   private render(timestamp: number): void {
-    const context = this.ctx;
-    const canvas = this.canvasRef()?.nativeElement;
+    const context = this.context;
+    const canvas = this.canvasReference()?.nativeElement;
 
     if (!canvas) {
       return;
@@ -265,11 +265,11 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
           this.currentEvent.type === 'use-move' &&
           this.currentEvent.payload?.attackerId === pokemon.id
         ) {
-          const lungeDistribution = LUNGE_DISTANCE_PX;
+          const lungeDistance = LUNGE_DISTANCE_PX;
           const factor = Math.sin(progress * Math.PI);
 
-          offsetX = lungeDistribution * factor;
-          offsetY = -lungeDistribution * 0.3 * factor;
+          offsetX = lungeDistance * factor;
+          offsetY = -lungeDistance * 0.3 * factor;
         } else if (
           this.currentEvent.type === 'damage' &&
           this.currentEvent.payload?.targetId === pokemon.id
@@ -319,11 +319,11 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
           this.currentEvent.type === 'use-move' &&
           this.currentEvent.payload?.attackerId === pokemon.id
         ) {
-          const lungeDistribution = -LUNGE_DISTANCE_PX; // Lunge left
+          const lungeDistance = -LUNGE_DISTANCE_PX; // Lunge left
           const factor = Math.sin(progress * Math.PI);
 
-          offsetX = lungeDistribution * factor;
-          offsetY = -lungeDistribution * 0.3 * factor;
+          offsetX = lungeDistance * factor;
+          offsetY = -lungeDistance * 0.3 * factor;
         } else if (
           this.currentEvent.type === 'damage' &&
           this.currentEvent.payload?.targetId === pokemon.id
@@ -368,7 +368,7 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
       this.imageCache.set(spriteUrl, img);
     }
 
-    const context = this.ctx;
+    const context = this.context;
     const oldAlpha = context.globalAlpha;
 
     context.globalAlpha = alpha;
@@ -390,7 +390,7 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
   }
 
   private drawUi(pokemon: BattlePokemon, x: number, y: number, alpha = 1.0): void {
-    const context = this.ctx;
+    const context = this.context;
     const oldAlpha = context.globalAlpha;
 
     context.globalAlpha = alpha;

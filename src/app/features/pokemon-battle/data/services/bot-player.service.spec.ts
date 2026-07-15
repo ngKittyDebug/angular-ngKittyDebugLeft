@@ -18,7 +18,7 @@ describe('BotPlayerService', () => {
     expect(service).toBeTruthy();
   });
 
-  describe('getCommands', () => {
+  describe('getCommandList', () => {
     it('должен возвращать валидную команду для активного покемона бота в 1 на 1', () => {
       const mockState: BattleState = {
         playerSide: {
@@ -61,10 +61,10 @@ describe('BotPlayerService', () => {
         turn: 1,
       };
 
-      const commands = service.getCommands(mockState);
+      const commandList = service.getCommandList(mockState);
 
-      expect(commands).toHaveLength(1);
-      const cmd = commands[0];
+      expect(commandList).toHaveLength(1);
+      const cmd = commandList[0];
 
       expect(cmd.pokemonId).toBe(4);
       expect(['scratch', 'ember']).toContain(cmd.moveName);
@@ -110,9 +110,9 @@ describe('BotPlayerService', () => {
         turn: 1,
       };
 
-      const commands = service.getCommands(mockState);
+      const commandList = service.getCommandList(mockState);
 
-      expect(commands).toHaveLength(0);
+      expect(commandList).toHaveLength(0);
     });
 
     it('должен возвращать команды для всех активных живых покемонов бота в режиме 2 на 2', () => {
@@ -174,13 +174,13 @@ describe('BotPlayerService', () => {
         turn: 1,
       };
 
-      const commands = service.getCommands(mockState);
+      const commandList = service.getCommandList(mockState);
 
-      expect(commands).toHaveLength(2);
-      expect(commands.map((c) => c.pokemonId)).toContain(4);
-      expect(commands.map((c) => c.pokemonId)).toContain(5);
-      expect([1, 2]).toContain(commands[0].targetId);
-      expect([1, 2]).toContain(commands[1].targetId);
+      expect(commandList).toHaveLength(2);
+      expect(commandList.map((c) => c.pokemonId)).toContain(4);
+      expect(commandList.map((c) => c.pokemonId)).toContain(5);
+      expect([1, 2]).toContain(commandList[0].targetId);
+      expect([1, 2]).toContain(commandList[1].targetId);
     });
   });
 });

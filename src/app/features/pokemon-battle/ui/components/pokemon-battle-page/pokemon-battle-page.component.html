@@ -8,7 +8,7 @@
     <div class="sound-controls">
       <button
         class="sound-toggle-button"
-        (click)="toggleMute()"
+        (click)="onSoundToggleClick()"
         [attr.aria-label]="soundEnabled() ? t('sound.off') : t('sound.on')"
       >
         <span class="sound-icon">{{ soundEnabled() ? '🔊' : '🔇' }}</span>

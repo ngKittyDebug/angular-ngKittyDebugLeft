@@ -30,7 +30,7 @@ export class PokemonBattlePageComponent {
   public readonly soundVolume = this.audioManager.volume;
   public readonly soundVolumePercent = computed(() => Math.round(this.soundVolume() * 100));
 
-  public toggleMute(): void {
+  public onSoundToggleClick(): void {
     this.audioManager.toggle();
   }
 
