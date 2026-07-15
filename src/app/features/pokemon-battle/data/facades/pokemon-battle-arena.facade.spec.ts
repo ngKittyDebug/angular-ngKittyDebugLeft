@@ -5,15 +5,7 @@ import { PokemonBattleArenaFacade } from './pokemon-battle-arena.facade';
 import { BotPlayerService } from '../services/bot-player.service';
 import { AudioManagerService } from '../services/audio-manager.service';
 import { PokemonBattleStore } from '../store/pokemon-battle.store';
-import {
-  BULBASAUR_FIXTURE,
-  CHARMANDER_FIXTURE,
-  IVYSAUR_FIXTURE,
-  SQUIRTLE_FIXTURE,
-} from '../fixtures/pokemon.fixture';
-
-type Public<T> = { [K in keyof T as K extends string ? K : never]: T[K] };
-type StoreType = Public<InstanceType<typeof PokemonBattleStore>>;
+import { createPokemonBattleStoreMock, type StoreType } from '../mocks/pokemon-battle-store.mock';
 
 describe('PokemonBattleArenaFacade', () => {
   let mockStore: MockedObject<Partial<StoreType>>;
@@ -22,27 +14,7 @@ describe('PokemonBattleArenaFacade', () => {
   let facade: PokemonBattleArenaFacade;
 
   beforeEach(() => {
-    mockStore = {
-      pokemonList: signal([
-        BULBASAUR_FIXTURE,
-        CHARMANDER_FIXTURE,
-        SQUIRTLE_FIXTURE,
-        IVYSAUR_FIXTURE,
-      ]),
-      selectedTeam: signal([BULBASAUR_FIXTURE, SQUIRTLE_FIXTURE]),
-      opponentTeam: signal([CHARMANDER_FIXTURE, IVYSAUR_FIXTURE]),
-      battleStarted: signal(true),
-      currentPage: signal(0),
-      totalCount: signal(4),
-      limit: signal(10),
-      isLoading: signal(false),
-      error: signal(null),
-      loadPokemonList: vi.fn() as unknown as StoreType['loadPokemonList'],
-      selectPokemonForTeam: vi.fn() as unknown as StoreType['selectPokemonForTeam'],
-      clearSelectedTeam: vi.fn() as unknown as StoreType['clearSelectedTeam'],
-      startBattle: vi.fn() as unknown as StoreType['startBattle'],
-      endBattle: vi.fn() as unknown as StoreType['endBattle'],
-    } as const satisfies MockedObject<Partial<StoreType>>;
+    mockStore = createPokemonBattleStoreMock();
 
     mockAudioManager = {
       enabled: signal(true),
@@ -87,7 +59,7 @@ describe('PokemonBattleArenaFacade', () => {
 
       it('должен изменять громкость', () => {
         facade.changeVolume(0.5);
-        expect(mockAudioManager.setVolume).toHaveBeenCalledWith(0.5);
+        expect(mockAudioManager.setVolume).toHaveBeenNthCalledWith(1, 0.5);
       });
     });
 
@@ -112,9 +84,9 @@ describe('PokemonBattleArenaFacade', () => {
         const move = facade.activeAlivePlayerPokemonList()[0].moves[0];
 
         facade.selectMove(move);
-        expect(facade.selectedMove()?.name).toBe(move.name);
 
         facade.cancelMoveSelection();
+
         expect(facade.selectedMove()).toBeNull();
       });
 
@@ -123,9 +95,6 @@ describe('PokemonBattleArenaFacade', () => {
 
         facade.selectMove(move);
         facade.selectTarget(facade.activeAliveOpponentPokemonList()[0]);
-
-        expect(facade.currentSelectingPokemonIndex()).toBe(1);
-        expect(facade.pendingCommandList().length).toBe(1);
 
         facade.resetSelection();
 

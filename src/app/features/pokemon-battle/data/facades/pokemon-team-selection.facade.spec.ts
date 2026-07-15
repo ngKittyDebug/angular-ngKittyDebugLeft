@@ -1,44 +1,21 @@
 import { TestBed } from '@angular/core/testing';
 import { signal, type WritableSignal } from '@angular/core';
-import { beforeEach, describe, expect, it, type MockedObject, vi } from 'vitest';
+import { beforeEach, describe, expect, it, type MockedObject } from 'vitest';
 import { PokemonTeamSelectionFacade } from './pokemon-team-selection.facade';
 import { PokemonBattleStore } from '../store/pokemon-battle.store';
-import {
-  BULBASAUR_FIXTURE,
-  CHARMANDER_FIXTURE,
-  IVYSAUR_FIXTURE,
-  SQUIRTLE_FIXTURE,
-} from '../fixtures/pokemon.fixture';
-
-type Public<T> = { [K in keyof T as K extends string ? K : never]: T[K] };
-type StoreType = Public<InstanceType<typeof PokemonBattleStore>>;
+import { BULBASAUR_FIXTURE } from '../fixtures/pokemon.fixture';
+import { createPokemonBattleStoreMock, type StoreType } from '../mocks/pokemon-battle-store.mock';
 
 describe('PokemonTeamSelectionFacade', () => {
   let mockStore: MockedObject<Partial<StoreType>>;
   let facade: PokemonTeamSelectionFacade;
 
   beforeEach(() => {
-    mockStore = {
-      pokemonList: signal([
-        BULBASAUR_FIXTURE,
-        CHARMANDER_FIXTURE,
-        SQUIRTLE_FIXTURE,
-        IVYSAUR_FIXTURE,
-      ]),
-      selectedTeam: signal([BULBASAUR_FIXTURE]),
+    mockStore = createPokemonBattleStoreMock({
+      selectedTeam: signal([structuredClone(BULBASAUR_FIXTURE)]),
       opponentTeam: signal([]),
       battleStarted: signal(false),
-      currentPage: signal(0),
-      totalCount: signal(4),
-      limit: signal(10),
-      isLoading: signal(false),
-      error: signal(null),
-      loadPokemonList: vi.fn() as unknown as StoreType['loadPokemonList'],
-      selectPokemonForTeam: vi.fn() as unknown as StoreType['selectPokemonForTeam'],
-      clearSelectedTeam: vi.fn() as unknown as StoreType['clearSelectedTeam'],
-      startBattle: vi.fn() as unknown as StoreType['startBattle'],
-      endBattle: vi.fn() as unknown as StoreType['endBattle'],
-    } as const satisfies MockedObject<Partial<StoreType>>;
+    });
 
     TestBed.configureTestingModule({
       providers: [PokemonTeamSelectionFacade, { provide: PokemonBattleStore, useValue: mockStore }],
@@ -68,12 +45,23 @@ describe('PokemonTeamSelectionFacade', () => {
         (mockStore.totalCount as unknown as WritableSignal<number>).set(15);
         (mockStore.limit as unknown as WritableSignal<number>).set(10);
         facade.nextPage();
-        expect(mockStore.loadPokemonList).toHaveBeenCalledWith({ page: 1, limit: 10 });
+        expect(mockStore.loadPokemonList).toHaveBeenNthCalledWith(2, { page: 1, limit: 10 });
       });
 
       it('не должен перелистывать назад с первой страницы', () => {
         facade.prevPage();
-        expect(mockStore.loadPokemonList).not.toHaveBeenCalledWith({ page: -1, limit: 10 });
+        expect(mockStore.loadPokemonList).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('Управление боем', () => {
+      it('должен вызывать startBattle в сторе, если выбрано 2 покемона', () => {
+        (mockStore.selectedTeam as unknown as WritableSignal<any[]>).set([
+          structuredClone(BULBASAUR_FIXTURE),
+          structuredClone(BULBASAUR_FIXTURE), // just needs to have length 2
+        ]);
+        facade.startBattle();
+        expect(mockStore.startBattle).toHaveBeenCalledTimes(1);
       });
     });
   });

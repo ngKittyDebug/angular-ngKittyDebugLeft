@@ -66,13 +66,19 @@ describe('AudioManagerService', () => {
         expect(audioInstances[0].volume).toBe(0.55);
       });
 
-      it('должен переключать включение/выключение звука', () => {
-        expect(service.enabled()).toBe(true);
+      it('должен отключать звук при переключении (если был включен)', () => {
+        service.setEnabled(true);
 
         service.toggle();
+
         expect(service.enabled()).toBe(false);
+      });
+
+      it('должен включать звук при переключении (если был отключен)', () => {
+        service.setEnabled(false);
 
         service.toggle();
+
         expect(service.enabled()).toBe(true);
       });
     });

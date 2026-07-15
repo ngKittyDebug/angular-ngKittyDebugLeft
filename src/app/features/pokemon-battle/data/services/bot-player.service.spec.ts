@@ -2,7 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { describe, expect, it } from 'vitest';
 
 import { BotPlayerService } from './bot-player.service';
-import type { BattleState } from '../models/battle.model';
+import type { BattlePokemon, BattleState } from '../models/battle.model';
+import { BULBASAUR_FIXTURE, CHARMANDER_FIXTURE } from '../fixtures/pokemon.fixture';
 
 describe('BotPlayerService', () => {
   let service: BotPlayerService;
@@ -14,7 +15,7 @@ describe('BotPlayerService', () => {
     service = TestBed.inject(BotPlayerService);
   });
 
-  it('should be created', () => {
+  it('должен быть создан', () => {
     expect(service).toBeTruthy();
   });
 
@@ -23,37 +24,12 @@ describe('BotPlayerService', () => {
       const mockState: BattleState = {
         playerSide: {
           playerType: 'player',
-          pokemons: [
-            {
-              id: 1,
-              name: 'bulbasaur',
-              maxHp: 45,
-              hp: 45,
-              stats: { hp: 45, attack: 49, defense: 49, speed: 45 },
-              types: ['grass', 'poison'],
-              sprites: { front: '', back: '' },
-              moves: [{ name: 'tackle', type: 'normal', power: 40 }],
-            },
-          ],
+          pokemons: [structuredClone(BULBASAUR_FIXTURE)],
           activePokemonIds: [1],
         },
         opponentSide: {
           playerType: 'bot',
-          pokemons: [
-            {
-              id: 4,
-              name: 'charmander',
-              maxHp: 39,
-              hp: 39,
-              stats: { hp: 39, attack: 52, defense: 43, speed: 65 },
-              types: ['fire'],
-              sprites: { front: '', back: '' },
-              moves: [
-                { name: 'scratch', type: 'normal', power: 40 },
-                { name: 'ember', type: 'fire', power: 40 },
-              ],
-            },
-          ],
+          pokemons: [structuredClone(CHARMANDER_FIXTURE)],
           activePokemonIds: [4],
         },
         status: 'waiting-for-commands',
@@ -72,37 +48,20 @@ describe('BotPlayerService', () => {
     });
 
     it('не должен возвращать команду для потерявших сознание покемонов', () => {
+      const faintedCharmander: BattlePokemon = {
+        ...structuredClone(CHARMANDER_FIXTURE),
+        hp: 0,
+      };
+
       const mockState: BattleState = {
         playerSide: {
           playerType: 'player',
-          pokemons: [
-            {
-              id: 1,
-              name: 'bulbasaur',
-              maxHp: 45,
-              hp: 45,
-              stats: { hp: 45, attack: 49, defense: 49, speed: 45 },
-              types: ['grass', 'poison'],
-              sprites: { front: '', back: '' },
-              moves: [{ name: 'tackle', type: 'normal', power: 40 }],
-            },
-          ],
+          pokemons: [structuredClone(BULBASAUR_FIXTURE)],
           activePokemonIds: [1],
         },
         opponentSide: {
           playerType: 'bot',
-          pokemons: [
-            {
-              id: 4,
-              name: 'charmander',
-              maxHp: 39,
-              hp: 0, // Fainted!
-              stats: { hp: 39, attack: 52, defense: 43, speed: 65 },
-              types: ['fire'],
-              sprites: { front: '', back: '' },
-              moves: [{ name: 'scratch', type: 'normal', power: 40 }],
-            },
-          ],
+          pokemons: [faintedCharmander],
           activePokemonIds: [4],
         },
         status: 'waiting-for-commands',
