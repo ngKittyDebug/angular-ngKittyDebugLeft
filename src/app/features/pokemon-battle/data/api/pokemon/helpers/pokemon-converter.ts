@@ -18,7 +18,7 @@ export function convertPokemonDetailApiDataToBattlePokemon(
   const frontSprite =
     raw.sprites.other.showdown?.front_default ||
     raw.sprites.front_default ||
-    'frenzy/pokemon/sprites/bulbasaur.gif';
+    'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png';
 
   const backSprite =
     raw.sprites.other.showdown?.back_default || raw.sprites.back_default || frontSprite;

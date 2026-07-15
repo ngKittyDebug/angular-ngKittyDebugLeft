@@ -1,7 +1,7 @@
 import { computed, inject, Service } from '@angular/core';
 import type { BattlePokemon } from '../models/battle.model';
 import { PokemonBattleStore } from '../store/pokemon-battle.store';
-import { CHARMANDER_FIXTURE, IVYSAUR_FIXTURE } from '../fixtures/pokemon.fixture';
+import { DEFAULT_OPPONENT_TEAM } from '../constants/default-opponents';
 
 const POKEMON_PAGE_LIMIT = 10;
 
@@ -56,7 +56,7 @@ export class PokemonTeamSelectionFacade {
 
       opponents.push(shuffled[0], shuffled[1]);
     } else {
-      opponents.push(structuredClone(CHARMANDER_FIXTURE), structuredClone(IVYSAUR_FIXTURE));
+      opponents.push(...structuredClone(DEFAULT_OPPONENT_TEAM));
     }
 
     this.pokemonBattleStore.startBattle(opponents);
