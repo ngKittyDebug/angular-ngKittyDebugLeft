@@ -16,7 +16,7 @@
     } @else if (facade.error(); as err) {
       <div class="error-container" role="alert">
         <p class="error-message">{{ t('errors.' + err) }}</p>
-        <button tuiButton class="retry-button" (click)="onPrevClick()">{{ t('retry') }}</button>
+        <button tuiButton class="retry-button" (click)="onRetryClick()">{{ t('retry') }}</button>
       </div>
     } @else {
       <div class="pokemon-selection-grid">

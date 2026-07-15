@@ -5,6 +5,7 @@ import { PokemonBattleStore } from './pokemon-battle.store';
 import { PokemonBattleApiService } from '../api/pokemon/services/pokemon-battle-api.service';
 import { MOCK_RAW_POKEMON } from '../fixtures/pokemon.fixture';
 import { convertPokemonDetailApiDataToBattlePokemon } from '../api/pokemon/helpers/pokemon-converter';
+import { POKEMON_PAGE_LIMIT } from '../constants/pokemon-battle.constants';
 
 describe('PokemonBattleStore', () => {
   let mockApiService: MockedObject<Partial<PokemonBattleApiService>>;
@@ -42,9 +43,9 @@ describe('PokemonBattleStore', () => {
       }),
     );
 
-    store.loadPokemonList({ page: 0, limit: 10 });
+    store.loadPokemonList({ page: 0, limit: POKEMON_PAGE_LIMIT });
 
-    expect(mockApiService.getPokemonList).toHaveBeenNthCalledWith(1, 10, 0);
+    expect(mockApiService.getPokemonList).toHaveBeenNthCalledWith(1, POKEMON_PAGE_LIMIT, 0);
 
     expect(store.pokemonList().length).toBe(1);
     expect(store.pokemonList()[0].name).toBe('pikachu');
@@ -60,7 +61,7 @@ describe('PokemonBattleStore', () => {
       throwError(() => new Error('API Error')),
     );
 
-    store.loadPokemonList({ page: 0, limit: 10 });
+    store.loadPokemonList({ page: 0, limit: POKEMON_PAGE_LIMIT });
 
     expect(store.isLoading()).toBe(false);
     expect(store.error()).toBe('loadFailed');

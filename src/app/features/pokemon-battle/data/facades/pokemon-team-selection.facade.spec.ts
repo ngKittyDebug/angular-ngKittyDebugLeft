@@ -20,19 +20,32 @@ describe('PokemonTeamSelectionFacade', () => {
     TestBed.configureTestingModule({
       providers: [PokemonTeamSelectionFacade, { provide: PokemonBattleStore, useValue: mockStore }],
     });
-
-    facade = TestBed.inject(PokemonTeamSelectionFacade);
   });
 
   describe('Happy Path', () => {
     describe('Инициализация', () => {
-      it('должен вызывать loadPokemonList на старте', () => {
-        expect(facade).toBeDefined();
-        expect(mockStore.loadPokemonList).toHaveBeenCalledTimes(1);
+      it('должен вызывать loadPokemonList на старте, если список пуст', () => {
+        (mockStore.pokemonList as unknown as WritableSignal<any[]>).set([]);
+
+        facade = TestBed.inject(PokemonTeamSelectionFacade);
+
+        expect(mockStore.loadPokemonList).toHaveBeenCalledWith({ page: 0, limit: 10 });
+      });
+
+      it('не должен вызывать loadPokemonList на старте, если список уже загружен', () => {
+        (mockStore.pokemonList as unknown as WritableSignal<any[]>).set([BULBASAUR_FIXTURE]);
+
+        facade = TestBed.inject(PokemonTeamSelectionFacade);
+
+        expect(mockStore.loadPokemonList).not.toHaveBeenCalled();
       });
     });
 
     describe('Выбор покемонов', () => {
+      beforeEach(() => {
+        facade = TestBed.inject(PokemonTeamSelectionFacade);
+      });
+
       it('должен вызывать selectPokemonForTeam в сторе при клике', () => {
         facade.selectPokemon(BULBASAUR_FIXTURE);
 
@@ -41,20 +54,40 @@ describe('PokemonTeamSelectionFacade', () => {
     });
 
     describe('Пагинация', () => {
+      beforeEach(() => {
+        facade = TestBed.inject(PokemonTeamSelectionFacade);
+      });
+
       it('должен загружать следующую страницу если есть куда листать', () => {
         (mockStore.totalCount as unknown as WritableSignal<number>).set(15);
         (mockStore.limit as unknown as WritableSignal<number>).set(10);
+        (mockStore.loadPokemonList as any).mockClear();
+
         facade.nextPage();
-        expect(mockStore.loadPokemonList).toHaveBeenNthCalledWith(2, { page: 1, limit: 10 });
+        expect(mockStore.loadPokemonList).toHaveBeenNthCalledWith(1, { page: 1, limit: 10 });
       });
 
       it('не должен перелистывать назад с первой страницы', () => {
+        (mockStore.loadPokemonList as any).mockClear();
         facade.prevPage();
-        expect(mockStore.loadPokemonList).toHaveBeenCalledTimes(1);
+        expect(mockStore.loadPokemonList).not.toHaveBeenCalled();
+      });
+
+      it('должен повторять загрузку текущей страницы при вызове retry', () => {
+        (mockStore.currentPage as unknown as WritableSignal<number>).set(2);
+        (mockStore.loadPokemonList as any).mockClear();
+
+        facade.retry();
+
+        expect(mockStore.loadPokemonList).toHaveBeenNthCalledWith(1, { page: 2, limit: 10 });
       });
     });
 
     describe('Управление боем', () => {
+      beforeEach(() => {
+        facade = TestBed.inject(PokemonTeamSelectionFacade);
+      });
+
       it('должен вызывать startBattle в сторе, если выбрано 2 покемона', () => {
         (mockStore.selectedTeam as unknown as WritableSignal<any[]>).set([
           structuredClone(BULBASAUR_FIXTURE),

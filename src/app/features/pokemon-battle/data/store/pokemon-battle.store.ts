@@ -6,6 +6,7 @@ import { catchError, switchMap, tap } from 'rxjs/operators';
 import { PokemonBattleApiService } from '../api/pokemon/services/pokemon-battle-api.service';
 import { convertPokemonDetailApiDataToBattlePokemon } from '../api/pokemon/helpers/pokemon-converter';
 import type { BattlePokemon } from '../models/battle.model';
+import { POKEMON_PAGE_LIMIT } from '../constants/pokemon-battle.constants';
 
 export interface PokemonBattleStoreState {
   pokemonList: BattlePokemon[];
@@ -23,7 +24,7 @@ const initialState: PokemonBattleStoreState = {
   pokemonList: [],
   totalCount: 0,
   currentPage: 0,
-  limit: 10,
+  limit: POKEMON_PAGE_LIMIT,
   isLoading: false,
   error: null,
   selectedTeam: [],

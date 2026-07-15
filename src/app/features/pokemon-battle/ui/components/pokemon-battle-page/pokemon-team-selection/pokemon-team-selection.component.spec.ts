@@ -13,6 +13,7 @@ describe('PokemonTeamSelectionComponent', () => {
   beforeEach(() => {
     mockFacade = {
       selectPokemon: vi.fn(),
+      retry: vi.fn(),
       prevPage: vi.fn(),
       nextPage: vi.fn(),
       startBattle: vi.fn(),
@@ -56,6 +57,9 @@ describe('PokemonTeamSelectionComponent', () => {
 
     component.onPokemonClick(BULBASAUR_FIXTURE);
     expect(mockFacade.selectPokemon).toHaveBeenCalledWith(BULBASAUR_FIXTURE);
+
+    component.onRetryClick();
+    expect(mockFacade.retry).toHaveBeenCalled();
 
     component.onPrevClick();
     expect(mockFacade.prevPage).toHaveBeenCalled();

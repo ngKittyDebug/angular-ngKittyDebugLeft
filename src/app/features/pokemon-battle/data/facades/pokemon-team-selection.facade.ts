@@ -2,10 +2,7 @@ import { computed, inject, Service } from '@angular/core';
 import type { BattlePokemon } from '../models/battle.model';
 import { PokemonBattleStore } from '../store/pokemon-battle.store';
 import { DEFAULT_OPPONENT_TEAM } from '../constants/default-opponents';
-
-const POKEMON_PAGE_LIMIT = 10;
-
-export const TEAM_SIZE = 2;
+import { POKEMON_PAGE_LIMIT, TEAM_SIZE } from '../constants/pokemon-battle.constants';
 
 @Service({ autoProvided: false })
 export class PokemonTeamSelectionFacade {
@@ -31,7 +28,16 @@ export class PokemonTeamSelectionFacade {
   public readonly pageCount = computed(() => Math.ceil(this.totalCount() / this.limit()));
 
   constructor() {
-    this.pokemonBattleStore.loadPokemonList({ page: 0, limit: POKEMON_PAGE_LIMIT });
+    if (this.pokemonBattleStore.pokemonList().length === 0) {
+      this.pokemonBattleStore.loadPokemonList({ page: 0, limit: POKEMON_PAGE_LIMIT });
+    }
+  }
+
+  public retry(): void {
+    this.pokemonBattleStore.loadPokemonList({
+      page: this.currentPage(),
+      limit: POKEMON_PAGE_LIMIT,
+    });
   }
 
   public selectPokemon(pokemon: BattlePokemon): void {

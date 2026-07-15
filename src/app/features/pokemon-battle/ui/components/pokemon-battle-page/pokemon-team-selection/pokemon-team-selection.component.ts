@@ -21,6 +21,10 @@ export class PokemonTeamSelectionComponent {
     this.facade.selectPokemon(pokemon);
   }
 
+  public onRetryClick(): void {
+    this.facade.retry();
+  }
+
   public onPrevClick(): void {
     this.facade.prevPage();
   }
