@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { UpperCasePipe } from '@angular/common';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { TuiButton, TuiCheckbox, TuiLoader } from '@taiga-ui/core';
 import { TuiPagination } from '@taiga-ui/kit';
@@ -8,7 +8,7 @@ import { PokemonTeamSelectionFacade } from '../../../../data/facades/pokemon-tea
 
 @Component({
   selector: 'left-paw-pokemon-team-selection',
-  imports: [CommonModule, TranslocoDirective, TuiButton, TuiCheckbox, TuiLoader, TuiPagination],
+  imports: [UpperCasePipe, TranslocoDirective, TuiButton, TuiCheckbox, TuiLoader, TuiPagination],
   providers: [PokemonTeamSelectionFacade],
   templateUrl: './pokemon-team-selection.component.html',
   styleUrl: './pokemon-team-selection.component.scss',
@@ -17,7 +17,6 @@ import { PokemonTeamSelectionFacade } from '../../../../data/facades/pokemon-tea
 export class PokemonTeamSelectionComponent {
   public readonly facade = inject(PokemonTeamSelectionFacade);
 
-  // Event handlers starting with "on" as per styleguide
   public get pageCount(): number {
     return Math.ceil(this.facade.totalCount() / this.facade.limit());
   }

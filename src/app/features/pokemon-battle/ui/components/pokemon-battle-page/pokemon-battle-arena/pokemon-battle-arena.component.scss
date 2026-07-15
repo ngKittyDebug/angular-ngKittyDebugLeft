@@ -1,4 +1,5 @@
-@import 'pokemon-types';
+@use 'sass:map';
+@use 'pokemon-types' as *;
 
 .battle-main {
   display: grid;
@@ -211,8 +212,8 @@
 .move-type {
   @each $type, $colors in $pokemon-types {
     &[data-type='#{$type}'] {
-      background-color: map-get($colors, bg);
-      color: map-get($colors, color);
+      background-color: map.get($colors, bg);
+      color: map.get($colors, color);
     }
   }
 }

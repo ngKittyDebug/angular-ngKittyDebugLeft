@@ -101,11 +101,5 @@ export const PokemonBattleStore = signalStore(
         battleStarted: true,
       });
     },
-
-    endBattle(): void {
-      patchState(store, {
-        battleStarted: false,
-      });
-    },
   })),
 );

@@ -1,4 +1,5 @@
-@import 'pokemon-types';
+@use 'sass:map';
+@use 'pokemon-types' as *;
 
 .team-selection-main {
   background-color: var(--tui-background-neutral-1);
@@ -154,8 +155,8 @@
 
   @each $type, $colors in $pokemon-types {
     &[data-type='#{$type}'] {
-      background-color: map-get($colors, bg);
-      color: map-get($colors, color);
+      background-color: map.get($colors, bg);
+      color: map.get($colors, color);
     }
   }
 }

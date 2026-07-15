@@ -26,6 +26,11 @@ const PLATFORM_PLAYER_Y = 320;
 const PLATFORM_OPPONENT_X = 580;
 const PLATFORM_OPPONENT_Y = 200;
 
+const PLATFORM_PLAYER_RADIUS_X = 120;
+const PLATFORM_PLAYER_RADIUS_Y = 30;
+const PLATFORM_OPPONENT_RADIUS_X = 100;
+const PLATFORM_OPPONENT_RADIUS_Y = 25;
+
 const BREATH_SPEED = 0.003;
 const LUNGE_DISTANCE_PX = 40;
 
@@ -231,13 +236,29 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
     // Player side platform
     context.fillStyle = 'rgba(100, 180, 100, 0.6)';
     context.beginPath();
-    context.ellipse(PLATFORM_PLAYER_X, PLATFORM_PLAYER_Y, 120, 30, 0, 0, 2 * Math.PI);
+    context.ellipse(
+      PLATFORM_PLAYER_X,
+      PLATFORM_PLAYER_Y,
+      PLATFORM_PLAYER_RADIUS_X,
+      PLATFORM_PLAYER_RADIUS_Y,
+      0,
+      0,
+      2 * Math.PI,
+    );
     context.fill();
 
     // Opponent side platform
     context.fillStyle = 'rgba(180, 100, 100, 0.6)';
     context.beginPath();
-    context.ellipse(PLATFORM_OPPONENT_X, PLATFORM_OPPONENT_Y, 100, 25, 0, 0, 2 * Math.PI);
+    context.ellipse(
+      PLATFORM_OPPONENT_X,
+      PLATFORM_OPPONENT_Y,
+      PLATFORM_OPPONENT_RADIUS_X,
+      PLATFORM_OPPONENT_RADIUS_Y,
+      0,
+      0,
+      2 * Math.PI,
+    );
     context.fill();
 
     // Idle breathing animation based on timestamp

@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, inject, viewChild } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { UpperCasePipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { TuiButton, TuiScrollbar } from '@taiga-ui/core';
@@ -11,7 +11,7 @@ import { PokemonBattleArenaFacade } from '../../../../data/facades/pokemon-battl
 @Component({
   selector: 'left-paw-pokemon-battle-arena',
   imports: [
-    CommonModule,
+    UpperCasePipe,
     TranslocoDirective,
     CanvasRendererComponent,
     TuiButton,
@@ -24,7 +24,6 @@ import { PokemonBattleArenaFacade } from '../../../../data/facades/pokemon-battl
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PokemonBattleArenaComponent {
-  // View child for the canvas renderer to play events (private field before public fields)
   private readonly canvasRenderer = viewChild(CanvasRendererComponent);
 
   public readonly facade = inject(PokemonBattleArenaFacade);
@@ -41,7 +40,6 @@ export class PokemonBattleArenaComponent {
     this.canvasRenderer()?.playEvents(events);
   }
 
-  // Event handlers starting with "on" as per styleguide
   public onSelectMove(move: PokemonMove): void {
     this.facade.selectMove(move);
   }

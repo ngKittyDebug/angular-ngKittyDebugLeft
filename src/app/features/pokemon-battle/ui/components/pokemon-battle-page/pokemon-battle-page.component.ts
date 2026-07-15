@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { TuiButton, TuiSlider } from '@taiga-ui/core';
 import { PokemonBattleStore } from '../../../data/store/pokemon-battle.store';
@@ -10,7 +9,6 @@ import { PokemonBattleArenaComponent } from './pokemon-battle-arena/pokemon-batt
 @Component({
   selector: 'left-paw-pokemon-battle-page',
   imports: [
-    CommonModule,
     TranslocoDirective,
     PokemonTeamSelectionComponent,
     PokemonBattleArenaComponent,

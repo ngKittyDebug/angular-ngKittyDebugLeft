@@ -3,6 +3,8 @@ import type { BattlePokemon } from '../models/battle.model';
 import { PokemonBattleStore } from '../store/pokemon-battle.store';
 import { CHARMANDER_FIXTURE, IVYSAUR_FIXTURE } from '../fixtures/pokemon.fixture';
 
+const POKEMON_PAGE_LIMIT = 10;
+
 @Service({ autoProvided: false })
 export class PokemonTeamSelectionFacade {
   private readonly pokemonBattleStore = inject(PokemonBattleStore);
@@ -17,7 +19,7 @@ export class PokemonTeamSelectionFacade {
   public readonly limit = this.pokemonBattleStore.limit;
 
   constructor() {
-    this.pokemonBattleStore.loadPokemonList({ page: 0, limit: 10 });
+    this.pokemonBattleStore.loadPokemonList({ page: 0, limit: POKEMON_PAGE_LIMIT });
   }
 
   public selectPokemon(pokemon: BattlePokemon): void {
@@ -52,7 +54,7 @@ export class PokemonTeamSelectionFacade {
     const current = this.pokemonBattleStore.currentPage();
 
     if (current > 0) {
-      this.pokemonBattleStore.loadPokemonList({ page: current - 1, limit: 10 });
+      this.pokemonBattleStore.loadPokemonList({ page: current - 1, limit: POKEMON_PAGE_LIMIT });
     }
   }
 
@@ -62,7 +64,7 @@ export class PokemonTeamSelectionFacade {
     const limit = this.pokemonBattleStore.limit();
 
     if ((current + 1) * limit < total) {
-      this.pokemonBattleStore.loadPokemonList({ page: current + 1, limit: 10 });
+      this.pokemonBattleStore.loadPokemonList({ page: current + 1, limit: POKEMON_PAGE_LIMIT });
     }
   }
 
@@ -71,7 +73,7 @@ export class PokemonTeamSelectionFacade {
     const limit = this.pokemonBattleStore.limit();
 
     if (page * limit < total && page >= 0) {
-      this.pokemonBattleStore.loadPokemonList({ page, limit: 10 });
+      this.pokemonBattleStore.loadPokemonList({ page, limit: POKEMON_PAGE_LIMIT });
     }
   }
 }
