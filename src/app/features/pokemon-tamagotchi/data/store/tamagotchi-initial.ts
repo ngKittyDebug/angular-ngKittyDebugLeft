@@ -51,6 +51,7 @@ export function createInitialDailyRoutine(): DailyRoutine {
 export function createInitialTamagotchiState(): TamagotchiStateModel {
   return {
     pokemon: null,
+    selectionOriginId: null,
     status: createInitialPokemonStatus(),
     achievementList: [],
     evolutionProgress: createInitialEvolutionProgress(),

@@ -47,8 +47,10 @@ export class TamagotchiSelectionStorageService {
 
   public save(pokemon: TamagotchiSelectionPokemon): void {
     const persistedPokemonId = readPersistedPokemonId(this.storage);
+    const isStarterReselection =
+      pokemon.isFirstStage && persistedPokemonId !== null && persistedPokemonId !== pokemon.id;
 
-    if (persistedPokemonId !== null && persistedPokemonId !== pokemon.id) {
+    if (isStarterReselection) {
       clearTamagotchiProgressStorage(this.storage);
     }
 

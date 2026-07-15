@@ -97,5 +97,33 @@ describe('TamagotchiSelectionStorageService', () => {
         species: 'charmander',
       });
     });
+
+    it('не должен очищать прогресс при сохранении не-first-stage ссылки с другим id', () => {
+      storageMock.setItem(
+        TAMAGOTCHI_STORAGE_KEY,
+        JSON.stringify({
+          state: selectPokemonState(createInitialTamagotchiState(), {
+            ...TEST_POKEMON,
+            id: '1',
+            name: 'bulbasaur',
+            species: 'bulbasaur',
+          }),
+        }),
+      );
+
+      service.save({
+        id: '2',
+        isFirstStage: false,
+        name: 'ivysaur',
+        species: 'ivysaur',
+      });
+
+      expect(storageMock.getItem(TAMAGOTCHI_STORAGE_KEY)).not.toBeNull();
+      expect(service.getReference()).toEqual({
+        id: '2',
+        name: 'ivysaur',
+        species: 'ivysaur',
+      });
+    });
   });
 });

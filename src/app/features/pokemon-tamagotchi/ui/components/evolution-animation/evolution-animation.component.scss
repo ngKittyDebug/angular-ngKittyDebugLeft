@@ -50,6 +50,10 @@
   filter: brightness(1);
 }
 
+.evolution-animation__sprite--reduced {
+  @include sprite.reduced_motion_reset($reset-transform: true);
+}
+
 .evolution-animation__label {
   margin: 0;
   color: var(--tui-text-primary);

@@ -10,6 +10,7 @@
     "loading": "Loading your tamagotchi…",
     "saveFailedError": "Could not save progress. Your session is still active.",
     "stateLoadFailedError": "Could not load saved progress. Starting fresh.",
+    "evolutionPrepareFailedError": "Could not load the evolved form. Dismiss and we will try again.",
     "stateRecoveredWarning": "Progress was recovered from a backup.",
     "dismissNotice": "Dismiss",
     "resetProgress": "Reset progress",

@@ -11,6 +11,7 @@
         class="evolution-animation__sprite"
         [class.evolution-animation__sprite--flash]="phase() === 'flash'"
         [class.evolution-animation__sprite--reveal]="phase() === 'reveal'"
+        [class.evolution-animation__sprite--reduced]="!useComplexAnimations()"
         [src]="displaySprite()"
         [alt]="fromPokemon().name"
         draggable="false"

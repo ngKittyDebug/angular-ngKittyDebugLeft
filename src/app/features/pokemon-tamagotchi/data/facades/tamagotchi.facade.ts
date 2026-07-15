@@ -42,6 +42,8 @@ export class TamagotchiFacade {
   private readonly timerService = inject(TimerService);
   private readonly isInitialized = computed(() => this.store.initialized());
   private readonly now = signal(Date.now());
+  private readonly pendingEvolvedPokemon = signal<PokemonModel | null>(null);
+  private readonly evolutionPrepareInFlight = signal(false);
   private readonly actionContext = computed(() => this.buildActionContext(this.now()));
 
   public readonly displayedStatusTypes = DISPLAYED_STATUS_TYPES;
@@ -57,7 +59,7 @@ export class TamagotchiFacade {
   public readonly pokemon = this.store.pokemon;
   public readonly status = this.store.status;
 
-  public readonly evolvedPokemon = computed(() => this.resolveEvolvedPokemon(this.pokemon()));
+  public readonly evolvedPokemon = this.pendingEvolvedPokemon.asReadonly();
 
   public readonly isLoading = computed(() => !this.isInitialized());
 
@@ -78,6 +80,10 @@ export class TamagotchiFacade {
 
     if (currentError === TAMAGOTCHI_SYSTEM_ERRORS.SAVE_FAILED) {
       return 'saveFailedError';
+    }
+
+    if (currentError === TAMAGOTCHI_SYSTEM_ERRORS.EVOLUTION_PREPARE_FAILED) {
+      return 'evolutionPrepareFailedError';
     }
 
     if (currentError === TAMAGOTCHI_SYSTEM_ERRORS.RECOVERED_FROM_BACKUP) {
@@ -128,16 +134,40 @@ export class TamagotchiFacade {
       });
     });
 
-    effect(() => {
+    effect((onCleanup) => {
       const ready = this.canEvolve();
       const species = this.pokemon();
       const readyNotifiedAt = untracked(() => this.store.evolutionProgress().readyNotifiedAt);
+      const prepareInFlight = untracked(() => this.evolutionPrepareInFlight());
 
-      if (ready && readyNotifiedAt === null && species) {
+      if (!ready || readyNotifiedAt !== null || !species || prepareInFlight) {
+        return;
+      }
+
+      const subscription = untracked(() => {
+        this.evolutionPrepareInFlight.set(true);
         this.notificationService.notifyEvolutionReady(species.name);
         this.store.markEvolutionReadyNotified(Date.now());
-        this.store.startEvolution();
-      }
+
+        return this.evolutionService.prepareEvolution(species).subscribe((result) => {
+          this.evolutionPrepareInFlight.set(false);
+
+          if (!result) {
+            this.pendingEvolvedPokemon.set(null);
+            this.store.setError(TAMAGOTCHI_SYSTEM_ERRORS.EVOLUTION_PREPARE_FAILED);
+
+            return;
+          }
+
+          this.store.startEvolution();
+          this.pendingEvolvedPokemon.set(result.evolvedPokemon);
+        });
+      });
+
+      onCleanup(() => {
+        subscription.unsubscribe();
+        this.evolutionPrepareInFlight.set(false);
+      });
     });
 
     effect((onCleanup) => {
@@ -251,6 +281,7 @@ export class TamagotchiFacade {
 
   public onEvolutionComplete(evolvedPokemon: PokemonModel): void {
     this.store.completeEvolution(evolvedPokemon);
+    this.pendingEvolvedPokemon.set(null);
   }
 
   public onInteraction(interaction: InteractionEventModel): void {
@@ -259,6 +290,10 @@ export class TamagotchiFacade {
   }
 
   public onSystemErrorDismiss(): void {
+    if (this.error() === TAMAGOTCHI_SYSTEM_ERRORS.EVOLUTION_PREPARE_FAILED) {
+      this.store.clearEvolutionReadyNotified();
+    }
+
     this.store.clearError();
   }
 
@@ -316,20 +351,6 @@ export class TamagotchiFacade {
 
   private isActionAllowed(action: ActionType): boolean {
     return this.tamagotchiService.validateAction(this.actionContext(), action).allowed;
-  }
-
-  private resolveEvolvedPokemon(species: PokemonModel | null): PokemonModel | null {
-    if (!species) {
-      return null;
-    }
-
-    const evolutionData = this.evolutionService.buildEvolutionData(species);
-
-    if (!evolutionData) {
-      return null;
-    }
-
-    return this.evolutionService.triggerEvolution(species, evolutionData)?.evolvedPokemon ?? null;
   }
 
   private buildActionContext(now: number): TamagotchiActionContext {

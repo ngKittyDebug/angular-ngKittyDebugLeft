@@ -118,24 +118,3 @@ export function getRequirementCompletionRatio(
 
   return Math.min(1, current / requirement.value);
 }
-
-export function buildEvolvedPokemon(pokemon: PokemonModel): PokemonModel | null {
-  const nextEvolution = pokemon.evolutionChain.nextEvolution;
-
-  if (!nextEvolution) {
-    return null;
-  }
-
-  const nextStage = pokemon.evolutionChain.currentStage + 1;
-
-  return {
-    ...pokemon,
-    evolutionChain: {
-      currentStage: nextStage,
-      nextEvolution: nextEvolution.childNextEvolution,
-      totalStages: pokemon.evolutionChain.totalStages,
-    },
-    id: nextEvolution.pokemonId,
-    isFirstStage: false,
-  };
-}

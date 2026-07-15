@@ -59,7 +59,7 @@ function createFacadeSmokeProviders() {
       provide: EvolutionService,
       useValue: {
         buildEvolutionData: vi.fn(() => null),
-        triggerEvolution: vi.fn(),
+        prepareEvolution: vi.fn(() => of(null)),
       },
     },
     {

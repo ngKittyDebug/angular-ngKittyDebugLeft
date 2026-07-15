@@ -11,6 +11,7 @@ import {
   TAMAGOTCHI_STORAGE_KEY,
   TamagotchiPersistenceService,
 } from './tamagotchi-persistence.service';
+import { TamagotchiSelectionStorageService } from './tamagotchi-selection-storage.service';
 
 describe('TamagotchiPersistenceService', () => {
   let service: TamagotchiPersistenceService;
@@ -22,6 +23,10 @@ describe('TamagotchiPersistenceService', () => {
       providers: [
         TamagotchiPersistenceService,
         { provide: TamagotchiStorageService, useValue: storageMock },
+        {
+          provide: TamagotchiSelectionStorageService,
+          useValue: { getReference: () => null },
+        },
       ],
     });
     service = TestBed.inject(TamagotchiPersistenceService);

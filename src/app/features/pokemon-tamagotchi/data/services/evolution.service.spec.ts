@@ -1,24 +1,46 @@
 import { TestBed } from '@angular/core/testing';
-import { GAME_BALANCE } from '../constants/game-balance.constants';
+import { of, throwError } from 'rxjs';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { PokemonTamagotchiApiService } from '../api/pokemon/services/pokemon-tamagotchi-api.service';
 import { EVOLUTION_REQUIREMENTS } from '../constants/evolution-criteria.constants';
-import { createInitialDailyRoutine } from '../store/tamagotchi-initial';
+import { GAME_BALANCE } from '../constants/game-balance.constants';
 import { TEST_POKEMON } from '../fixtures/tamagotchi-arbitraries';
+import type { EvolutionResultModel } from '../models/evolution.model';
 import type { PokemonModel } from '../models/pokemon.model';
 import type { PokemonStatusModel } from '../models/pokemon-status.model';
+import { createInitialDailyRoutine } from '../store/tamagotchi-initial';
 import { EvolutionService } from './evolution.service';
 
 describe('EvolutionService', () => {
   let service: EvolutionService;
+  let loadPokemonByName: ReturnType<typeof vi.fn>;
 
   const basePokemon: PokemonModel = {
     ...TEST_POKEMON,
     evolutionChain: {
       currentStage: 1,
       nextEvolution: {
-        pokemonId: '26',
+        pokemonId: 'raichu',
         requirements: EVOLUTION_REQUIREMENTS,
       },
       totalStages: 3,
+    },
+  };
+
+  const fetchedRaichu: PokemonModel = {
+    ...TEST_POKEMON,
+    evolutionChain: {
+      currentStage: 2,
+      totalStages: 3,
+    },
+    id: '26',
+    isFirstStage: false,
+    name: 'raichu',
+    species: 'raichu',
+    spriteUrls: {
+      ...TEST_POKEMON.spriteUrls,
+      evolving: '/sprites/raichu-evolving.png',
+      normal: '/sprites/raichu-normal.png',
     },
   };
 
@@ -40,7 +62,14 @@ describe('EvolutionService', () => {
   };
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [EvolutionService] });
+    loadPokemonByName = vi.fn(() => of(fetchedRaichu));
+
+    TestBed.configureTestingModule({
+      providers: [
+        EvolutionService,
+        { provide: PokemonTamagotchiApiService, useValue: { loadPokemonByName } },
+      ],
+    });
     service = TestBed.inject(EvolutionService);
   });
 
@@ -76,21 +105,40 @@ describe('EvolutionService', () => {
       });
     });
 
-    describe('triggerEvolution', () => {
-      it('должен возвращать эволюционировавшего покемона, когда данные критериев совпадают с цепочкой', () => {
-        const evolutionData = service.buildEvolutionData(basePokemon);
-
-        expect(evolutionData).not.toBeNull();
-
-        const result = service.triggerEvolution(basePokemon, evolutionData!);
-
-        expect(result).not.toBeNull();
-        expect(result?.evolvedPokemon.id).toBe('26');
-        expect(result?.evolvedPokemon.isFirstStage).toBe(false);
-        expect(result?.evolvedPokemon.evolutionChain.currentStage).toBe(2);
+    describe('prepareEvolution', () => {
+      it('должен вернуть эволюционировавшего покемона с новыми name, sprites и numeric id', () => {
+        service.prepareEvolution(basePokemon).subscribe((result) => {
+          expect(loadPokemonByName).toHaveBeenNthCalledWith(1, 'raichu');
+          expect(result).toEqual(
+            expect.objectContaining({
+              evolutionData: expect.objectContaining({ toPokemonId: 'raichu' }),
+              evolvedPokemon: expect.objectContaining({
+                id: '26',
+                name: 'raichu',
+                spriteUrls: expect.objectContaining({
+                  normal: '/sprites/raichu-normal.png',
+                }),
+              }),
+            }),
+          );
+          expect(result?.evolvedPokemon.spriteUrls.normal).not.toBe(basePokemon.spriteUrls.normal);
+        });
       });
 
-      it('должен сохранять nextEvolution для второй ступени из childNextEvolution', () => {
+      it('должен сохранять nextEvolution для второй ступени из загруженной модели', () => {
+        const threeStageFetched: PokemonModel = {
+          ...fetchedRaichu,
+          evolutionChain: {
+            currentStage: 2,
+            nextEvolution: {
+              pokemonId: 'venusaur',
+              requirements: EVOLUTION_REQUIREMENTS,
+            },
+            totalStages: 3,
+          },
+          name: 'ivysaur',
+          species: 'ivysaur',
+        };
         const threeStagePokemon: PokemonModel = {
           ...basePokemon,
           evolutionChain: {
@@ -106,13 +154,16 @@ describe('EvolutionService', () => {
             totalStages: 3,
           },
         };
-        const evolutionData = service.buildEvolutionData(threeStagePokemon);
 
-        expect(evolutionData).not.toBeNull();
+        loadPokemonByName.mockReturnValue(of(threeStageFetched));
 
-        const result = service.triggerEvolution(threeStagePokemon, evolutionData!);
+        let nextPokemonId: string | undefined;
 
-        expect(result?.evolvedPokemon.evolutionChain.nextEvolution?.pokemonId).toBe('venusaur');
+        service.prepareEvolution(threeStagePokemon).subscribe((value) => {
+          nextPokemonId = value?.evolvedPokemon.evolutionChain.nextEvolution?.pokemonId;
+        });
+
+        expect(nextPokemonId).toBe('venusaur');
       });
     });
 
@@ -138,12 +189,45 @@ describe('EvolutionService', () => {
       });
     });
 
-    describe('triggerEvolution', () => {
-      it('должен возвращать null, когда данные эволюции не совпадают с покемоном', () => {
-        const evolutionData = service.buildEvolutionData(basePokemon)!;
+    describe('prepareEvolution', () => {
+      it('должен возвращать null, когда API не загрузил форму эволюции', () => {
+        loadPokemonByName.mockReturnValue(throwError(() => new Error('network')));
 
-        const result = service.triggerEvolution({ ...basePokemon, id: '999' }, evolutionData);
+        let result: EvolutionResultModel | null | 'unset' = 'unset';
 
+        service.prepareEvolution(basePokemon).subscribe((value) => {
+          result = value;
+        });
+
+        expect(result).toBeNull();
+      });
+
+      it('должен возвращать null, когда загруженный вид не совпадает с nextEvolution', () => {
+        loadPokemonByName.mockReturnValue(
+          of({
+            ...fetchedRaichu,
+            name: 'pikachu',
+            species: 'pikachu',
+          }),
+        );
+
+        let result: EvolutionResultModel | null | 'unset' = 'unset';
+
+        service.prepareEvolution(basePokemon).subscribe((value) => {
+          result = value;
+        });
+
+        expect(result).toBeNull();
+      });
+
+      it('должен возвращать null, когда у покемона нет nextEvolution', () => {
+        let result: EvolutionResultModel | null | 'unset' = 'unset';
+
+        service.prepareEvolution(TEST_POKEMON).subscribe((value) => {
+          result = value;
+        });
+
+        expect(loadPokemonByName).not.toHaveBeenCalled();
         expect(result).toBeNull();
       });
     });

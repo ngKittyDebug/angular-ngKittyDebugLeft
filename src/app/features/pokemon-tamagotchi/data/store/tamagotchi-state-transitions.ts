@@ -93,7 +93,22 @@ export function selectPokemonState(
     error: null,
     initialized: true,
     pokemon,
+    selectionOriginId: pokemon.id,
     evolutionProgress: buildEvolutionProgressForPokemon(pokemon),
+  };
+}
+
+export function healSelectionOriginIdState(
+  state: TamagotchiStateModel,
+  selectionOriginId: string,
+): TamagotchiStateModel {
+  if (state.selectionOriginId === selectionOriginId) {
+    return state;
+  }
+
+  return {
+    ...state,
+    selectionOriginId,
   };
 }
 
@@ -391,6 +406,22 @@ export function markEvolutionReadyNotifiedState(
     evolutionProgress: {
       ...state.evolutionProgress,
       readyNotifiedAt: notifiedAt,
+    },
+  };
+}
+
+export function clearEvolutionReadyNotifiedState(
+  state: TamagotchiStateModel,
+): TamagotchiStateModel {
+  if (state.evolutionProgress.readyNotifiedAt === null) {
+    return state;
+  }
+
+  return {
+    ...state,
+    evolutionProgress: {
+      ...state.evolutionProgress,
+      readyNotifiedAt: null,
     },
   };
 }

@@ -5,9 +5,11 @@ import type { PokemonModel } from '../models/pokemon.model';
 import {
   careForPokemonState,
   checkEvolutionState,
+  clearEvolutionReadyNotifiedState,
   completeEvolutionState,
   completeTrainingState,
   feedPokemonState,
+  healSelectionOriginIdState,
   interactWithPokemonState,
   markEvolutionReadyNotifiedState,
   putToSleepState,
@@ -199,6 +201,25 @@ describe('tamagotchiStateTransitions', () => {
       const notified = markEvolutionReadyNotifiedState(checked, notifiedAt);
 
       expect(notified.evolutionProgress.readyNotifiedAt).toBe(notifiedAt);
+    });
+
+    it('должен сбрасывать readyNotifiedAt через clearEvolutionReadyNotifiedState', () => {
+      const selected = selectPokemonState(initialTamagotchiState, stage2Pokemon);
+      const checked = checkEvolutionState(updateStatusState(selected, { level: 99 }));
+      const notified = markEvolutionReadyNotifiedState(checked, 1_700_000_000_000);
+      const cleared = clearEvolutionReadyNotifiedState(notified);
+
+      expect(cleared.evolutionProgress.readyNotifiedAt).toBeNull();
+    });
+
+    it('должен заполнять selectionOriginId через healSelectionOriginIdState', () => {
+      const selected = {
+        ...selectPokemonState(initialTamagotchiState, TEST_POKEMON),
+        selectionOriginId: null,
+      };
+      const healed = healSelectionOriginIdState(selected, '25');
+
+      expect(healed.selectionOriginId).toBe('25');
     });
   });
 });

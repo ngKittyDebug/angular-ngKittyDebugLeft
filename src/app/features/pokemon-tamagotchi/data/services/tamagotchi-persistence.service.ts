@@ -14,13 +14,15 @@ import {
   createInitialTamagotchiState,
 } from '../store/tamagotchi-initial';
 import { syncEvolutionProgressWithPokemon } from '../store/tamagotchi-state-transitions';
+import { TamagotchiSelectionStorageService } from './tamagotchi-selection-storage.service';
 import { TamagotchiStorageService } from './tamagotchi-storage.service';
 
-export const TAMAGOTCHI_STATE_VERSION = 7;
+export const TAMAGOTCHI_STATE_VERSION = 8;
 export { TAMAGOTCHI_BACKUP_KEY, TAMAGOTCHI_STORAGE_KEY };
 
 const TAMAGOTCHI_TRAINING_STATE_VERSION = 5;
 const TAMAGOTCHI_NOTIFICATION_TEXT_STATE_VERSION = 7;
+const TAMAGOTCHI_SELECTION_ORIGIN_STATE_VERSION = 8;
 const LEGACY_NOTIFICATION_KEY_PREFIXES = ['alerts.', 'evolution.'] as const;
 
 export interface PersistedTamagotchiPayload {
@@ -68,6 +70,7 @@ function migrateNotificationList(
 
 @Service({ autoProvided: false })
 export class TamagotchiPersistenceService {
+  private readonly selectionStorage = inject(TamagotchiSelectionStorageService);
   private readonly storage = inject(TamagotchiStorageService);
 
   public load(): TamagotchiLoadResult | null {
@@ -176,6 +179,7 @@ export class TamagotchiPersistenceService {
           ? (state.notificationList ?? [])
           : migrateNotificationList(legacyNotifications),
       pokemon: state.pokemon ? ensurePokemonSpriteVariations(state.pokemon) : null,
+      selectionOriginId: this.resolveSelectionOriginId(state, version),
       status: {
         ...createInitialPokemonStatus(),
         ...state.status,
@@ -193,6 +197,20 @@ export class TamagotchiPersistenceService {
     }
 
     return syncEvolutionProgressWithPokemon(migrated);
+  }
+
+  private resolveSelectionOriginId(state: TamagotchiStateModel, version: number): string | null {
+    if (version >= TAMAGOTCHI_SELECTION_ORIGIN_STATE_VERSION) {
+      return typeof state.selectionOriginId === 'string' ? state.selectionOriginId : null;
+    }
+
+    const selectionReference = this.selectionStorage.getReference();
+
+    if (selectionReference?.id) {
+      return selectionReference.id;
+    }
+
+    return state.pokemon?.id ?? null;
   }
 
   private validateState(state: TamagotchiStateModel): TamagotchiStateModel {

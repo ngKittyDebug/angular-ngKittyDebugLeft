@@ -82,6 +82,7 @@ const PAGE_TRANSLATIONS = {
   noSelectionTitle: 'No Pokémon selected',
   saveFailedError: 'Save failed',
   stateLoadFailedError: 'State load failed',
+  evolutionPrepareFailedError: 'Evolution prepare failed',
   stateRecoveredWarning: 'Recovered',
   statusPanelAria: 'Status panel',
   dismissNotice: 'Dismiss',
@@ -164,7 +165,7 @@ function createFacadeProviders() {
       provide: EvolutionService,
       useValue: {
         buildEvolutionData: vi.fn(() => null),
-        triggerEvolution: vi.fn(),
+        prepareEvolution: vi.fn(() => of(null)),
       },
     },
     {

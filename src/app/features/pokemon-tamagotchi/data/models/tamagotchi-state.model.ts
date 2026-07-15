@@ -32,6 +32,7 @@ export interface ValidationResult {
 
 export interface TamagotchiStateModel {
   pokemon: PokemonModel | null;
+  selectionOriginId: string | null;
   status: PokemonStatusModel;
   achievementList: AchievementModel[];
   evolutionProgress: EvolutionProgressModel;

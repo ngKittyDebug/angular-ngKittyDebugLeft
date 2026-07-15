@@ -25,9 +25,11 @@ import {
   careForPokemonState,
   checkEvolutionState,
   clearErrorState,
+  clearEvolutionReadyNotifiedState,
   completeEvolutionState,
   completeTrainingState,
   feedPokemonState,
+  healSelectionOriginIdState,
   initializeTamagotchiState,
   interactWithPokemonState,
   loadStateSuccessState,
@@ -63,6 +65,7 @@ function snapshotState(store: {
   lastSaveTime: () => TamagotchiStateModel['lastSaveTime'];
   notificationList: () => TamagotchiStateModel['notificationList'];
   pokemon: () => TamagotchiStateModel['pokemon'];
+  selectionOriginId: () => TamagotchiStateModel['selectionOriginId'];
   status: () => TamagotchiStateModel['status'];
   trainingExperienceReward: () => TamagotchiStateModel['trainingExperienceReward'];
   trainingStartedAt: () => TamagotchiStateModel['trainingStartedAt'];
@@ -81,6 +84,7 @@ function snapshotState(store: {
     lastSaveTime: store.lastSaveTime(),
     notificationList: store.notificationList(),
     pokemon: store.pokemon(),
+    selectionOriginId: store.selectionOriginId(),
     status: store.status(),
     trainingExperienceReward: store.trainingExperienceReward(),
     trainingStartedAt: store.trainingStartedAt(),
@@ -200,6 +204,10 @@ export const TamagotchiStore = signalStore(
           mutateAndSave((state) => selectPokemonState(state, pokemon));
         },
 
+        healSelectionOriginId(selectionOriginId: string): void {
+          mutateAndSave((state) => healSelectionOriginIdState(state, selectionOriginId));
+        },
+
         feed(now: number): void {
           mutateAndSave((state) => feedPokemonState(state, now));
         },
@@ -258,6 +266,10 @@ export const TamagotchiStore = signalStore(
 
         markEvolutionReadyNotified(notifiedAt: number): void {
           mutateAndSave((state) => markEvolutionReadyNotifiedState(state, notifiedAt));
+        },
+
+        clearEvolutionReadyNotified(): void {
+          mutateAndSave(clearEvolutionReadyNotifiedState);
         },
 
         startEvolution(): void {
