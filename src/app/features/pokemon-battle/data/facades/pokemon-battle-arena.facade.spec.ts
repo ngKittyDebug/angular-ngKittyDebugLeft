@@ -133,6 +133,42 @@ describe('PokemonBattleArenaFacade', () => {
         expect(facade.pendingCommands().length).toBe(0);
         expect(facade.selectedMove()).toBeNull();
       });
+
+      it('должен корректно обновлять список живых активных покемонов после разрешения хода (issue-1)', () => {
+        // Устанавливаем HP первого покемона соперника в 1 в сторе и сбрасываем бой,
+        // чтобы движок создался с этим значением HP
+        const opponentTeamSignal = mockStore.opponentTeam as any;
+        const opponentTeam = structuredClone(opponentTeamSignal());
+
+        opponentTeam[0].hp = 1;
+        opponentTeamSignal.set(opponentTeam);
+        facade.resetBattle();
+
+        expect(facade.activeAliveOpponentPokemons().length).toBe(2);
+
+        const firstActivePlayer = facade.activeAlivePlayerPokemons()[0];
+        const move1 = firstActivePlayer.moves[0];
+
+        facade.onSelectMove(move1);
+
+        const target1 = facade.activeAliveOpponentPokemons()[0];
+
+        facade.onSelectTarget(target1);
+
+        const secondActivePlayer = facade.activeAlivePlayerPokemons()[1];
+        const move2 = secondActivePlayer.moves[0];
+
+        facade.onSelectMove(move2);
+
+        const target2 = facade.activeAliveOpponentPokemons()[0];
+
+        facade.onSelectTarget(target2);
+
+        const state = facade.battleState();
+
+        expect(state?.opponentSide.pokemons[0].hp).toBe(0);
+        expect(facade.activeAliveOpponentPokemons().length).toBe(1);
+      });
     });
   });
 });

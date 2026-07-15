@@ -169,7 +169,7 @@ export class PokemonBattleArenaFacade {
       const opponentTeam = structuredClone(this.pokemonBattleStore.opponentTeam());
 
       this.engine = new BattleEngine(playerTeam, opponentTeam, true);
-      this.battleState.set(this.engine.getState());
+      this.battleState.set(structuredClone(this.engine.getState()));
     } else {
       this.battleState.set(null);
     }
@@ -201,7 +201,7 @@ export class PokemonBattleArenaFacade {
     // Emit event stream for the UI renderer component to play
     this.turnResolvedSubject.next(events);
 
-    this.battleState.set(this.engine.getState());
+    this.battleState.set(structuredClone(this.engine.getState()));
 
     // Reset selection state for next turn
     this.pendingCommands.set([]);
