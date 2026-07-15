@@ -18,5 +18,6 @@
     [src]="spriteUrl()"
     [alt]="pokemon().name"
     draggable="false"
+    (animationend)="onFeedbackAnimationEnd($event)"
   />
 </button>

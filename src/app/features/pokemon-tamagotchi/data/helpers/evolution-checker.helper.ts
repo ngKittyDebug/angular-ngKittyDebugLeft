@@ -62,7 +62,7 @@ export function buildEvolutionProgressForPokemon(
   pokemon: PokemonModel | null,
 ): EvolutionProgressModel {
   if (!pokemon?.evolutionChain.nextEvolution) {
-    return { requirements: [], currentProgress: {}, isReady: false };
+    return { requirements: [], currentProgress: {}, isReady: false, readyNotifiedAt: null };
   }
 
   const requirements = getEvolutionRequirementsForPokemon(pokemon);
@@ -76,6 +76,7 @@ export function buildEvolutionProgressForPokemon(
     requirements,
     currentProgress,
     isReady: false,
+    readyNotifiedAt: null,
   };
 }
 
@@ -94,6 +95,7 @@ export function checkEvolutionCriteria(
   const progress: EvolutionProgressModel = {
     currentProgress,
     isReady,
+    readyNotifiedAt: null,
     requirements,
   };
 

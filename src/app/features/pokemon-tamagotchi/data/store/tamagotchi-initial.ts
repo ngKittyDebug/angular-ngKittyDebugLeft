@@ -13,7 +13,9 @@ export function createInitialPokemonStatus(): PokemonStatusModel {
     hydration: GAME_BALANCE.THRESHOLDS.MAXIMUM,
     experience: 0,
     level: 1,
+    lastCareTime: null,
     lastFeedTime: null,
+    lastTrainTime: null,
     lastPlayTime: null,
     lastSleepTime: null,
     lastHydrationTime: null,
@@ -32,6 +34,7 @@ export function createInitialEvolutionProgress(): EvolutionProgressModel {
     requirements: [...EVOLUTION_REQUIREMENTS],
     currentProgress,
     isReady: false,
+    readyNotifiedAt: null,
   };
 }
 

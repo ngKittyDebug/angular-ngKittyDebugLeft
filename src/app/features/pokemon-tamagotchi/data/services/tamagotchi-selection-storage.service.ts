@@ -3,14 +3,16 @@ import type {
   SelectedPokemonReference,
   TamagotchiSelectionPokemon,
 } from '@shared/models/tamagotchi-selection.model';
-import { TamagotchiPersistenceService } from './tamagotchi-persistence.service';
+import {
+  clearTamagotchiProgressStorage,
+  readPersistedPokemonId,
+} from '../helpers/tamagotchi-progress-storage.helper';
 import { TamagotchiStorageService } from './tamagotchi-storage.service';
 
 export const TAMAGOTCHI_SELECTED_POKEMON_KEY = 'pokemon-tamagotchi-selected-pokemon';
 
 @Injectable({ providedIn: 'root' })
 export class TamagotchiSelectionStorageService {
-  private readonly persistence = inject(TamagotchiPersistenceService);
   private readonly storage = inject(TamagotchiStorageService);
 
   public getReference(): SelectedPokemonReference | null {
@@ -44,10 +46,10 @@ export class TamagotchiSelectionStorageService {
   }
 
   public save(pokemon: TamagotchiSelectionPokemon): void {
-    const persistedPokemonId = this.persistence.load()?.state.pokemon?.id ?? null;
+    const persistedPokemonId = readPersistedPokemonId(this.storage);
 
     if (persistedPokemonId !== null && persistedPokemonId !== pokemon.id) {
-      this.persistence.clear();
+      clearTamagotchiProgressStorage(this.storage);
     }
 
     const reference: SelectedPokemonReference = {

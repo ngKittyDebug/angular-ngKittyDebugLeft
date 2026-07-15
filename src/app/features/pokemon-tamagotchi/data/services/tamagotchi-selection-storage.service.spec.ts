@@ -1,10 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 import type { PokemonModel, PokemonSpriteUrlsModel } from '../models/pokemon.model';
 import { TEST_POKEMON } from '../fixtures/tamagotchi-arbitraries';
+import { TAMAGOTCHI_STORAGE_KEY } from '../helpers/tamagotchi-progress-storage.helper';
 import { createInitialTamagotchiState } from '../store/tamagotchi-initial';
 import { selectPokemonState } from '../store/tamagotchi-state-transitions';
 import { createTamagotchiStorageMock } from '../fixtures/tamagotchi-storage.mock';
-import { TamagotchiPersistenceService } from './tamagotchi-persistence.service';
 import { TamagotchiStorageService } from './tamagotchi-storage.service';
 import {
   TAMAGOTCHI_SELECTED_POKEMON_KEY,
@@ -67,7 +67,6 @@ describe('TamagotchiSelectionStorageService', () => {
     });
 
     it('должен очищать сохранённый прогресс тамагочи при смене выбранного покемона', () => {
-      const persistence = TestBed.inject(TamagotchiPersistenceService);
       const charmander = buildPokemon({
         eating: '',
         evolving: '',
@@ -77,18 +76,21 @@ describe('TamagotchiSelectionStorageService', () => {
         sleeping: '',
       });
 
-      persistence.save(
-        selectPokemonState(createInitialTamagotchiState(), {
-          ...TEST_POKEMON,
-          id: '1',
-          name: 'bulbasaur',
-          species: 'bulbasaur',
+      storageMock.setItem(
+        TAMAGOTCHI_STORAGE_KEY,
+        JSON.stringify({
+          state: selectPokemonState(createInitialTamagotchiState(), {
+            ...TEST_POKEMON,
+            id: '1',
+            name: 'bulbasaur',
+            species: 'bulbasaur',
+          }),
         }),
       );
 
       service.save(charmander);
 
-      expect(persistence.load()).toBeNull();
+      expect(storageMock.getItem(TAMAGOTCHI_STORAGE_KEY)).toBeNull();
       expect(service.getReference()).toEqual({
         id: '4',
         name: 'charmander',

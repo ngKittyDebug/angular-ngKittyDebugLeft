@@ -12,6 +12,7 @@ import type {
 } from '../models/profile.model';
 
 import { convertUserProfileApiDataToUserProfileModel } from '../helpers/convert-user-profile-api-data-to-user-profile-model';
+import { extractFavoritePokemonList } from '../helpers/extract-favorite-pokemon-list';
 import { getFullUrl } from '../helpers/full-url';
 import { USER_PATH } from '../constants/user-path.constants';
 
@@ -58,7 +59,7 @@ export class ProfileService {
       .get<PokemonFavoriteResponse>(
         getFullUrl(this.baseUrl, `${USER_PATH.BASE}${USER_PATH.POKEMON_FAVORITE}`),
       )
-      .pipe(map((response) => response.pokemonNameFavoriteList));
+      .pipe(map(extractFavoritePokemonList));
   }
 
   public addFavorite(pokemonName: string): Observable<PokemonFavoriteResponse> {

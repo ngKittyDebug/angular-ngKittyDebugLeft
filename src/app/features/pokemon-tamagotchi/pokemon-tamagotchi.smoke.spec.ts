@@ -14,13 +14,20 @@ import { ChildrenRouts } from '../features.routes';
 import { GAMES_PATH } from '../games/games.routes';
 import { feedPokemonState, selectPokemonState } from './data/store/tamagotchi-state-transitions';
 import { createInitialTamagotchiState } from './data/store/tamagotchi-initial';
-import { snapshotState, TamagotchiStore } from './data/store/tamagotchi.store';
+import { TamagotchiStore } from './data/store/tamagotchi.store';
+import { TamagotchiFacade } from './data/facades/tamagotchi.facade';
+import { EvolutionService } from './data/services/evolution.service';
+import { PerformanceService } from './data/services/performance.service';
 import { TamagotchiInitService } from './data/services/tamagotchi-init.service';
 import { TamagotchiPersistenceService } from './data/services/tamagotchi-persistence.service';
 import { TamagotchiSelectionService } from './data/services/tamagotchi-selection.service';
+import { TamagotchiService } from './data/services/tamagotchi.service';
+import { TimerService } from './data/services/timer.service';
 import { TEST_POKEMON } from './data/fixtures/tamagotchi-arbitraries';
 import { pokemonTamagotchiRoutes, TAMAGOTCHI_PATH } from './pokemon-tamagotchi.routes';
 import { PokemonTamagotchiPageComponent } from './ui/components/pokemon-tamagotchi-page/pokemon-tamagotchi-page.component';
+import { AnimationService } from './ui/services/animation.service';
+import { TamagotchiNotificationService } from './ui/services/notification.service';
 
 type TamagotchiStoreInstance = InstanceType<typeof TamagotchiStore>;
 
@@ -41,6 +48,43 @@ function createInitSmokeMock(): TamagotchiInitSmokeMock {
   return {
     bootstrapFromProfile: vi.fn(() => of(undefined)),
   } as const satisfies TamagotchiInitSmokeMock;
+}
+
+function createFacadeSmokeProviders() {
+  return [
+    TamagotchiFacade,
+    TamagotchiService,
+    AnimationService,
+    {
+      provide: EvolutionService,
+      useValue: {
+        buildEvolutionData: vi.fn(() => null),
+        triggerEvolution: vi.fn(),
+      },
+    },
+    {
+      provide: PerformanceService,
+      useValue: {
+        mode: signal('balanced' as const).asReadonly(),
+        profile: computed(() => ({ decayIntervalMs: 30_000 })),
+        setMode: vi.fn(),
+      },
+    },
+    {
+      provide: TimerService,
+      useValue: {
+        startTimer: vi.fn(() => ({ cleanup: vi.fn() })),
+        stopTimer: vi.fn(),
+      },
+    },
+    {
+      provide: TamagotchiNotificationService,
+      useValue: {
+        notifyEvolutionReady: vi.fn(),
+        processStatusAlerts: vi.fn(),
+      },
+    },
+  ];
 }
 
 const REQUIRED_TRANSLATION_PATHS = [
@@ -114,7 +158,7 @@ describe('PokemonTamagotchi — интеграция', () => {
 
     beforeEach(() => {
       localStorage.clear();
-      TestBed.configureTestingModule({});
+      TestBed.configureTestingModule({ providers: [TamagotchiPersistenceService] });
       persistence = TestBed.inject(TamagotchiPersistenceService);
     });
 
@@ -144,10 +188,12 @@ describe('PokemonTamagotchi — интеграция', () => {
   describe('Bootstrap из профиля покемона', () => {
     it('должен записывать ошибку выбора эволюционировавшего покемона в store', async () => {
       const error = signal<string | null>(null);
-      const initialized = signal(true);
+      const initialized = signal(false);
       const hasPokemon = signal(false);
       const storeMethods = {
-        loadFromPersistence: vi.fn(),
+        loadFromPersistence: vi.fn(() => {
+          initialized.set(true);
+        }),
         selectPokemon: vi.fn(),
         setError: vi.fn((value: string) => {
           error.set(value);
@@ -252,11 +298,11 @@ describe('PokemonTamagotchi — интеграция', () => {
         ],
         providers: [
           provideRouter([]),
+          ...createFacadeSmokeProviders(),
           {
             provide: TamagotchiStore,
             useValue: {
               ...storeSignals,
-              snapshot: computed(() => snapshotState(storeSignals)),
               ...storeMethods,
             },
           },

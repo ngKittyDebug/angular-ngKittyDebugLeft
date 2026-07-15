@@ -68,6 +68,7 @@ export function computeEvolutionProgress(state: TamagotchiStateModel): Evolution
     ...state.evolutionProgress,
     currentProgress,
     isReady,
+    readyNotifiedAt: state.evolutionProgress.readyNotifiedAt ?? null,
   };
 }
 
@@ -93,14 +94,6 @@ export function selectPokemonState(
     initialized: true,
     pokemon,
     evolutionProgress: buildEvolutionProgressForPokemon(pokemon),
-  };
-}
-
-export function clearPokemonState(state: TamagotchiStateModel): TamagotchiStateModel {
-  return {
-    ...initialTamagotchiState,
-    initialized: state.initialized,
-    lastSaveTime: state.lastSaveTime,
   };
 }
 
@@ -161,6 +154,7 @@ export function careForPokemonState(
           ...current.status,
           energy: applyStatusDelta(current.status.energy, -energyCost),
           health: applyStatusDelta(current.status.health, healthIncrease),
+          lastCareTime: now,
           mood: applyStatusDelta(current.status.mood, moodIncrease),
         },
         now,
@@ -243,6 +237,7 @@ export function completeTrainingState(
           {
             ...awake.status,
             experience,
+            lastTrainTime: now,
             level: computeLevelFromExperience(experience),
           },
           now,
@@ -250,6 +245,24 @@ export function completeTrainingState(
         dailyRoutine: recordRoutineActivity(awake.dailyRoutine, 'train', now),
         trainingExperienceReward: null,
         trainingStartedAt: null,
+      };
+    }),
+  );
+}
+
+export function restartTrainingTimerState(
+  state: TamagotchiStateModel,
+  now: number,
+): TamagotchiStateModel {
+  return withPokemon(state, (current) =>
+    whenAwake(current, (awake) => {
+      if (awake.trainingStartedAt === null) {
+        return awake;
+      }
+
+      return {
+        ...awake,
+        trainingStartedAt: now,
       };
     }),
   );
@@ -270,7 +283,11 @@ export function putToSleepState(state: TamagotchiStateModel, now: number): Tamag
   });
 }
 
-export function wakeUpState(state: TamagotchiStateModel, now: number): TamagotchiStateModel {
+export function wakeUpState(
+  state: TamagotchiStateModel,
+  now: number,
+  bonusEnergy = 0,
+): TamagotchiStateModel {
   if (!state.isSleeping) {
     return state;
   }
@@ -279,23 +296,21 @@ export function wakeUpState(state: TamagotchiStateModel, now: number): Tamagotch
     ...state,
     isSleeping: false,
     lastActionTime: now,
+    status: updateStatusFields(state.status, {
+      energy: applyStatusDelta(state.status.energy, bonusEnergy),
+    }),
   };
 }
 
 export function interactWithPokemonState(
   state: TamagotchiStateModel,
   interaction: InteractionEventModel,
-  now: number,
 ): TamagotchiStateModel {
   return withPokemon(state, (current) => ({
-    ...touchAction(
-      current,
-      {
-        ...current.status,
-        mood: applyStatusDelta(current.status.mood, interaction.moodIncrease),
-      },
-      now,
-    ),
+    ...current,
+    status: updateStatusFields(current.status, {
+      mood: applyStatusDelta(current.status.mood, interaction.moodIncrease),
+    }),
     interactionHistory: [...current.interactionHistory, interaction].slice(
       -INTERACTION_HISTORY_LIMIT,
     ),
@@ -342,6 +357,7 @@ export function syncEvolutionProgressWithPokemon(
     evolutionProgress: {
       ...buildEvolutionProgressForPokemon(state.pokemon),
       currentProgress: state.evolutionProgress.currentProgress,
+      readyNotifiedAt: state.evolutionProgress.readyNotifiedAt ?? null,
     },
   };
 
@@ -359,6 +375,23 @@ export function startEvolutionState(state: TamagotchiStateModel): TamagotchiStat
   return {
     ...state,
     isEvolving: true,
+  };
+}
+
+export function markEvolutionReadyNotifiedState(
+  state: TamagotchiStateModel,
+  notifiedAt: number,
+): TamagotchiStateModel {
+  if (!state.evolutionProgress.isReady) {
+    return state;
+  }
+
+  return {
+    ...state,
+    evolutionProgress: {
+      ...state.evolutionProgress,
+      readyNotifiedAt: notifiedAt,
+    },
   };
 }
 

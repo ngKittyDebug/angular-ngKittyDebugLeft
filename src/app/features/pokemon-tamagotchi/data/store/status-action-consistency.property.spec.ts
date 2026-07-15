@@ -55,7 +55,7 @@ function applyCareAction(state: TamagotchiStateModel, action: CareAction): Tamag
       return feedPokemonState(state, FIXED_NOW);
 
     case 'interact':
-      return interactWithPokemonState(state, action.interaction!, FIXED_NOW);
+      return interactWithPokemonState(state, action.interaction!);
 
     case 'play':
       return playWithPokemonState(state, FIXED_NOW);

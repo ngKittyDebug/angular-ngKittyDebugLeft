@@ -1,17 +1,27 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Service } from '@angular/core';
+import {
+  clearTamagotchiProgressStorage,
+  TAMAGOTCHI_BACKUP_KEY,
+  TAMAGOTCHI_STORAGE_KEY,
+} from '../helpers/tamagotchi-progress-storage.helper';
 import { normalizePokemonStatus } from '../helpers/status-bounds.helper';
 import { ensurePokemonSpriteVariations } from '../helpers/sprite-variation.helper';
+import type { NotificationModel, NotificationText } from '../models/notification.model';
 import type { TamagotchiStateModel } from '../models/tamagotchi-state.model';
 import {
   createInitialDailyRoutine,
+  createInitialPokemonStatus,
   createInitialTamagotchiState,
 } from '../store/tamagotchi-initial';
 import { syncEvolutionProgressWithPokemon } from '../store/tamagotchi-state-transitions';
 import { TamagotchiStorageService } from './tamagotchi-storage.service';
 
-export const TAMAGOTCHI_STORAGE_KEY = 'pokemon-tamagotchi-state';
-export const TAMAGOTCHI_BACKUP_KEY = 'pokemon-tamagotchi-state-backup';
-export const TAMAGOTCHI_STATE_VERSION = 5;
+export const TAMAGOTCHI_STATE_VERSION = 7;
+export { TAMAGOTCHI_BACKUP_KEY, TAMAGOTCHI_STORAGE_KEY };
+
+const TAMAGOTCHI_TRAINING_STATE_VERSION = 5;
+const TAMAGOTCHI_NOTIFICATION_TEXT_STATE_VERSION = 7;
+const LEGACY_NOTIFICATION_KEY_PREFIXES = ['alerts.', 'evolution.'] as const;
 
 export interface PersistedTamagotchiPayload {
   version: number;
@@ -23,7 +33,40 @@ export interface TamagotchiLoadResult {
   state: TamagotchiStateModel;
 }
 
-@Injectable({ providedIn: 'root' })
+type LegacyNotificationText = NotificationText | string;
+
+interface LegacyNotificationModel extends Omit<NotificationModel, 'message' | 'title'> {
+  message: LegacyNotificationText;
+  title: LegacyNotificationText;
+}
+
+function isNotificationText(value: LegacyNotificationText): value is NotificationText {
+  return typeof value === 'object' && value !== null && 'kind' in value;
+}
+
+function migrateNotificationText(value: LegacyNotificationText): NotificationText {
+  if (isNotificationText(value)) {
+    return value;
+  }
+
+  if (LEGACY_NOTIFICATION_KEY_PREFIXES.some((prefix) => value.startsWith(prefix))) {
+    return { key: value, kind: 'translationKey' };
+  }
+
+  return { kind: 'plainText', text: value };
+}
+
+function migrateNotificationList(
+  notifications: readonly LegacyNotificationModel[],
+): NotificationModel[] {
+  return notifications.map((notification) => ({
+    ...notification,
+    message: migrateNotificationText(notification.message),
+    title: migrateNotificationText(notification.title),
+  }));
+}
+
+@Service({ autoProvided: false })
 export class TamagotchiPersistenceService {
   private readonly storage = inject(TamagotchiStorageService);
 
@@ -68,8 +111,7 @@ export class TamagotchiPersistenceService {
   }
 
   public clear(): void {
-    this.remove(TAMAGOTCHI_STORAGE_KEY);
-    this.remove(TAMAGOTCHI_BACKUP_KEY);
+    clearTamagotchiProgressStorage(this.storage);
   }
 
   private readPayload(key: string): TamagotchiStateModel | null {
@@ -108,8 +150,10 @@ export class TamagotchiPersistenceService {
   private migrateState(state: TamagotchiStateModel, version: number): TamagotchiStateModel {
     const legacy = state as TamagotchiStateModel & {
       achievements?: TamagotchiStateModel['achievementList'];
-      notifications?: TamagotchiStateModel['notificationList'];
+      notificationList?: LegacyNotificationModel[];
+      notifications?: LegacyNotificationModel[];
     };
+    const legacyNotifications = legacy.notificationList ?? legacy.notifications ?? [];
     const migrated: TamagotchiStateModel = {
       ...createInitialTamagotchiState(),
       ...state,
@@ -119,14 +163,29 @@ export class TamagotchiPersistenceService {
         ...(state.dailyRoutine ?? {}),
       },
       evolutionProgress:
-        state.evolutionProgress ?? createInitialTamagotchiState().evolutionProgress,
+        state.evolutionProgress === undefined
+          ? createInitialTamagotchiState().evolutionProgress
+          : {
+              ...createInitialTamagotchiState().evolutionProgress,
+              ...state.evolutionProgress,
+              readyNotifiedAt: state.evolutionProgress.readyNotifiedAt ?? null,
+            },
       interactionHistory: state.interactionHistory ?? [],
-      notificationList: state.notificationList ?? legacy.notifications ?? [],
+      notificationList:
+        version >= TAMAGOTCHI_NOTIFICATION_TEXT_STATE_VERSION
+          ? (state.notificationList ?? [])
+          : migrateNotificationList(legacyNotifications),
       pokemon: state.pokemon ? ensurePokemonSpriteVariations(state.pokemon) : null,
+      status: {
+        ...createInitialPokemonStatus(),
+        ...state.status,
+      },
       trainingExperienceReward:
-        version >= TAMAGOTCHI_STATE_VERSION ? (state.trainingExperienceReward ?? null) : null,
+        version >= TAMAGOTCHI_TRAINING_STATE_VERSION
+          ? (state.trainingExperienceReward ?? null)
+          : null,
       trainingStartedAt:
-        version >= TAMAGOTCHI_STATE_VERSION ? (state.trainingStartedAt ?? null) : null,
+        version >= TAMAGOTCHI_TRAINING_STATE_VERSION ? (state.trainingStartedAt ?? null) : null,
     };
 
     if (!migrated.pokemon) {
@@ -175,9 +234,5 @@ export class TamagotchiPersistenceService {
 
   private writeRaw(key: string, value: string): void {
     this.storage.setItem(key, value);
-  }
-
-  private remove(key: string): void {
-    this.storage.removeItem(key);
   }
 }

@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Service } from '@angular/core';
 import { environment } from '@environments/environment';
 
 export type TamagotchiLogLevel = 'debug' | 'error' | 'info' | 'warn';
@@ -13,7 +13,7 @@ export interface TamagotchiLogEntry {
 
 const MAX_LOG_ENTRIES = 100;
 
-@Injectable({ providedIn: 'root' })
+@Service({ autoProvided: false })
 export class TamagotchiLoggerService {
   private readonly entries: TamagotchiLogEntry[] = [];
 

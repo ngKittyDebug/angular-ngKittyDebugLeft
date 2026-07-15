@@ -1,0 +1,23 @@
+@mixin pixel_sprite($size, $viewport-size) {
+  inline-size: min($size, $viewport-size);
+  block-size: min($size, $viewport-size);
+  object-fit: contain;
+  image-rendering: pixelated;
+  contain: layout style paint;
+  backface-visibility: hidden;
+}
+
+@mixin gpu_layer($will-change: transform) {
+  will-change: $will-change;
+  transform: translate3d(0, 0, 0);
+}
+
+@mixin reduced_motion_reset($reset-transform: false) {
+  animation: none !important;
+  filter: none;
+  opacity: 1;
+
+  @if $reset-transform {
+    transform: none;
+  }
+}

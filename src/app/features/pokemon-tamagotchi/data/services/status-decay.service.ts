@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Service } from '@angular/core';
 import {
   applyDecayToStatus,
   calculateDecay,
@@ -22,7 +22,7 @@ export interface StatusDecayTickResult {
   nextStatus: PokemonStatusModel;
 }
 
-@Injectable({ providedIn: 'root' })
+@Service({ autoProvided: false })
 export class StatusDecayService {
   public calculateDecay(
     elapsedMs: number,

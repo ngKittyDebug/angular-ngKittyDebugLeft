@@ -1,7 +1,6 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Service } from '@angular/core';
 import { TIMER_CONFIG } from '../constants/timer.constants';
 import { applyRoutineBonusIfEligible } from '../helpers/routine.helper';
-import { calculateSleepRestorationBonus } from '../helpers/sleep-restoration.helper';
 import type { StatusDecayContext } from './status-decay.service';
 import { StatusDecayService } from './status-decay.service';
 import { applyStatusDelta } from '../helpers/status-bounds.helper';
@@ -11,7 +10,6 @@ import type { DailyRoutine } from '../models/tamagotchi-state.model';
 
 export interface TamagotchiTimerContext extends StatusDecayContext {
   dailyRoutine: DailyRoutine;
-  sleepStartedAt: number | null;
 }
 
 export interface TimerTickResult {
@@ -20,7 +18,6 @@ export interface TimerTickResult {
   decay: StatusDecayModel;
   nextStatus: PokemonStatusModel;
   routineBonusApplied: number;
-  sleepBonusEnergy: number;
 }
 
 export interface TimerStartOptions {
@@ -32,7 +29,7 @@ export interface TimerHandle {
   cleanup: () => void;
 }
 
-@Injectable({ providedIn: 'root' })
+@Service({ autoProvided: false })
 export class TimerService {
   private readonly statusDecayService = inject(StatusDecayService);
 
@@ -56,15 +53,7 @@ export class TimerService {
       decay: decayResult.decay,
       nextStatus,
       routineBonusApplied: routineBonus,
-      sleepBonusEnergy: this.calculateSleepRestorationBonus(context.sleepStartedAt, now),
     };
-  }
-
-  public calculateSleepRestorationBonus(
-    sleepStartedAt: number | null,
-    now: number = Date.now(),
-  ): number {
-    return calculateSleepRestorationBonus(sleepStartedAt, now);
   }
 
   public startTimer(

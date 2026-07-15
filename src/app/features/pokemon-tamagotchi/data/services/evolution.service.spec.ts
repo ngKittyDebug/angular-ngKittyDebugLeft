@@ -28,17 +28,19 @@ describe('EvolutionService', () => {
     health: 90,
     hunger: 90,
     hydration: 90,
+    lastCareTime: null,
     lastFeedTime: null,
     lastHydrationTime: null,
     lastPlayTime: null,
     lastSaveTime: null,
     lastSleepTime: null,
+    lastTrainTime: null,
     level: GAME_BALANCE.EVOLUTION.MIN_LEVEL,
     mood: 90,
   };
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({ providers: [EvolutionService] });
     service = TestBed.inject(EvolutionService);
   });
 

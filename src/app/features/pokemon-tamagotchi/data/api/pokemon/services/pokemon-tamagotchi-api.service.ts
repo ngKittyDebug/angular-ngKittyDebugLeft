@@ -17,34 +17,44 @@ export class PokemonTamagotchiApiService {
   public loadPokemonByName(nameOrId: string): Observable<PokemonModel> {
     return this.http.get<PokemonDetailApiData>(this.pokemonApi.getPokemonData(nameOrId)).pipe(
       switchMap((detail) =>
-        this.http.get<PokemonSpeciesApiData>(this.pokemonApi.getPokemonSpecies(detail.name)).pipe(
-          switchMap((species) => {
-            const chainId = species.evolution_chain?.url.split('/').filter(Boolean).pop();
+        this.http
+          .get<PokemonSpeciesApiData>(this.pokemonApi.getPokemonSpecies(detail.species.name))
+          .pipe(
+            switchMap((species) => {
+              const chainId = species.evolution_chain?.url.split('/').filter(Boolean).pop();
 
-            if (!chainId) {
-              return of(
+              if (!chainId) {
+                return of(
+                  convertPokemonDetailApiDataToTamagotchiPokemon(
+                    detail,
+                    this.fallbackEvolutionChain(detail),
+                  ),
+                );
+              }
+
+              return this.http
+                .get<EvolutionChainApiResponse>(this.pokemonApi.getEvolutionChain(chainId))
+                .pipe(
+                  map((chain) => convertPokemonDetailApiDataToTamagotchiPokemon(detail, chain)),
+                  catchError(() =>
+                    of(
+                      convertPokemonDetailApiDataToTamagotchiPokemon(
+                        detail,
+                        this.fallbackEvolutionChain(detail),
+                      ),
+                    ),
+                  ),
+                );
+            }),
+            catchError(() =>
+              of(
                 convertPokemonDetailApiDataToTamagotchiPokemon(
                   detail,
                   this.fallbackEvolutionChain(detail),
                 ),
-              );
-            }
-
-            return this.http
-              .get<EvolutionChainApiResponse>(this.pokemonApi.getEvolutionChain(chainId))
-              .pipe(
-                map((chain) => convertPokemonDetailApiDataToTamagotchiPokemon(detail, chain)),
-                catchError(() =>
-                  of(
-                    convertPokemonDetailApiDataToTamagotchiPokemon(
-                      detail,
-                      this.fallbackEvolutionChain(detail),
-                    ),
-                  ),
-                ),
-              );
-          }),
-        ),
+              ),
+            ),
+          ),
       ),
     );
   }

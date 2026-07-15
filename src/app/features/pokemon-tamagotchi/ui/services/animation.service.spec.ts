@@ -2,11 +2,23 @@ import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { ANIMATION_PERFORMANCE } from '../../data/constants/animation-performance.constants';
+import { PerformanceService } from '../../data/services/performance.service';
 import { AnimationService } from './animation.service';
 
 describe('AnimationService', () => {
   beforeEach(() => {
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({
+      providers: [
+        AnimationService,
+        {
+          provide: PerformanceService,
+          useValue: {
+            mode: () => 'high',
+            profile: () => ({ complexAnimations: true }),
+          },
+        },
+      ],
+    });
   });
 
   describe('Happy Path', () => {

@@ -18,6 +18,7 @@ import {
   TEST_POKEMON,
 } from '../fixtures/tamagotchi-arbitraries';
 import { TamagotchiErrorRecoveryService } from '../services/tamagotchi-error-recovery.service';
+import { TamagotchiLoggerService } from '../services/tamagotchi-logger.service';
 import { TamagotchiPersistenceService } from '../services/tamagotchi-persistence.service';
 import { TamagotchiService } from '../services/tamagotchi.service';
 import {
@@ -29,7 +30,6 @@ import { createInitialTamagotchiState } from '../store/tamagotchi-initial';
 import type { NotificationPriority } from '../models/notification.model';
 
 const PROPERTY_RUNS = 100;
-const FIXED_NOW = 1_700_000_000_000;
 
 function collectTranslationKeys(value: unknown, prefix = ''): string[] {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
@@ -57,7 +57,12 @@ describe('TamagotchiService', () => {
   beforeEach(() => {
     localStorage.clear();
     TestBed.configureTestingModule({
-      providers: [TamagotchiErrorRecoveryService, TamagotchiPersistenceService, TamagotchiService],
+      providers: [
+        TamagotchiErrorRecoveryService,
+        TamagotchiLoggerService,
+        TamagotchiPersistenceService,
+        TamagotchiService,
+      ],
     });
   });
 
@@ -134,7 +139,7 @@ describe('TamagotchiService', () => {
 
             const moodBefore = state.status.mood;
 
-            state = interactWithPokemonState(state, high, FIXED_NOW);
+            state = interactWithPokemonState(state, high);
 
             const moodAfter = state.status.mood;
             const tracked = state.interactionHistory.some(
@@ -206,11 +211,11 @@ describe('TamagotchiService', () => {
           (priorities) => {
             const notificationList = priorities.map((priority, index) => ({
               id: `notification-${index}`,
-              message: 'message',
+              message: { kind: 'plainText' as const, text: 'message' },
               priority,
               read: false,
               timestamp: index,
-              title: 'title',
+              title: { kind: 'plainText' as const, text: 'title' },
             }));
             const sorted = [...notificationList].sort(compareNotificationsByPriority);
 

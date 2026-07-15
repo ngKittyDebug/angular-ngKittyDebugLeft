@@ -18,17 +18,17 @@
               [class.tamagotchi-notifications__history-item--unread]="!notification.read"
             >
               <span class="tamagotchi-notifications__history-title">
-                @if (isTranslationKey(notification.title)) {
-                  {{ t(notification.title) }}
+                @if (notification.title.kind === 'translationKey') {
+                  {{ t(notification.title.key) }}
                 } @else {
-                  {{ notification.title }}
+                  {{ notification.title.text }}
                 }
               </span>
               <span class="tamagotchi-notifications__history-message">
-                @if (isTranslationKey(notification.message)) {
-                  {{ t(notification.message) }}
+                @if (notification.message.kind === 'translationKey') {
+                  {{ t(notification.message.key) }}
                 } @else {
-                  {{ notification.message }}
+                  {{ notification.message.text }}
                 }
               </span>
             </li>

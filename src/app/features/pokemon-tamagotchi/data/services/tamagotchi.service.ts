@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Service } from '@angular/core';
 import { STATUS_THRESHOLDS } from '../constants/status-thresholds.constants';
 import { rollTrainingExperienceGain } from '../helpers/training-reward.helper';
 import {
@@ -26,7 +26,7 @@ export interface TamagotchiActionContext {
 const AWAKE_ONLY_ACTIONS = new Set<ActionType>(['feed', 'play', 'train']);
 const GAME_ACTIONS = new Set<ActionType>(['play', 'train']);
 
-@Injectable({ providedIn: 'root' })
+@Service({ autoProvided: false })
 export class TamagotchiService {
   public calculateStatusUpdate(
     currentStatus: PokemonStatusModel,
@@ -40,7 +40,7 @@ export class TamagotchiService {
       return { allowed: false, reason: 'noPokemon' };
     }
 
-    if (context.isTraining) {
+    if (context.isTraining && action !== 'play') {
       return { allowed: false, reason: 'training' };
     }
 
@@ -123,7 +123,7 @@ export class TamagotchiService {
     context: TamagotchiActionContext,
     action: ActionType,
   ): number | null {
-    const { lastActionTime, status } = context;
+    const { status } = context;
 
     switch (action) {
       case 'feed':
@@ -139,10 +139,10 @@ export class TamagotchiService {
         return status.lastSleepTime;
 
       case 'care':
-        return lastActionTime;
+        return status.lastCareTime;
 
       case 'train':
-        return lastActionTime;
+        return status.lastTrainTime;
     }
   }
 }

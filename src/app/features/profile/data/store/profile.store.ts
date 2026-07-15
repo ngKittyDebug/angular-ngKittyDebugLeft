@@ -9,6 +9,7 @@ import { patchState, signalStore, withMethods, withState } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { concatMap, pipe, switchMap, tap } from 'rxjs';
 import { ProfileService } from '../services/profile.service';
+import { extractFavoritePokemonList } from '../helpers/extract-favorite-pokemon-list';
 import { handleStoreError } from '../helpers/handle-store-error';
 
 const initialState: UserState = {
@@ -30,7 +31,11 @@ export const UserProfileStore = signalStore(
         switchMap(() =>
           api.getUser().pipe(
             tap((profile) => {
-              patchState(store, { profile: profile, isLoading: false });
+              patchState(store, {
+                profile: profile,
+                favoritePokemonList: profile.pokemonNameFavoriteList,
+                isLoading: false,
+              });
             }),
             handleStoreError(store),
           ),
@@ -120,11 +125,15 @@ export const UserProfileStore = signalStore(
         tap(() => patchState(store, { isLoading: true, error: null })),
         concatMap((pokemonName) =>
           api.addFavorite(pokemonName).pipe(
-            tap(() => {
-              const current = store.favoritePokemonList();
+            tap((response) => {
+              const favorites = extractFavoritePokemonList(response);
+              const currentProfile = store.profile();
 
               patchState(store, {
-                favoritePokemonList: [...current, pokemonName],
+                favoritePokemonList: favorites,
+                profile: currentProfile
+                  ? { ...currentProfile, pokemonNameFavoriteList: favorites }
+                  : currentProfile,
                 isLoading: false,
               });
             }),
@@ -139,11 +148,17 @@ export const UserProfileStore = signalStore(
         tap(() => patchState(store, { isLoading: true, error: null })),
         concatMap((pokemonName) =>
           api.removeFavorite(pokemonName).pipe(
-            tap(() => {
-              const current = store.favoritePokemonList();
-              const updated = current.filter((name) => name !== pokemonName);
+            tap((response) => {
+              const favorites = extractFavoritePokemonList(response);
+              const currentProfile = store.profile();
 
-              patchState(store, { favoritePokemonList: updated, isLoading: false });
+              patchState(store, {
+                favoritePokemonList: favorites,
+                profile: currentProfile
+                  ? { ...currentProfile, pokemonNameFavoriteList: favorites }
+                  : currentProfile,
+                isLoading: false,
+              });
             }),
             handleStoreError(store),
           ),

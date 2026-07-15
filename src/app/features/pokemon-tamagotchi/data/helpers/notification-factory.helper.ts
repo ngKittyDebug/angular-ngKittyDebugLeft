@@ -1,6 +1,7 @@
 import type {
   NotificationModel,
   NotificationPriority,
+  NotificationText,
   StatusAlertType,
 } from '../models/notification.model';
 
@@ -20,11 +21,6 @@ const ALERT_TEMPLATES: Record<StatusAlertType, AlertNotificationTemplate> = {
     messageKey: 'alerts.energyLow.message',
     priority: 'warning',
     titleKey: 'alerts.energyLow.title',
-  },
-  evolutionReady: {
-    messageKey: 'alerts.evolutionReady.message',
-    priority: 'achievement',
-    titleKey: 'alerts.evolutionReady.title',
   },
   hungerCritical: {
     messageKey: 'alerts.hungerCritical.message',
@@ -69,6 +65,14 @@ export function createNotificationId(): string {
   return `notification-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
+export function notificationPlainText(text: string): NotificationText {
+  return { kind: 'plainText', text };
+}
+
+export function notificationTranslationKey(key: string): NotificationText {
+  return { key, kind: 'translationKey' };
+}
+
 export function compareNotificationsByPriority(
   left: NotificationModel,
   right: NotificationModel,
@@ -90,11 +94,11 @@ export function notificationFromStatusAlert(
 
   return {
     id: createNotificationId(),
-    message: template.messageKey,
+    message: notificationTranslationKey(template.messageKey),
     priority: template.priority,
     read: false,
     timestamp,
-    title: template.titleKey,
+    title: notificationTranslationKey(template.titleKey),
   };
 }
 
@@ -104,11 +108,11 @@ export function notificationFromEvolutionReady(
 ): NotificationModel {
   return {
     id: createNotificationId(),
-    message: pokemonName,
+    message: notificationPlainText(pokemonName),
     priority: 'achievement',
     read: false,
     timestamp,
-    title: 'evolution.readyTitle',
+    title: notificationTranslationKey('evolution.readyTitle'),
   };
 }
 

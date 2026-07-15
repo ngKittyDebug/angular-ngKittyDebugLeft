@@ -8,45 +8,40 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { TranslocoDirective } from '@jsverse/transloco';
 import { TuiProgress } from '@taiga-ui/kit';
 import { TuiCard } from '@taiga-ui/layout';
 import { catchError, finalize, map, of } from 'rxjs';
+import { convertEvolutionChainToNodeModel } from '@features/pokemon-profile/data/helpers/convert-evolution-chain';
+import { PokemonDataService } from '@shared/services/pokemon-data.service';
 import { EvolutionChainItemComponent } from './evolution-chain-item/evolution-chain-item.component';
 import { PokemonProfileInfoComponent } from './pokemon-profile-info/pokemon-profile-info.component';
 import { PokemonProfileStatsComponent } from './pokemon-profile-stats/pokemon-profile-stats.component';
 import { PokemonProfileSpeciesBreedingComponent } from './pokemon-profile-species-breeding/pokemon-profile-species-breeding.component';
-import { TranslocoDirective } from '@jsverse/transloco';
-import { PokemonDataService } from '@shared/services/pokemon-data.service';
-import { convertEvolutionChainToNodeModel } from '@features/pokemon-profile/data/helpers/convert-evolution-chain';
 import { GAMES_PATH } from '@features/games/games.routes';
 import { TAMAGOTCHI_PATH } from '@shared/constants/tamagotchi-routes';
 import { TAMAGOTCHI_SELECTION_PORT } from '@shared/constants/tamagotchi-selection.token';
-import {
-  PokemonTamagotchiSelectionComponent,
-  type TamagotchiSelectionFeedback,
-} from '@shared/ui/components/pokemon-tamagotchi-selection/pokemon-tamagotchi-selection.component';
+import type { TamagotchiSelectionFeedback } from '@shared/ui/components/pokemon-tamagotchi-selection/pokemon-tamagotchi-selection.component';
 
 @Component({
   selector: 'left-paw-pokemon-profile-page',
   imports: [
-    PokemonTamagotchiSelectionComponent,
-    TuiProgress,
-    TuiCard,
     EvolutionChainItemComponent,
     PokemonProfileInfoComponent,
-    PokemonProfileStatsComponent,
     PokemonProfileSpeciesBreedingComponent,
+    PokemonProfileStatsComponent,
     TranslocoDirective,
+    TuiCard,
+    TuiProgress,
   ],
   templateUrl: './pokemon-profile-page.component.html',
   styleUrl: './pokemon-profile-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PokemonProfilePageComponent {
+  private readonly profileService = inject(PokemonDataService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly selectionPort = inject(TAMAGOTCHI_SELECTION_PORT);
-  private readonly profileService = inject(PokemonDataService);
-
   public readonly pokemonEndpoint = input.required<string>();
 
   protected readonly pokemonProfile = this.profileService.createPokemonProfileData(() =>

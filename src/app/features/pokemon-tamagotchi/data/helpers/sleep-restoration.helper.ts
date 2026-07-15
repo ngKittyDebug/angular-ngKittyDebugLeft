@@ -1,14 +1,14 @@
 import { TIMER_CONFIG } from '../constants/timer.constants';
 
 export function calculateSleepRestorationBonus(
-  sleepStartedAt: number | null,
+  lastSleepTime: number | null,
   now: number = Date.now(),
 ): number {
-  if (sleepStartedAt === null) {
+  if (lastSleepTime === null) {
     return 0;
   }
 
-  const sleepDurationMs = now - sleepStartedAt;
+  const sleepDurationMs = now - lastSleepTime;
 
   if (sleepDurationMs < TIMER_CONFIG.SLEEP.MIN_DURATION_MS) {
     return 0;

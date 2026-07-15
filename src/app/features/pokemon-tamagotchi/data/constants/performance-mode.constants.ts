@@ -1,20 +1,16 @@
-import type {
-  EffectivePerformanceMode,
-  PerformanceMode,
-  PerformanceProfileModel,
-} from '../models/performance-mode.model';
+import type { PerformanceMode, PerformanceProfileModel } from '../models/performance-mode.model';
 import { TIMER_CONFIG } from './timer.constants';
 
 export const PERFORMANCE_MODE_STORAGE_KEY = 'pokemon-tamagotchi-performance-mode';
 
-export const DEFAULT_PERFORMANCE_MODE: PerformanceMode = 'auto';
+export const DEFAULT_PERFORMANCE_MODE: PerformanceMode = 'high';
 
 export const MEMORY_LIMITS = {
   INTERACTION_HISTORY_MAX: 50,
   NOTIFICATION_HISTORY_MAX: 20,
 } as const;
 
-export const PERFORMANCE_PROFILES: Record<EffectivePerformanceMode, PerformanceProfileModel> = {
+export const PERFORMANCE_PROFILES: Record<PerformanceMode, PerformanceProfileModel> = {
   high: {
     complexAnimations: true,
     decayIntervalMs: TIMER_CONFIG.DECAY_INTERVAL_MS,

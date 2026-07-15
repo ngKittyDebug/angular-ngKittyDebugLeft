@@ -116,6 +116,20 @@ describe('ActionButtonsComponent', () => {
       expect(feedButton.disabled).toBe(true);
     });
 
+    it('должен включать кнопку, когда cooldown input очищается без перезагрузки', () => {
+      const fixture = createFixture({
+        cooldowns: { ...EMPTY_COOLDOWNS, feed: 45_000 },
+      });
+      const feedButton = [
+        ...(fixture.nativeElement as HTMLElement).querySelectorAll('button'),
+      ].find((node) => node.textContent?.trim() === 'Feed') as HTMLButtonElement;
+
+      fixture.componentRef.setInput('cooldowns', EMPTY_COOLDOWNS);
+      fixture.detectChanges();
+
+      expect(feedButton.disabled).toBe(false);
+    });
+
     it('должен отключать тренировку при низкой энергии', () => {
       const element = createFixture({ canTrain: false }).nativeElement as HTMLElement;
       const trainButton = [...element.querySelectorAll('.action-buttons__btn')].find(
@@ -123,6 +137,23 @@ describe('ActionButtonsComponent', () => {
       ) as HTMLButtonElement;
 
       expect(trainButton.disabled).toBe(true);
+    });
+
+    it('должен оставлять play доступным во время блокировки тренировки', () => {
+      const fixture = createFixture();
+
+      fixture.componentRef.setInput('actionsLocked', true);
+      fixture.detectChanges();
+
+      const playButton = [
+        ...(fixture.nativeElement as HTMLElement).querySelectorAll('.action-buttons__btn'),
+      ].find((node) => node.textContent?.trim() === 'Play') as HTMLButtonElement;
+      const feedButton = [
+        ...(fixture.nativeElement as HTMLElement).querySelectorAll('.action-buttons__btn'),
+      ].find((node) => node.textContent?.trim() === 'Feed') as HTMLButtonElement;
+
+      expect(playButton.disabled).toBe(false);
+      expect(feedButton.disabled).toBe(true);
     });
 
     it('должен эмитить sleep при клике по Wake up во время сна', () => {

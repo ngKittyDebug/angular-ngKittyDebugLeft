@@ -2,6 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createInitialPokemonStatus } from '../store/tamagotchi-initial';
 import { createInitialDailyRoutine } from '../store/tamagotchi-initial';
+import { GAME_BALANCE } from '../constants/game-balance.constants';
+import { STATUS_THRESHOLDS } from '../constants/status-thresholds.constants';
 import { TIMER_CONFIG } from '../constants/timer.constants';
 import { TimerService } from './timer.service';
 import { StatusDecayService } from './status-decay.service';
@@ -34,7 +36,6 @@ describe('TimerService', () => {
             isSleeping: false,
             lastActionTime: fixedNow - TIMER_CONFIG.DECAY_INTERVAL_MS - 1000,
             lastDecayTime: null,
-            sleepStartedAt: null,
             status: { ...createInitialPokemonStatus(), mood: 70 },
           },
           fixedNow,
@@ -58,7 +59,6 @@ describe('TimerService', () => {
           isSleeping: false,
           lastActionTime: fixedNow - TIMER_CONFIG.DECAY_INTERVAL_MS - 1000,
           lastDecayTime: null,
-          sleepStartedAt: null,
           status: { ...createInitialPokemonStatus(), mood: 70 },
         };
 
@@ -87,18 +87,28 @@ describe('TimerService', () => {
         expect(third.dailyRoutine.bonusAppliedDate).toBe('2026-07-03');
       });
 
-      it('должен сообщать бонус восстановления энергии за длительный сон', () => {
-        const startedAt = Date.now() - TIMER_CONFIG.SLEEP.MIN_DURATION_MS - 1000;
-        const result = service.processTick({
-          dailyRoutine: createInitialDailyRoutine(),
-          isSleeping: true,
-          lastActionTime: startedAt,
-          lastDecayTime: startedAt,
-          sleepStartedAt: startedAt,
-          status: { ...createInitialPokemonStatus(), energy: 20 },
-        });
+      it('должен возвращать alert при offline decay, который пересекает warning-порог', () => {
+        const fixedNow = 1_700_000_000_000;
+        const beforeHunger = STATUS_THRESHOLDS.hungerWarning + 5;
+        const targetHunger = STATUS_THRESHOLDS.hungerWarning - 1;
+        const elapsedMs =
+          ((beforeHunger - targetHunger) / GAME_BALANCE.STATUS_DECAY.HUNGER) * (60 * 60 * 1000);
 
-        expect(result.sleepBonusEnergy).toBe(TIMER_CONFIG.SLEEP.BONUS_ENERGY);
+        const result = service.processTick(
+          {
+            dailyRoutine: createInitialDailyRoutine(),
+            isSleeping: false,
+            lastActionTime: null,
+            lastDecayTime: fixedNow - elapsedMs,
+            status: {
+              ...createInitialPokemonStatus(),
+              hunger: beforeHunger,
+            },
+          },
+          fixedNow,
+        );
+
+        expect(result.alerts).toContain('hungerLow');
       });
     });
 
@@ -124,7 +134,6 @@ describe('TimerService', () => {
             isSleeping: false,
             lastActionTime: Date.now() - TIMER_CONFIG.DECAY_INTERVAL_MS - 1000,
             lastDecayTime: null,
-            sleepStartedAt: null,
             status: createInitialPokemonStatus(),
           }),
           callback,
@@ -169,7 +178,6 @@ describe('TimerService', () => {
           isSleeping: false,
           lastActionTime: Date.now() - TIMER_CONFIG.DECAY_INTERVAL_MS - 1000,
           lastDecayTime: null,
-          sleepStartedAt: null,
           status: createInitialPokemonStatus(),
         }),
         callback,

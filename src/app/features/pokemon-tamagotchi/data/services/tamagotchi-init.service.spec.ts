@@ -8,6 +8,7 @@ import { TEST_POKEMON } from '../fixtures/tamagotchi-arbitraries';
 import type { PokemonModel } from '../models/pokemon.model';
 import { TamagotchiErrorRecoveryService } from './tamagotchi-error-recovery.service';
 import { TamagotchiInitService } from './tamagotchi-init.service';
+import { TamagotchiLoggerService } from './tamagotchi-logger.service';
 import { TamagotchiSelectionService } from './tamagotchi-selection.service';
 import { TAMAGOTCHI_SYSTEM_ERRORS } from '../constants/system-errors.constants';
 
@@ -35,8 +36,11 @@ function createInitStoreMock(
   },
   methodOverrides: Partial<TamagotchiStoreInitMethodsMock> = {},
 ) {
+  const initialized = signal(options.initialized ?? true);
   const methods = {
-    loadFromPersistence: vi.fn(),
+    loadFromPersistence: vi.fn(() => {
+      initialized.set(true);
+    }),
     resetState: vi.fn(),
     selectPokemon: vi.fn(),
     setError: vi.fn(),
@@ -45,7 +49,7 @@ function createInitStoreMock(
 
   return {
     hasPokemon: signal(options.hasPokemon),
-    initialized: signal(options.initialized ?? true),
+    initialized,
     ...(options.pokemon === undefined ? {} : { pokemon: signal(options.pokemon) }),
     ...methods,
   };
@@ -76,23 +80,16 @@ describe('TamagotchiInitService', () => {
         of({ pokemon: TEST_POKEMON, valid: true as const }),
       );
       const saveSelectedPokemon = vi.fn();
-      const loadFromPersistence = vi.fn();
-      const selectPokemon = vi.fn();
       const selection = createSelectionInitMock({
         saveSelectedPokemon,
         validateSelectedPokemon,
       });
+      const store = createInitStoreMock({ hasPokemon: false, initialized: false });
 
       TestBed.configureTestingModule({
         providers: [
           TamagotchiInitService,
-          {
-            provide: TamagotchiStore,
-            useValue: createInitStoreMock(
-              { hasPokemon: false },
-              { loadFromPersistence, selectPokemon },
-            ),
-          },
+          { provide: TamagotchiStore, useValue: store },
           { provide: TamagotchiSelectionService, useValue: selection },
         ],
       });
@@ -102,8 +99,8 @@ describe('TamagotchiInitService', () => {
       service.bootstrapFromProfile().subscribe();
 
       expect(validateSelectedPokemon).toHaveBeenCalledTimes(1);
-      expect(loadFromPersistence).toHaveBeenCalledTimes(1);
-      expect(selectPokemon).toHaveBeenNthCalledWith(1, TEST_POKEMON);
+      expect(store.loadFromPersistence).toHaveBeenCalledTimes(1);
+      expect(store.selectPokemon).toHaveBeenNthCalledWith(1, TEST_POKEMON);
       expect(saveSelectedPokemon).toHaveBeenNthCalledWith(1, TEST_POKEMON);
     });
   });
@@ -145,7 +142,7 @@ describe('TamagotchiInitService', () => {
 
       expect(completed).toBe(true);
       expect(validateSelectedPokemon).not.toHaveBeenCalled();
-      expect(loadFromPersistence).toHaveBeenCalledTimes(1);
+      expect(loadFromPersistence).not.toHaveBeenCalled();
       expect(resetState).not.toHaveBeenCalled();
       expect(selectPokemon).not.toHaveBeenCalled();
     });
@@ -192,7 +189,7 @@ describe('TamagotchiInitService', () => {
 
       service.bootstrapFromProfile().subscribe();
 
-      expect(loadFromPersistence).toHaveBeenCalledTimes(1);
+      expect(loadFromPersistence).not.toHaveBeenCalled();
       expect(resetState).toHaveBeenCalledTimes(1);
       expect(validateSelectedPokemon).toHaveBeenCalledTimes(1);
       expect(selectPokemon).toHaveBeenNthCalledWith(1, replacementPokemon);
@@ -203,25 +200,18 @@ describe('TamagotchiInitService', () => {
       const validateSelectedPokemon = vi.fn(() =>
         of({ error: 'noSelection' as const, valid: false }),
       );
-      const loadFromPersistence = vi.fn();
-      const selectPokemon = vi.fn();
       const setError = vi.fn();
       const loadPokemonByName = vi.fn();
       const selection = createSelectionInitMock({
         loadPokemonByName,
         validateSelectedPokemon,
       });
+      const store = createInitStoreMock({ hasPokemon: false, initialized: false }, { setError });
 
       TestBed.configureTestingModule({
         providers: [
           TamagotchiInitService,
-          {
-            provide: TamagotchiStore,
-            useValue: createInitStoreMock(
-              { hasPokemon: false },
-              { loadFromPersistence, selectPokemon, setError },
-            ),
-          },
+          { provide: TamagotchiStore, useValue: store },
           { provide: TamagotchiSelectionService, useValue: selection },
         ],
       });
@@ -231,9 +221,9 @@ describe('TamagotchiInitService', () => {
       service.bootstrapFromProfile().subscribe();
 
       expect(validateSelectedPokemon).toHaveBeenCalledTimes(1);
-      expect(loadFromPersistence).toHaveBeenCalledTimes(1);
+      expect(store.loadFromPersistence).toHaveBeenCalledTimes(1);
       expect(setError).toHaveBeenNthCalledWith(1, 'noSelection');
-      expect(selectPokemon).not.toHaveBeenCalled();
+      expect(store.selectPokemon).not.toHaveBeenCalled();
       expect(loadPokemonByName).not.toHaveBeenCalled();
     });
   });
@@ -243,7 +233,9 @@ describe('TamagotchiErrorRecoveryService', () => {
   let service: TamagotchiErrorRecoveryService;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({
+      providers: [TamagotchiErrorRecoveryService, TamagotchiLoggerService],
+    });
     service = TestBed.inject(TamagotchiErrorRecoveryService);
   });
 

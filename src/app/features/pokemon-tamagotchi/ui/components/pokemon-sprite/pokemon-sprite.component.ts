@@ -1,17 +1,15 @@
 import type { ElementRef } from '@angular/core';
 import {
-  afterNextRender,
+  afterRenderEffect,
   ChangeDetectionStrategy,
   Component,
   computed,
-  DestroyRef,
   inject,
   input,
   output,
   signal,
   viewChild,
 } from '@angular/core';
-import { ANIMATION_PERFORMANCE } from '../../../data/constants/animation-performance.constants';
 import {
   resolveSpriteUrl,
   resolveStatusSpriteKey,
@@ -32,10 +30,8 @@ import { GestureService } from '../../services/gesture.service';
 })
 export class PokemonSpriteComponent {
   private readonly animationService = inject(AnimationService);
-  private readonly destroyRef = inject(DestroyRef);
   private readonly gestureService = inject(GestureService);
   private readonly spriteImage = viewChild<ElementRef<HTMLImageElement>>('spriteImage');
-  private feedbackTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private pointerHandledInteraction = false;
 
   public readonly interacted = output<InteractionEventModel>();
@@ -86,18 +82,26 @@ export class PokemonSpriteComponent {
   });
 
   public constructor() {
-    afterNextRender(() => {
-      const image = this.spriteImage()?.nativeElement;
+    afterRenderEffect({
+      write: (onCleanup) => {
+        const image = this.spriteImage()?.nativeElement;
 
-      if (!image || !this.useComplexAnimations()) {
-        return;
-      }
+        if (!image) {
+          return;
+        }
 
-      this.animationService.enableGpuCompositing(image);
+        if (!this.useComplexAnimations()) {
+          this.animationService.releaseGpuCompositing(image);
 
-      this.destroyRef.onDestroy(() => {
-        this.animationService.releaseGpuCompositing(image);
-      });
+          return;
+        }
+
+        this.animationService.enableGpuCompositing(image);
+
+        onCleanup(() => {
+          this.animationService.releaseGpuCompositing(image);
+        });
+      },
     });
   }
 
@@ -132,24 +136,30 @@ export class PokemonSpriteComponent {
   }
 
   protected onPointerUp(event: PointerEvent): void {
-    if (!this.canInteract()) {
+    const result = this.gestureService.handlePointerUp(event);
+
+    if (!this.canInteract() || !result) {
       return;
     }
 
-    const result = this.gestureService.handlePointerUp(event);
-
-    if (result) {
-      this.pointerHandledInteraction = true;
-      this.applyGestureResult(result);
-    }
+    this.pointerHandledInteraction = true;
+    this.applyGestureResult(result);
   }
 
   protected onPointerCancel(event: PointerEvent): void {
     this.gestureService.handlePointerCancel(event);
   }
 
+  protected onFeedbackAnimationEnd(event: AnimationEvent): void {
+    if (event.animationName !== this.feedbackAnimation()) {
+      return;
+    }
+
+    this.feedbackAnimation.set(null);
+  }
+
   private canInteract(): boolean {
-    return !this.isSleeping() && !this.isEvolving() && !this.isTraining();
+    return !this.isSleeping() && !this.isEvolving();
   }
 
   private applyGestureResult(result: {
@@ -165,15 +175,12 @@ export class PokemonSpriteComponent {
   }
 
   private triggerFeedbackAnimation(animationClass: string): void {
-    this.feedbackAnimation.set(animationClass);
+    if (!this.useComplexAnimations()) {
+      this.feedbackAnimation.set(null);
 
-    if (this.feedbackTimeoutId !== null) {
-      clearTimeout(this.feedbackTimeoutId);
+      return;
     }
 
-    this.feedbackTimeoutId = setTimeout(() => {
-      this.feedbackAnimation.set(null);
-      this.feedbackTimeoutId = null;
-    }, ANIMATION_PERFORMANCE.FEEDBACK_ANIMATION_MS);
+    this.feedbackAnimation.set(animationClass);
   }
 }

@@ -17,9 +17,7 @@
     "ariaLabel": "Экран ухода за покемоном-тамагочи",
     "performanceLabel": "Производительность",
     "performanceAria": "Режим производительности",
-    "performanceEffective": "Используется профиль «{{mode}}»",
     "performanceModes": {
-      "auto": "Авто",
       "high": "Высокая",
       "balanced": "Сбалансированная",
       "low": "Экономия"
@@ -44,7 +42,6 @@
     "sleep": "Спать",
     "wakeUp": "Разбудить",
     "cooldown": "Доступно через {{seconds}}с",
-    "disabledSleeping": "Покемон спит",
     "disabledLowEnergy": "Мало энергии",
     "disabledCooldown": "Перезарядка",
     "disabledTraining": "Идёт тренировка"
@@ -85,10 +82,6 @@
       "energyCritical": {
         "title": "Истощён!",
         "message": "У покемона почти не осталось энергии."
-      },
-      "evolutionReady": {
-        "title": "Готов к эволюции!",
-        "message": "Все условия эволюции выполнены."
       }
     },
     "evolution": {

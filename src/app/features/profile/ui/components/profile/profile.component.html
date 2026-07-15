@@ -163,7 +163,7 @@
     <h3>{{ t('profile.favorite.heading') }}</h3>
     <span class="line"></span>
     <div class="card-container">
-      @for (name of facade.profile()?.pokemonNameFavoriteList ?? []; track name) {
+      @for (name of facade.favoritePokemonList(); track name) {
         <left-paw-pokemon-card-profile [pokemonName]="name" />
       } @empty {
         <div class="caught-text">{{ t('profile.favorite.empty') }}</div>

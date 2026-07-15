@@ -141,11 +141,13 @@ export const arbitraryPokemonStatus = (): fc.Arbitrary<PokemonStatusModel> =>
     health: fc.integer({ max: 100, min: 0 }),
     hunger: fc.integer({ max: 100, min: 0 }),
     hydration: fc.integer({ max: 100, min: 0 }),
+    lastCareTime: fc.option(fc.nat(), { nil: null }),
     lastFeedTime: fc.option(fc.nat(), { nil: null }),
     lastHydrationTime: fc.option(fc.nat(), { nil: null }),
     lastPlayTime: fc.option(fc.nat(), { nil: null }),
     lastSaveTime: fc.option(fc.nat(), { nil: null }),
     lastSleepTime: fc.option(fc.nat(), { nil: null }),
+    lastTrainTime: fc.option(fc.nat(), { nil: null }),
     level: fc.integer({ max: 100, min: 1 }),
     mood: fc.integer({ max: 100, min: 0 }),
   });

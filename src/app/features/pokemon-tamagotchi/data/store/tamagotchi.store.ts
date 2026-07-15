@@ -1,5 +1,14 @@
-import { computed, inject } from '@angular/core';
-import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
+import { computed, DestroyRef, inject } from '@angular/core';
+import {
+  patchState,
+  signalStore,
+  withComputed,
+  withHooks,
+  withMethods,
+  withState,
+} from '@ngrx/signals';
+import { rxMethod } from '@ngrx/signals/rxjs-interop';
+import { debounceTime, pipe, tap } from 'rxjs';
 import { TAMAGOTCHI_SYSTEM_ERRORS } from '../constants/system-errors.constants';
 import { calculateBondLevel } from '../helpers/gesture.helper';
 import { sortNotificationsByPriority } from '../helpers/notification-factory.helper';
@@ -16,16 +25,17 @@ import {
   careForPokemonState,
   checkEvolutionState,
   clearErrorState,
-  clearPokemonState,
   completeEvolutionState,
   completeTrainingState,
   feedPokemonState,
   initializeTamagotchiState,
   interactWithPokemonState,
   loadStateSuccessState,
+  markEvolutionReadyNotifiedState,
   playWithPokemonState,
   putToSleepState,
   resetStateTransition,
+  restartTrainingTimerState,
   saveStateSuccessState,
   selectPokemonState,
   setErrorState,
@@ -39,7 +49,7 @@ import { initialTamagotchiState } from './tamagotchi-initial';
 
 const SAVE_DEBOUNCE_MS = 300;
 
-export function snapshotState(store: {
+function snapshotState(store: {
   achievementList: () => TamagotchiStateModel['achievementList'];
   dailyRoutine: () => TamagotchiStateModel['dailyRoutine'];
   error: () => TamagotchiStateModel['error'];
@@ -78,13 +88,11 @@ export function snapshotState(store: {
 }
 
 export const TamagotchiStore = signalStore(
-  { providedIn: 'root' },
   withState(initialTamagotchiState),
   withComputed((store) => ({
     hasPokemon: computed(() => store.pokemon() !== null),
     isTraining: computed(() => store.trainingStartedAt() !== null),
     canEvolve: computed(() => store.evolutionProgress().isReady && !store.isEvolving()),
-    snapshot: computed(() => snapshotState(store)),
     unreadNotifications: computed(() =>
       sortNotificationsByPriority(
         store.notificationList().filter((notification) => !notification.read),
@@ -98,7 +106,7 @@ export const TamagotchiStore = signalStore(
       errorRecovery = inject(TamagotchiErrorRecoveryService),
       persistence = inject(TamagotchiPersistenceService),
     ) => {
-      let saveTimer: ReturnType<typeof setTimeout> | null = null;
+      let pendingSave = false;
 
       const performSave = (): void => {
         if (!store.initialized()) {
@@ -120,19 +128,27 @@ export const TamagotchiStore = signalStore(
         }
       };
 
+      const saveStateDebounced = rxMethod<void>(
+        pipe(
+          debounceTime(SAVE_DEBOUNCE_MS),
+          tap(() => {
+            if (!pendingSave) {
+              return;
+            }
+
+            pendingSave = false;
+            performSave();
+          }),
+        ),
+      );
+
       const scheduleSave = (): void => {
         if (!store.initialized()) {
           return;
         }
 
-        if (saveTimer !== null) {
-          clearTimeout(saveTimer);
-        }
-
-        saveTimer = setTimeout(() => {
-          saveTimer = null;
-          performSave();
-        }, SAVE_DEBOUNCE_MS);
+        pendingSave = true;
+        saveStateDebounced();
       };
 
       const mutateAndSave = (
@@ -143,6 +159,15 @@ export const TamagotchiStore = signalStore(
       };
 
       return {
+        flushSave(): void {
+          if (!pendingSave) {
+            return;
+          }
+
+          pendingSave = false;
+          performSave();
+        },
+
         loadFromPersistence(): void {
           try {
             const loaded = persistence.load();
@@ -175,12 +200,6 @@ export const TamagotchiStore = signalStore(
           mutateAndSave((state) => selectPokemonState(state, pokemon));
         },
 
-        clearPokemon(): void {
-          persistence.clear();
-          patchState(store, clearPokemonState);
-          scheduleSave();
-        },
-
         feed(now: number): void {
           mutateAndSave((state) => feedPokemonState(state, now));
         },
@@ -205,16 +224,20 @@ export const TamagotchiStore = signalStore(
           mutateAndSave((state) => completeTrainingState(state, now, experienceGain));
         },
 
+        restartTrainingTimer(now: number): void {
+          mutateAndSave((state) => restartTrainingTimerState(state, now));
+        },
+
         putToSleep(now: number): void {
           mutateAndSave((state) => putToSleepState(state, now));
         },
 
-        wakeUp(now: number): void {
-          mutateAndSave((state) => wakeUpState(state, now));
+        wakeUp(now: number, bonusEnergy = 0): void {
+          mutateAndSave((state) => wakeUpState(state, now, bonusEnergy));
         },
 
-        interactWithPokemon(interaction: InteractionEventModel, now: number): void {
-          mutateAndSave((state) => interactWithPokemonState(state, interaction, now));
+        interactWithPokemon(interaction: InteractionEventModel): void {
+          mutateAndSave((state) => interactWithPokemonState(state, interaction));
         },
 
         updateStatus(statusUpdate: StatusUpdateModel): void {
@@ -231,6 +254,10 @@ export const TamagotchiStore = signalStore(
 
         checkEvolution(): void {
           mutateAndSave(checkEvolutionState);
+        },
+
+        markEvolutionReadyNotified(notifiedAt: number): void {
+          mutateAndSave((state) => markEvolutionReadyNotifiedState(state, notifiedAt));
         },
 
         startEvolution(): void {
@@ -261,4 +288,37 @@ export const TamagotchiStore = signalStore(
       };
     },
   ),
+  withHooks({
+    onInit(store) {
+      const destroyReference = inject(DestroyRef);
+      const flushSave = (): void => {
+        store.flushSave();
+      };
+      const flushOnHidden = (): void => {
+        if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+          flushSave();
+        }
+      };
+
+      if (typeof document !== 'undefined') {
+        document.addEventListener('visibilitychange', flushOnHidden);
+      }
+
+      if (typeof window !== 'undefined') {
+        window.addEventListener('pagehide', flushSave);
+      }
+
+      destroyReference.onDestroy(() => {
+        flushSave();
+
+        if (typeof document !== 'undefined') {
+          document.removeEventListener('visibilitychange', flushOnHidden);
+        }
+
+        if (typeof window !== 'undefined') {
+          window.removeEventListener('pagehide', flushSave);
+        }
+      });
+    },
+  }),
 );

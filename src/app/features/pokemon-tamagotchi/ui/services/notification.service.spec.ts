@@ -1,5 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { TranslocoService } from '@jsverse/transloco';
+import { of } from 'rxjs';
+import type { Observable } from 'rxjs';
 import { beforeEach, describe, expect, it, type MockedObject, vi } from 'vitest';
 import { AppNotificationService } from '@core/services/app-notification.service';
 import { TIMER_CONFIG } from '../../data/constants/timer.constants';
@@ -16,8 +18,17 @@ const TRANSLATIONS: Record<string, string> = {
 };
 
 type NotificationTranslocoMock = MockedObject<{
-  translate(key: string): string;
+  selectTranslate(
+    key: string,
+    parameters: Record<string, never>,
+    scope: string,
+  ): Observable<string>;
 }>;
+
+async function flushTranslation(): Promise<void> {
+  await Promise.resolve();
+  await Promise.resolve();
+}
 
 describe('TamagotchiNotificationService', () => {
   let service: TamagotchiNotificationService;
@@ -48,7 +59,9 @@ describe('TamagotchiNotificationService', () => {
     >;
 
     const translocoMock = {
-      translate: vi.fn((key: string) => TRANSLATIONS[key] ?? key),
+      selectTranslate: vi.fn((key: string, _parameters: Record<string, never>, scope: string) =>
+        of(TRANSLATIONS[`${scope}.${key}`] ?? `${scope}.${key}`),
+      ),
     } as const satisfies NotificationTranslocoMock;
 
     TestBed.configureTestingModule({
@@ -64,8 +77,9 @@ describe('TamagotchiNotificationService', () => {
   });
 
   describe('Happy Path', () => {
-    it('должен показывать warning toast и сохранять историю для status alerts', () => {
+    it('должен показывать warning toast и сохранять историю для status alerts', async () => {
       service.notifyStatusAlerts(['hungerLow']);
+      await flushTranslation();
 
       expect(appNotifications.showWarningNotification).toHaveBeenNthCalledWith(
         1,
@@ -77,13 +91,14 @@ describe('TamagotchiNotificationService', () => {
         1,
         expect.objectContaining({
           priority: 'warning',
-          title: 'alerts.hungerLow.title',
+          title: { key: 'alerts.hungerLow.title', kind: 'translationKey' },
         }),
       );
     });
 
-    it('должен показывать positive toast при готовности к эволюции', () => {
+    it('должен показывать positive toast при готовности к эволюции', async () => {
       service.notifyEvolutionReady('Pikachu');
+      await flushTranslation();
 
       expect(appNotifications.showPositiveNotification).toHaveBeenNthCalledWith(
         1,
@@ -91,10 +106,21 @@ describe('TamagotchiNotificationService', () => {
         'Ready to evolve!',
       );
     });
+
+    it('не должен переводить имя покемона с точкой как i18n-ключ', async () => {
+      service.notifyEvolutionReady('Mr. Mime');
+      await flushTranslation();
+
+      expect(appNotifications.showPositiveNotification).toHaveBeenNthCalledWith(
+        1,
+        'Mr. Mime',
+        'Ready to evolve!',
+      );
+    });
   });
 
   describe('Edge Cases', () => {
-    it('должен объединять пороговые и периодические critical alerts без дубликатов', () => {
+    it('должен объединять пороговые и периодические critical alerts без дубликатов', async () => {
       const timestamp = 2_000_000;
       const status = {
         ...createInitialPokemonStatus(),
@@ -106,6 +132,7 @@ describe('TamagotchiNotificationService', () => {
         thresholdAlerts: ['energyCritical'],
         timestamp,
       });
+      await flushTranslation();
 
       expect(storeMock.addNotification).toHaveBeenCalledTimes(1);
       expect(appNotifications.showErrorNotification).toHaveBeenNthCalledWith(
@@ -122,6 +149,7 @@ describe('TamagotchiNotificationService', () => {
         thresholdAlerts: [],
         timestamp: timestamp + TIMER_CONFIG.CRITICAL_ALERT_REPEAT_MS,
       });
+      await flushTranslation();
 
       expect(storeMock.addNotification).toHaveBeenCalledTimes(1);
     });
