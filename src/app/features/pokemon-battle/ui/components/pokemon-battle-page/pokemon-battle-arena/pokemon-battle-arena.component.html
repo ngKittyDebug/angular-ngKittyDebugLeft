@@ -18,9 +18,12 @@
       <div class="battle-controls">
         <div class="controls-header">
           <h3 class="controls-title">
-            {{ t('controls.turn') }} {{ facade.currentSelectingPokemonIndex() + 1 }}
-            {{ t('controls.of') }}
-            {{ facade.activeAlivePlayerPokemonList().length }}
+            {{
+              t('controls.turnOfTotal', {
+                current: facade.currentSelectingPokemonIndex() + 1,
+                total: facade.activeAlivePlayerPokemonList().length,
+              })
+            }}
           </h3>
           @if (facade.currentSelectingPokemonIndex() > 0) {
             <button class="reset-selection-button" (click)="onResetSelection()">
@@ -91,10 +94,10 @@
       <div class="log-box">
         @for (log of textLogList; track $index) {
           <p class="log-entry" [class.round-header]="log.key === 'roundHeader'">
-            @if (log.key === 'roundHeader') {
-              {{ t('log.' + log.key, log.params) }}
+            @if (log.key === 'raw' && log.params?.['message']) {
+              {{ log.params['message'] }}
             } @else {
-              {{ log.params?.['message'] || log.key }}
+              {{ t('log.' + log.key, log.params) }}
             }
           </p>
         } @empty {
@@ -114,7 +117,7 @@
         </div>
         <div class="info-item">
           <span class="info-label">{{ t('info.status') }}</span>
-          <span class="info-value status-badge">{{ t('status.' + state.status) }}</span>
+          <span class="info-value status-badge">{{ t('status.' + facade.statusKey()) }}</span>
         </div>
         <div class="info-item">
           <span class="info-label">{{ t('info.mode') }}</span>

@@ -56,13 +56,14 @@ export const PokemonBattleStore = signalStore(
               });
             }),
             catchError((error: unknown) => {
-              const errorMessage =
-                error instanceof Error ? error.message : 'Failed to load pokemons';
-
               patchState(store, {
-                error: errorMessage,
+                error: 'loadFailed',
                 isLoading: false,
               });
+
+              if (error instanceof Error) {
+                console.error(error.message);
+              }
 
               return EMPTY;
             }),

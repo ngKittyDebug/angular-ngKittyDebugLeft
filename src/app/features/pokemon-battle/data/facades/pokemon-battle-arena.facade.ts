@@ -32,6 +32,16 @@ export class PokemonBattleArenaFacade {
   public readonly soundVolume = this.audioManager.volume;
   public readonly soundVolumePercent = computed(() => Math.round(this.soundVolume() * 100));
 
+  public readonly statusKey = computed(() => {
+    const status = this.battleState()?.status;
+
+    if (!status) {
+      return '';
+    }
+
+    return status.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+  });
+
   // Battle play state
   public readonly battleState = signal<BattleState | null>(null);
   public readonly textLogList = signal<{ key: string; params?: Record<string, unknown> }[]>([]);
@@ -149,11 +159,68 @@ export class PokemonBattleArenaFacade {
   }
 
   public triggerEvent(event: BattleEvent): void {
-    if (event.message) {
-      this.textLogList.update((logs) => [
-        ...logs,
-        { key: 'raw', params: { message: event.message } },
-      ]);
+    let key = '';
+    let parameters: Record<string, unknown> = {};
+
+    switch (event.type) {
+      case 'use-move':
+        key = 'useMove';
+        parameters = {
+          attacker: this.getPokemonName(event.payload?.attackerId),
+          move: event.payload?.moveName,
+        };
+
+        break;
+
+      case 'damage':
+        key = 'damage';
+        parameters = {
+          target: this.getPokemonName(event.payload?.targetId),
+          damage: event.payload?.damage,
+        };
+
+        break;
+
+      case 'faint':
+        key = 'faint';
+        parameters = {
+          pokemon: this.getPokemonName(event.payload?.pokemonId),
+        };
+
+        break;
+
+      case 'battle-over':
+        key = 'battleOver';
+
+        break;
+
+      case 'text':
+        if (event.message) {
+          key = 'raw';
+          parameters = { message: event.message };
+        }
+
+        break;
+
+      case 'turn-start':
+        if (event.message) {
+          key = 'raw';
+          parameters = { message: event.message };
+        }
+
+        break;
+
+      default:
+        if (event.message) {
+          key = 'raw';
+          parameters = { message: event.message };
+        }
+
+        break;
+    }
+
+    if (key) {
+      this.textLogList.update((logs) => [...logs, { key, params: parameters }]);
     }
   }
 
@@ -213,5 +280,23 @@ export class PokemonBattleArenaFacade {
     this.pendingCommandList.set([]);
     this.currentSelectingPokemonIndex.set(0);
     this.selectedMove.set(null);
+  }
+
+  private getPokemonName(id?: number): string {
+    if (!id) {
+      return '';
+    }
+
+    const state = this.battleState();
+
+    if (!state) {
+      return '';
+    }
+
+    const pokemon =
+      state.playerSide.pokemons.find((p) => p.id === id) ||
+      state.opponentSide.pokemons.find((p) => p.id === id);
+
+    return pokemon ? pokemon.name : '';
   }
 }

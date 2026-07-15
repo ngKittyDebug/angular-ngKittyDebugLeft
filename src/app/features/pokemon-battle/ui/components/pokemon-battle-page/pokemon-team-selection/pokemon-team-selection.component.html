@@ -14,7 +14,7 @@
       </div>
     } @else if (facade.error(); as err) {
       <div class="error-container">
-        <p class="error-message">{{ t('error') }} {{ err }}</p>
+        <p class="error-message">{{ t('errors.' + err) }}</p>
         <button class="retry-button" (click)="onPrevClick()">{{ t('retry') }}</button>
       </div>
     } @else {

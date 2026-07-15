@@ -63,7 +63,7 @@ describe('PokemonBattleStore', () => {
     store.loadPokemonList({ page: 0, limit: 10 });
 
     expect(store.isLoading()).toBe(false);
-    expect(store.error()).toBe('API Error');
+    expect(store.error()).toBe('loadFailed');
   });
 
   it('should add pokemon to team', () => {

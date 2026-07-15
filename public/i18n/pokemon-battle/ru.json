@@ -12,7 +12,9 @@
     "title": "Выберите Вашу Команду (2 покемона)",
     "summary": "Выбрано:",
     "loading": "Загрузка покемонов из PokeAPI...",
-    "error": "Ошибка:",
+    "errors": {
+      "loadFailed": "Ошибка: Не удалось загрузить покемонов"
+    },
     "retry": "Попробовать снова",
     "stats": {
       "hp": "HP",
@@ -29,8 +31,7 @@
   },
   "arena": {
     "controls": {
-      "turn": "Ход",
-      "of": "из",
+      "turnOfTotal": "Ход {{ current }} из {{ total }}",
       "resetSelection": "Сбросить выбор",
       "selectAttack": "Выберите атаку для",
       "selectTarget": "Выберите цель для",
@@ -40,8 +41,8 @@
     },
     "status": {
       "initializing": "Инициализация",
-      "waiting-for-commands": "Ожидание команд",
-      "resolving-turn": "Обработка хода",
+      "waitingForCommands": "Ожидание команд",
+      "resolvingTurn": "Обработка хода",
       "finished": "Завершено"
     },
     "result": {
@@ -55,7 +56,11 @@
     "log": {
       "title": "Журнал событий (Battle Log)",
       "empty": "Бой еще не начался. Сделайте первый ход!",
-      "roundHeader": "--- Раунд {{ turn }} ---"
+      "roundHeader": "--- Раунд {{ turn }} ---",
+      "useMove": "{{ attacker }} использует {{ move }}!",
+      "damage": "{{ target }} получает {{ damage }} ед. урона!",
+      "faint": "{{ pokemon }} теряет сознание!",
+      "battleOver": "Бой завершен!"
     },
     "info": {
       "title": "Состояние боя",
