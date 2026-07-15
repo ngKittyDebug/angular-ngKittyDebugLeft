@@ -21,6 +21,7 @@ describe('CanvasRendererComponent', () => {
       fillText: vi.fn(),
       fillRect: vi.fn(),
       arc: vi.fn(),
+      scale: vi.fn(),
     } as unknown as CanvasRenderingContext2D);
 
     audioManagerMock = {
@@ -63,9 +64,10 @@ describe('CanvasRendererComponent', () => {
 
         fixture.componentRef.setInput('state', stateMock);
         fixture.detectChanges();
+        TestBed.flushEffects();
 
         expect(fixture.componentInstance).toBeDefined();
-        expect(runOutsideAngularSpy).toHaveBeenCalledTimes(4);
+        expect(runOutsideAngularSpy).toHaveBeenCalledTimes(5);
 
         vi.advanceTimersByTime(1000);
 
@@ -100,6 +102,7 @@ describe('CanvasRendererComponent', () => {
 
         fixture.componentRef.setInput('state', stateMock);
         fixture.detectChanges();
+        TestBed.flushEffects();
 
         const eventTriggeredSpy = vi.spyOn(component.eventTriggered, 'emit');
         const animationFinishedSpy = vi.spyOn(component.animationFinished, 'emit');
@@ -132,6 +135,56 @@ describe('CanvasRendererComponent', () => {
         vi.advanceTimersByTime(1100);
 
         expect(animationFinishedSpy).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('Метод reset', () => {
+      it('должен корректно сбрасывать очереди анимаций и таймеры', () => {
+        vi.useFakeTimers();
+        const fixture = TestBed.createComponent(CanvasRendererComponent);
+        const component = fixture.componentInstance;
+        const stateMock: BattleState = {
+          playerSide: {
+            playerType: 'player',
+            pokemons: [structuredClone(BULBASAUR_FIXTURE)],
+            activePokemonIds: [1],
+          },
+          opponentSide: {
+            playerType: 'bot',
+            pokemons: [structuredClone(CHARMANDER_FIXTURE)],
+            activePokemonIds: [4],
+          },
+          status: 'waiting-for-commands',
+          winner: null,
+          turn: 1,
+        };
+
+        fixture.componentRef.setInput('state', stateMock);
+        fixture.detectChanges();
+        TestBed.flushEffects();
+
+        // Queue some events
+        component.playEvents([
+          {
+            type: 'use-move' as const,
+            message: 'Bulbasaur used tackle!',
+            payload: { attackerId: 1, moveName: 'tackle', targetId: 4 },
+          },
+        ]);
+
+        // Advance timers so events are active/queued
+        vi.advanceTimersByTime(50);
+
+        // Perform reset
+        component.reset();
+
+        // Verify state is cleared
+        expect((component as any).eventQueue.length).toBe(0);
+        expect((component as any).currentEvent).toBeNull();
+        expect((component as any).eventStartTime).toBe(0);
+        expect((component as any).eventDuration).toBe(0);
+        expect((component as any).animatedHps.size).toBe(0);
+        expect((component as any).cryTimers.length).toBe(0);
       });
     });
   });

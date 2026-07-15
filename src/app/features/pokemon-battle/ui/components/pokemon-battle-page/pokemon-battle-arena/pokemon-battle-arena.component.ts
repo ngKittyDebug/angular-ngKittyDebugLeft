@@ -57,10 +57,12 @@ export class PokemonBattleArenaComponent {
   }
 
   public onResetBattle(): void {
+    this.canvasRenderer()?.reset();
     this.facade.resetBattle();
   }
 
   public onGoBackToSelection(): void {
+    this.canvasRenderer()?.reset();
     this.facade.goBackToSelection();
   }
 
