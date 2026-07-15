@@ -3,7 +3,8 @@
     <div class="selection-header">
       <h2>{{ t('title') }}</h2>
       <div class="selected-summary">
-        {{ t('summary') }} <strong>{{ facade.selectedTeam().length }} / 2</strong>
+        {{ t('summary') }}
+        <strong>{{ facade.selectedTeam().length }} / {{ facade.TEAM_SIZE }}</strong>
       </div>
     </div>
 
@@ -20,8 +21,8 @@
     } @else {
       <div class="pokemon-selection-grid">
         @for (pokemon of facade.pokemonList(); track pokemon.id) {
-          @let isSelected = facade.selectedTeam().some((p) => p.id === pokemon.id);
-          @let limitReached = facade.selectedTeam().length >= 2;
+          @let isSelected = facade.selectedIds().has(pokemon.id);
+          @let limitReached = facade.isTeamLimitReached();
 
           <button
             type="button"
@@ -69,7 +70,7 @@
       <div class="pagination-controls">
         <tui-pagination
           [index]="facade.currentPage()"
-          [length]="pageCount"
+          [length]="facade.pageCount()"
           (indexChange)="onPageChange($event)"
         />
       </div>
@@ -80,7 +81,7 @@
           appearance="brand-primary"
           size="m"
           class="start-battle-action-btn"
-          [disabled]="facade.selectedTeam().length !== 2"
+          [disabled]="!facade.isTeamComplete()"
           (click)="onStartBattleClick()"
         >
           {{ t('startBattle') }}

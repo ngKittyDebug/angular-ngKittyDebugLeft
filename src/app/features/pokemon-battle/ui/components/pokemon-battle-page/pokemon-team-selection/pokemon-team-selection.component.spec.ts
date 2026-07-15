@@ -23,6 +23,12 @@ describe('PokemonTeamSelectionComponent', () => {
       limit: signal(10),
       isLoading: signal(false),
       error: signal(null),
+      TEAM_SIZE: 2,
+      selectedIds: signal(new Set()),
+      isTeamLimitReached: signal(false),
+      isTeamComplete: signal(false),
+      hasNextPage: signal(false),
+      pageCount: signal(1),
     } as unknown as MockedObject<Partial<PokemonTeamSelectionFacade>>;
 
     TestBed.configureTestingModule({

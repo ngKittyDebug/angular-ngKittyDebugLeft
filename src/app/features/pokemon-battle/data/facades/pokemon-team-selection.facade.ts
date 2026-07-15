@@ -1,13 +1,17 @@
-import { inject, Service } from '@angular/core';
+import { computed, inject, Service } from '@angular/core';
 import type { BattlePokemon } from '../models/battle.model';
 import { PokemonBattleStore } from '../store/pokemon-battle.store';
 import { CHARMANDER_FIXTURE, IVYSAUR_FIXTURE } from '../fixtures/pokemon.fixture';
 
 const POKEMON_PAGE_LIMIT = 10;
 
+export const TEAM_SIZE = 2;
+
 @Service({ autoProvided: false })
 export class PokemonTeamSelectionFacade {
   private readonly pokemonBattleStore = inject(PokemonBattleStore);
+
+  public readonly TEAM_SIZE = TEAM_SIZE;
 
   // Expose store signals
   public readonly pokemonList = this.pokemonBattleStore.pokemonList;
@@ -17,6 +21,14 @@ export class PokemonTeamSelectionFacade {
   public readonly currentPage = this.pokemonBattleStore.currentPage;
   public readonly totalCount = this.pokemonBattleStore.totalCount;
   public readonly limit = this.pokemonBattleStore.limit;
+
+  public readonly selectedIds = computed(() => new Set(this.selectedTeam().map((p) => p.id)));
+  public readonly isTeamLimitReached = computed(() => this.selectedTeam().length >= TEAM_SIZE);
+  public readonly isTeamComplete = computed(() => this.selectedTeam().length === TEAM_SIZE);
+  public readonly hasNextPage = computed(
+    () => (this.currentPage() + 1) * this.limit() < this.totalCount(),
+  );
+  public readonly pageCount = computed(() => Math.ceil(this.totalCount() / this.limit()));
 
   constructor() {
     this.pokemonBattleStore.loadPokemonList({ page: 0, limit: POKEMON_PAGE_LIMIT });
@@ -29,7 +41,7 @@ export class PokemonTeamSelectionFacade {
   public startBattle(): void {
     const selected = this.pokemonBattleStore.selectedTeam();
 
-    if (selected.length !== 2) {
+    if (selected.length !== TEAM_SIZE) {
       return;
     }
 
@@ -39,7 +51,7 @@ export class PokemonTeamSelectionFacade {
 
     const opponents: BattlePokemon[] = [];
 
-    if (available.length >= 2) {
+    if (available.length >= TEAM_SIZE) {
       const shuffled = [...available].sort(() => 0.5 - Math.random());
 
       opponents.push(shuffled[0], shuffled[1]);

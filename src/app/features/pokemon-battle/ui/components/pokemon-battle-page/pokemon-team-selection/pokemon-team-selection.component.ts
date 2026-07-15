@@ -17,10 +17,6 @@ import { PokemonTeamSelectionFacade } from '../../../../data/facades/pokemon-tea
 export class PokemonTeamSelectionComponent {
   public readonly facade = inject(PokemonTeamSelectionFacade);
 
-  public get pageCount(): number {
-    return Math.ceil(this.facade.totalCount() / this.facade.limit());
-  }
-
   public onPokemonClick(pokemon: BattlePokemon): void {
     this.facade.selectPokemon(pokemon);
   }
