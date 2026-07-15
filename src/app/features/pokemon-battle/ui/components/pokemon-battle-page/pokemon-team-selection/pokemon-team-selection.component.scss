@@ -1,6 +1,8 @@
+@import 'pokemon-types';
+
 .team-selection-main {
-  background-color: #f1f5f9;
-  border: 1px solid #cbd5e1;
+  background-color: var(--tui-background-neutral-1);
+  border: 1px solid var(--tui-border-normal);
   border-radius: 12px;
   padding: 2rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
@@ -16,11 +18,11 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 2px solid #e2e8f0;
+  border-bottom: 2px solid var(--tui-border-normal);
   padding-bottom: 1rem;
 
   h2 {
-    color: #1e3a8a;
+    color: var(--tui-text-primary);
     font-size: 1.5rem;
     font-weight: 700;
     margin: 0;
@@ -29,7 +31,7 @@
 
 .selected-summary {
   font-size: 1.1rem;
-  color: #475569;
+  color: var(--tui-text-secondary);
 }
 
 .loader-container {
@@ -41,7 +43,7 @@
   gap: 1rem;
 
   p {
-    color: #64748b;
+    color: var(--tui-text-secondary);
     font-size: 1.1rem;
     margin: 0;
   }
@@ -55,7 +57,7 @@
   gap: 1rem;
 
   .error-message {
-    color: #ef4444;
+    color: var(--tui-status-negative);
     font-size: 1.1rem;
     font-weight: 600;
   }
@@ -69,8 +71,8 @@
 
 .pokemon-card {
   position: relative;
-  background-color: #ffffff;
-  border: 2px solid #cbd5e1;
+  background-color: var(--tui-background-base);
+  border: 2px solid var(--tui-border-normal);
   border-radius: 12px;
   padding: 1.25rem;
   display: flex;
@@ -86,12 +88,12 @@
   &:hover {
     transform: translateY(-4px);
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    border-color: #94a3b8;
+    border-color: var(--tui-border-hover);
   }
 
   &.selected {
-    border-color: #3b82f6;
-    background-color: #f0fdf4;
+    border-color: var(--tui-status-info);
+    background-color: var(--tui-background-neutral-2);
     box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.1);
   }
 
@@ -101,7 +103,7 @@
     &:hover {
       transform: none;
       box-shadow: none;
-      border-color: #e2e8f0;
+      border-color: var(--tui-border-normal);
     }
   }
 }
@@ -130,7 +132,7 @@
 .pokemon-name {
   font-size: 1.1rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--tui-text-primary);
   margin: 0 0 0.5rem 0;
   text-align: center;
 }
@@ -148,61 +150,13 @@
   border-radius: 9999px;
   text-transform: uppercase;
   color: #ffffff;
-  background-color: #64748b; /* Fallback background color to ensure text is ALWAYS visible! */
+  background-color: var(--tui-background-neutral-2); /* Fallback background color */
 
-  &[data-type='normal'] {
-    background-color: #94a3b8;
-  }
-  &[data-type='fire'] {
-    background-color: #ef4444;
-  }
-  &[data-type='water'] {
-    background-color: #3b82f6;
-  }
-  &[data-type='grass'] {
-    background-color: #10b981;
-  }
-  &[data-type='electric'] {
-    background-color: #eab308;
-  }
-  &[data-type='ice'] {
-    background-color: #06b6d4;
-  }
-  &[data-type='fighting'] {
-    background-color: #b91c1c;
-  }
-  &[data-type='poison'] {
-    background-color: #a855f7;
-  }
-  &[data-type='ground'] {
-    background-color: #b45309;
-  }
-  &[data-type='flying'] {
-    background-color: #60a5fa;
-  }
-  &[data-type='psychic'] {
-    background-color: #ec4899;
-  }
-  &[data-type='bug'] {
-    background-color: #84cc16;
-  }
-  &[data-type='rock'] {
-    background-color: #78350f;
-  }
-  &[data-type='ghost'] {
-    background-color: #6d28d9;
-  }
-  &[data-type='dragon'] {
-    background-color: #4f46e5;
-  }
-  &[data-type='dark'] {
-    background-color: #1e293b;
-  }
-  &[data-type='steel'] {
-    background-color: #64748b;
-  }
-  &[data-type='fairy'] {
-    background-color: #f472b6;
+  @each $type, $colors in $pokemon-types {
+    &[data-type='#{$type}'] {
+      background-color: map-get($colors, bg);
+      color: map-get($colors, color);
+    }
   }
 }
 
@@ -212,8 +166,8 @@
   grid-template-columns: 1fr 1fr;
   gap: 0.35rem;
   font-size: 0.85rem;
-  color: #475569;
-  border-top: 1px solid #f1f5f9;
+  color: var(--tui-text-secondary);
+  border-top: 1px solid var(--tui-border-normal);
   padding-top: 0.75rem;
 }
 
@@ -223,7 +177,7 @@
   padding: 0 0.25rem;
 
   span {
-    color: #64748b;
+    color: var(--tui-text-secondary);
   }
 }
 

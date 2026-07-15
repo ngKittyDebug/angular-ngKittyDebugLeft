@@ -1,3 +1,5 @@
+@import 'pokemon-types';
+
 .battle-main {
   display: grid;
   grid-template-columns: 1fr;
@@ -12,15 +14,15 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background-color: var(--tui-background-neutral-1);
+  border: 1px solid var(--tui-border-normal);
   border-radius: 12px;
   padding: 1rem;
 }
 
 .battle-info {
-  background-color: #ffffff;
-  border: 1px solid #e2e8f0;
+  background-color: var(--tui-background-base);
+  border: 1px solid var(--tui-border-normal);
   border-radius: 12px;
   padding: 1.5rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
@@ -29,9 +31,9 @@
 .info-title {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--tui-text-primary);
   margin: 0 0 1.5rem 0;
-  border-bottom: 2px solid #f1f5f9;
+  border-bottom: 2px solid var(--tui-border-normal);
   padding-bottom: 0.75rem;
 }
 
@@ -47,27 +49,27 @@
   justify-content: space-between;
   align-items: center;
   padding: 0.5rem 0;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--tui-border-normal);
 }
 
 .info-label {
   font-weight: 600;
-  color: #64748b;
+  color: var(--tui-text-secondary);
 }
 
 .info-value {
   font-weight: 700;
-  color: #0f172a;
+  color: var(--tui-text-primary);
 }
 
 .status-badge {
-  background-color: #3b82f6 !important;
+  background-color: var(--tui-status-info) !important;
   color: #ffffff !important;
 }
 
 .battle-rules {
-  background-color: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background-color: var(--tui-background-neutral-1);
+  border: 1px solid var(--tui-border-normal);
   border-radius: 8px;
   padding: 1rem;
 
@@ -75,13 +77,13 @@
     margin: 0 0 0.5rem 0;
     font-size: 1rem;
     font-weight: 700;
-    color: #1e293b;
+    color: var(--tui-text-primary);
   }
 
   ul {
     margin: 0;
     padding-left: 1.25rem;
-    color: #475569;
+    color: var(--tui-text-secondary);
     font-size: 0.9rem;
     line-height: 1.5;
 
@@ -102,8 +104,8 @@
 }
 
 .battle-controls {
-  background-color: #ffffff;
-  border: 1px solid #e2e8f0;
+  background-color: var(--tui-background-base);
+  border: 1px solid var(--tui-border-normal);
   border-radius: 12px;
   padding: 1.5rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
@@ -119,7 +121,7 @@
 .controls-title {
   font-size: 1.1rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--tui-text-primary);
   margin: 0;
 }
 
@@ -129,11 +131,11 @@
 
 .selection-prompt {
   font-size: 1rem;
-  color: #334155;
+  color: var(--tui-text-secondary);
   margin-bottom: 1rem;
 
   strong {
-    color: #1e3a8a;
+    color: var(--tui-text-primary);
   }
 }
 
@@ -162,13 +164,13 @@
 .target-name {
   font-weight: 700;
   font-size: 1.1rem;
-  color: #0f172a;
+  color: var(--tui-text-primary);
 }
 
 .target-hp {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #ef4444;
+  color: var(--tui-status-negative);
 }
 
 .target-actions {
@@ -202,41 +204,23 @@
 .move-name {
   font-weight: 700;
   font-size: 1.1rem;
-  color: #0f172a;
+  color: var(--tui-text-primary);
   text-transform: capitalize;
 }
 
 .move-type {
-  &[data-type='normal'] {
-    background-color: #a8a878;
-    color: #fff;
-  }
-  &[data-type='fire'] {
-    background-color: #f08030;
-    color: #fff;
-  }
-  &[data-type='water'] {
-    background-color: #6890f0;
-    color: #fff;
-  }
-  &[data-type='grass'] {
-    background-color: #78c850;
-    color: #fff;
-  }
-  &[data-type='electric'] {
-    background-color: #f8d030;
-    color: #111;
-  }
-  &[data-type='poison'] {
-    background-color: #a040a0;
-    color: #fff;
+  @each $type, $colors in $pokemon-types {
+    &[data-type='#{$type}'] {
+      background-color: map-get($colors, bg);
+      color: map-get($colors, color);
+    }
   }
 }
 
 .move-power {
   font-size: 0.8rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--tui-text-secondary);
 }
 
 .result-panel {
@@ -246,12 +230,12 @@
   justify-content: center;
   text-align: center;
   padding: 2rem;
-  border-color: #10b981;
-  background-color: #f0fdf4;
+  border-color: var(--tui-status-positive);
+  background-color: var(--tui-background-neutral-1);
 }
 
 .victory-title {
-  color: #065f46;
+  color: var(--tui-status-positive);
   font-size: 1.5rem;
   margin-bottom: 0.5rem;
 }
@@ -259,27 +243,27 @@
 .winner-message {
   font-size: 1.1rem;
   margin: 0 0 1.5rem 0;
-  color: #374151;
+  color: var(--tui-text-secondary);
 }
 
 .winner-name {
   font-weight: 800;
-  color: #047857;
+  color: var(--tui-status-positive);
 }
 
 .log-panel {
-  background-color: #0f172a;
+  background-color: var(--tui-background-neutral-1);
   border-radius: 12px;
   padding: 1.5rem;
-  color: #e2e8f0;
+  color: var(--tui-text-primary);
 }
 
 .log-title {
   font-size: 1.1rem;
   font-weight: 700;
-  color: #94a3b8;
+  color: var(--tui-text-secondary);
   margin: 0 0 1rem 0;
-  border-bottom: 1px solid #334155;
+  border-bottom: 1px solid var(--tui-border-normal);
   padding-bottom: 0.5rem;
 }
 
@@ -293,7 +277,7 @@
 }
 
 .empty-log-message {
-  color: #64748b;
+  color: var(--tui-text-secondary);
   font-style: italic;
   margin: auto;
   text-align: center;
@@ -303,10 +287,10 @@
   margin: 0;
   font-size: 0.9rem;
   line-height: 1.4;
-  color: #cbd5e1;
+  color: var(--tui-text-secondary);
 
   &.round-header {
-    color: #38bdf8;
+    color: var(--tui-status-info);
     font-weight: 700;
     margin-top: 0.5rem;
     &:first-child {
