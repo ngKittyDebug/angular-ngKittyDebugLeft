@@ -70,7 +70,7 @@ describe('validateTamagotchiPokemonSelection', () => {
   describe('Property 5: валидация покемона первой стадии', () => {
     // Feature: pokemon-tamagotchi, Property 5: First-Stage PokemonModel Validation
     describe('Happy Path', () => {
-      it('должен классифицировать только корневой вид цепочки как первую стадию', () => {
+      it('должен классифицировать только первый non-baby вид primary-пути как первую стадию', () => {
         fc.assert(
           fc.property(arbitraryLinearEvolutionChain(), ({ chain, speciesIndex, stageCount }) => {
             const speciesName = `species-${speciesIndex}`;
@@ -87,7 +87,7 @@ describe('validateTamagotchiPokemonSelection', () => {
         );
       });
 
-      it('должен согласованно маппить флаг first-stage API-покемона с корнем цепочки эволюции', () => {
+      it('должен согласованно маппить флаг first-stage с первым non-baby в цепочке', () => {
         fc.assert(
           fc.property(arbitraryLinearEvolutionChain(), ({ chain, speciesIndex }) => {
             const speciesName = `species-${speciesIndex}`;

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import type { EvolutionChainItemApiData } from '@shared/models/pokemon-evolution-chain-api-data-interface';
 import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
+import { POKEMON_EVOLUTION_CHAIN_FIXTURE } from '@shared/fixtures/eevee-evolution-chain.fixture';
 import {
   EVOLUTION_REQUIREMENTS,
   EVOLUTION_REQUIREMENTS_STAGE_2,
@@ -8,6 +10,7 @@ import { buildLinearEvolutionChain } from '../../../fixtures/tamagotchi-arbitrar
 import {
   buildNextEvolutionStep,
   convertPokemonDetailApiDataToTamagotchiPokemon,
+  isFirstStageInEvolutionChain,
 } from './pokemon-tamagotchi-converter';
 
 const SHOWDOWN_SPRITE = '/sprites/showdown.gif';
@@ -15,7 +18,7 @@ const ARTWORK_SPRITE = '/sprites/artwork.png';
 const PIXEL_SPRITE = '/sprites/pixel.png';
 const POKEMON_SPRITE_FALLBACK_URL = '/images/svg/pokeball.svg';
 
-function detailWithSprites(): PokemonDetailApiData {
+function detailForSpecies(speciesName: string, id: number): PokemonDetailApiData {
   return {
     abilities: [],
     base_experience: 50,
@@ -24,16 +27,16 @@ function detailWithSprites(): PokemonDetailApiData {
     game_indices: [],
     height: 7,
     held_items: [],
-    id: 25,
+    id,
     is_default: true,
     location_area_encounters: '',
     moves: [],
-    name: 'pikachu',
-    order: 25,
+    name: speciesName,
+    order: id,
     past_abilities: [],
     past_stats: [],
     past_types: [],
-    species: { name: 'pikachu', url: '' },
+    species: { name: speciesName, url: '' },
     sprites: {
       back_default: null,
       back_female: null,
@@ -71,6 +74,10 @@ function detailWithSprites(): PokemonDetailApiData {
   } as unknown as PokemonDetailApiData;
 }
 
+function detailWithSprites(): PokemonDetailApiData {
+  return detailForSpecies('pikachu', 25);
+}
+
 function detailWithoutSprites(): PokemonDetailApiData {
   const detail = detailWithSprites();
 
@@ -91,6 +98,29 @@ function detailWithoutSprites(): PokemonDetailApiData {
         },
       },
     },
+  };
+}
+
+function buildBabyLinearChain(): EvolutionChainItemApiData {
+  return {
+    evolution_details: [],
+    evolves_to: [
+      {
+        evolution_details: [],
+        evolves_to: [
+          {
+            evolution_details: [],
+            evolves_to: [],
+            is_baby: false,
+            species: { name: 'raichu', url: '' },
+          },
+        ],
+        is_baby: false,
+        species: { name: 'pikachu', url: '' },
+      },
+    ],
+    is_baby: true,
+    species: { name: 'pichu', url: '' },
   };
 }
 
@@ -119,6 +149,54 @@ describe('pokemonTamagotchiConverter', () => {
 
       expect(pokemon.spriteUrls.normal).toBe(POKEMON_SPRITE_FALLBACK_URL);
     });
+
+    it('должен согласовывать requirements следующей стадии с currentStage', () => {
+      const chain = buildLinearEvolutionChain(3);
+      const midStage = convertPokemonDetailApiDataToTamagotchiPokemon(
+        detailForSpecies('species-1', 2),
+        { baby_trigger_item: null, chain, id: 1 },
+      );
+
+      expect(midStage.evolutionChain.currentStage).toBe(2);
+      expect(midStage.evolutionChain.nextEvolution?.pokemonId).toBe('species-2');
+      expect(midStage.evolutionChain.nextEvolution?.requirements).toEqual(
+        EVOLUTION_REQUIREMENTS_STAGE_2,
+      );
+    });
+
+    it('должен брать только первую ветвь evolves_to для nextEvolution', () => {
+      const pokemon = convertPokemonDetailApiDataToTamagotchiPokemon(
+        detailForSpecies('eevee', 133),
+        POKEMON_EVOLUTION_CHAIN_FIXTURE,
+      );
+
+      expect(pokemon.evolutionChain.nextEvolution?.pokemonId).toBe('vaporeon');
+      expect(pokemon.evolutionChain.nextEvolution?.pokemonId).not.toBe('jolteon');
+    });
+
+    it('должен считать первой стадией первого non-baby на primary-пути', () => {
+      const chain = buildBabyLinearChain();
+      const response = { baby_trigger_item: null, chain, id: 1 };
+
+      const pichu = convertPokemonDetailApiDataToTamagotchiPokemon(
+        detailForSpecies('pichu', 172),
+        response,
+      );
+      const pikachu = convertPokemonDetailApiDataToTamagotchiPokemon(
+        detailForSpecies('pikachu', 25),
+        response,
+      );
+      const raichu = convertPokemonDetailApiDataToTamagotchiPokemon(
+        detailForSpecies('raichu', 26),
+        response,
+      );
+
+      expect(pichu.isFirstStage).toBe(false);
+      expect(pikachu.isFirstStage).toBe(true);
+      expect(raichu.isFirstStage).toBe(false);
+      expect(isFirstStageInEvolutionChain('pichu', chain)).toBe(false);
+      expect(isFirstStageInEvolutionChain('pikachu', chain)).toBe(true);
+    });
   });
 
   describe('buildNextEvolutionStep', () => {
@@ -136,6 +214,32 @@ describe('pokemonTamagotchiConverter', () => {
           childNextEvolution: undefined,
         },
       });
+    });
+
+    it('должен игнорировать остальные ветви evolves_to кроме первой', () => {
+      const branched: EvolutionChainItemApiData = {
+        evolution_details: [],
+        evolves_to: [
+          {
+            evolution_details: [],
+            evolves_to: [],
+            is_baby: false,
+            species: { name: 'vaporeon', url: '' },
+          },
+          {
+            evolution_details: [],
+            evolves_to: [],
+            is_baby: false,
+            species: { name: 'jolteon', url: '' },
+          },
+        ],
+        is_baby: false,
+        species: { name: 'eevee', url: '' },
+      };
+
+      const nextStep = buildNextEvolutionStep(branched);
+
+      expect(nextStep?.pokemonId).toBe('vaporeon');
     });
   });
 });
