@@ -14,7 +14,7 @@
         <p>{{ t('loading') }}</p>
       </div>
     } @else if (facade.error(); as err) {
-      <div class="error-container">
+      <div class="error-container" role="alert">
         <p class="error-message">{{ t('errors.' + err) }}</p>
         <button tuiButton class="retry-button" (click)="onPrevClick()">{{ t('retry') }}</button>
       </div>

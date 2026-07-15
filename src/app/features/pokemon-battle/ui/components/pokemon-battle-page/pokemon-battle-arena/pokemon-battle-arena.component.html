@@ -131,7 +131,7 @@
 
     <div class="log-panel">
       <h3 class="log-title">{{ t('log.title') }}</h3>
-      <tui-scrollbar class="log-box">
+      <tui-scrollbar class="log-box" role="log" aria-live="polite">
         @for (log of textLogList; track $index) {
           <p class="log-entry" [class.round-header]="log.key === 'roundHeader'">
             @if (log.key === 'raw' && log.params?.['message']) {

@@ -66,4 +66,15 @@ describe('PokemonTeamSelectionComponent', () => {
     component.onStartBattleClick();
     expect(mockFacade.startBattle).toHaveBeenCalled();
   });
+
+  it('должен иметь role="alert" у контейнера ошибки', () => {
+    (mockFacade as any).error = signal('some-error');
+    const fixture = TestBed.createComponent(PokemonTeamSelectionComponent);
+
+    fixture.detectChanges();
+
+    const errorContainer = fixture.nativeElement.querySelector('.error-container');
+
+    expect(errorContainer.getAttribute('role')).toBe('alert');
+  });
 });

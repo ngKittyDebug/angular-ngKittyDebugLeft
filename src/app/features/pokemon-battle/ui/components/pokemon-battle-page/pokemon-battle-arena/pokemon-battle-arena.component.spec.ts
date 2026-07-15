@@ -25,6 +25,7 @@ describe('PokemonBattleArenaComponent', () => {
       activeAlivePlayerPokemonList: signal([]),
       activeAliveOpponentPokemonList: signal([]),
       selectedMove: signal(null),
+      currentSelectingPokemon: signal(null),
       currentSelectingPokemonIndex: signal(0),
       pendingCommandList: signal([]),
       battleState: signal(null),
@@ -80,5 +81,16 @@ describe('PokemonBattleArenaComponent', () => {
 
     component.onAnimationFinished();
     expect(mockFacade.finishAnimation).toHaveBeenCalled();
+  });
+
+  it('должен иметь атрибуты доступности для лога боя', () => {
+    const fixture = TestBed.createComponent(PokemonBattleArenaComponent);
+
+    fixture.detectChanges();
+
+    const logBox = fixture.nativeElement.querySelector('.log-box');
+
+    expect(logBox.getAttribute('role')).toBe('log');
+    expect(logBox.getAttribute('aria-live')).toBe('polite');
   });
 });
