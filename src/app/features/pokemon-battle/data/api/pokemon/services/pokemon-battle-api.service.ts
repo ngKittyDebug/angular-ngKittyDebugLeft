@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { inject, Service } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { forkJoin, of } from 'rxjs';
 import type { Observable } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
@@ -8,7 +8,7 @@ import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-dat
 import type { PokemonListApiData } from '@shared/models/pokemon-list-api-data-interface';
 import type { PokemonBattlePageModel } from '../../../models/battle.model';
 
-@Service()
+@Injectable()
 export class PokemonBattleApiService {
   private readonly http = inject(HttpClient);
 

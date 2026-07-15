@@ -9,6 +9,8 @@ import {
 } from '../../../data/mocks/pokemon-battle-store.mock';
 
 import { TranslocoTestingModule } from '@jsverse/transloco';
+import { AudioManagerService } from '../../../data/services/audio-manager.service';
+import { BotPlayerService } from '../../../data/services/bot-player.service';
 
 describe('PokemonBattlePageComponent', () => {
   let mockStore: MockedObject<Partial<StoreType>>;
@@ -24,7 +26,11 @@ describe('PokemonBattlePageComponent', () => {
           translocoConfig: { availableLangs: ['en'], defaultLang: 'en' },
         }),
       ],
-      providers: [{ provide: PokemonBattleStore, useValue: mockStore }],
+      providers: [
+        { provide: PokemonBattleStore, useValue: mockStore },
+        AudioManagerService,
+        BotPlayerService,
+      ],
     });
   });
 

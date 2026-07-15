@@ -32,7 +32,6 @@ const initialState: PokemonBattleStoreState = {
 };
 
 export const PokemonBattleStore = signalStore(
-  { providedIn: 'root' },
   withState(initialState),
   withMethods((store, api = inject(PokemonBattleApiService)) => ({
     loadPokemonList: rxMethod<{ page: number; limit: number }>(

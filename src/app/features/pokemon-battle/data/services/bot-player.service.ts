@@ -1,9 +1,7 @@
 import { Injectable } from '@angular/core';
 import type { BattleCommand, BattleState } from '../models/battle.model';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable()
 export class BotPlayerService {
   /**
    * Generates random valid commands for all alive active bot pokemons.
