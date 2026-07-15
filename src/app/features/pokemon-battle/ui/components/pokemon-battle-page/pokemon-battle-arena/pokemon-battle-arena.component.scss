@@ -61,12 +61,8 @@
 }
 
 .status-badge {
-  background-color: #dbeafe;
-  color: #1e40af;
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-size: 0.85rem;
-  text-transform: uppercase;
+  background-color: #3b82f6 !important;
+  color: #ffffff !important;
 }
 
 .battle-rules {
@@ -128,20 +124,7 @@
 }
 
 .reset-selection-button {
-  background-color: #f1f5f9;
-  border: 1px solid #cbd5e1;
-  color: #475569;
-  padding: 0.35rem 0.75rem;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background-color: #e2e8f0;
-    color: #1e293b;
-  }
+  margin-left: auto;
 }
 
 .selection-prompt {
@@ -165,28 +148,15 @@
 }
 
 .target-button {
+  width: 100%;
+  height: 100%;
+}
+
+.target-button-content {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.35rem;
-  padding: 1rem;
-  border: 2px solid #e2e8f0;
-  border-radius: 10px;
-  background-color: #f8fafc;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-family: inherit;
-
-  &:hover {
-    border-color: #ef4444;
-    background-color: #fef2f2;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1);
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
 }
 
 .target-name {
@@ -207,24 +177,6 @@
   margin-top: 1.5rem;
 }
 
-.back-button {
-  background-color: #ffffff;
-  border: 1px solid #cbd5e1;
-  color: #475569;
-  padding: 0.5rem 1.25rem;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background-color: #f8fafc;
-    border-color: #94a3b8;
-    color: #0f172a;
-  }
-}
-
 .moves-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -236,28 +188,15 @@
 }
 
 .move-button {
+  width: 100%;
+  height: 100%;
+}
+
+.move-button-content {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.35rem;
-  padding: 1rem;
-  border: 2px solid #e2e8f0;
-  border-radius: 10px;
-  background-color: #f8fafc;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-family: inherit;
-
-  &:hover {
-    border-color: #3b82f6;
-    background-color: #eff6ff;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
 }
 
 .move-name {
@@ -268,13 +207,6 @@
 }
 
 .move-type {
-  font-size: 0.75rem;
-  font-weight: 800;
-  padding: 0.15rem 0.5rem;
-  border-radius: 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-
   &[data-type='normal'] {
     background-color: #a8a878;
     color: #fff;
@@ -335,29 +267,6 @@
   color: #047857;
 }
 
-.restart-button {
-  background-color: #10b981;
-  color: white;
-  border: none;
-  padding: 0.75rem 2rem;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);
-
-  &:hover {
-    background-color: #059669;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(16, 185, 129, 0.3);
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
-}
-
 .log-panel {
   background-color: #0f172a;
   border-radius: 12px;
@@ -376,28 +285,11 @@
 
 .log-box {
   height: 200px;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   padding-right: 0.5rem;
   font-family: monospace;
-
-  /* Scrollbar styling */
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-  &::-webkit-scrollbar-track {
-    background: #1e293b;
-    border-radius: 4px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: #475569;
-    border-radius: 4px;
-  }
-  &::-webkit-scrollbar-thumb:hover {
-    background: #64748b;
-  }
 }
 
 .empty-log-message {
@@ -425,14 +317,7 @@
 
 .result-actions {
   display: flex;
+  justify-content: center;
   gap: 1rem;
   width: 100%;
-}
-
-.select-team-btn {
-  background-color: #475569 !important;
-  color: #ffffff;
-  &:hover {
-    background-color: #334155 !important;
-  }
 }

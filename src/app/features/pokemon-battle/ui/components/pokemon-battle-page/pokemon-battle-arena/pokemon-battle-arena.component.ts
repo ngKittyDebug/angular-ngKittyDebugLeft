@@ -2,13 +2,22 @@ import { ChangeDetectionStrategy, Component, DestroyRef, inject, viewChild } fro
 import { CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslocoDirective } from '@jsverse/transloco';
+import { TuiButton, TuiScrollbar } from '@taiga-ui/core';
+import { TuiBadge } from '@taiga-ui/kit';
 import type { BattleEvent, BattlePokemon, PokemonMove } from '../../../../data/models/battle.model';
 import { CanvasRendererComponent } from '../canvas-renderer/canvas-renderer.component';
 import { PokemonBattleArenaFacade } from '../../../../data/facades/pokemon-battle-arena.facade';
 
 @Component({
   selector: 'left-paw-pokemon-battle-arena',
-  imports: [CommonModule, TranslocoDirective, CanvasRendererComponent],
+  imports: [
+    CommonModule,
+    TranslocoDirective,
+    CanvasRendererComponent,
+    TuiButton,
+    TuiBadge,
+    TuiScrollbar,
+  ],
   providers: [PokemonBattleArenaFacade],
   templateUrl: './pokemon-battle-arena.component.html',
   styleUrl: './pokemon-battle-arena.component.scss',

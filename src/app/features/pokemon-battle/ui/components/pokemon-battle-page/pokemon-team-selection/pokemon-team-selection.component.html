@@ -9,13 +9,13 @@
 
     @if (facade.isLoading()) {
       <div class="loader-container">
-        <div class="spinner"></div>
+        <tui-loader />
         <p>{{ t('loading') }}</p>
       </div>
     } @else if (facade.error(); as err) {
       <div class="error-container">
         <p class="error-message">{{ t('errors.' + err) }}</p>
-        <button class="retry-button" (click)="onPrevClick()">{{ t('retry') }}</button>
+        <button tuiButton class="retry-button" (click)="onPrevClick()">{{ t('retry') }}</button>
       </div>
     } @else {
       <div class="pokemon-selection-grid">
@@ -31,9 +31,14 @@
             [disabled]="!isSelected && limitReached"
             (click)="onPokemonClick(pokemon)"
           >
-            <div class="card-checkbox">
-              <span class="check-icon">{{ isSelected ? '✓' : '' }}</span>
-            </div>
+            <input
+              tuiCheckbox
+              type="checkbox"
+              size="m"
+              [checked]="isSelected"
+              [disabled]="!isSelected && limitReached"
+              class="card-checkbox"
+            />
             <div class="pokemon-image-wrapper">
               <img [src]="pokemon.sprites.front" [alt]="pokemon.name" class="pokemon-image" />
             </div>
@@ -62,27 +67,18 @@
       </div>
 
       <div class="pagination-controls">
-        <button
-          class="pagination-button"
-          [disabled]="facade.currentPage() === 0"
-          (click)="onPrevClick()"
-        >
-          {{ t('pagination.prev') }}
-        </button>
-        <span class="page-indicator"
-          >{{ t('pagination.page') }} {{ facade.currentPage() + 1 }}</span
-        >
-        <button
-          class="pagination-button"
-          [disabled]="(facade.currentPage() + 1) * facade.limit() >= facade.totalCount()"
-          (click)="onNextClick()"
-        >
-          {{ t('pagination.next') }}
-        </button>
+        <tui-pagination
+          [index]="facade.currentPage()"
+          [length]="pageCount"
+          (indexChange)="onPageChange($event)"
+        />
       </div>
 
       <div class="battle-start-action">
         <button
+          tuiButton
+          appearance="brand-primary"
+          size="m"
           class="start-battle-action-btn"
           [disabled]="facade.selectedTeam().length !== 2"
           (click)="onStartBattleClick()"

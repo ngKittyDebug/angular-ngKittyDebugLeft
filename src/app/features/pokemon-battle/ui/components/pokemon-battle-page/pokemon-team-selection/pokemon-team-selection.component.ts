@@ -1,12 +1,14 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslocoDirective } from '@jsverse/transloco';
+import { TuiButton, TuiCheckbox, TuiLoader } from '@taiga-ui/core';
+import { TuiPagination } from '@taiga-ui/kit';
 import type { BattlePokemon } from '../../../../data/models/battle.model';
 import { PokemonTeamSelectionFacade } from '../../../../data/facades/pokemon-team-selection.facade';
 
 @Component({
   selector: 'left-paw-pokemon-team-selection',
-  imports: [CommonModule, TranslocoDirective],
+  imports: [CommonModule, TranslocoDirective, TuiButton, TuiCheckbox, TuiLoader, TuiPagination],
   providers: [PokemonTeamSelectionFacade],
   templateUrl: './pokemon-team-selection.component.html',
   styleUrl: './pokemon-team-selection.component.scss',
@@ -16,6 +18,10 @@ export class PokemonTeamSelectionComponent {
   public readonly facade = inject(PokemonTeamSelectionFacade);
 
   // Event handlers starting with "on" as per styleguide
+  public get pageCount(): number {
+    return Math.ceil(this.facade.totalCount() / this.facade.limit());
+  }
+
   public onPokemonClick(pokemon: BattlePokemon): void {
     this.facade.selectPokemon(pokemon);
   }
@@ -26,6 +32,10 @@ export class PokemonTeamSelectionComponent {
 
   public onNextClick(): void {
     this.facade.nextPage();
+  }
+
+  public onPageChange(index: number): void {
+    this.facade.setPage(index);
   }
 
   public onStartBattleClick(): void {

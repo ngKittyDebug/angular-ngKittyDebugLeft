@@ -49,3 +49,41 @@ a[tuiButton][data-appearance='brand-primary'] {
     cursor: not-allowed;
   }
 }
+
+button[tuiButton][data-appearance='move-outline'],
+a[tuiButton][data-appearance='move-outline'] {
+  background-color: transparent;
+  border: 2px solid var(--primary);
+  color: var(--tui-text-primary);
+  transition: all 0.2s ease;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--muted);
+      transform: translateY(-2px);
+    }
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+button[tuiButton][data-appearance='target-outline'],
+a[tuiButton][data-appearance='target-outline'] {
+  background-color: transparent;
+  border: 2px solid var(--destructive);
+  color: var(--tui-text-primary);
+  transition: all 0.2s ease;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: rgba(220, 38, 38, 0.1);
+      transform: translateY(-2px);
+    }
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}

@@ -65,4 +65,13 @@ export class PokemonTeamSelectionFacade {
       this.pokemonBattleStore.loadPokemonList({ page: current + 1, limit: 10 });
     }
   }
+
+  public setPage(page: number): void {
+    const total = this.pokemonBattleStore.totalCount();
+    const limit = this.pokemonBattleStore.limit();
+
+    if (page * limit < total && page >= 0) {
+      this.pokemonBattleStore.loadPokemonList({ page, limit: 10 });
+    }
+  }
 }

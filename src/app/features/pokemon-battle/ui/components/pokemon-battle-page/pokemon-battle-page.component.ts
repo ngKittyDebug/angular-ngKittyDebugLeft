@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslocoDirective } from '@jsverse/transloco';
+import { TuiButton, TuiSlider } from '@taiga-ui/core';
 import { PokemonBattleStore } from '../../../data/store/pokemon-battle.store';
 import { AudioManagerService } from '../../../data/services/audio-manager.service';
 import { PokemonTeamSelectionComponent } from './pokemon-team-selection/pokemon-team-selection.component';
@@ -13,6 +14,8 @@ import { PokemonBattleArenaComponent } from './pokemon-battle-arena/pokemon-batt
     TranslocoDirective,
     PokemonTeamSelectionComponent,
     PokemonBattleArenaComponent,
+    TuiButton,
+    TuiSlider,
   ],
   templateUrl: './pokemon-battle-page.component.html',
   styleUrl: './pokemon-battle-page.component.scss',
