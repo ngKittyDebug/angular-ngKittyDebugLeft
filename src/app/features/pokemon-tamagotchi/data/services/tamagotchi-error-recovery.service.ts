@@ -64,10 +64,21 @@ export class TamagotchiErrorRecoveryService {
       }
     }
 
+    const legacy = state as TamagotchiStateModel & {
+      achievements?: TamagotchiStateModel['achievementList'];
+      interactionHistory?: TamagotchiStateModel['interactionHistoryList'];
+      notifications?: TamagotchiStateModel['notificationList'];
+    };
+    const stateWithoutLegacyKeys = { ...legacy };
+
+    delete stateWithoutLegacyKeys.achievements;
+    delete stateWithoutLegacyKeys.interactionHistory;
+    delete stateWithoutLegacyKeys.notifications;
+
     const repaired: TamagotchiStateModel = {
       ...createInitialTamagotchiState(),
-      ...state,
-      achievementList: state.achievementList ?? [],
+      ...stateWithoutLegacyKeys,
+      achievementList: state.achievementList ?? legacy.achievements ?? [],
       dailyRoutine: state.dailyRoutine ?? createInitialTamagotchiState().dailyRoutine,
       error: null,
       evolutionProgress:
@@ -79,8 +90,8 @@ export class TamagotchiErrorRecoveryService {
               readyNotifiedAt: state.evolutionProgress.readyNotifiedAt ?? null,
             },
       initialized: true,
-      interactionHistory: state.interactionHistory ?? [],
-      notificationList: state.notificationList ?? [],
+      interactionHistoryList: state.interactionHistoryList ?? legacy.interactionHistory ?? [],
+      notificationList: state.notificationList ?? legacy.notifications ?? [],
       status: {
         ...state.status,
         energy: clampStatusValue(state.status.energy),

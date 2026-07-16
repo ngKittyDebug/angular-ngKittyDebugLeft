@@ -154,6 +154,34 @@ describe('TamagotchiPersistenceService', () => {
       );
     });
 
+    it('должен мигрировать interactionHistory в interactionHistoryList и убрать legacy-ключ', () => {
+      const interaction = {
+        intensity: 1,
+        moodIncrease: 5,
+        timestamp: 1_700_000_000_000,
+        type: 'pet' as const,
+      };
+      const legacyState = {
+        ...createInitialTamagotchiState(),
+        interactionHistory: [interaction],
+      };
+
+      delete (legacyState as Partial<TamagotchiStateModel>).interactionHistoryList;
+
+      storageMock.setItem(
+        TAMAGOTCHI_STORAGE_KEY,
+        JSON.stringify({ state: legacyState, version: 8 }),
+      );
+
+      const loaded = service.load();
+
+      expect(loaded?.state.interactionHistoryList).toEqual([interaction]);
+      expect(
+        (loaded?.state as TamagotchiStateModel & { interactionHistory?: unknown })
+          .interactionHistory,
+      ).toBeUndefined();
+    });
+
     it('должен восстанавливаться из backup при повреждённом основном хранилище', () => {
       const state = createInitialTamagotchiState();
       const payload = JSON.stringify({ state, version: TAMAGOTCHI_STATE_VERSION });

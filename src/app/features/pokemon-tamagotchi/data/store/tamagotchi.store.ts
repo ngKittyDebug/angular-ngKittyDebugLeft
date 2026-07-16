@@ -11,7 +11,6 @@ import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { debounceTime, pipe, tap } from 'rxjs';
 import { TAMAGOTCHI_SYSTEM_ERRORS } from '../constants/system-errors.constants';
 import { calculateBondLevel } from '../helpers/gesture.helper';
-import { sortNotificationsByPriority } from '../helpers/notification-factory.helper';
 import { TamagotchiErrorRecoveryService } from '../services/tamagotchi-error-recovery.service';
 import { TamagotchiPersistenceService } from '../services/tamagotchi-persistence.service';
 import type { InteractionEventModel } from '../models/interaction.model';
@@ -57,7 +56,7 @@ function snapshotState(store: {
   error: () => TamagotchiStateModel['error'];
   evolutionProgress: () => TamagotchiStateModel['evolutionProgress'];
   initialized: () => boolean;
-  interactionHistory: () => TamagotchiStateModel['interactionHistory'];
+  interactionHistoryList: () => TamagotchiStateModel['interactionHistoryList'];
   isEvolving: () => boolean;
   isSleeping: () => boolean;
   lastActionTime: () => TamagotchiStateModel['lastActionTime'];
@@ -76,7 +75,7 @@ function snapshotState(store: {
     error: store.error(),
     evolutionProgress: store.evolutionProgress(),
     initialized: store.initialized(),
-    interactionHistory: store.interactionHistory(),
+    interactionHistoryList: store.interactionHistoryList(),
     isEvolving: store.isEvolving(),
     isSleeping: store.isSleeping(),
     lastActionTime: store.lastActionTime(),
@@ -97,12 +96,7 @@ export const TamagotchiStore = signalStore(
     hasPokemon: computed(() => store.pokemon() !== null),
     isTraining: computed(() => store.trainingStartedAt() !== null),
     canEvolve: computed(() => store.evolutionProgress().isReady && !store.isEvolving()),
-    unreadNotifications: computed(() =>
-      sortNotificationsByPriority(
-        store.notificationList().filter((notification) => !notification.read),
-      ),
-    ),
-    bondLevel: computed(() => calculateBondLevel(store.interactionHistory())),
+    bondLevel: computed(() => calculateBondLevel(store.interactionHistoryList())),
   })),
   withMethods(
     (

@@ -11,10 +11,10 @@
         type="button"
         [attr.aria-controls]="historyListId"
         [attr.aria-expanded]="historyOpen()"
-        (click)="toggleHistory()"
+        (click)="onHistoryToggle()"
       >
         {{ historyOpen() ? t('hideHistory') : t('showHistory') }}
-        ({{ historyNotifications().length }})
+        ({{ historyNotificationList().length }})
       </button>
 
       <ul
@@ -22,7 +22,7 @@
         class="tamagotchi-notifications__history-list"
         [hidden]="!historyOpen()"
       >
-        @for (notification of historyNotifications(); track notification.id) {
+        @for (notification of historyNotificationList(); track notification.id) {
           <li
             class="tamagotchi-notifications__history-item"
             [class.tamagotchi-notifications__history-item--unread]="!notification.read"

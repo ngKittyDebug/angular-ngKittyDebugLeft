@@ -24,7 +24,7 @@ const PLAIN_TEXT_NOTIFICATION: NotificationModel = {
 };
 
 function createFixture(
-  notifications: NotificationModel[] = [SAMPLE_NOTIFICATION],
+  notificationList: NotificationModel[] = [SAMPLE_NOTIFICATION],
 ): ComponentFixture<NotificationComponent> {
   TestBed.configureTestingModule({
     imports: [
@@ -57,7 +57,7 @@ function createFixture(
 
   const fixture = TestBed.createComponent(NotificationComponent);
 
-  fixture.componentRef.setInput('notifications', notifications);
+  fixture.componentRef.setInput('notificationList', notificationList);
   fixture.detectChanges();
 
   return fixture;

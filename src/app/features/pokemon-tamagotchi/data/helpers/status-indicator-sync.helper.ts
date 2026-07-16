@@ -16,7 +16,7 @@ export interface StatusIndicatorSnapshot {
   value: number;
 }
 
-export const DISPLAYED_STATUS_TYPES: StatusType[] = [
+export const DISPLAYED_STATUS_TYPE_LIST: StatusType[] = [
   'health',
   'hunger',
   'hydration',
@@ -79,7 +79,7 @@ export function projectStatusIndicator(
 }
 
 export function projectAllStatusIndicators(status: PokemonStatusModel): StatusIndicatorSnapshot[] {
-  return DISPLAYED_STATUS_TYPES.map((statusType) => projectStatusIndicator(statusType, status));
+  return DISPLAYED_STATUS_TYPE_LIST.map((statusType) => projectStatusIndicator(statusType, status));
 }
 
 export function indicatorsMatchStatus(

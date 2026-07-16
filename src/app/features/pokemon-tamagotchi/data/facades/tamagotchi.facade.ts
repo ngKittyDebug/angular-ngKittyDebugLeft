@@ -4,7 +4,7 @@ import { GAME_BALANCE } from '../constants/game-balance.constants';
 import { isTamagotchiSelectionError } from '../constants/selection-errors.constants';
 import { TAMAGOTCHI_SYSTEM_ERRORS } from '../constants/system-errors.constants';
 import {
-  DISPLAYED_STATUS_TYPES,
+  DISPLAYED_STATUS_TYPE_LIST,
   maxValueForStatusType,
   statusValueForType,
 } from '../helpers/status-indicator-sync.helper';
@@ -25,7 +25,7 @@ import type { InteractionEventModel } from '../models/interaction.model';
 import type { PerformanceMode } from '../models/performance-mode.model';
 import type { PokemonModel } from '../models/pokemon.model';
 import type { StatusType } from '../models/pokemon-status.model';
-import type { ActionCooldowns, ActionType } from '../models/tamagotchi-state.model';
+import type { ActionCooldownsModel, ActionType } from '../models/tamagotchi-state.model';
 
 const COOLDOWN_ACTIONS: ActionType[] = ['feed', 'water', 'care', 'play', 'train', 'sleep'];
 const COOLDOWN_REFRESH_INTERVAL_MS = 1_000;
@@ -46,7 +46,7 @@ export class TamagotchiFacade {
   private readonly evolutionPrepareInFlight = signal(false);
   private readonly actionContext = computed(() => this.buildActionContext(this.now()));
 
-  public readonly displayedStatusTypes = DISPLAYED_STATUS_TYPES;
+  public readonly displayedStatusTypeList = DISPLAYED_STATUS_TYPE_LIST;
 
   public readonly trainingStartedAt = this.store.trainingStartedAt;
   public readonly isTraining = this.store.isTraining;
@@ -55,7 +55,7 @@ export class TamagotchiFacade {
   public readonly hasPokemon = this.store.hasPokemon;
   public readonly isEvolving = this.store.isEvolving;
   public readonly isSleeping = this.store.isSleeping;
-  public readonly notifications = this.store.notificationList;
+  public readonly notificationList = this.store.notificationList;
   public readonly pokemon = this.store.pokemon;
   public readonly status = this.store.status;
 
@@ -108,9 +108,9 @@ export class TamagotchiFacade {
   );
 
   public readonly performanceMode = this.performanceService.mode;
-  public readonly performanceModes: PerformanceMode[] = ['high', 'balanced', 'low'];
+  public readonly performanceModeList: PerformanceMode[] = ['high', 'balanced', 'low'];
   public readonly performanceModeIndex = computed(() =>
-    this.performanceModes.indexOf(this.performanceMode()),
+    this.performanceModeList.indexOf(this.performanceMode()),
   );
 
   public constructor() {
@@ -302,7 +302,7 @@ export class TamagotchiFacade {
   }
 
   public onPerformanceModeIndexChange(index: number): void {
-    const mode = this.performanceModes[index];
+    const mode = this.performanceModeList[index];
 
     if (mode) {
       this.onPerformanceModeChange(mode);
@@ -364,7 +364,7 @@ export class TamagotchiFacade {
     };
   }
 
-  private hasActiveCooldown(cooldowns: ActionCooldowns): boolean {
+  private hasActiveCooldown(cooldowns: ActionCooldownsModel): boolean {
     return COOLDOWN_ACTIONS.some((action) => {
       const remaining = cooldowns[action];
 

@@ -17,7 +17,7 @@ import { syncEvolutionProgressWithPokemon } from '../store/tamagotchi-state-tran
 import { TamagotchiSelectionStorageService } from './tamagotchi-selection-storage.service';
 import { TamagotchiStorageService } from './tamagotchi-storage.service';
 
-export const TAMAGOTCHI_STATE_VERSION = 8;
+export const TAMAGOTCHI_STATE_VERSION = 9;
 export { TAMAGOTCHI_BACKUP_KEY, TAMAGOTCHI_STORAGE_KEY };
 
 const TAMAGOTCHI_TRAINING_STATE_VERSION = 5;
@@ -59,13 +59,29 @@ function migrateNotificationText(value: LegacyNotificationText): NotificationTex
 }
 
 function migrateNotificationList(
-  notifications: readonly LegacyNotificationModel[],
+  notificationList: readonly LegacyNotificationModel[],
 ): NotificationModel[] {
-  return notifications.map((notification) => ({
+  return notificationList.map((notification) => ({
     ...notification,
     message: migrateNotificationText(notification.message),
     title: migrateNotificationText(notification.title),
   }));
+}
+
+function omitLegacyStateKeys(
+  state: TamagotchiStateModel & {
+    achievements?: TamagotchiStateModel['achievementList'];
+    interactionHistory?: TamagotchiStateModel['interactionHistoryList'];
+    notifications?: LegacyNotificationModel[];
+  },
+): TamagotchiStateModel {
+  const canonical = { ...state };
+
+  delete canonical.achievements;
+  delete canonical.interactionHistory;
+  delete canonical.notifications;
+
+  return canonical;
 }
 
 @Service({ autoProvided: false })
@@ -153,13 +169,15 @@ export class TamagotchiPersistenceService {
   private migrateState(state: TamagotchiStateModel, version: number): TamagotchiStateModel {
     const legacy = state as TamagotchiStateModel & {
       achievements?: TamagotchiStateModel['achievementList'];
+      interactionHistory?: TamagotchiStateModel['interactionHistoryList'];
       notificationList?: LegacyNotificationModel[];
       notifications?: LegacyNotificationModel[];
     };
-    const legacyNotifications = legacy.notificationList ?? legacy.notifications ?? [];
+    const legacyNotificationList = legacy.notificationList ?? legacy.notifications ?? [];
+    const stateWithoutLegacyKeys = omitLegacyStateKeys(legacy);
     const migrated: TamagotchiStateModel = {
       ...createInitialTamagotchiState(),
-      ...state,
+      ...stateWithoutLegacyKeys,
       achievementList: state.achievementList ?? legacy.achievements ?? [],
       dailyRoutine: {
         ...createInitialDailyRoutine(),
@@ -173,11 +191,11 @@ export class TamagotchiPersistenceService {
               ...state.evolutionProgress,
               readyNotifiedAt: state.evolutionProgress.readyNotifiedAt ?? null,
             },
-      interactionHistory: state.interactionHistory ?? [],
+      interactionHistoryList: state.interactionHistoryList ?? legacy.interactionHistory ?? [],
       notificationList:
         version >= TAMAGOTCHI_NOTIFICATION_TEXT_STATE_VERSION
           ? (state.notificationList ?? [])
-          : migrateNotificationList(legacyNotifications),
+          : migrateNotificationList(legacyNotificationList),
       pokemon: state.pokemon ? ensurePokemonSpriteVariations(state.pokemon) : null,
       selectionOriginId: this.resolveSelectionOriginId(state, version),
       status: {
@@ -237,9 +255,15 @@ export class TamagotchiPersistenceService {
     }
 
     return {
-      ...state,
+      ...omitLegacyStateKeys(
+        state as TamagotchiStateModel & {
+          achievements?: TamagotchiStateModel['achievementList'];
+          interactionHistory?: TamagotchiStateModel['interactionHistoryList'];
+          notifications?: LegacyNotificationModel[];
+        },
+      ),
       achievementList: state.achievementList ?? [],
-      interactionHistory: state.interactionHistory ?? [],
+      interactionHistoryList: state.interactionHistoryList ?? [],
       notificationList: state.notificationList ?? [],
       pokemon: state.pokemon ? ensurePokemonSpriteVariations(state.pokemon) : null,
       status: normalizePokemonStatus(state.status),

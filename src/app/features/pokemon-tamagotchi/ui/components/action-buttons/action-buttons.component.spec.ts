@@ -2,10 +2,10 @@ import { TestBed } from '@angular/core/testing';
 import type { ComponentFixture } from '@angular/core/testing';
 import { TranslocoTestingModule } from '@jsverse/transloco';
 import { describe, expect, it, vi } from 'vitest';
-import type { ActionCooldowns, ActionType } from '../../../data/models/tamagotchi-state.model';
+import type { ActionCooldownsModel, ActionType } from '../../../data/models/tamagotchi-state.model';
 import { ActionButtonsComponent } from './action-buttons.component';
 
-const EMPTY_COOLDOWNS: ActionCooldowns = {
+const EMPTY_COOLDOWNS: ActionCooldownsModel = {
   care: null,
   feed: null,
   play: null,
@@ -21,7 +21,7 @@ function createFixture(
     canTrain?: boolean;
     canWater?: boolean;
     canCare?: boolean;
-    cooldowns?: ActionCooldowns;
+    cooldowns?: ActionCooldownsModel;
     isSleeping?: boolean;
   } = {},
 ): ComponentFixture<ActionButtonsComponent> {

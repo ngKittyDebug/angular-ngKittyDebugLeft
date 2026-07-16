@@ -70,7 +70,7 @@ function createStoreMock(
     evolutionProgress: signal(initial.evolutionProgress),
     hasPokemon: signal((overrides.pokemon ?? TEST_POKEMON) !== null),
     initialized: signal(overrides.initialized ?? true),
-    interactionHistory: signal(initial.interactionHistory),
+    interactionHistoryList: signal(initial.interactionHistoryList),
     isEvolving: signal(false),
     isSleeping: signal(overrides.isSleeping ?? false),
     isTraining: signal(overrides.isTraining ?? false),

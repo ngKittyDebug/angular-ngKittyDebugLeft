@@ -142,7 +142,7 @@ describe('TamagotchiService', () => {
             state = interactWithPokemonState(state, high);
 
             const moodAfter = state.status.mood;
-            const tracked = state.interactionHistory.some(
+            const tracked = state.interactionHistoryList.some(
               (entry) =>
                 entry.type === high.type &&
                 entry.intensity === high.intensity &&

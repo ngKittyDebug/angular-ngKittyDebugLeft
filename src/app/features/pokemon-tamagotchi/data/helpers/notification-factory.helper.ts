@@ -115,9 +115,3 @@ export function notificationFromEvolutionReady(
     title: notificationTranslationKey('evolution.readyTitle'),
   };
 }
-
-export function sortNotificationsByPriority(
-  notifications: NotificationModel[],
-): NotificationModel[] {
-  return [...notifications].sort(compareNotificationsByPriority);
-}

@@ -8,10 +8,10 @@ import {
 } from '../helpers/status-calculator.helper';
 import type { PokemonStatusModel, StatusUpdateModel } from '../models/pokemon-status.model';
 import type {
-  ActionCooldowns,
+  ActionCooldownsModel,
   ActionType,
   TamagotchiStateModel,
-  ValidationResult,
+  ValidationResultModel,
 } from '../models/tamagotchi-state.model';
 
 export interface TamagotchiActionContext {
@@ -35,7 +35,10 @@ export class TamagotchiService {
     return calculateStatusUpdate(currentStatus, action);
   }
 
-  public validateAction(context: TamagotchiActionContext, action: ActionType): ValidationResult {
+  public validateAction(
+    context: TamagotchiActionContext,
+    action: ActionType,
+  ): ValidationResultModel {
     if (!context.hasPokemon) {
       return { allowed: false, reason: 'noPokemon' };
     }
@@ -78,7 +81,7 @@ export class TamagotchiService {
   public validateActionFromState(
     state: TamagotchiStateModel,
     action: ActionType,
-  ): ValidationResult {
+  ): ValidationResultModel {
     return this.validateAction(
       {
         hasPokemon: state.pokemon !== null,
@@ -91,7 +94,7 @@ export class TamagotchiService {
     );
   }
 
-  public getActionCooldowns(context: TamagotchiActionContext): ActionCooldowns {
+  public getActionCooldowns(context: TamagotchiActionContext): ActionCooldownsModel {
     return {
       care: this.getCooldownRemaining(context, 'care') || null,
       feed: this.getCooldownRemaining(context, 'feed') || null,

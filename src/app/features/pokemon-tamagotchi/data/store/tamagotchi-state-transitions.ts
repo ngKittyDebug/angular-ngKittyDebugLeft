@@ -326,7 +326,7 @@ export function interactWithPokemonState(
     status: updateStatusFields(current.status, {
       mood: applyStatusDelta(current.status.mood, interaction.moodIncrease),
     }),
-    interactionHistory: [...current.interactionHistory, interaction].slice(
+    interactionHistoryList: [...current.interactionHistoryList, interaction].slice(
       -INTERACTION_HISTORY_LIMIT,
     ),
   }));

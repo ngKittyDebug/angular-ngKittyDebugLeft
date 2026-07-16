@@ -11,18 +11,18 @@ import type { NotificationModel } from '../../../data/models/notification.model'
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NotificationComponent {
-  public readonly notifications = input.required<NotificationModel[]>();
+  public readonly notificationList = input.required<NotificationModel[]>();
 
   protected readonly historyListId = 'tamagotchi-notifications-history';
   protected readonly historyOpen = signal(false);
 
-  protected readonly historyNotifications = computed(() =>
-    [...this.notifications()].sort((left, right) => right.timestamp - left.timestamp),
+  protected readonly historyNotificationList = computed(() =>
+    [...this.notificationList()].sort((left, right) => right.timestamp - left.timestamp),
   );
 
-  protected readonly hasHistory = computed(() => this.historyNotifications().length > 0);
+  protected readonly hasHistory = computed(() => this.historyNotificationList().length > 0);
 
-  protected toggleHistory(): void {
+  protected onHistoryToggle(): void {
     this.historyOpen.update((open) => !open);
   }
 }

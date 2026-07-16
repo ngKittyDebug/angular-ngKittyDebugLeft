@@ -24,7 +24,7 @@
           [activeItemIndex]="facade.performanceModeIndex()"
           (activeItemIndexChange)="facade.onPerformanceModeIndexChange($event)"
         >
-          @for (mode of facade.performanceModes; track mode) {
+          @for (mode of facade.performanceModeList; track mode) {
             <button type="button">{{ t('performanceModes.' + mode) }}</button>
           }
         </tui-segmented>
@@ -94,7 +94,7 @@
 
     <div class="tamagotchi-page__layout">
       <aside class="tamagotchi-page__status-panel" [attr.aria-label]="t('statusPanelAria')">
-        @for (statusType of facade.displayedStatusTypes; track statusType) {
+        @for (statusType of facade.displayedStatusTypeList; track statusType) {
           <left-paw-status-indicator
             [currentValue]="facade.statusValueFor(statusType)"
             [level]="statusType === 'experience' ? facade.status().level : null"
@@ -140,7 +140,7 @@
     />
     <left-paw-tamagotchi-notifications
       class="tamagotchi-page__notifications"
-      [notifications]="facade.notifications()"
+      [notificationList]="facade.notificationList()"
     />
   }
 </main>

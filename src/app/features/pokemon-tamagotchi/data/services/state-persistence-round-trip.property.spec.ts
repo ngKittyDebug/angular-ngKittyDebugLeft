@@ -71,7 +71,7 @@ function assertPersistedEquivalence(
     return false;
   }
 
-  if (!areEquivalentJsonValues(loaded.interactionHistory, original.interactionHistory)) {
+  if (!areEquivalentJsonValues(loaded.interactionHistoryList, original.interactionHistoryList)) {
     return false;
   }
 

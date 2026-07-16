@@ -22,7 +22,7 @@ import type {
 } from '../models/evolution.model';
 import type { PokemonModel } from '../models/pokemon.model';
 import type { PokemonStatusModel } from '../models/pokemon-status.model';
-import type { DailyRoutine } from '../models/tamagotchi-state.model';
+import type { DailyRoutineModel } from '../models/tamagotchi-state.model';
 
 @Service({ autoProvided: false })
 export class EvolutionService {
@@ -32,7 +32,7 @@ export class EvolutionService {
     pokemon: PokemonModel,
     status: PokemonStatusModel,
     achievementList: AchievementModel[],
-    dailyRoutine: DailyRoutine,
+    dailyRoutine: DailyRoutineModel,
     requirements: EvolutionRequirementModel[] = this.getRequirementsForPokemon(pokemon),
   ): EvolutionCheckResultModel {
     return checkEvolutionCriteria(
@@ -46,7 +46,7 @@ export class EvolutionService {
   public computeEvolutionProgress(
     status: PokemonStatusModel,
     achievementList: AchievementModel[],
-    dailyRoutine: DailyRoutine,
+    dailyRoutine: DailyRoutineModel,
     requirements: EvolutionRequirementModel[] = EVOLUTION_REQUIREMENTS,
   ): EvolutionProgressModel {
     const result = checkEvolutionCriteria(
@@ -108,7 +108,7 @@ export class EvolutionService {
     requirement: EvolutionRequirementModel,
     status: PokemonStatusModel,
     achievementList: AchievementModel[],
-    dailyRoutine: DailyRoutine,
+    dailyRoutine: DailyRoutineModel,
   ): number {
     const currentProgress = buildEvolutionProgressValues(
       status,
@@ -123,7 +123,7 @@ export class EvolutionService {
     pokemon: PokemonModel,
     status: PokemonStatusModel,
     achievementList: AchievementModel[],
-    dailyRoutine: DailyRoutine,
+    dailyRoutine: DailyRoutineModel,
   ): boolean {
     if (!pokemon.isFirstStage && !pokemon.evolutionChain.nextEvolution) {
       return false;
