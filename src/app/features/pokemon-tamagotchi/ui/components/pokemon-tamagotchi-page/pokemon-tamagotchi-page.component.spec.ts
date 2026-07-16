@@ -20,7 +20,7 @@ import { TamagotchiStore } from '../../../data/store/tamagotchi.store';
 import { TamagotchiFacade } from '../../../data/facades/tamagotchi.facade';
 import { TAMAGOTCHI_SYSTEM_ERRORS } from '../../../data/constants/system-errors.constants';
 import { AnimationService } from '../../services/animation.service';
-import { TamagotchiNotificationService } from '../../services/notification.service';
+import { TamagotchiNotificationService } from '../../../data/services/tamagotchi-notification.service';
 import { PokemonTamagotchiPageComponent } from './pokemon-tamagotchi-page.component';
 
 type TamagotchiStoreInstance = InstanceType<typeof TamagotchiStore>;

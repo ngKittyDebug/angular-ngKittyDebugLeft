@@ -13,6 +13,7 @@ import { rollTrainingExperienceGain } from '../helpers/training-reward.helper';
 import { EvolutionService } from '../services/evolution.service';
 import { PerformanceService } from '../services/performance.service';
 import { TamagotchiInitService } from '../services/tamagotchi-init.service';
+import { TamagotchiNotificationService } from '../services/tamagotchi-notification.service';
 import { type TamagotchiActionContext, TamagotchiService } from '../services/tamagotchi.service';
 import {
   type TamagotchiTimerContext,
@@ -25,7 +26,6 @@ import type { PerformanceMode } from '../models/performance-mode.model';
 import type { PokemonModel } from '../models/pokemon.model';
 import type { StatusType } from '../models/pokemon-status.model';
 import type { ActionCooldowns, ActionType } from '../models/tamagotchi-state.model';
-import { TamagotchiNotificationService } from '../../ui/services/notification.service';
 
 const COOLDOWN_ACTIONS: ActionType[] = ['feed', 'water', 'care', 'play', 'train', 'sleep'];
 const COOLDOWN_REFRESH_INTERVAL_MS = 1_000;

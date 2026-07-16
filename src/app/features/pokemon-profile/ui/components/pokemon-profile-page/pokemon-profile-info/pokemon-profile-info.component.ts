@@ -15,7 +15,7 @@ import { ProfileFacade } from '@features/profile/data/facades/profile.facade';
 import { TAMAGOTCHI_PATH } from '@shared/constants/tamagotchi-routes';
 import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
 import { DivideByTenPipe } from '@shared/pipes/divide-by-ten.pipe';
-import { PokemonTamagotchiSelectionComponent } from '@shared/ui/components/pokemon-tamagotchi-selection/pokemon-tamagotchi-selection.component';
+import { PokemonTamagotchiSelectionComponent } from '../pokemon-tamagotchi-selection/pokemon-tamagotchi-selection.component';
 
 @Component({
   selector: 'left-paw-pokemon-profile-info',

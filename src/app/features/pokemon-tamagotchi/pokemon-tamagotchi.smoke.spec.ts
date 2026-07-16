@@ -27,7 +27,7 @@ import { TEST_POKEMON } from './data/fixtures/tamagotchi-arbitraries';
 import { pokemonTamagotchiRoutes, TAMAGOTCHI_PATH } from './pokemon-tamagotchi.routes';
 import { PokemonTamagotchiPageComponent } from './ui/components/pokemon-tamagotchi-page/pokemon-tamagotchi-page.component';
 import { AnimationService } from './ui/services/animation.service';
-import { TamagotchiNotificationService } from './ui/services/notification.service';
+import { TamagotchiNotificationService } from './data/services/tamagotchi-notification.service';
 
 type TamagotchiStoreInstance = InstanceType<typeof TamagotchiStore>;
 

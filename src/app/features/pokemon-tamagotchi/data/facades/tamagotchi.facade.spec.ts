@@ -12,6 +12,7 @@ import type { PokemonStatusModel } from '../models/pokemon-status.model';
 import { EvolutionService } from '../services/evolution.service';
 import { PerformanceService } from '../services/performance.service';
 import { TamagotchiInitService } from '../services/tamagotchi-init.service';
+import { TamagotchiNotificationService } from '../services/tamagotchi-notification.service';
 import { TamagotchiService } from '../services/tamagotchi.service';
 import { TimerService } from '../services/timer.service';
 import {
@@ -19,7 +20,6 @@ import {
   createInitialTamagotchiState,
 } from '../store/tamagotchi-initial';
 import { TamagotchiStore } from '../store/tamagotchi.store';
-import { TamagotchiNotificationService } from '../../ui/services/notification.service';
 import { TamagotchiFacade } from './tamagotchi.facade';
 
 type TamagotchiStoreInstance = InstanceType<typeof TamagotchiStore>;
