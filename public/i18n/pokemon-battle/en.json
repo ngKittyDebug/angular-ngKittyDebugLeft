@@ -12,7 +12,9 @@
     "title": "Select Your Team (2 Pokemon)",
     "summary": "Selected:",
     "loading": "Loading Pokemon from PokeAPI...",
-    "error": "Error:",
+    "errors": {
+      "loadFailed": "Failed to load pokemons"
+    },
     "retry": "Try again",
     "stats": {
       "hp": "HP",
@@ -29,8 +31,7 @@
   },
   "arena": {
     "controls": {
-      "turn": "Turn",
-      "of": "of",
+      "turnOfTotal": "Turn {{ current }} of {{ total }}",
       "resetSelection": "Reset selection",
       "selectAttack": "Select attack for",
       "selectTarget": "Select target for",
@@ -40,8 +41,8 @@
     },
     "status": {
       "initializing": "Initializing",
-      "waiting-for-commands": "Waiting for commands",
-      "resolving-turn": "Processing turn",
+      "waitingForCommands": "Waiting for commands",
+      "resolvingTurn": "Processing turn",
       "finished": "Finished"
     },
     "result": {
@@ -55,7 +56,11 @@
     "log": {
       "title": "Battle Log",
       "empty": "The battle hasn't started yet. Make your first move!",
-      "roundHeader": "--- Round {{ turn }} ---"
+      "roundHeader": "--- Round {{ turn }} ---",
+      "useMove": "{{ attacker }} used {{ move }}!",
+      "damage": "{{ target }} took {{ damage }} damage!",
+      "faint": "{{ pokemon }} fainted!",
+      "battleOver": "Battle over!"
     },
     "info": {
       "title": "Battle Status",

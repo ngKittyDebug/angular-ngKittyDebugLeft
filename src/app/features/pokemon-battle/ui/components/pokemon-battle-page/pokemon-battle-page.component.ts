@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { TranslocoDirective } from '@jsverse/transloco';
+import { TuiButton, TuiSlider } from '@taiga-ui/core';
 import { PokemonBattleStore } from '../../../data/store/pokemon-battle.store';
 import { AudioManagerService } from '../../../data/services/audio-manager.service';
 import { PokemonTeamSelectionComponent } from './pokemon-team-selection/pokemon-team-selection.component';
@@ -9,10 +9,11 @@ import { PokemonBattleArenaComponent } from './pokemon-battle-arena/pokemon-batt
 @Component({
   selector: 'left-paw-pokemon-battle-page',
   imports: [
-    CommonModule,
     TranslocoDirective,
     PokemonTeamSelectionComponent,
     PokemonBattleArenaComponent,
+    TuiButton,
+    TuiSlider,
   ],
   templateUrl: './pokemon-battle-page.component.html',
   styleUrl: './pokemon-battle-page.component.scss',
@@ -30,7 +31,7 @@ export class PokemonBattlePageComponent {
   public readonly soundVolume = this.audioManager.volume;
   public readonly soundVolumePercent = computed(() => Math.round(this.soundVolume() * 100));
 
-  public toggleMute(): void {
+  public onSoundToggleClick(): void {
     this.audioManager.toggle();
   }
 
