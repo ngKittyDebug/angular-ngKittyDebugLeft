@@ -5,7 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ngKittyDebugLeft — PokeDex, который мы заслужили</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/reveal.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/theme/white.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/theme/white.css"
+    />
     <style>
       :root {
         --poke-dark: #22283e;
@@ -42,11 +45,21 @@
         text-align: left;
       }
 
-      .reveal h2.blue { border-color: var(--poke-blue); }
-      .reveal h2.green { border-color: var(--poke-green); }
-      .reveal h2.gold { border-color: var(--poke-yellow); }
-      .reveal h2.violet { border-color: var(--poke-violet); }
-      .reveal h2.pink { border-color: var(--poke-pink); }
+      .reveal h2.blue {
+        border-color: var(--poke-blue);
+      }
+      .reveal h2.green {
+        border-color: var(--poke-green);
+      }
+      .reveal h2.gold {
+        border-color: var(--poke-yellow);
+      }
+      .reveal h2.violet {
+        border-color: var(--poke-violet);
+      }
+      .reveal h2.pink {
+        border-color: var(--poke-pink);
+      }
 
       .reveal .subtitle {
         text-align: left;
@@ -62,8 +75,12 @@
         line-height: 1.45;
       }
 
-      .reveal ul li { margin-bottom: 0.45em; }
-      .reveal ul li::marker { color: var(--poke-red); }
+      .reveal ul li {
+        margin-bottom: 0.45em;
+      }
+      .reveal ul li::marker {
+        color: var(--poke-red);
+      }
 
       .reveal ul ul {
         font-size: 0.92em;
@@ -98,8 +115,14 @@
         text-align: left;
       }
 
-      .reveal .cards.four { grid-template-columns: repeat(4, 1fr); font-size: 0.5em; }
-      .reveal .cards.two { grid-template-columns: repeat(2, 1fr); font-size: 0.62em; }
+      .reveal .cards.four {
+        grid-template-columns: repeat(4, 1fr);
+        font-size: 0.5em;
+      }
+      .reveal .cards.two {
+        grid-template-columns: repeat(2, 1fr);
+        font-size: 0.62em;
+      }
 
       .reveal .card {
         background: #fff;
@@ -110,13 +133,27 @@
         box-shadow: 0 6px 18px rgba(34, 40, 62, 0.07);
       }
 
-      .reveal .card.yellow { border-top-color: var(--poke-yellow); }
-      .reveal .card.blue { border-top-color: var(--poke-blue); }
-      .reveal .card.green { border-top-color: var(--poke-green); }
-      .reveal .card.violet { border-top-color: var(--poke-violet); }
+      .reveal .card.yellow {
+        border-top-color: var(--poke-yellow);
+      }
+      .reveal .card.blue {
+        border-top-color: var(--poke-blue);
+      }
+      .reveal .card.green {
+        border-top-color: var(--poke-green);
+      }
+      .reveal .card.violet {
+        border-top-color: var(--poke-violet);
+      }
 
-      .reveal .card h3 { font-size: 1.05em; margin: 0 0 0.5em; }
-      .reveal .card ul { font-size: 0.95em; margin: 0 0 0 1.1em; }
+      .reveal .card h3 {
+        font-size: 1.05em;
+        margin: 0 0 0.5em;
+      }
+      .reveal .card ul {
+        font-size: 0.95em;
+        margin: 0 0 0 1.1em;
+      }
 
       .reveal .stats {
         display: grid;
@@ -140,11 +177,21 @@
         color: var(--poke-red);
       }
 
-      .reveal .stat .num.blue { color: var(--poke-blue); }
-      .reveal .stat .num.green { color: var(--poke-green); }
-      .reveal .stat .num.gold { color: #c99a00; }
-      .reveal .stat .num.violet { color: var(--poke-violet); }
-      .reveal .stat .num.pink { color: var(--poke-pink); }
+      .reveal .stat .num.blue {
+        color: var(--poke-blue);
+      }
+      .reveal .stat .num.green {
+        color: var(--poke-green);
+      }
+      .reveal .stat .num.gold {
+        color: #c99a00;
+      }
+      .reveal .stat .num.violet {
+        color: var(--poke-violet);
+      }
+      .reveal .stat .num.pink {
+        color: var(--poke-pink);
+      }
 
       .reveal .stat .label {
         display: block;
@@ -166,16 +213,30 @@
         box-shadow: 0 6px 18px rgba(34, 40, 62, 0.25);
       }
 
-      .reveal .commits .sha { color: var(--poke-yellow); }
-      .reveal .commits .note { color: #8a8fa5; font-style: italic; }
+      .reveal .commits .sha {
+        color: var(--poke-yellow);
+      }
+      .reveal .commits .note {
+        color: #8a8fa5;
+        font-style: italic;
+      }
 
       .reveal section.dark h1,
       .reveal section.dark h2,
       .reveal section.dark h3,
-      .reveal section.dark p { color: #fff; }
-      .reveal section.dark .accent { color: var(--poke-yellow); }
-      .reveal section.dark .muted { color: #c9cdde; }
-      .reveal section.dark .fine { color: #8a8fa5; font-size: 0.45em; }
+      .reveal section.dark p {
+        color: #fff;
+      }
+      .reveal section.dark .accent {
+        color: var(--poke-yellow);
+      }
+      .reveal section.dark .muted {
+        color: #c9cdde;
+      }
+      .reveal section.dark .fine {
+        color: #8a8fa5;
+        font-size: 0.45em;
+      }
 
       .reveal .pokeball {
         width: 110px;
@@ -183,7 +244,12 @@
         margin: 0 auto 0.5em;
         border-radius: 50%;
         border: 4px solid var(--poke-dark);
-        background: linear-gradient(to bottom, var(--poke-red) 0 46%, var(--poke-dark) 46% 54%, #fff 54% 100%);
+        background: linear-gradient(
+          to bottom,
+          var(--poke-red) 0 46%,
+          var(--poke-dark) 46% 54%,
+          #fff 54% 100%
+        );
         position: relative;
         animation: wiggle 3.5s ease-in-out infinite;
       }
@@ -202,11 +268,22 @@
       }
 
       @keyframes wiggle {
-        0%, 100% { transform: rotate(0deg); }
-        10% { transform: rotate(-12deg); }
-        20% { transform: rotate(10deg); }
-        30% { transform: rotate(-6deg); }
-        40% { transform: rotate(0deg); }
+        0%,
+        100% {
+          transform: rotate(0deg);
+        }
+        10% {
+          transform: rotate(-12deg);
+        }
+        20% {
+          transform: rotate(10deg);
+        }
+        30% {
+          transform: rotate(-6deg);
+        }
+        40% {
+          transform: rotate(0deg);
+        }
       }
 
       .reveal .hint {
@@ -231,24 +308,29 @@
         box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
       }
 
-      #music-toggle:hover { background: #333b5e; }
+      #music-toggle:hover {
+        background: #333b5e;
+      }
     </style>
   </head>
   <body>
     <div class="reveal">
       <div class="slides">
         <!-- 1. Титульный -->
-        <section class="dark" data-background-gradient="radial-gradient(circle at 30% 20%, #333b5e, #171c2e)">
+        <section
+          class="dark"
+          data-background-gradient="radial-gradient(circle at 30% 20%, #333b5e, #171c2e)"
+        >
           <div class="pokeball"></div>
           <h1 style="font-size: 1.9em">ngKittyDebugLeft</h1>
-          <p class="accent" style="font-size: 0.9em; font-weight: 700">PokeDex, который мы заслужили</p>
+          <p class="accent" style="font-size: 0.9em; font-weight: 700">
+            PokeDex, который мы заслужили
+          </p>
           <p class="muted" style="font-size: 0.55em; font-style: italic">
             Мы — команда ngKittyDebug: три разработчика, один ментор-мультикласс<br />
             и ноль шансов, что это будет скучно.
           </p>
-          <p style="font-size: 0.62em; font-weight: 600">
-            603 коммита · 121 PR · 4 игры · 1 гимн
-          </p>
+          <p style="font-size: 0.62em; font-weight: 600">603 коммита · 121 PR · 4 игры · 1 гимн</p>
           <p class="accent" style="font-size: 0.5em; font-style: italic">
             🎵 Кликните в любом месте — заиграет наш гимн. Да, у нас есть гимн.
           </p>
@@ -301,11 +383,18 @@
         <!-- 3. Как выбирали проект -->
         <section data-background-gradient="linear-gradient(160deg, #ffffff, #fff3d6)">
           <h2 class="gold">Как мы выбирали проект</h2>
-          <p class="subtitle">глава первая: «Скучаю по моменту, когда думал, что у меня есть выбор»</p>
+          <p class="subtitle">
+            глава первая: «Скучаю по моменту, когда думал, что у меня есть выбор»
+          </p>
           <ul>
             <li>Мы попросили оставить нас в старом составе вшестером. Ответ судьбы: ( ͡° ͜ʖ ͡° )</li>
-            <li>Все хотели тамагочи. Но SVG-тамагочи — скучно, а игровой движок — это уже не «изучаем Angular»</li>
-            <li>И тут мы нашли PokeAPI: готовый каталог из 1300+ «тамагочи» и тонны данных для страниц</li>
+            <li>
+              Все хотели тамагочи. Но SVG-тамагочи — скучно, а игровой движок — это уже не «изучаем
+              Angular»
+            </li>
+            <li>
+              И тут мы нашли PokeAPI: готовый каталог из 1300+ «тамагочи» и тонны данных для страниц
+            </li>
             <li class="fragment">
               Составили план здорового человека — три уровня:
               <ul>
@@ -317,7 +406,9 @@
           </ul>
           <blockquote class="fragment">
             «Кто знает, может, и успеем.»
-            <span class="author">— наш тимлид, спринт 1. Спойлер: успели всё и ещё реалтайм-игру сверху</span>
+            <span class="author"
+              >— наш тимлид, спринт 1. Спойлер: успели всё и ещё реалтайм-игру сверху</span
+            >
           </blockquote>
         </section>
 
@@ -340,7 +431,9 @@
             </div>
             <div class="stat">
               <span class="num gold">29</span>
-              <span class="label">коммитов за день — 7 июня, накануне конца спринта. Совпадение? Не думаем</span>
+              <span class="label"
+                >коммитов за день — 7 июня, накануне конца спринта. Совпадение? Не думаем</span
+              >
             </div>
             <div class="stat">
               <span class="num green">121</span>
@@ -372,7 +465,9 @@
             </div>
             <div class="stat">
               <span class="num blue">17 000</span>
-              <span class="label">строк тестов в 130 файлах. Мы их не читали — нам сказали не читать</span>
+              <span class="label"
+                >строк тестов в 130 файлах. Мы их не читали — нам сказали не читать</span
+              >
             </div>
             <div class="stat">
               <span class="num violet">6 249</span>
@@ -424,7 +519,9 @@
             </div>
             <div class="stat">
               <span class="num violet">17 : 0</span>
-              <span class="label">счёт «обращения к Танди : её ответы». Рецептов «Картошки» — тоже 0</span>
+              <span class="label"
+                >счёт «обращения к Танди : её ответы». Рецептов «Картошки» — тоже 0</span
+              >
             </div>
             <div class="stat">
               <span class="num green">6 из 6</span>
@@ -432,18 +529,25 @@
             </div>
             <div class="stat">
               <span class="num blue">7</span>
-              <span class="label">упоминаний Клавдия — все со смесью благодарности и лёгкого страха</span>
+              <span class="label"
+                >упоминаний Клавдия — все со смесью благодарности и лёгкого страха</span
+              >
             </div>
             <div class="stat">
               <span class="num">2</span>
-              <span class="label">официальные жалобы на документацию Taiga UI. Поданы через Танди</span>
+              <span class="label"
+                >официальные жалобы на документацию Taiga UI. Поданы через Танди</span
+              >
             </div>
           </div>
         </section>
 
         <!-- 7. Спринты (вертикальная стопка) -->
         <section>
-          <section class="dark" data-background-gradient="radial-gradient(circle at 70% 30%, #333b5e, #171c2e)">
+          <section
+            class="dark"
+            data-background-gradient="radial-gradient(circle at 70% 30%, #333b5e, #171c2e)"
+          >
             <h2 style="border-color: #ffcb05; color: #fff">Четыре спринта — четыре главы</h2>
             <p class="muted" style="font-size: 0.6em">сетап → сигналы → бэкенд → нейросети</p>
             <p class="accent hint">Листайте вниз ↓ — как эволюционная цепочка, только про нас</p>
@@ -454,10 +558,19 @@
             <p class="subtitle">жанр: драма с элементами безысходности (цитата, не оценка)</p>
             <ul>
               <li>Подняли репозитории, защиту веток, ESLint и CI с нотификациями в Телеграм</li>
-              <li>Канбан: «всё ещё нет чёткого видения декомпозиции, но, думаю, я пойму. Может быть, пойму»</li>
+              <li>
+                Канбан: «всё ещё нет чёткого видения декомпозиции, но, думаю, я пойму. Может быть,
+                пойму»
+              </li>
               <li>Тему переписали на TUI_DARK_MODE — меньше кода, localStorage в подарок</li>
-              <li>i18n: выбрали директиву вместо pipe — одна подписка и кеш вместо вызова на каждый перевод</li>
-              <li>Страница 404: компонент — быстро, gif — 10+ часов. «Непростительно много. Зато узнал»</li>
+              <li>
+                i18n: выбрали директиву вместо pipe — одна подписка и кеш вместо вызова на каждый
+                перевод
+              </li>
+              <li>
+                Страница 404: компонент — быстро, gif — 10+ часов. «Непростительно много. Зато
+                узнал»
+              </li>
             </ul>
             <blockquote>
               «Хочется съесть Санчо Панчо, но придётся сначала его приготовить :(»
@@ -469,10 +582,22 @@
             <h2 class="blue">Спринт 2 · «Добро пожаловать в Angular 22!»</h2>
             <p class="subtitle">кризис среднего возраста и другие миграции</p>
             <ul>
-              <li>«Я с гордостью хотел писать бургер-меню, но мне сказали, что burger не в моде» → кризис среднего возраста → TabBar</li>
-              <li>Написали свою структурную директиву + BreakpointObserver. Первая версия — через костыльный effect, вторая — по-людски</li>
-              <li>Пагинация и поиск: resource + computed + debounce. 1300+ покемонов одним запросом — «дёшево и сердито»</li>
-              <li>Профиль покемона: рекурсивная цепочка эволюции, ArcChart и карусель, которая «НОООООООООО...» (6 часов)</li>
+              <li>
+                «Я с гордостью хотел писать бургер-меню, но мне сказали, что burger не в моде» →
+                кризис среднего возраста → TabBar
+              </li>
+              <li>
+                Написали свою структурную директиву + BreakpointObserver. Первая версия — через
+                костыльный effect, вторая — по-людски
+              </li>
+              <li>
+                Пагинация и поиск: resource + computed + debounce. 1300+ покемонов одним запросом —
+                «дёшево и сердито»
+              </li>
+              <li>
+                Профиль покемона: рекурсивная цепочка эволюции, ArcChart и карусель, которая
+                «НОООООООООО...» (6 часов)
+              </li>
               <li>Гварды: «простые и тупые» (документация от автора)</li>
               <li>Посреди проекта вышел Angular 22 — мигрировали сразу, не раздумывая</li>
             </ul>
@@ -486,11 +611,23 @@
             <h2 class="green">Спринт 3 · Бэкенд, авторизация, state</h2>
             <p class="subtitle">PokeAPI: очень объёмная, очень интересная, очень неудобная 😤</p>
             <ul>
-              <li>Переиспользовали NestJS-сервер с прошлого проекта. «Можно было написать новый, но зачем?»</li>
-              <li>Авторизация: HttpClient + InjectionToken, интерцептор ошибок только на auth-роутах</li>
-              <li>Токен положили в память в сигнал, а не в localStorage. Безопасность, а не лень</li>
-              <li>Фильтры: у PokeAPI нет query-фильтров, так что пересечения массивов считаем сами на фронте</li>
-              <li>@ngrx/signals: «документация — моё почтение» (редкий комплимент в наших дневниках)</li>
+              <li>
+                Переиспользовали NestJS-сервер с прошлого проекта. «Можно было написать новый, но
+                зачем?»
+              </li>
+              <li>
+                Авторизация: HttpClient + InjectionToken, интерцептор ошибок только на auth-роутах
+              </li>
+              <li>
+                Токен положили в память в сигнал, а не в localStorage. Безопасность, а не лень
+              </li>
+              <li>
+                Фильтры: у PokeAPI нет query-фильтров, так что пересечения массивов считаем сами на
+                фронте
+              </li>
+              <li>
+                @ngrx/signals: «документация — моё почтение» (редкий комплимент в наших дневниках)
+              </li>
               <li>Навели UX-красоту: тосты, скелетоны, Loader, радар на ECharts</li>
             </ul>
             <blockquote>
@@ -523,13 +660,14 @@
                 <h3>Оксана × Claude Code</h3>
                 <ul>
                   <li>Доработка профиля тренера</li>
-                  <li>Первый вариант от ИИ — в корзину: лишние @if и ng-container</li>
+                  <li>Первый вариант от ИИ — в корзину: лишние &#64;if и ng-container</li>
                   <li>«Это помощник, а не тот, кто пишет код вместо меня»</li>
                 </ul>
               </div>
             </div>
             <blockquote>
-              «Если через пару месяцев я начну говорить „это надо завернуть в computed" — значит, обучение прошло успешно.»
+              «Если через пару месяцев я начну говорить „это надо завернуть в computed" — значит,
+              обучение прошло успешно.»
               <span class="author">— Оксана</span>
             </blockquote>
           </section>
@@ -540,15 +678,37 @@
           <h2 class="blue">Хроники наших коммитов</h2>
           <p class="subtitle">git log помнит всё. Особенно то, что мы хотели бы забыть</p>
           <div class="commits">
-            <div><span class="sha">fix:</span> fix prettier mistakes <span class="note">// prettier исправляет нас, мы — его</span></div>
-            <div><span class="sha">fix(core):</span> fix bugs according ai <span class="note">// краткость — сестра</span></div>
-            <div><span class="sha">fix:</span> fix mistake in to tamagotchi link. refactor if else in pokemon in pokemon tamamgotchi page template <span class="note">// покемонов много не бывает</span></div>
-            <div><span class="sha">refactor:</span> extract magic numbers to constants <span class="note">// ×3 — магию изгоняли трижды, как в хорошем экзорцизме</span></div>
-            <div><span class="sha">fix:</span> fix mistakes in tests according code review <span class="note">// ревью писал не человек. Мы знаем, кто</span></div>
+            <div>
+              <span class="sha">fix:</span> fix prettier mistakes
+              <span class="note">// prettier исправляет нас, мы — его</span>
+            </div>
+            <div>
+              <span class="sha">fix(core):</span> fix bugs according ai
+              <span class="note">// краткость — сестра</span>
+            </div>
+            <div>
+              <span class="sha">fix:</span> fix mistake in to tamagotchi link. refactor if else in
+              pokemon in pokemon tamamgotchi page template
+              <span class="note">// покемонов много не бывает</span>
+            </div>
+            <div>
+              <span class="sha">refactor:</span> extract magic numbers to constants
+              <span class="note">// ×3 — магию изгоняли трижды, как в хорошем экзорцизме</span>
+            </div>
+            <div>
+              <span class="sha">fix:</span> fix mistakes in tests according code review
+              <span class="note">// ревью писал не человек. Мы знаем, кто</span>
+            </div>
           </div>
           <ul style="margin-top: 0.8em">
-            <li>114 из этих коммитов сделаны между полуночью и 5 утра — тёмная тема была выбором, а не опцией</li>
-            <li>Мержи пережиты, конфликты решены: «Алексей просто бог и мне помог» (настоящая цитата из дневника)</li>
+            <li>
+              114 из этих коммитов сделаны между полуночью и 5 утра — тёмная тема была выбором, а не
+              опцией
+            </li>
+            <li>
+              Мержи пережиты, конфликты решены: «Алексей просто бог и мне помог» (настоящая цитата
+              из дневника)
+            </li>
           </ul>
         </section>
 
@@ -557,22 +717,39 @@
           <h2>Битвы, которые мы не выбирали</h2>
           <p class="subtitle">финальный босс оказался не покемоном, а документацией</p>
           <ul>
-            <li>tuiTextfield «не как в примере»: полдня поисков → удалили всё → переписали с нуля → работает. Почему? Тайна</li>
+            <li>
+              tuiTextfield «не как в примере»: полдня поисков → удалили всё → переписали с нуля →
+              работает. Почему? Тайна
+            </li>
             <li>Карусель Taiga: без tuiCardMedium «застревает». Где об этом написано? Нигде</li>
-            <li>ProgressCircle оборачивает подпись в &lt;label&gt; — ESLint в ярости. Обошли, правила не отключали (принципиально)</li>
-            <li>Signal Forms + Taiga UI = «не поддерживается»: валидацию «тронутых» полей собрали руками через validate()</li>
-            <li>Наш вывод: «не используй новую фичу фреймворка, если её не поддерживает твоя UI-библиотека»</li>
+            <li>
+              ProgressCircle оборачивает подпись в &lt;label&gt; — ESLint в ярости. Обошли, правила
+              не отключали (принципиально)
+            </li>
+            <li>
+              Signal Forms + Taiga UI = «не поддерживается»: валидацию «тронутых» полей собрали
+              руками через validate()
+            </li>
+            <li>
+              Наш вывод: «не используй новую фичу фреймворка, если её не поддерживает твоя
+              UI-библиотека»
+            </li>
           </ul>
           <blockquote>
-            «Tandi, если меня услышишь: документация Taiga UI — полная шляпа. А документация Angular — топ.»
-            <span class="author">— Павел, обращение к высшим силам (дважды официально, в письменной форме)</span>
+            «Tandi, если меня услышишь: документация Taiga UI — полная шляпа. А документация Angular
+            — топ.»
+            <span class="author"
+              >— Павел, обращение к высшим силам (дважды официально, в письменной форме)</span
+            >
           </blockquote>
         </section>
 
         <!-- 10. Сасарик -->
         <section data-background-gradient="linear-gradient(160deg, #ffffff, #f3eaff)">
           <h2 class="violet">Сасарик: человек-оркестр</h2>
-          <p class="subtitle">номинально в команде — фактически устроил себе отдельный проект внутри нашего</p>
+          <p class="subtitle">
+            номинально в команде — фактически устроил себе отдельный проект внутри нашего
+          </p>
           <div class="cards">
             <div class="card violet">
               <h3>🧙 Сасарик — ментор</h3>
@@ -586,7 +763,9 @@
               <h3>🧐 Клавдий — его AI-ревьюер</h3>
               <ul>
                 <li>«Проверяет PR и тыкает носом в каки»</li>
-                <li>«Уровень просмотра у него намного шире. По крайней мере, чем мой — так точно»</li>
+                <li>
+                  «Уровень просмотра у него намного шире. По крайней мере, чем мой — так точно»
+                </li>
                 <li>Аудиты, чеклисты, «правило „один issue на класс"»</li>
               </ul>
             </div>
@@ -600,8 +779,12 @@
             </div>
           </div>
           <blockquote>
-            «До мёржа остался ровно ОДИН хвост 🐾 [...] Один коммит с чисткой двух JSON — и жму APPROVE.»
-            <span class="author">— Сасарик держит интригу в PR #238. Гимн, который сейчас играет, — тоже в его честь</span>
+            «До мёржа остался ровно ОДИН хвост 🐾 [...] Один коммит с чисткой двух JSON — и жму
+            APPROVE.»
+            <span class="author"
+              >— Сасарик держит интригу в PR #238. Гимн, который сейчас играет, — тоже в его
+              честь</span
+            >
           </blockquote>
         </section>
 
@@ -610,15 +793,28 @@
           <h2 class="green">Танди — наш самый преданный читатель</h2>
           <p class="subtitle">в титрах не значится, но получила 17 персональных обращений</p>
           <ul>
-            <li>«Никто не будет читать это, кроме меня и Танди» — и мы честно писали дневники для неё</li>
-            <li>Она получала: жалобы на Taiga UI (2 официальные), просьбы о рекламе (2), вопросы о смысле дневников (1)</li>
-            <li>«Танди, напиши рецепт пирожного „Картошка". Всё равно, кроме тебя, никто читать не будет»</li>
+            <li>
+              «Никто не будет читать это, кроме меня и Танди» — и мы честно писали дневники для неё
+            </li>
+            <li>
+              Она получала: жалобы на Taiga UI (2 официальные), просьбы о рекламе (2), вопросы о
+              смысле дневников (1)
+            </li>
+            <li>
+              «Танди, напиши рецепт пирожного „Картошка". Всё равно, кроме тебя, никто читать не
+              будет»
+            </li>
             <li>Рецепт так и не прислала. Мы всё помним. Счёт: обращений — 17, ответов — 0</li>
-            <li>«Недоволен работой Tandi. Почему её не запустили на прошлой неделе?» — даже у невидимых сущностей бывают выходные</li>
+            <li>
+              «Недоволен работой Tandi. Почему её не запустили на прошлой неделе?» — даже у
+              невидимых сущностей бывают выходные
+            </li>
           </ul>
           <blockquote>
             «Давай, Танди, прорекламируй меня, если тебе понравилось!»
-            <span class="author">— наш тимлид. Эта презентация — та самая реклама. Танди, можешь отдыхать</span>
+            <span class="author"
+              >— наш тимлид. Эта презентация — та самая реклама. Танди, можешь отдыхать</span
+            >
           </blockquote>
         </section>
 
@@ -626,11 +822,26 @@
         <section data-background-gradient="linear-gradient(160deg, #ffffff, #eef2ff)">
           <h2 class="blue">Процессы, которые реально сработали</h2>
           <ul>
-            <li>Канбан всерьёз: приоритеты, effort, sub-issues. Наш тимлид написал об этом «Сказ» на 4 часа 15 минут — читается лучше документации GitHub</li>
-            <li>Подготовка к интервью как шоу: колесо вопросов + колесо студентов. Ответил — твой шанс выпасть снова падает. «Максимально интересно, не стрессово, очень весело»</li>
-            <li>Неформальные созвоны в Discord: именно там родились TUI_DARK_MODE, финальная директива и половина дизайна</li>
-            <li>AI-ревью на каждом из 121 PR — Сасарик не спит. Вообще никогда. Мы проверяли по таймстемпам</li>
-            <li>Дневники каждый спринт: тренировка слепой печати, психотерапия и — внезапно — источник этой презентации</li>
+            <li>
+              Канбан всерьёз: приоритеты, effort, sub-issues. Наш тимлид написал об этом «Сказ» на 4
+              часа 15 минут — читается лучше документации GitHub
+            </li>
+            <li>
+              Подготовка к интервью как шоу: колесо вопросов + колесо студентов. Ответил — твой шанс
+              выпасть снова падает. «Максимально интересно, не стрессово, очень весело»
+            </li>
+            <li>
+              Неформальные созвоны в Discord: именно там родились TUI_DARK_MODE, финальная директива
+              и половина дизайна
+            </li>
+            <li>
+              AI-ревью на каждом из 121 PR — Сасарик не спит. Вообще никогда. Мы проверяли по
+              таймстемпам
+            </li>
+            <li>
+              Дневники каждый спринт: тренировка слепой печати, психотерапия и — внезапно — источник
+              этой презентации
+            </li>
           </ul>
           <blockquote>
             «Такие нежданчики мне нравятся.»
@@ -643,10 +854,22 @@
           <h2 class="gold">Итоги: «Победа»</h2>
           <p class="subtitle">иногда — «Победа, но послевкусие не очень». Но всё равно победа</p>
           <ul>
-            <li>Все обязательные требования мы закрыли досрочно — к 3-му спринту. «Нет смысла ждать 4-й спринт, чтобы подключить HttpClient»</li>
-            <li>PokeDex: 1300+ покемонов, фильтры, профили, авторизация, темы, 566 ключей перевода на два языка</li>
-            <li>Сверх программы — четыре игры: битва покемонов, тамагочи, маскот и реалтайм-Frenzy на PartyKit (6 249 строк движка)</li>
-            <li>Освоили: signals, resource, httpResource, Signal Forms, @ngrx/signals, интерцепторы, ECharts и четыре AI-инструмента</li>
+            <li>
+              Все обязательные требования мы закрыли досрочно — к 3-му спринту. «Нет смысла ждать
+              4-й спринт, чтобы подключить HttpClient»
+            </li>
+            <li>
+              PokeDex: 1300+ покемонов, фильтры, профили, авторизация, темы, 566 ключей перевода на
+              два языка
+            </li>
+            <li>
+              Сверх программы — четыре игры: битва покемонов, тамагочи, маскот и реалтайм-Frenzy на
+              PartyKit (6 249 строк движка)
+            </li>
+            <li>
+              Освоили: signals, resource, httpResource, Signal Forms, @ngrx/signals, интерцепторы,
+              ECharts и четыре AI-инструмента
+            </li>
             <li>И главное — научились не верить ИИ на слово и заворачивать всё в computed</li>
           </ul>
           <blockquote>
@@ -656,20 +879,29 @@
         </section>
 
         <!-- 14. Финал -->
-        <section class="dark" data-background-gradient="radial-gradient(circle at 50% 20%, #333b5e, #171c2e)">
+        <section
+          class="dark"
+          data-background-gradient="radial-gradient(circle at 50% 20%, #333b5e, #171c2e)"
+        >
           <div class="pokeball"></div>
           <h1 style="font-size: 1.5em">Спасибо! (и пока, дневники)</h1>
           <p class="accent" style="font-size: 0.6em; font-style: italic">
             «Наконец-то последний дневник — и далее полная свобода от них! Закрыт гештальт!»
           </p>
           <p class="muted" style="font-size: 0.55em">
-            603 коммита · 121 PR · 4 игры · 17 дневников · 1 Сасарик в трёх лицах · 0 рецептов «Картошки»
+            603 коммита · 121 PR · 4 игры · 17 дневников · 1 Сасарик в трёх лицах · 0 рецептов
+            «Картошки»
           </p>
-          <p class="muted" style="font-size: 0.5em">🎵 Сейчас звучит наш гимн «Нейросасарик». Если нет — кнопка внизу слева.</p>
+          <p class="muted" style="font-size: 0.5em">
+            🎵 Сейчас звучит наш гимн «Нейросасарик». Если нет — кнопка внизу слева.
+          </p>
           <p class="fine">
-            github.com/ngKittyDebug/angular-ngKittyDebugLeft · доска: github.com/orgs/ngKittyDebug/projects/2
+            github.com/ngKittyDebug/angular-ngKittyDebugLeft · доска:
+            github.com/orgs/ngKittyDebug/projects/2
           </p>
-          <p class="fine">Рецепт пирожного «Картошка» — в приложении к презентации. Наверное. Танди, ход за тобой.</p>
+          <p class="fine">
+            Рецепт пирожного «Картошка» — в приложении к презентации. Наверное. Танди, ход за тобой.
+          </p>
         </section>
       </div>
     </div>
