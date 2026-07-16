@@ -1,24 +1,21 @@
 import * as fc from 'fast-check';
+import { describe, expect, it } from 'vitest';
 import { GAME_BALANCE } from '../constants/game-balance.constants';
-import { arbitraryPokemonStatus, TEST_POKEMON } from '../fixtures/tamagotchi-arbitraries';
+import {
+  applyCareAction,
+  arbitraryPokemonStatus,
+  PROPERTY_FIXED_NOW,
+  stateWithPokemon,
+} from '../fixtures/tamagotchi-arbitraries';
+import type { PokemonStatusModel, StatusType } from '../models/pokemon-status.model';
 import {
   DISPLAYED_STATUS_TYPE_LIST,
   maxValueForStatusType,
   statusValueForType,
-} from '../helpers/status-indicator-sync.helper';
-import type { PokemonStatusModel, StatusType } from '../models/pokemon-status.model';
-import type { TamagotchiStateModel } from '../models/tamagotchi-state.model';
-import { initialTamagotchiState } from '../store/tamagotchi-initial';
-import {
-  careForPokemonState,
-  feedPokemonState,
-  playWithPokemonState,
-  selectPokemonState,
-  waterPokemonState,
-} from '../store/tamagotchi-state-transitions';
+} from './status-indicator-sync.helper';
+import { feedPokemonState, waterPokemonState } from '../store/tamagotchi-state-transitions';
 
 const PROPERTY_RUNS = 100;
-const FIXED_NOW = 1_700_000_000_000;
 
 const STATUS_FIELD_BY_TYPE: Record<StatusType, keyof PokemonStatusModel> = {
   energy: 'energy',
@@ -28,15 +25,6 @@ const STATUS_FIELD_BY_TYPE: Record<StatusType, keyof PokemonStatusModel> = {
   hydration: 'hydration',
   mood: 'mood',
 };
-
-function stateWithPokemon(status: PokemonStatusModel): TamagotchiStateModel {
-  const selected = selectPokemonState(initialTamagotchiState, TEST_POKEMON);
-
-  return {
-    ...selected,
-    status,
-  };
-}
 
 function displayedMatchesStatus(status: PokemonStatusModel): boolean {
   return DISPLAYED_STATUS_TYPE_LIST.every((statusType) => {
@@ -64,14 +52,7 @@ describe('status-indicator-sync.helper', () => {
             fc.constantFrom('feed', 'water', 'care', 'play' as const),
             (initialStatus, action) => {
               const before = stateWithPokemon(initialStatus);
-              const after =
-                action === 'feed'
-                  ? feedPokemonState(before, FIXED_NOW)
-                  : action === 'water'
-                    ? waterPokemonState(before, FIXED_NOW)
-                    : action === 'care'
-                      ? careForPokemonState(before, FIXED_NOW)
-                      : playWithPokemonState(before, FIXED_NOW);
+              const after = applyCareAction(before, { kind: action });
 
               return displayedMatchesStatus(after.status);
             },
@@ -100,8 +81,8 @@ describe('status-indicator-sync.helper', () => {
               mood: 80,
             };
             const state = stateWithPokemon(status);
-            const fed = feedPokemonState(state, FIXED_NOW);
-            const watered = waterPokemonState(state, FIXED_NOW + 1);
+            const fed = feedPokemonState(state, PROPERTY_FIXED_NOW);
+            const watered = waterPokemonState(state, PROPERTY_FIXED_NOW + 1);
 
             const hungerGrew =
               statusValueForType('hunger', fed.status) > statusValueForType('hunger', status);
@@ -144,7 +125,6 @@ describe('status-indicator-sync.helper', () => {
                 return false;
               }
 
-              // Experience above the evolution threshold is a valid ready-to-evolve state.
               if (statusType === 'experience') {
                 return true;
               }

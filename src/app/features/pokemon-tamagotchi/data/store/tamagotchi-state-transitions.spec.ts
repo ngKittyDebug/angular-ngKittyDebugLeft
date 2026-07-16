@@ -13,6 +13,7 @@ import {
   interactWithPokemonState,
   markEvolutionReadyNotifiedState,
   putToSleepState,
+  restartTrainingTimerState,
   selectPokemonState,
   startTrainingState,
   updateStatusState,
@@ -220,6 +221,29 @@ describe('tamagotchiStateTransitions', () => {
       const healed = healSelectionOriginIdState(selected, '25');
 
       expect(healed.selectionOriginId).toBe('25');
+    });
+
+    describe('детерминизм тренировки', () => {
+      const fixedReward = 42;
+
+      it('должен давать идентичное состояние тренировки для одинаковых входных данных', () => {
+        const selected = selectPokemonState(initialTamagotchiState, pokemon);
+        const first = startTrainingState(selected, FIXED_NOW, fixedReward);
+        const second = startTrainingState(selected, FIXED_NOW, fixedReward);
+
+        expect(first).toEqual(second);
+        expect(first.trainingExperienceReward).toBe(fixedReward);
+        expect(first.trainingStartedAt).toBe(FIXED_NOW);
+      });
+
+      it('должен перезапускать таймер тренировки без изменения награды', () => {
+        const selected = selectPokemonState(initialTamagotchiState, pokemon);
+        const training = startTrainingState(selected, FIXED_NOW, fixedReward);
+        const restarted = restartTrainingTimerState(training, FIXED_NOW + 10_000);
+
+        expect(restarted.trainingStartedAt).toBe(FIXED_NOW + 10_000);
+        expect(restarted.trainingExperienceReward).toBe(fixedReward);
+      });
     });
   });
 });

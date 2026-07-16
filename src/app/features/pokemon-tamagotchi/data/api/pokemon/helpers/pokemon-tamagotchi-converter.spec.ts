@@ -7,6 +7,7 @@ import {
   EVOLUTION_REQUIREMENTS_STAGE_2,
 } from '../../../constants/evolution-criteria.constants';
 import { buildLinearEvolutionChain } from '../../../fixtures/tamagotchi-arbitraries';
+import { createPokemonDetailFixture } from '../../../fixtures/pokemon-detail.fixture';
 import {
   buildNextEvolutionStep,
   convertPokemonDetailApiDataToTamagotchiPokemon,
@@ -19,59 +20,14 @@ const PIXEL_SPRITE = '/sprites/pixel.png';
 const POKEMON_SPRITE_FALLBACK_URL = '/images/svg/pokeball.svg';
 
 function detailForSpecies(speciesName: string, id: number): PokemonDetailApiData {
-  return {
-    abilities: [],
-    base_experience: 50,
-    cries: { latest: '', legacy: '' },
-    forms: [],
-    game_indices: [],
-    height: 7,
-    held_items: [],
+  return createPokemonDetailFixture({
+    artworkSprite: ARTWORK_SPRITE,
+    frontDefault: PIXEL_SPRITE,
     id,
-    is_default: true,
-    location_area_encounters: '',
-    moves: [],
     name: speciesName,
-    order: id,
-    past_abilities: [],
-    past_stats: [],
-    past_types: [],
-    species: { name: speciesName, url: '' },
-    sprites: {
-      back_default: null,
-      back_female: null,
-      back_shiny: null,
-      back_shiny_female: null,
-      front_default: PIXEL_SPRITE,
-      front_female: null,
-      front_shiny: null,
-      front_shiny_female: null,
-      other: {
-        dream_world: { front_default: null, front_female: null },
-        home: {
-          front_default: null,
-          front_female: null,
-          front_shiny: null,
-          front_shiny_female: null,
-        },
-        'official-artwork': { front_default: ARTWORK_SPRITE, front_shiny: null },
-        showdown: {
-          back_default: null,
-          back_female: null,
-          back_shiny: null,
-          back_shiny_female: null,
-          front_default: SHOWDOWN_SPRITE,
-          front_female: null,
-          front_shiny: null,
-          front_shiny_female: null,
-        },
-      },
-      versions: {},
-    },
-    stats: [],
-    types: [],
+    showdownSprite: SHOWDOWN_SPRITE,
     weight: 60,
-  } as unknown as PokemonDetailApiData;
+  });
 }
 
 function detailWithSprites(): PokemonDetailApiData {

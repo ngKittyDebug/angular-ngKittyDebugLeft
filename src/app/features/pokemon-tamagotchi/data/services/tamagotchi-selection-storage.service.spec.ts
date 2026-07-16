@@ -4,7 +4,7 @@ import { TEST_POKEMON } from '../fixtures/tamagotchi-arbitraries';
 import { TAMAGOTCHI_STORAGE_KEY } from '../helpers/tamagotchi-progress-storage.helper';
 import { createInitialTamagotchiState } from '../store/tamagotchi-initial';
 import { selectPokemonState } from '../store/tamagotchi-state-transitions';
-import { createTamagotchiStorageMock } from '../fixtures/tamagotchi-storage.mock';
+import { createTamagotchiStorageMock } from './tamagotchi-storage.service.mock';
 import { TamagotchiStorageService } from './tamagotchi-storage.service';
 import {
   TAMAGOTCHI_SELECTED_POKEMON_KEY,

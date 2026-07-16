@@ -5,55 +5,14 @@ import {
   convertPokemonDetailApiDataToTamagotchiPokemon,
   isFirstStageInEvolutionChain,
 } from '../api/pokemon/helpers/pokemon-tamagotchi-converter';
-import { validateTamagotchiPokemonSelection } from '../helpers/validate-tamagotchi-pokemon-selection.helper';
+import { createPokemonDetailFixture } from '../fixtures/pokemon-detail.fixture';
 import { arbitraryLinearEvolutionChain } from '../fixtures/tamagotchi-arbitraries';
+import { validateTamagotchiPokemonSelection } from './validate-tamagotchi-pokemon-selection.helper';
 
 const PROPERTY_RUNS = 100;
 
 function detailForSpecies(speciesName: string, id: number): PokemonDetailApiData {
-  return {
-    abilities: [],
-    base_experience: 50,
-    cries: { latest: '', legacy: '' },
-    forms: [],
-    game_indices: [],
-    height: 7,
-    held_items: [],
-    id,
-    is_default: true,
-    location_area_encounters: '',
-    moves: [],
-    name: speciesName,
-    order: id,
-    past_abilities: [],
-    past_stats: [],
-    past_types: [],
-    species: { name: speciesName, url: '' },
-    sprites: {
-      back_default: null,
-      back_female: null,
-      back_shiny: null,
-      back_shiny_female: null,
-      front_default: '/sprite.png',
-      front_female: null,
-      front_shiny: null,
-      front_shiny_female: null,
-      other: {
-        dream_world: { front_default: null, front_female: null },
-        home: {
-          front_default: null,
-          front_female: null,
-          front_shiny: null,
-          front_shiny_female: null,
-        },
-        'official-artwork': { front_default: '/sprite-art.png', front_shiny: null },
-      },
-      versions: {},
-    },
-    stats: [],
-    types: [],
-    weight: 90,
-  } as unknown as PokemonDetailApiData;
+  return createPokemonDetailFixture({ id, name: speciesName });
 }
 
 function evolutionResponseFromChain(
@@ -66,7 +25,7 @@ function evolutionResponseFromChain(
   };
 }
 
-describe('validateTamagotchiPokemonSelection', () => {
+describe('validate-tamagotchi-pokemon-selection.helper', () => {
   describe('Property 5: валидация покемона первой стадии', () => {
     // Feature: pokemon-tamagotchi, Property 5: First-Stage PokemonModel Validation
     describe('Happy Path', () => {

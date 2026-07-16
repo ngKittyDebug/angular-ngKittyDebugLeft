@@ -17,6 +17,13 @@ describe('gesture.helper', () => {
       expect(event.moodIncrease).toBeLessThanOrEqual(10);
     });
 
+    it('должен увеличивать настроение пропорционально интенсивности', () => {
+      const low = createInteractionEvent('click', 0.2);
+      const high = createInteractionEvent('click', 0.9);
+
+      expect(high.moodIncrease).toBeGreaterThanOrEqual(low.moodIncrease);
+    });
+
     it('должен собирать результат жеста с триггером анимации', () => {
       const result = buildGestureResult('multiTouch', 1);
 

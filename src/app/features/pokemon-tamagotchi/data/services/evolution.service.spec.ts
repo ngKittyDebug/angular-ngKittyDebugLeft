@@ -156,7 +156,7 @@ describe('EvolutionService', () => {
           result = value;
         });
 
-        expect(loadPokemonByName).not.toHaveBeenCalled();
+        expect(loadPokemonByName).toHaveBeenCalledTimes(0);
         expect(result).toBeNull();
       });
     });

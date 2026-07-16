@@ -1,6 +1,6 @@
 import * as fc from 'fast-check';
 import { GAME_BALANCE } from '../constants/game-balance.constants';
-import { rollTrainingExperienceGain } from '../helpers/training-reward.helper';
+import { rollTrainingExperienceGain } from './training-reward.helper';
 
 const PROPERTY_RUNS = 100;
 

@@ -126,7 +126,7 @@ describe('EvolutionAnimationComponent', () => {
       vi.advanceTimersByTime(EVOLUTION_ANIMATION_DURATION_MS);
       fixture.detectChanges();
 
-      expect(completeSpy).not.toHaveBeenCalled();
+      expect(completeSpy).toHaveBeenCalledTimes(0);
       expect(fixture.nativeElement.querySelector('.evolution-animation')).toBeTruthy();
       expect(
         fixture.nativeElement.querySelector('.evolution-animation__sprite--reveal'),

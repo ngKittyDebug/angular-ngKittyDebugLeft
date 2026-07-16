@@ -150,7 +150,7 @@ describe('ActionButtonsComponent', () => {
       fixture.detectChanges();
 
       expect(document.activeElement).toBe(feedButton);
-      expect(emitSpy).not.toHaveBeenCalled();
+      expect(emitSpy).toHaveBeenCalledTimes(0);
     });
 
     it('должен включать кнопку, когда cooldown input очищается без перезагрузки', () => {

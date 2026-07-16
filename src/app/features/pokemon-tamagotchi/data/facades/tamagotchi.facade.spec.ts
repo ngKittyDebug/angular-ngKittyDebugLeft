@@ -8,128 +8,22 @@ import { TAMAGOTCHI_SYSTEM_ERRORS } from '../constants/system-errors.constants';
 import { TIMER_CONFIG } from '../constants/timer.constants';
 import { TEST_POKEMON } from '../fixtures/tamagotchi-arbitraries';
 import type { PerformanceMode } from '../models/performance-mode.model';
-import type { PokemonStatusModel } from '../models/pokemon-status.model';
 import { EvolutionService } from '../services/evolution.service';
 import { PerformanceService } from '../services/performance.service';
 import { TamagotchiInitService } from '../services/tamagotchi-init.service';
 import { TamagotchiNotificationService } from '../services/tamagotchi-notification.service';
 import { TamagotchiService } from '../services/tamagotchi.service';
 import { TimerService } from '../services/timer.service';
+import { createInitialPokemonStatus } from '../store/tamagotchi-initial';
 import {
-  createInitialPokemonStatus,
-  createInitialTamagotchiState,
-} from '../store/tamagotchi-initial';
+  createTamagotchiStoreMock,
+  type TamagotchiStoreMock,
+} from '../store/tamagotchi.store.mock';
 import { TamagotchiStore } from '../store/tamagotchi.store';
 import { TamagotchiFacade } from './tamagotchi.facade';
 
-type TamagotchiStoreInstance = InstanceType<typeof TamagotchiStore>;
-
-type TamagotchiStoreMethodsMock = MockedObject<
-  Pick<
-    TamagotchiStoreInstance,
-    | 'applyStatusDecay'
-    | 'care'
-    | 'checkEvolution'
-    | 'clearError'
-    | 'clearEvolutionReadyNotified'
-    | 'completeEvolution'
-    | 'completeTraining'
-    | 'feed'
-    | 'interactWithPokemon'
-    | 'markEvolutionReadyNotified'
-    | 'play'
-    | 'putToSleep'
-    | 'resetState'
-    | 'restartTrainingTimer'
-    | 'setError'
-    | 'startEvolution'
-    | 'startTraining'
-    | 'updateStatus'
-    | 'wakeUp'
-    | 'water'
-  >
->;
-
-function createStoreMock(
-  overrides: {
-    error?: string | null;
-    initialized?: boolean;
-    pokemon?: typeof TEST_POKEMON | null;
-    isSleeping?: boolean;
-    isTraining?: boolean;
-    status?: PokemonStatusModel;
-  } = {},
-) {
-  const initial = createInitialTamagotchiState();
-
-  const storeSignals = {
-    achievementList: signal(initial.achievementList),
-    canEvolve: signal(false),
-    dailyRoutine: signal(initial.dailyRoutine),
-    error: signal(overrides.error ?? initial.error),
-    evolutionProgress: signal(initial.evolutionProgress),
-    hasPokemon: signal((overrides.pokemon ?? TEST_POKEMON) !== null),
-    initialized: signal(overrides.initialized ?? true),
-    interactionHistoryList: signal(initial.interactionHistoryList),
-    isEvolving: signal(false),
-    isSleeping: signal(overrides.isSleeping ?? false),
-    isTraining: signal(overrides.isTraining ?? false),
-    lastActionTime: signal(initial.lastActionTime),
-    lastDecayTime: signal(initial.lastDecayTime),
-    lastSaveTime: signal(initial.lastSaveTime),
-    notificationList: signal(initial.notificationList),
-    pokemon: signal(overrides.pokemon ?? TEST_POKEMON),
-    status: signal(overrides.status ?? createInitialPokemonStatus()),
-    trainingExperienceReward: signal<number | null>(null),
-    trainingStartedAt: signal<number | null>(null),
-  };
-
-  const methods = {
-    applyStatusDecay: vi.fn(),
-    care: vi.fn(),
-    checkEvolution: vi.fn(),
-    clearError: vi.fn(),
-    clearEvolutionReadyNotified: vi.fn(() => {
-      storeSignals.evolutionProgress.update((progress) => ({
-        ...progress,
-        readyNotifiedAt: null,
-      }));
-    }),
-    completeEvolution: vi.fn(),
-    completeTraining: vi.fn(),
-    feed: vi.fn(),
-    interactWithPokemon: vi.fn(),
-    markEvolutionReadyNotified: vi.fn((notifiedAt: number) => {
-      storeSignals.evolutionProgress.update((progress) => ({
-        ...progress,
-        readyNotifiedAt: notifiedAt,
-      }));
-    }),
-    play: vi.fn(),
-    putToSleep: vi.fn(),
-    resetState: vi.fn(),
-    restartTrainingTimer: vi.fn(),
-    setError: vi.fn((error: string) => {
-      storeSignals.error.set(error);
-    }),
-    startEvolution: vi.fn((() => {
-      storeSignals.isEvolving.set(true);
-      storeSignals.canEvolve.set(false);
-    }) as () => void),
-    startTraining: vi.fn(),
-    updateStatus: vi.fn(),
-    wakeUp: vi.fn(),
-    water: vi.fn(),
-  } as const satisfies TamagotchiStoreMethodsMock;
-
-  return {
-    ...storeSignals,
-    ...methods,
-  };
-}
-
 describe('TamagotchiFacade', () => {
-  let mockStore: ReturnType<typeof createStoreMock>;
+  let mockStore: TamagotchiStoreMock;
   let mockEvolutionService: MockedObject<
     Pick<EvolutionService, 'buildEvolutionData' | 'prepareEvolution'>
   >;
@@ -142,7 +36,7 @@ describe('TamagotchiFacade', () => {
   let facade: TamagotchiFacade;
 
   beforeEach(() => {
-    mockStore = createStoreMock();
+    mockStore = createTamagotchiStoreMock();
     mockInitService = {
       bootstrapFromProfile: vi.fn(() => of(undefined)),
     } as const satisfies MockedObject<Pick<TamagotchiInitService, 'bootstrapFromProfile'>>;
@@ -217,7 +111,7 @@ describe('TamagotchiFacade', () => {
     describe('Инициализация', () => {
       it('должен создаваться без автоматической загрузки профиля', () => {
         expect(facade).toBeDefined();
-        expect(mockInitService.bootstrapFromProfile).not.toHaveBeenCalled();
+        expect(mockInitService.bootstrapFromProfile).toHaveBeenCalledTimes(0);
       });
 
       it('должен загружать состояние из профиля по команде страницы', () => {
@@ -243,7 +137,7 @@ describe('TamagotchiFacade', () => {
         mockStore.isTraining.set(true);
         facade.onAction('feed');
 
-        expect(mockStore.feed).not.toHaveBeenCalled();
+        expect(mockStore.feed).toHaveBeenCalledTimes(0);
       });
 
       it('должен перезапускать таймер тренировки при play во время тренировки', () => {
@@ -282,7 +176,7 @@ describe('TamagotchiFacade', () => {
         });
 
         expect(mockStore.interactWithPokemon).toHaveBeenCalledTimes(1);
-        expect(mockStore.restartTrainingTimer).not.toHaveBeenCalled();
+        expect(mockStore.restartTrainingTimer).toHaveBeenCalledTimes(0);
       });
 
       it('должен разблокировать действие через активный cooldown ticker', () => {
@@ -361,9 +255,9 @@ describe('TamagotchiFacade', () => {
 
         TestBed.flushEffects();
 
-        expect(mockNotificationService.notifyEvolutionReady).not.toHaveBeenCalled();
-        expect(mockStore.markEvolutionReadyNotified).not.toHaveBeenCalled();
-        expect(mockStore.startEvolution).not.toHaveBeenCalled();
+        expect(mockNotificationService.notifyEvolutionReady).toHaveBeenCalledTimes(0);
+        expect(mockStore.markEvolutionReadyNotified).toHaveBeenCalledTimes(0);
+        expect(mockStore.startEvolution).toHaveBeenCalledTimes(0);
       });
 
       it('должен ставить EVOLUTION_PREPARE_FAILED, когда prepareEvolution вернул null', () => {
@@ -381,7 +275,7 @@ describe('TamagotchiFacade', () => {
           1,
           TAMAGOTCHI_SYSTEM_ERRORS.EVOLUTION_PREPARE_FAILED,
         );
-        expect(mockStore.startEvolution).not.toHaveBeenCalled();
+        expect(mockStore.startEvolution).toHaveBeenCalledTimes(0);
         expect(facade.systemErrorMessageKey()).toBe('evolutionPrepareFailedError');
       });
 
@@ -477,7 +371,7 @@ describe('TamagotchiFacade', () => {
       TestBed.resetTestingModule();
       vi.advanceTimersByTime(200);
 
-      expect(lateBootstrapEffect).not.toHaveBeenCalled();
+      expect(lateBootstrapEffect).toHaveBeenCalledTimes(0);
     });
   });
 });
