@@ -13,6 +13,7 @@ import type { NotificationModel } from '../../../data/models/notification.model'
 export class NotificationComponent {
   public readonly notifications = input.required<NotificationModel[]>();
 
+  protected readonly historyListId = 'tamagotchi-notifications-history';
   protected readonly historyOpen = signal(false);
 
   protected readonly historyNotifications = computed(() =>

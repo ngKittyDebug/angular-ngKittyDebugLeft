@@ -6,7 +6,7 @@ import {
   type GestureResult,
   intensityForGesture,
 } from '../../data/helpers/gesture.helper';
-import type { InteractionEventModel } from '../../data/models/interaction.model';
+import type { InteractionEventModel, InteractionType } from '../../data/models/interaction.model';
 
 interface PointerSession {
   lastX: number;
@@ -89,7 +89,9 @@ export class GestureService {
     this.activePointers.delete(event.pointerId);
   }
 
-  public handleKeyboardActivate(): GestureResult {
-    return buildGestureResult('click', 0.5);
+  public handleKeyboardActivate(type: InteractionType = 'click'): GestureResult {
+    const intensity = type === 'multiTouch' ? 1 : 0.5;
+
+    return buildGestureResult(type, intensity);
   }
 }

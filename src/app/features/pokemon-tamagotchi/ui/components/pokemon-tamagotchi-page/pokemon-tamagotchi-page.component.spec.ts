@@ -18,6 +18,7 @@ import {
 } from '../../../data/store/tamagotchi-initial';
 import { TamagotchiStore } from '../../../data/store/tamagotchi.store';
 import { TamagotchiFacade } from '../../../data/facades/tamagotchi.facade';
+import { TAMAGOTCHI_SYSTEM_ERRORS } from '../../../data/constants/system-errors.constants';
 import { AnimationService } from '../../services/animation.service';
 import { TamagotchiNotificationService } from '../../services/notification.service';
 import { PokemonTamagotchiPageComponent } from './pokemon-tamagotchi-page.component';
@@ -197,9 +198,11 @@ describe('PokemonTamagotchiPageComponent', () => {
   describe('Happy Path', () => {
     let fixture: ComponentFixture<PokemonTamagotchiPageComponent>;
     let initService: TamagotchiInitPageMock;
+    let storeMock: ReturnType<typeof createStoreMock>;
 
     beforeEach(async () => {
       initService = createInitPageMock();
+      storeMock = createStoreMock();
 
       await TestBed.configureTestingModule({
         imports: [
@@ -211,8 +214,11 @@ describe('PokemonTamagotchiPageComponent', () => {
                   actions: {
                     care: 'Care',
                     cooldown: '{{seconds}}s',
+                    cooldownAria: '{{action}} — available in {{seconds}}s',
+                    disabledAria: '{{action}} — unavailable: {{reason}}',
                     disabledCooldown: 'Cooldown',
                     disabledLowEnergy: 'Low energy',
+                    disabledTraining: 'Training',
                     feed: 'Feed',
                     play: 'Play',
                     sleep: 'Sleep',
@@ -224,8 +230,19 @@ describe('PokemonTamagotchiPageComponent', () => {
                     evolving: 'Evolving…',
                     evolvingAria: '{{name}} is evolving',
                   },
+                  notifications: {
+                    empty: 'No notifications yet',
+                    hideHistory: 'Hide history',
+                    showHistory: 'Show history',
+                  },
                   page: PAGE_TRANSLATIONS,
+                  sprite: {
+                    petAria: 'Pet {{name}}. Enter: tap',
+                  },
                   status: {
+                    alertCritical: '{{label}}: {{value}} / {{max}} — critical',
+                    alertWarning: '{{label}}: {{value}} / {{max}} — warning',
+                    criticalBadge: 'Critical',
                     energy: 'Energy',
                     experience: 'Experience',
                     health: 'Health',
@@ -234,6 +251,7 @@ describe('PokemonTamagotchiPageComponent', () => {
                     levelTooltip: 'Level {{level}}',
                     mood: 'Mood',
                     tooltip: '{{label}}: {{value}} / {{max}}',
+                    warningBadge: 'Warning',
                   },
                 },
               },
@@ -247,7 +265,7 @@ describe('PokemonTamagotchiPageComponent', () => {
         providers: [
           provideRouter([]),
           ...createFacadeProviders(),
-          { provide: TamagotchiStore, useValue: createStoreMock() },
+          { provide: TamagotchiStore, useValue: storeMock },
           { provide: TamagotchiInitService, useValue: initService },
           { provide: TamagotchiSelectionService, useValue: createSelectionPageMock() },
         ],
@@ -281,6 +299,44 @@ describe('PokemonTamagotchiPageComponent', () => {
       const title = fixture.nativeElement.querySelector('.tamagotchi-page__title');
 
       expect(title?.textContent?.trim()).toBe('Pokémon Tamagotchi');
+    });
+
+    it('должен ставить фокус на заголовок после выхода из загрузки', () => {
+      const title = fixture.nativeElement.querySelector('.tamagotchi-page__title') as HTMLElement;
+
+      expect(title.getAttribute('tabindex')).toBe('-1');
+      expect(document.activeElement).not.toBe(title);
+
+      storeMock.initialized.set(false);
+      fixture.detectChanges();
+      storeMock.initialized.set(true);
+      fixture.detectChanges();
+
+      expect(document.activeElement).toBe(title);
+    });
+
+    it('должен ставить фокус на system-notice при появлении ошибки', () => {
+      storeMock.error.set(TAMAGOTCHI_SYSTEM_ERRORS.SAVE_FAILED);
+      fixture.detectChanges();
+
+      const notice = fixture.nativeElement.querySelector(
+        '.tamagotchi-page__system-notice',
+      ) as HTMLElement;
+
+      expect(notice.getAttribute('tabindex')).toBe('-1');
+      expect(document.activeElement).toBe(notice);
+    });
+
+    it('должен возвращать фокус на заголовок после закрытия system-notice', () => {
+      storeMock.error.set(TAMAGOTCHI_SYSTEM_ERRORS.SAVE_FAILED);
+      fixture.detectChanges();
+
+      storeMock.error.set(null);
+      fixture.detectChanges();
+
+      const title = fixture.nativeElement.querySelector('.tamagotchi-page__title') as HTMLElement;
+
+      expect(document.activeElement).toBe(title);
     });
 
     it('должен отображать индикаторы статуса, когда покемон загружен', () => {

@@ -6,7 +6,7 @@
   [attr.aria-busy]="facade.isLoading()"
 >
   <div class="tamagotchi-page__header">
-    <h1 class="tamagotchi-page__title">{{ t('title') }}</h1>
+    <h1 #pageTitle class="tamagotchi-page__title" tabindex="-1">{{ t('title') }}</h1>
     <div class="tamagotchi-page__header-controls">
       @if (facade.pokemon(); as species) {
         <span appearance="primary" size="m" tuiBadge class="tamagotchi-page__level">
@@ -56,8 +56,10 @@
   } @else if (facade.pokemon(); as species) {
     @if (facade.systemErrorMessageKey(); as messageKey) {
       <div
+        #systemNotice
         class="tamagotchi-page__system-notice"
         role="alert"
+        tabindex="-1"
         tuiNotification
         size="m"
         [appearance]="messageKey === 'stateRecoveredWarning' ? 'warning' : 'negative'"

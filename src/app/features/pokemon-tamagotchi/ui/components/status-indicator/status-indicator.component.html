@@ -1,22 +1,55 @@
 <div
   *transloco="let t; prefix: 'pokemonTamagotchi.status'"
   class="status-indicator"
+  [attr.aria-label]="
+    alertLevel() === 'critical'
+      ? t('alertCritical', { label: t(statusType()), value: displayValue(), max: maxValue() })
+      : alertLevel() === 'warning'
+        ? t('alertWarning', { label: t(statusType()), value: displayValue(), max: maxValue() })
+        : t('tooltip', { label: t(statusType()), value: displayValue(), max: maxValue() })
+  "
   [class.status-indicator--warning]="alertLevel() === 'warning'"
   [class.status-indicator--critical]="alertLevel() === 'critical'"
   [tuiHint]="hint"
   tuiHintDirection="top"
 >
+  <div
+    class="status-indicator__live"
+    aria-atomic="true"
+    [attr.aria-live]="liveAnnounceLevel() === 'critical' ? 'assertive' : 'polite'"
+  >
+    @if (liveAnnounceLevel() === 'critical') {
+      {{ t('alertCritical', { label: t(statusType()), value: displayValue(), max: maxValue() }) }}
+    } @else if (liveAnnounceLevel() === 'warning') {
+      {{ t('alertWarning', { label: t(statusType()), value: displayValue(), max: maxValue() }) }}
+    }
+  </div>
+
   <div class="status-indicator__head">
     <span class="status-indicator__label">{{ t(statusType()) }}</span>
     <span class="status-indicator__value">{{ displayValue() }} / {{ maxValue() }}</span>
     @if (alertLevel() === 'warning') {
-      <span appearance="warning" size="s" tuiBadge tuiStatus class="status-indicator__badge">
-        !
+      <span
+        appearance="warning"
+        size="s"
+        tuiBadge
+        tuiStatus
+        class="status-indicator__badge"
+        [attr.aria-label]="t('warningBadge')"
+      >
+        <span aria-hidden="true">!</span>
       </span>
     }
     @if (alertLevel() === 'critical') {
-      <span appearance="negative" size="s" tuiBadge tuiStatus class="status-indicator__badge">
-        !!
+      <span
+        appearance="negative"
+        size="s"
+        tuiBadge
+        tuiStatus
+        class="status-indicator__badge"
+        [attr.aria-label]="t('criticalBadge')"
+      >
+        <span aria-hidden="true">!!</span>
       </span>
     }
   </div>

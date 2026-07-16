@@ -78,9 +78,21 @@ describe('NotificationComponent', () => {
       const element = fixture.nativeElement as HTMLElement;
       const toggle = element.querySelector('button');
 
+      expect(element.querySelector('section')?.hasAttribute('aria-live')).toBe(false);
+      expect(toggle?.getAttribute('aria-expanded')).toBe('false');
+      expect(toggle?.getAttribute('aria-controls')).toBe('tamagotchi-notifications-history');
+      expect(element.querySelector('#tamagotchi-notifications-history')).toBeTruthy();
+      expect(
+        (element.querySelector('#tamagotchi-notifications-history') as HTMLElement).hidden,
+      ).toBe(true);
+
       toggle?.dispatchEvent(new Event('click'));
       fixture.detectChanges();
 
+      expect(toggle?.getAttribute('aria-expanded')).toBe('true');
+      expect(
+        (element.querySelector('#tamagotchi-notifications-history') as HTMLElement).hidden,
+      ).toBe(false);
       expect(element.textContent).toContain('Getting hungry');
       expect(element.textContent).toContain('Your Pokémon is hungry.');
     });

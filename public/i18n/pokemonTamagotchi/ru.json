@@ -32,7 +32,11 @@
     "hydration": "Гидратация",
     "experience": "Опыт",
     "tooltip": "{{label}}: {{value}} / {{max}}",
-    "levelTooltip": "Уровень {{level}} · {{experience}} опыта"
+    "levelTooltip": "Уровень {{level}} · {{experience}} опыта",
+    "warningBadge": "Предупреждение",
+    "criticalBadge": "Критично",
+    "alertWarning": "{{label}}: {{value}} / {{max}} — предупреждение",
+    "alertCritical": "{{label}}: {{value}} / {{max}} — критично"
   },
   "actions": {
     "feed": "Кормить",
@@ -43,9 +47,14 @@
     "sleep": "Спать",
     "wakeUp": "Разбудить",
     "cooldown": "Доступно через {{seconds}}с",
+    "cooldownAria": "{{action}} — доступно через {{seconds}}с",
+    "disabledAria": "{{action}} — недоступно: {{reason}}",
     "disabledLowEnergy": "Мало энергии",
     "disabledCooldown": "Перезарядка",
     "disabledTraining": "Идёт тренировка"
+  },
+  "sprite": {
+    "petAria": "Погладить {{name}}. Enter: касание, Shift+Enter: поглаживание, Alt+Enter: перетаскивание, Control+Enter: мультитач"
   },
   "notifications": {
     "empty": "Уведомлений пока нет",

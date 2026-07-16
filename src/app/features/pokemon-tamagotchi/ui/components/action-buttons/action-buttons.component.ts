@@ -97,7 +97,11 @@ export class ActionButtonsComponent {
     ];
   });
 
-  protected onAction(action: ActionType): void {
+  protected onAction(action: ActionType, unavailable = false): void {
+    if (unavailable) {
+      return;
+    }
+
     this.actionSelected.emit(action);
   }
 

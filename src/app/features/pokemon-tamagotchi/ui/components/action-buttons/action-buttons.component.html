@@ -6,7 +6,20 @@
       tuiButton
       type="button"
       class="action-buttons__btn"
-      [disabled]="button.disabled"
+      [attr.aria-disabled]="button.disabled ? true : null"
+      [attr.aria-label]="
+        button.disabled
+          ? button.cooldownSeconds
+            ? t('cooldownAria', { action: t(button.labelKey), seconds: button.cooldownSeconds })
+            : button.disabledReasonKey
+              ? t('disabledAria', {
+                  action: t(button.labelKey),
+                  reason: t(button.disabledReasonKey),
+                })
+              : t(button.labelKey)
+          : null
+      "
+      [class.action-buttons__btn--unavailable]="button.disabled"
       [iconStart]="button.icon"
       [tuiHint]="
         button.cooldownSeconds
@@ -15,7 +28,7 @@
             ? t(button.disabledReasonKey)
             : ''
       "
-      (click)="onAction(button.action)"
+      (click)="onAction(button.action, button.disabled)"
     >
       {{ t(button.labelKey) }}
     </button>
