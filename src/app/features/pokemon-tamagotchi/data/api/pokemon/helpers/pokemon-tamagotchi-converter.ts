@@ -206,12 +206,6 @@ export function convertPokemonDetailApiDataToTamagotchiPokemon(
   const spriteVariations = convertApiSpritesToSpriteVariations(detail.sprites);
 
   return {
-    baseStats: {
-      energyRestorationRate: 1,
-      experienceMultiplier: 1,
-      hungerDecayRate: 1,
-      moodDecayRate: 1,
-    },
     evolutionChain: buildEvolutionChain(detail, evolutionResponse, chainNode),
     id: String(detail.id),
     isFirstStage: isFirstStageInEvolutionChain(speciesName, evolutionResponse.chain),

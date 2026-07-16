@@ -8,7 +8,6 @@ import enTranslations from '../../../../../../public/i18n/pokemonTamagotchi/en.j
 import ruTranslations from '../../../../../../public/i18n/pokemonTamagotchi/ru.json';
 import { TIMER_CONFIG } from '../constants/timer.constants';
 import { createInteractionEvent } from '../helpers/gesture.helper';
-import { compareNotificationsByPriority } from '../helpers/notification-factory.helper';
 import { isRoutineBonusEligible, recordRoutineActivity } from '../helpers/routine.helper';
 import { resolveStatusSpriteKey } from '../helpers/sprite-variation.helper';
 import { calculateSleepRestorationBonus } from '../helpers/sleep-restoration.helper';
@@ -17,7 +16,6 @@ import {
   arbitraryPokemonStatus,
   TEST_POKEMON,
 } from '../fixtures/tamagotchi-arbitraries';
-import { TamagotchiErrorRecoveryService } from '../services/tamagotchi-error-recovery.service';
 import { TamagotchiLoggerService } from '../services/tamagotchi-logger.service';
 import { TamagotchiPersistenceService } from '../services/tamagotchi-persistence.service';
 import { TamagotchiService } from '../services/tamagotchi.service';
@@ -27,7 +25,6 @@ import {
   updateStatusState,
 } from '../store/tamagotchi-state-transitions';
 import { createInitialTamagotchiState } from '../store/tamagotchi-initial';
-import type { NotificationPriority } from '../models/notification.model';
 
 const PROPERTY_RUNS = 100;
 
@@ -57,12 +54,7 @@ describe('TamagotchiService', () => {
   beforeEach(() => {
     localStorage.clear();
     TestBed.configureTestingModule({
-      providers: [
-        TamagotchiErrorRecoveryService,
-        TamagotchiLoggerService,
-        TamagotchiPersistenceService,
-        TamagotchiService,
-      ],
+      providers: [TamagotchiLoggerService, TamagotchiPersistenceService, TamagotchiService],
     });
   });
 
@@ -197,73 +189,6 @@ describe('TamagotchiService', () => {
       const russianKeys = loadLocaleKeys('ru');
 
       expect(englishKeys).toEqual(russianKeys);
-    });
-  });
-
-  describe('Property 15: обработка приоритета уведомлений', () => {
-    it('должен сортировать уведомления с critical наивысшим приоритетом', () => {
-      fc.assert(
-        fc.property(
-          fc.shuffledSubarray(
-            ['critical', 'warning', 'achievement', 'info'] as NotificationPriority[],
-            { minLength: 2 },
-          ),
-          (priorities) => {
-            const notificationList = priorities.map((priority, index) => ({
-              id: `notification-${index}`,
-              message: { kind: 'plainText' as const, text: 'message' },
-              priority,
-              read: false,
-              timestamp: index,
-              title: { kind: 'plainText' as const, text: 'title' },
-            }));
-            const sorted = [...notificationList].sort(compareNotificationsByPriority);
-
-            for (let index = 1; index < sorted.length; index += 1) {
-              const comparison = compareNotificationsByPriority(sorted[index - 1]!, sorted[index]!);
-
-              if (comparison > 0) {
-                return false;
-              }
-            }
-
-            return true;
-          },
-        ),
-        { numRuns: PROPERTY_RUNS },
-      );
-    });
-  });
-
-  describe('Property 16: корректное восстановление после ошибок', () => {
-    describe('Negative Cases', () => {
-      it('должен откатываться к начальному состоянию, когда восстановление невозможно', () => {
-        const recovery = TestBed.inject(TamagotchiErrorRecoveryService);
-        const broken = {
-          ...createInitialTamagotchiState(),
-          pokemon: TEST_POKEMON,
-          status: {
-            ...createInitialTamagotchiState().status,
-            mood: Number.NaN,
-          },
-        };
-
-        const result = recovery.attemptStateRecovery(broken);
-
-        expect(result.recovered).toBe(false);
-        expect(result.state.status.mood).toBe(100);
-      });
-    });
-
-    describe('Happy Path', () => {
-      it('должен восстанавливать валидное состояние, сохраняя покемона', () => {
-        const recovery = TestBed.inject(TamagotchiErrorRecoveryService);
-        const customized = selectPokemonState(createInitialTamagotchiState(), TEST_POKEMON);
-
-        const repaired = recovery.repairState(customized);
-
-        expect(repaired?.pokemon?.id).toBe(TEST_POKEMON.id);
-      });
     });
   });
 

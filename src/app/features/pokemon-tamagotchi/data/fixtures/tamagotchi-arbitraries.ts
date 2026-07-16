@@ -13,12 +13,6 @@ import type { TamagotchiStateModel } from '../models/tamagotchi-state.model';
 import { createInitialTamagotchiState } from '../store/tamagotchi-initial';
 
 export const TEST_POKEMON = {
-  baseStats: {
-    energyRestorationRate: 1,
-    experienceMultiplier: 1,
-    hungerDecayRate: 1,
-    moodDecayRate: 1,
-  },
   evolutionChain: { currentStage: 1, totalStages: 3 },
   id: '25',
   isFirstStage: true,
@@ -237,7 +231,6 @@ export const arbitraryTamagotchiState = (): fc.Arbitrary<TamagotchiStateModel> =
       };
     });
 
-export const arbitraryEvolutionRequirement = arbitraryEvolutionRequirementModel;
 export const arbitraryEvolutionRequirements = arbitraryEvolutionRequirementModels;
 export const arbitraryLinearEvolutionChain = arbitraryLinearEvolutionChainModel;
 export const arbitraryTrainingAchievements = arbitraryTrainingAchievementModels;

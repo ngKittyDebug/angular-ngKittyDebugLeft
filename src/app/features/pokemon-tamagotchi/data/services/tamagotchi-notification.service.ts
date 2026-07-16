@@ -46,12 +46,6 @@ export class TamagotchiNotificationService {
     }
   }
 
-  public notifyStatusAlerts(alerts: StatusAlertType[], timestamp?: number): void {
-    for (const alertType of alerts) {
-      this.notifyStatusAlert(alertType, timestamp);
-    }
-  }
-
   public notifyEvolutionReady(pokemonName: string, timestamp?: number): void {
     this.publish(notificationFromEvolutionReady(pokemonName, timestamp));
   }

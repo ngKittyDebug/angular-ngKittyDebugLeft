@@ -1,12 +1,11 @@
 import { Injectable } from '@angular/core';
 import {
   buildGestureResult,
-  calculateBondLevel,
   classifyPointerGesture,
   type GestureResult,
   intensityForGesture,
 } from '../../data/helpers/gesture.helper';
-import type { InteractionEventModel, InteractionType } from '../../data/models/interaction.model';
+import type { InteractionType } from '../../data/models/interaction.model';
 
 interface PointerSession {
   lastX: number;
@@ -20,10 +19,6 @@ interface PointerSession {
 @Injectable()
 export class GestureService {
   private readonly activePointers = new Map<number, PointerSession>();
-
-  public calculateBondLevel(history: InteractionEventModel[]): number {
-    return calculateBondLevel(history);
-  }
 
   public handlePointerDown(event: PointerEvent): GestureResult | null {
     this.activePointers.set(event.pointerId, {

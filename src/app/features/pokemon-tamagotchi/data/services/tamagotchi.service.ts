@@ -1,16 +1,10 @@
 import { Service } from '@angular/core';
 import { STATUS_THRESHOLDS } from '../constants/status-thresholds.constants';
-import { rollTrainingExperienceGain } from '../helpers/training-reward.helper';
-import {
-  calculateStatusUpdate,
-  getActionCooldownMs,
-  getActionEnergyCost,
-} from '../helpers/status-calculator.helper';
-import type { PokemonStatusModel, StatusUpdateModel } from '../models/pokemon-status.model';
+import { getActionCooldownMs, getActionEnergyCost } from '../helpers/status-calculator.helper';
+import type { PokemonStatusModel } from '../models/pokemon-status.model';
 import type {
   ActionCooldownsModel,
   ActionType,
-  TamagotchiStateModel,
   ValidationResultModel,
 } from '../models/tamagotchi-state.model';
 
@@ -28,13 +22,6 @@ const GAME_ACTIONS = new Set<ActionType>(['play', 'train']);
 
 @Service({ autoProvided: false })
 export class TamagotchiService {
-  public calculateStatusUpdate(
-    currentStatus: PokemonStatusModel,
-    action: ActionType,
-  ): StatusUpdateModel {
-    return calculateStatusUpdate(currentStatus, action);
-  }
-
   public validateAction(
     context: TamagotchiActionContext,
     action: ActionType,
@@ -78,22 +65,6 @@ export class TamagotchiService {
     return { allowed: true };
   }
 
-  public validateActionFromState(
-    state: TamagotchiStateModel,
-    action: ActionType,
-  ): ValidationResultModel {
-    return this.validateAction(
-      {
-        hasPokemon: state.pokemon !== null,
-        isSleeping: state.isSleeping,
-        isTraining: state.trainingStartedAt !== null,
-        lastActionTime: state.lastActionTime,
-        status: state.status,
-      },
-      action,
-    );
-  }
-
   public getActionCooldowns(context: TamagotchiActionContext): ActionCooldownsModel {
     return {
       care: this.getCooldownRemaining(context, 'care') || null,
@@ -103,10 +74,6 @@ export class TamagotchiService {
       train: this.getCooldownRemaining(context, 'train') || null,
       water: this.getCooldownRemaining(context, 'water') || null,
     };
-  }
-
-  public rollTrainingExperienceGain(random?: number): number {
-    return rollTrainingExperienceGain(random);
   }
 
   private getCooldownRemaining(context: TamagotchiActionContext, action: ActionType): number {

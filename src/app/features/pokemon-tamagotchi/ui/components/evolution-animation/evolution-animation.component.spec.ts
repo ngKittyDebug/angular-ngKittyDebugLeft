@@ -26,12 +26,6 @@ const basePokemon = (id: string, name: string): PokemonModel => {
   };
 
   return {
-    baseStats: {
-      energyRestorationRate: 1,
-      experienceMultiplier: 1,
-      hungerDecayRate: 1,
-      moodDecayRate: 1,
-    },
     evolutionChain: { currentStage: 1, totalStages: 3 },
     id,
     isFirstStage: true,

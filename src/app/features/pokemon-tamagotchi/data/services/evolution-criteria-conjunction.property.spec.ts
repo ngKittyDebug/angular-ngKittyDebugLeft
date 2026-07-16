@@ -1,9 +1,8 @@
 import * as fc from 'fast-check';
 import type { EvolutionRequirementModel } from '../models/evolution.model';
 import {
-  checkEvolutionCriteria,
+  buildEvolutionProgressValues,
   evaluateEvolutionRequirements,
-  getRequirementCompletionRatio,
 } from '../helpers/evolution-checker.helper';
 import {
   arbitraryEvolutionRequirements,
@@ -56,38 +55,7 @@ describe('evolution-checker.helper', () => {
         );
       });
 
-      it('должен отслеживать пропорциональные коэффициенты выполнения от 0 до 1', () => {
-        fc.assert(
-          fc.property(
-            arbitraryEvolutionRequirements(),
-            fc.dictionary(fc.string(), fc.nat({ max: 3_000 })),
-            (requirements, progress) => {
-              for (const requirement of requirements) {
-                const ratio = getRequirementCompletionRatio(requirement, progress);
-
-                if (ratio < 0 || ratio > 1) {
-                  return false;
-                }
-
-                const current = progress[requirement.type] ?? 0;
-
-                if (current >= requirement.value && ratio !== 1) {
-                  return false;
-                }
-
-                if (current <= 0 && requirement.value > 0 && ratio !== 0) {
-                  return false;
-                }
-              }
-
-              return true;
-            },
-          ),
-          { numRuns: PROPERTY_RUNS },
-        );
-      });
-
-      it('должен согласовывать интегрированные проверки эволюции с семантикой конъюнкции', () => {
+      it('должен согласовывать прогресс эволюции с семантикой конъюнкции', () => {
         fc.assert(
           fc.property(
             arbitraryEvolutionRequirements(),
@@ -95,17 +63,14 @@ describe('evolution-checker.helper', () => {
             arbitraryTrainingAchievements(),
             fc.nat({ max: 365 }),
             (requirements, status, achievementList, consecutiveDays) => {
-              const result = checkEvolutionCriteria(
-                requirements,
+              const currentProgress = buildEvolutionProgressValues(
                 status,
                 achievementList,
                 consecutiveDays,
               );
+              const result = evaluateEvolutionRequirements(requirements, currentProgress);
 
-              return (
-                result.isReady ===
-                isRequirementSatisfied(requirements, result.progress.currentProgress)
-              );
+              return result.isReady === isRequirementSatisfied(requirements, currentProgress);
             },
           ),
           { numRuns: PROPERTY_RUNS },

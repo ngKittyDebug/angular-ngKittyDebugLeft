@@ -3,12 +3,9 @@ import { of, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { PokemonTamagotchiApiService } from '../api/pokemon/services/pokemon-tamagotchi-api.service';
 import { EVOLUTION_REQUIREMENTS } from '../constants/evolution-criteria.constants';
-import { GAME_BALANCE } from '../constants/game-balance.constants';
 import { TEST_POKEMON } from '../fixtures/tamagotchi-arbitraries';
 import type { EvolutionResultModel } from '../models/evolution.model';
 import type { PokemonModel } from '../models/pokemon.model';
-import type { PokemonStatusModel } from '../models/pokemon-status.model';
-import { createInitialDailyRoutine } from '../store/tamagotchi-initial';
 import { EvolutionService } from './evolution.service';
 
 describe('EvolutionService', () => {
@@ -44,23 +41,6 @@ describe('EvolutionService', () => {
     },
   };
 
-  const readyStatus: PokemonStatusModel = {
-    energy: 80,
-    experience: GAME_BALANCE.EVOLUTION.MIN_EXPERIENCE,
-    health: 90,
-    hunger: 90,
-    hydration: 90,
-    lastCareTime: null,
-    lastFeedTime: null,
-    lastHydrationTime: null,
-    lastPlayTime: null,
-    lastSaveTime: null,
-    lastSleepTime: null,
-    lastTrainTime: null,
-    level: GAME_BALANCE.EVOLUTION.MIN_LEVEL,
-    mood: 90,
-  };
-
   beforeEach(() => {
     loadPokemonByName = vi.fn(() => of(fetchedRaichu));
 
@@ -74,37 +54,6 @@ describe('EvolutionService', () => {
   });
 
   describe('Happy Path', () => {
-    describe('checkEvolutionCriteria', () => {
-      it('должен быть готов, только когда все требования выполнены', () => {
-        const result = service.checkEvolutionCriteria(
-          basePokemon,
-          readyStatus,
-          [],
-          createInitialDailyRoutine(),
-        );
-
-        expect(result.isReady).toBe(true);
-        expect(result.missingRequirements).toEqual([]);
-        expect(result.progress.currentProgress['level']).toBe(GAME_BALANCE.EVOLUTION.MIN_LEVEL);
-        expect(result.progress.currentProgress['experience']).toBe(
-          GAME_BALANCE.EVOLUTION.MIN_EXPERIENCE,
-        );
-      });
-    });
-
-    describe('getRequirementCompletionRatio', () => {
-      it('должен возвращать пропорциональный прогресс к требованию', () => {
-        const ratio = service.getRequirementCompletionRatio(
-          EVOLUTION_REQUIREMENTS[0],
-          { ...readyStatus, level: 5 },
-          [],
-          createInitialDailyRoutine(),
-        );
-
-        expect(ratio).toBeCloseTo(5 / GAME_BALANCE.EVOLUTION.MIN_LEVEL);
-      });
-    });
-
     describe('prepareEvolution', () => {
       it('должен вернуть эволюционировавшего покемона с новыми name, sprites и numeric id', () => {
         service.prepareEvolution(basePokemon).subscribe((result) => {
@@ -166,29 +115,9 @@ describe('EvolutionService', () => {
         expect(nextPokemonId).toBe('venusaur');
       });
     });
-
-    describe('getEvolutionChain', () => {
-      it('должен возвращать цепочку эволюции из покемона', () => {
-        expect(service.getEvolutionChain(basePokemon)).toEqual(basePokemon.evolutionChain);
-      });
-    });
   });
 
   describe('Negative Cases', () => {
-    describe('checkEvolutionCriteria', () => {
-      it('не должен быть готов, когда не выполнено хотя бы одно требование', () => {
-        const result = service.checkEvolutionCriteria(
-          basePokemon,
-          { ...readyStatus, level: 1 },
-          [],
-          createInitialDailyRoutine(),
-        );
-
-        expect(result.isReady).toBe(false);
-        expect(result.missingRequirements.length).toBeGreaterThan(0);
-      });
-    });
-
     describe('prepareEvolution', () => {
       it('должен возвращать null, когда API не загрузил форму эволюции', () => {
         loadPokemonByName.mockReturnValue(throwError(() => new Error('network')));

@@ -1,218 +1,169 @@
 import * as fc from 'fast-check';
+import { GAME_BALANCE } from '../constants/game-balance.constants';
+import { arbitraryPokemonStatus, TEST_POKEMON } from '../fixtures/tamagotchi-arbitraries';
 import {
-  computeIndicatorPercentage,
-  indicatorsMatchStatus,
+  DISPLAYED_STATUS_TYPE_LIST,
   maxValueForStatusType,
-  projectAllStatusIndicators,
-  projectStatusIndicator,
   statusValueForType,
 } from '../helpers/status-indicator-sync.helper';
-import type { PokemonStatusModel } from '../models/pokemon-status.model';
+import type { PokemonStatusModel, StatusType } from '../models/pokemon-status.model';
 import type { TamagotchiStateModel } from '../models/tamagotchi-state.model';
-import {
-  applyStatusDecayState,
-  careForPokemonState,
-  completeTrainingState,
-  feedPokemonState,
-  interactWithPokemonState,
-  playWithPokemonState,
-  selectPokemonState,
-  startTrainingState,
-  updateStatusState,
-  waterPokemonState,
-} from '../store/tamagotchi-state-transitions';
 import { initialTamagotchiState } from '../store/tamagotchi-initial';
 import {
-  arbitraryCareAction,
-  arbitraryPokemonStatus,
-  type CareAction,
-  TEST_POKEMON,
-} from '../fixtures/tamagotchi-arbitraries';
+  careForPokemonState,
+  feedPokemonState,
+  playWithPokemonState,
+  selectPokemonState,
+  waterPokemonState,
+} from '../store/tamagotchi-state-transitions';
 
 const PROPERTY_RUNS = 100;
 const FIXED_NOW = 1_700_000_000_000;
-const FIXED_TRAINING_REWARD = 25;
 
-function applyCareAction(state: TamagotchiStateModel, action: CareAction): TamagotchiStateModel {
-  switch (action.kind) {
-    case 'applyStatusDecay':
-      return applyStatusDecayState(state, action.decay!);
+const STATUS_FIELD_BY_TYPE: Record<StatusType, keyof PokemonStatusModel> = {
+  energy: 'energy',
+  experience: 'experience',
+  health: 'health',
+  hunger: 'hunger',
+  hydration: 'hydration',
+  mood: 'mood',
+};
 
-    case 'care':
-      return careForPokemonState(state, FIXED_NOW);
-
-    case 'feed':
-      return feedPokemonState(state, FIXED_NOW);
-
-    case 'interact':
-      return interactWithPokemonState(state, action.interaction!);
-
-    case 'play':
-      return playWithPokemonState(state, FIXED_NOW);
-
-    case 'train': {
-      const started = startTrainingState(state, FIXED_NOW, FIXED_TRAINING_REWARD);
-
-      if (started.trainingStartedAt === null) {
-        return started;
-      }
-
-      return completeTrainingState(started, FIXED_NOW, FIXED_TRAINING_REWARD);
-    }
-
-    case 'updateStatus':
-      return updateStatusState(state, action.statusUpdate!);
-
-    case 'water':
-      return waterPokemonState(state, FIXED_NOW);
-  }
-}
-
-function stateWithPokemon(status: PokemonStatusModel, isSleeping: boolean): TamagotchiStateModel {
+function stateWithPokemon(status: PokemonStatusModel): TamagotchiStateModel {
   const selected = selectPokemonState(initialTamagotchiState, TEST_POKEMON);
 
   return {
     ...selected,
-    isSleeping,
     status,
   };
+}
+
+function displayedMatchesStatus(status: PokemonStatusModel): boolean {
+  return DISPLAYED_STATUS_TYPE_LIST.every((statusType) => {
+    const field = STATUS_FIELD_BY_TYPE[statusType];
+
+    return statusValueForType(statusType, status) === status[field];
+  });
 }
 
 describe('status-indicator-sync.helper', () => {
   describe('Property 7: синхронизация статуса в реальном времени', () => {
     // Feature: pokemon-tamagotchi, Property 7: Real-Time Status Synchronization
     describe('Happy Path', () => {
-      it('должен сохранять проецируемые значения индикаторов равными статусу стора после любой последовательности действий', () => {
+      it('должен покрывать все отображаемые типы прямым чтением полей статуса', () => {
+        fc.assert(
+          fc.property(arbitraryPokemonStatus(), (status) => displayedMatchesStatus(status)),
+          { numRuns: PROPERTY_RUNS },
+        );
+      });
+
+      it('должен сохранять синхронизацию отображаемых значений после feed/water/care/play', () => {
         fc.assert(
           fc.property(
             arbitraryPokemonStatus(),
-            fc.array(arbitraryCareAction(), { maxLength: 12, minLength: 1 }),
-            fc.boolean(),
-            (initialStatus, actions, isSleeping) => {
-              let state = stateWithPokemon(initialStatus, isSleeping);
+            fc.constantFrom('feed', 'water', 'care', 'play' as const),
+            (initialStatus, action) => {
+              const before = stateWithPokemon(initialStatus);
+              const after =
+                action === 'feed'
+                  ? feedPokemonState(before, FIXED_NOW)
+                  : action === 'water'
+                    ? waterPokemonState(before, FIXED_NOW)
+                    : action === 'care'
+                      ? careForPokemonState(before, FIXED_NOW)
+                      : playWithPokemonState(before, FIXED_NOW);
 
-              for (const action of actions) {
-                state = applyCareAction(state, action);
-                const indicators = projectAllStatusIndicators(state.status);
-
-                if (!indicatorsMatchStatus(state.status, indicators)) {
-                  return false;
-                }
-              }
-
-              return true;
+              return displayedMatchesStatus(after.status);
             },
           ),
           { numRuns: PROPERTY_RUNS },
         );
       });
 
-      it('должен выводить проценты индикаторов напрямую из текущих значений статуса', () => {
+      it('должен отражать рост hunger после feed и hydration после water', () => {
         fc.assert(
-          fc.property(arbitraryPokemonStatus(), (status) => {
-            const indicators = projectAllStatusIndicators(status);
+          fc.property(fc.integer({ max: 60, min: 0 }), (base) => {
+            const status: PokemonStatusModel = {
+              energy: 80,
+              experience: 0,
+              health: 80,
+              hunger: base,
+              hydration: base,
+              lastCareTime: null,
+              lastFeedTime: null,
+              lastHydrationTime: null,
+              lastPlayTime: null,
+              lastSaveTime: null,
+              lastSleepTime: null,
+              lastTrainTime: null,
+              level: 1,
+              mood: 80,
+            };
+            const state = stateWithPokemon(status);
+            const fed = feedPokemonState(state, FIXED_NOW);
+            const watered = waterPokemonState(state, FIXED_NOW + 1);
 
-            return indicators.every((indicator) => {
-              const max = maxValueForStatusType(indicator.statusType);
+            const hungerGrew =
+              statusValueForType('hunger', fed.status) > statusValueForType('hunger', status);
+            const hydrationGrew =
+              statusValueForType('hydration', watered.status) >
+              statusValueForType('hydration', status);
+            const hungerDelta = statusValueForType('hunger', fed.status) - status.hunger;
+            const hydrationDelta =
+              statusValueForType('hydration', watered.status) - status.hydration;
 
-              return (
-                indicator.percentage === computeIndicatorPercentage(indicator.value, max) &&
-                indicator.value === statusValueForType(indicator.statusType, status)
-              );
-            });
+            return (
+              hungerGrew &&
+              hydrationGrew &&
+              hungerDelta ===
+                Math.min(
+                  GAME_BALANCE.ACTION_EFFECTS.FEED.hungerIncrease,
+                  GAME_BALANCE.THRESHOLDS.MAXIMUM - status.hunger,
+                ) &&
+              hydrationDelta ===
+                Math.min(
+                  GAME_BALANCE.ACTION_EFFECTS.WATER.hydrationIncrease,
+                  GAME_BALANCE.THRESHOLDS.MAXIMUM - status.hydration,
+                )
+            );
           }),
-          { numRuns: PROPERTY_RUNS },
-        );
-      });
-
-      it('должен отражать каждое промежуточное изменение статуса в проекциях индикаторов', () => {
-        fc.assert(
-          fc.property(
-            arbitraryPokemonStatus(),
-            fc.array(arbitraryCareAction(), { maxLength: 8, minLength: 2 }),
-            (initialStatus, actions) => {
-              let state = stateWithPokemon(initialStatus, false);
-              let previousIndicators = projectAllStatusIndicators(state.status);
-
-              for (const action of actions) {
-                state = applyCareAction(state, action);
-                const nextIndicators = projectAllStatusIndicators(state.status);
-
-                for (const next of nextIndicators) {
-                  const previous = previousIndicators.find(
-                    (indicator) => indicator.statusType === next.statusType,
-                  );
-
-                  if (!previous) {
-                    return false;
-                  }
-
-                  const statusValue = statusValueForType(next.statusType, state.status);
-
-                  if (next.value !== statusValue) {
-                    return false;
-                  }
-
-                  if (previous.value !== statusValue && next.value === previous.value) {
-                    return false;
-                  }
-                }
-
-                if (!indicatorsMatchStatus(state.status, nextIndicators)) {
-                  return false;
-                }
-
-                previousIndicators = nextIndicators;
-              }
-
-              return true;
-            },
-          ),
           { numRuns: PROPERTY_RUNS },
         );
       });
     });
 
     describe('Edge Cases', () => {
-      it('должен сохранять монотонность процентов индикаторов при изменении значений статуса', () => {
+      it('должен держать value >= 0 и value <= max для обычных статусов; experience может превысить порог', () => {
         fc.assert(
-          fc.property(
-            fc.integer({ max: 100, min: 0 }),
-            fc.integer({ max: 100, min: 0 }),
-            (before, after) => {
-              const statusBefore: PokemonStatusModel = {
-                energy: before,
-                experience: before,
-                health: before,
-                hunger: before,
-                hydration: before,
-                lastCareTime: null,
-                lastFeedTime: null,
-                lastHydrationTime: null,
-                lastPlayTime: null,
-                lastSaveTime: null,
-                lastSleepTime: null,
-                lastTrainTime: null,
-                level: 1,
-                mood: before,
-              };
-              const statusAfter: PokemonStatusModel = { ...statusBefore, hunger: after };
-              const indicatorBefore = projectStatusIndicator('hunger', statusBefore);
-              const indicatorAfter = projectStatusIndicator('hunger', statusAfter);
+          fc.property(arbitraryPokemonStatus(), (status) => {
+            return DISPLAYED_STATUS_TYPE_LIST.every((statusType) => {
+              const value = statusValueForType(statusType, status);
+              const max = maxValueForStatusType(statusType);
 
-              if (after > before) {
-                return indicatorAfter.percentage >= indicatorBefore.percentage;
+              if (value < 0 || max <= 0) {
+                return false;
               }
 
-              if (after < before) {
-                return indicatorAfter.percentage <= indicatorBefore.percentage;
+              // Experience above the evolution threshold is a valid ready-to-evolve state.
+              if (statusType === 'experience') {
+                return true;
               }
 
-              return indicatorAfter.percentage === indicatorBefore.percentage;
-            },
-          ),
+              return value <= max;
+            });
+          }),
           { numRuns: PROPERTY_RUNS },
         );
+      });
+
+      it('должен использовать порог эволюции как max для experience и MAXIMUM для остальных', () => {
+        expect(maxValueForStatusType('experience')).toBe(GAME_BALANCE.EVOLUTION.MIN_EXPERIENCE);
+
+        for (const statusType of DISPLAYED_STATUS_TYPE_LIST.filter(
+          (type) => type !== 'experience',
+        )) {
+          expect(maxValueForStatusType(statusType)).toBe(GAME_BALANCE.THRESHOLDS.MAXIMUM);
+        }
       });
     });
   });

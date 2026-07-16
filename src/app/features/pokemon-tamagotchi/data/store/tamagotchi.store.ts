@@ -10,8 +10,7 @@ import {
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { debounceTime, pipe, tap } from 'rxjs';
 import { TAMAGOTCHI_SYSTEM_ERRORS } from '../constants/system-errors.constants';
-import { calculateBondLevel } from '../helpers/gesture.helper';
-import { TamagotchiErrorRecoveryService } from '../services/tamagotchi-error-recovery.service';
+import { TamagotchiLoggerService } from '../services/tamagotchi-logger.service';
 import { TamagotchiPersistenceService } from '../services/tamagotchi-persistence.service';
 import type { InteractionEventModel } from '../models/interaction.model';
 import type { NotificationModel } from '../models/notification.model';
@@ -96,12 +95,11 @@ export const TamagotchiStore = signalStore(
     hasPokemon: computed(() => store.pokemon() !== null),
     isTraining: computed(() => store.trainingStartedAt() !== null),
     canEvolve: computed(() => store.evolutionProgress().isReady && !store.isEvolving()),
-    bondLevel: computed(() => calculateBondLevel(store.interactionHistoryList())),
   })),
   withMethods(
     (
       store,
-      errorRecovery = inject(TamagotchiErrorRecoveryService),
+      logger = inject(TamagotchiLoggerService),
       persistence = inject(TamagotchiPersistenceService),
     ) => {
       let pendingSave = false;
@@ -119,7 +117,7 @@ export const TamagotchiStore = signalStore(
 
           patchState(store, (current) => saveStateSuccessState(current, savedAt));
         } catch (error) {
-          errorRecovery.logError('saveState', error);
+          logger.logError('saveState', error);
           patchState(store, (current) =>
             setErrorState(current, TAMAGOTCHI_SYSTEM_ERRORS.SAVE_FAILED),
           );
@@ -185,7 +183,7 @@ export const TamagotchiStore = signalStore(
               }),
             );
           } catch (error) {
-            errorRecovery.logError('loadFromPersistence', error);
+            logger.logError('loadFromPersistence', error);
             patchState(store, (current) =>
               initializeTamagotchiState(
                 setErrorState(current, TAMAGOTCHI_SYSTEM_ERRORS.LOAD_FAILED),

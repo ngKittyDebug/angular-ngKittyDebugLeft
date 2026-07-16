@@ -4,7 +4,6 @@ import { TamagotchiFacade } from './data/facades/tamagotchi.facade';
 import { EvolutionService } from './data/services/evolution.service';
 import { PerformanceService } from './data/services/performance.service';
 import { StatusDecayService } from './data/services/status-decay.service';
-import { TamagotchiErrorRecoveryService } from './data/services/tamagotchi-error-recovery.service';
 import { TamagotchiInitService } from './data/services/tamagotchi-init.service';
 import { TamagotchiLoggerService } from './data/services/tamagotchi-logger.service';
 import { TamagotchiNotificationService } from './data/services/tamagotchi-notification.service';
@@ -22,7 +21,6 @@ export const POKEMON_TAMAGOTCHI_PROVIDERS: Provider[] = [
   EvolutionService,
   PerformanceService,
   StatusDecayService,
-  TamagotchiErrorRecoveryService,
   TamagotchiInitService,
   TamagotchiLoggerService,
   TamagotchiPersistenceService,

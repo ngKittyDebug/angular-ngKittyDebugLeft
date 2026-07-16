@@ -1,16 +1,12 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
-import { beforeEach, describe, expect, it, type MockedObject, vi } from 'vitest';
+import { describe, expect, it, type MockedObject, vi } from 'vitest';
 import { TamagotchiStore } from '../store/tamagotchi.store';
-import { createInitialTamagotchiState } from '../store/tamagotchi-initial';
 import { TEST_POKEMON } from '../fixtures/tamagotchi-arbitraries';
 import type { PokemonModel } from '../models/pokemon.model';
-import { TamagotchiErrorRecoveryService } from './tamagotchi-error-recovery.service';
 import { TamagotchiInitService } from './tamagotchi-init.service';
-import { TamagotchiLoggerService } from './tamagotchi-logger.service';
 import { TamagotchiSelectionService } from './tamagotchi-selection.service';
-import { TAMAGOTCHI_SYSTEM_ERRORS } from '../constants/system-errors.constants';
 
 type TamagotchiStoreInstance = InstanceType<typeof TamagotchiStore>;
 
@@ -326,50 +322,6 @@ describe('TamagotchiInitService', () => {
       expect(setError).toHaveBeenNthCalledWith(1, 'noSelection');
       expect(store.selectPokemon).not.toHaveBeenCalled();
       expect(loadPokemonByName).not.toHaveBeenCalled();
-    });
-  });
-});
-
-describe('TamagotchiErrorRecoveryService', () => {
-  let service: TamagotchiErrorRecoveryService;
-
-  beforeEach(() => {
-    TestBed.configureTestingModule({
-      providers: [TamagotchiErrorRecoveryService, TamagotchiLoggerService],
-    });
-    service = TestBed.inject(TamagotchiErrorRecoveryService);
-  });
-
-  describe('Happy Path', () => {
-    it('должен восстанавливать валидное состояние с зажатыми значениями статуса', () => {
-      const broken = {
-        ...createInitialTamagotchiState(),
-        initialized: true,
-        pokemon: TEST_POKEMON,
-        status: {
-          ...createInitialTamagotchiState().status,
-          energy: 150,
-          hunger: -10,
-        },
-      };
-
-      const repaired = service.repairState(broken);
-
-      expect(repaired?.status.energy).toBe(100);
-      expect(repaired?.status.hunger).toBe(0);
-      expect(repaired?.error).toBeNull();
-    });
-
-    it('должен сообщать метаданные восстановления для отремонтированного состояния', () => {
-      const result = service.attemptStateRecovery({
-        ...createInitialTamagotchiState(),
-        initialized: true,
-        pokemon: TEST_POKEMON,
-        status: createInitialTamagotchiState().status,
-      });
-
-      expect(result.recovered).toBe(true);
-      expect(result.message).toBe(TAMAGOTCHI_SYSTEM_ERRORS.RECOVERED_FROM_BACKUP);
     });
   });
 });

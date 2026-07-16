@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, type MockedObject, vi } from 'vitest';
 import { GAME_BALANCE } from '../constants/game-balance.constants';
 import { EVOLUTION_REQUIREMENTS } from '../constants/evolution-criteria.constants';
 import { TAMAGOTCHI_SYSTEM_ERRORS } from '../constants/system-errors.constants';
-import { TamagotchiErrorRecoveryService } from '../services/tamagotchi-error-recovery.service';
+import { TamagotchiLoggerService } from '../services/tamagotchi-logger.service';
 import { TamagotchiPersistenceService } from '../services/tamagotchi-persistence.service';
 import { TEST_POKEMON } from '../fixtures/tamagotchi-arbitraries';
 import type { PokemonModel } from '../models/pokemon.model';
@@ -19,7 +19,7 @@ type TamagotchiPersistenceMock = MockedObject<
   Pick<TamagotchiPersistenceService, 'clear' | 'load' | 'save'>
 >;
 
-type TamagotchiErrorRecoveryMock = MockedObject<Pick<TamagotchiErrorRecoveryService, 'logError'>>;
+type TamagotchiLoggerMock = MockedObject<Pick<TamagotchiLoggerService, 'logError'>>;
 
 function createPersistenceMock(
   overrides: Partial<TamagotchiPersistenceMock> = {},
@@ -32,10 +32,10 @@ function createPersistenceMock(
   } as const satisfies TamagotchiPersistenceMock;
 }
 
-function createErrorRecoveryMock(): TamagotchiErrorRecoveryMock {
+function createLoggerMock(): TamagotchiLoggerMock {
   return {
     logError: vi.fn(),
-  } as const satisfies TamagotchiErrorRecoveryMock;
+  } as const satisfies TamagotchiLoggerMock;
 }
 
 const EVOLVABLE_TEST_POKEMON: PokemonModel = {
@@ -60,7 +60,7 @@ function createStoreTestBedWithMocks(
     providers: [
       TamagotchiStore,
       { provide: TamagotchiPersistenceService, useValue: persistence },
-      { provide: TamagotchiErrorRecoveryService, useValue: createErrorRecoveryMock() },
+      { provide: TamagotchiLoggerService, useValue: createLoggerMock() },
     ],
   });
 
@@ -94,7 +94,7 @@ describe('TamagotchiStore', () => {
           providers: [
             TamagotchiStore,
             { provide: TamagotchiPersistenceService, useValue: persistence },
-            { provide: TamagotchiErrorRecoveryService, useValue: createErrorRecoveryMock() },
+            { provide: TamagotchiLoggerService, useValue: createLoggerMock() },
           ],
         });
 
@@ -131,7 +131,7 @@ describe('TamagotchiStore', () => {
           providers: [
             TamagotchiStore,
             { provide: TamagotchiPersistenceService, useValue: persistence },
-            { provide: TamagotchiErrorRecoveryService, useValue: createErrorRecoveryMock() },
+            { provide: TamagotchiLoggerService, useValue: createLoggerMock() },
           ],
         });
 

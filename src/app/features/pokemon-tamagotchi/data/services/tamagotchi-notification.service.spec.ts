@@ -78,7 +78,25 @@ describe('TamagotchiNotificationService', () => {
 
   describe('Happy Path', () => {
     it('должен показывать warning toast и сохранять историю для status alerts', async () => {
-      service.notifyStatusAlerts(['hungerLow']);
+      service.processStatusAlerts({
+        status: {
+          energy: 100,
+          experience: 0,
+          health: 100,
+          hunger: 100,
+          hydration: 100,
+          lastCareTime: null,
+          lastFeedTime: null,
+          lastHydrationTime: null,
+          lastPlayTime: null,
+          lastSaveTime: null,
+          lastSleepTime: null,
+          lastTrainTime: null,
+          level: 1,
+          mood: 100,
+        },
+        thresholdAlerts: ['hungerLow'],
+      });
       await flushTranslation();
 
       expect(appNotifications.showWarningNotification).toHaveBeenNthCalledWith(

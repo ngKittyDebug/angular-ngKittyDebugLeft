@@ -1,4 +1,0 @@
-export const ANIMATION_PERFORMANCE = {
-  TARGET_FPS: 60,
-  TARGET_FRAME_MS: 1000 / 60,
-} as const;
