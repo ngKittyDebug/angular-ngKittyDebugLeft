@@ -55,15 +55,11 @@ export const PokemonBattleStore = signalStore(
                 isLoading: false,
               });
             }),
-            catchError((error: unknown) => {
+            catchError(() => {
               patchState(store, {
                 error: 'loadFailed',
                 isLoading: false,
               });
-
-              if (error instanceof Error) {
-                console.error(error.message);
-              }
 
               return EMPTY;
             }),

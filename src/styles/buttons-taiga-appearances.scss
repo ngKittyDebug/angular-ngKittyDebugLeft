@@ -78,7 +78,7 @@ a[tuiButton][data-appearance='target-outline'] {
 
   @media (hover: hover) {
     &:hover {
-      background-color: rgba(220, 38, 38, 0.1);
+      background-color: color-mix(in srgb, var(--destructive) 10%, transparent);
       transform: translateY(-2px);
     }
   }

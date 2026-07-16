@@ -1,3 +1,4 @@
+import { POKEMON_SPRITE_BASE } from './pokemon-battle.constants';
 import type { BattlePokemon } from '../models/battle.model';
 
 /**
@@ -13,8 +14,8 @@ export const DEFAULT_OPPONENT_TEAM: BattlePokemon[] = [
     stats: { hp: 39, attack: 52, defense: 43, speed: 65 },
     types: ['fire'],
     sprites: {
-      front: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/4.png',
-      back: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/4.png',
+      front: `${POKEMON_SPRITE_BASE}/4.png`,
+      back: `${POKEMON_SPRITE_BASE}/back/4.png`,
     },
     moves: [
       { name: 'scratch', type: 'normal', power: 40 },
@@ -29,8 +30,8 @@ export const DEFAULT_OPPONENT_TEAM: BattlePokemon[] = [
     stats: { hp: 60, attack: 62, defense: 63, speed: 60 },
     types: ['grass', 'poison'],
     sprites: {
-      front: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/2.png',
-      back: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/2.png',
+      front: `${POKEMON_SPRITE_BASE}/2.png`,
+      back: `${POKEMON_SPRITE_BASE}/back/2.png`,
     },
     moves: [
       { name: 'tackle', type: 'normal', power: 40 },

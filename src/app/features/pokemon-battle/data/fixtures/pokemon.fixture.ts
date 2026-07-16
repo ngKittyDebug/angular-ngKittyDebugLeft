@@ -69,7 +69,7 @@ export const IVYSAUR_FIXTURE = {
   ],
 } as const satisfies BattlePokemon;
 
-export const MOCK_RAW_POKEMON: PokemonDetailApiData = {
+export const MOCK_RAW_POKEMON = {
   id: 25,
   name: 'pikachu',
   base_experience: 112,
@@ -135,4 +135,4 @@ export const MOCK_RAW_POKEMON: PokemonDetailApiData = {
       version_group_details: [],
     },
   ],
-};
+} as const satisfies PokemonDetailApiData;

@@ -1,5 +1,6 @@
 import type { BattlePokemon, PokemonMove } from '../../../models/battle.model';
 import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
+import { POKEMON_SPRITE_BASE } from '../../../constants/pokemon-battle.constants';
 
 export function convertPokemonDetailApiDataToBattlePokemon(
   raw: PokemonDetailApiData,
@@ -18,7 +19,7 @@ export function convertPokemonDetailApiDataToBattlePokemon(
   const frontSprite =
     raw.sprites.other.showdown?.front_default ||
     raw.sprites.front_default ||
-    'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png';
+    `${POKEMON_SPRITE_BASE}/1.png`;
 
   const backSprite =
     raw.sprites.other.showdown?.back_default || raw.sprites.back_default || frontSprite;

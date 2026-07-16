@@ -194,22 +194,6 @@ export class PokemonBattleArenaFacade {
 
         break;
 
-      case 'text':
-        if (event.message) {
-          key = 'raw';
-          parameters = { message: event.message };
-        }
-
-        break;
-
-      case 'turn-start':
-        if (event.message) {
-          key = 'raw';
-          parameters = { message: event.message };
-        }
-
-        break;
-
       default:
         if (event.message) {
           key = 'raw';
