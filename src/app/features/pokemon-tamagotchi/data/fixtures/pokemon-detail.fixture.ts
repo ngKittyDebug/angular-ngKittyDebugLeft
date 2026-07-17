@@ -128,4 +128,4 @@ export const CHARMANDER_SPECIES = {
   pokedex_numbers: [],
   shape: { name: 'upright', url: '' },
   varieties: [],
-} satisfies PokemonSpeciesApiData;
+} as const satisfies PokemonSpeciesApiData;
