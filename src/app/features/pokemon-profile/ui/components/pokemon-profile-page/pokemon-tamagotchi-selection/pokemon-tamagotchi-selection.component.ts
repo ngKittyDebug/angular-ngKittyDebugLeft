@@ -3,8 +3,6 @@ import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { TuiButton } from '@taiga-ui/core';
 
-export type TamagotchiSelectionFeedback = 'evolvedPokemon' | 'loadFailed' | 'saved' | null;
-
 @Component({
   selector: 'left-paw-pokemon-tamagotchi-selection',
   imports: [RouterLink, TranslocoDirective, TuiButton],

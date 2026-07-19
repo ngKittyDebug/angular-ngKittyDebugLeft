@@ -6,15 +6,15 @@ import { StatusDecayService } from './status-decay.service';
 import { applyStatusDelta } from '../helpers/status-bounds.helper';
 import type { StatusAlertType } from '../models/notification.model';
 import type { PokemonStatusModel, StatusDecayModel } from '../models/pokemon-status.model';
-import type { DailyRoutine } from '../models/tamagotchi-state.model';
+import type { DailyRoutineModel } from '../models/tamagotchi-state.model';
 
 export interface TamagotchiTimerContext extends StatusDecayContext {
-  dailyRoutine: DailyRoutine;
+  dailyRoutine: DailyRoutineModel;
 }
 
 export interface TimerTickResult {
   alerts: StatusAlertType[];
-  dailyRoutine: DailyRoutine;
+  dailyRoutine: DailyRoutineModel;
   decay: StatusDecayModel;
   nextStatus: PokemonStatusModel;
   routineBonusApplied: number;

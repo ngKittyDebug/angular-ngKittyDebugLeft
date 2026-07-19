@@ -1,9 +1,5 @@
 import * as fc from 'fast-check';
-import {
-  applyDecayToStatus,
-  calculateDecay,
-  decayAmountForElapsed,
-} from '../helpers/status-decay.helper';
+import { applyDecayToStatus, calculateDecay, decayAmountForElapsed } from './status-decay.helper';
 import { GAME_BALANCE } from '../constants/game-balance.constants';
 import { arbitraryPokemonStatus } from '../fixtures/tamagotchi-arbitraries';
 

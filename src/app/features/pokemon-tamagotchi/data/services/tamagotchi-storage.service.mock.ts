@@ -1,5 +1,5 @@
 import { type MockedObject, vi } from 'vitest';
-import type { TamagotchiStorageService } from '../services/tamagotchi-storage.service';
+import type { TamagotchiStorageService } from './tamagotchi-storage.service';
 
 export type TamagotchiStorageMock = MockedObject<
   Pick<TamagotchiStorageService, 'getItem' | 'removeItem' | 'setItem'>

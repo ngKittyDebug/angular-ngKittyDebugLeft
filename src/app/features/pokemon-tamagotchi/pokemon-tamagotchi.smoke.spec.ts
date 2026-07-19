@@ -4,7 +4,7 @@ import type { ComponentFixture } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { TranslocoTestingModule } from '@jsverse/transloco';
 import { firstValueFrom, of } from 'rxjs';
-import { beforeEach, describe, expect, it, type MockedObject, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // eslint-disable-next-line import/extensions -- JSON fixtures must be imported with their extension.
 import enTranslations from '../../../../public/i18n/pokemonTamagotchi/en.json';
@@ -15,11 +15,14 @@ import { GAMES_PATH } from '../games/games.routes';
 import { feedPokemonState, selectPokemonState } from './data/store/tamagotchi-state-transitions';
 import { createInitialTamagotchiState } from './data/store/tamagotchi-initial';
 import { TamagotchiStore } from './data/store/tamagotchi.store';
+import { createTamagotchiStoreMock } from './data/store/tamagotchi.store.mock';
 import { TamagotchiFacade } from './data/facades/tamagotchi.facade';
 import { EvolutionService } from './data/services/evolution.service';
 import { PerformanceService } from './data/services/performance.service';
+import { createTamagotchiInitMock } from './data/services/tamagotchi-init.service.mock';
 import { TamagotchiInitService } from './data/services/tamagotchi-init.service';
 import { TamagotchiPersistenceService } from './data/services/tamagotchi-persistence.service';
+import { createTamagotchiSelectionMock } from './data/services/tamagotchi-selection.service.mock';
 import { TamagotchiSelectionService } from './data/services/tamagotchi-selection.service';
 import { TamagotchiService } from './data/services/tamagotchi.service';
 import { TimerService } from './data/services/timer.service';
@@ -27,28 +30,7 @@ import { TEST_POKEMON } from './data/fixtures/tamagotchi-arbitraries';
 import { pokemonTamagotchiRoutes, TAMAGOTCHI_PATH } from './pokemon-tamagotchi.routes';
 import { PokemonTamagotchiPageComponent } from './ui/components/pokemon-tamagotchi-page/pokemon-tamagotchi-page.component';
 import { AnimationService } from './ui/services/animation.service';
-import { TamagotchiNotificationService } from './ui/services/notification.service';
-
-type TamagotchiStoreInstance = InstanceType<typeof TamagotchiStore>;
-
-type TamagotchiStoreSmokeMethodsMock = MockedObject<
-  Pick<
-    TamagotchiStoreInstance,
-    'checkEvolution' | 'clearError' | 'loadFromPersistence' | 'selectPokemon' | 'setError'
-  >
->;
-
-type TamagotchiInitSmokeMock = MockedObject<Pick<TamagotchiInitService, 'bootstrapFromProfile'>>;
-
-type TamagotchiSelectionSmokeMock = MockedObject<
-  Pick<TamagotchiSelectionService, 'saveSelectedPokemon' | 'validateSelectedPokemon'>
->;
-
-function createInitSmokeMock(): TamagotchiInitSmokeMock {
-  return {
-    bootstrapFromProfile: vi.fn(() => of(undefined)),
-  } as const satisfies TamagotchiInitSmokeMock;
-}
+import { TamagotchiNotificationService } from './data/services/tamagotchi-notification.service';
 
 function createFacadeSmokeProviders() {
   return [
@@ -59,7 +41,7 @@ function createFacadeSmokeProviders() {
       provide: EvolutionService,
       useValue: {
         buildEvolutionData: vi.fn(() => null),
-        triggerEvolution: vi.fn(),
+        prepareEvolution: vi.fn(() => of(null)),
       },
     },
     {
@@ -187,40 +169,24 @@ describe('PokemonTamagotchi — интеграция', () => {
 
   describe('Bootstrap из профиля покемона', () => {
     it('должен записывать ошибку выбора эволюционировавшего покемона в store', async () => {
-      const error = signal<string | null>(null);
-      const initialized = signal(false);
-      const hasPokemon = signal(false);
-      const storeMethods = {
-        loadFromPersistence: vi.fn(() => {
-          initialized.set(true);
-        }),
-        selectPokemon: vi.fn(),
-        setError: vi.fn((value: string) => {
-          error.set(value);
-        }),
-      } as const satisfies Pick<
-        TamagotchiStoreSmokeMethodsMock,
-        'loadFromPersistence' | 'selectPokemon' | 'setError'
-      >;
+      const store = createTamagotchiStoreMock({
+        hasPokemon: false,
+        initialized: false,
+        pokemon: null,
+      });
 
-      const selection = {
-        saveSelectedPokemon: vi.fn(),
+      const selection = createTamagotchiSelectionMock({
         validateSelectedPokemon: vi.fn(() =>
           of({ error: 'evolvedPokemon' as const, valid: false as const }),
         ),
-      } as const satisfies TamagotchiSelectionSmokeMock;
+      });
 
       TestBed.configureTestingModule({
         providers: [
           TamagotchiInitService,
           {
             provide: TamagotchiStore,
-            useValue: {
-              error,
-              hasPokemon,
-              initialized,
-              ...storeMethods,
-            },
+            useValue: store,
           },
           { provide: TamagotchiSelectionService, useValue: selection },
         ],
@@ -230,9 +196,9 @@ describe('PokemonTamagotchi — интеграция', () => {
 
       await firstValueFrom(service.bootstrapFromProfile());
 
-      expect(storeMethods.loadFromPersistence).toHaveBeenCalledTimes(1);
-      expect(storeMethods.setError).toHaveBeenNthCalledWith(1, 'evolvedPokemon');
-      expect(error()).toBe('evolvedPokemon');
+      expect(store.loadFromPersistence).toHaveBeenCalledTimes(1);
+      expect(store.setError).toHaveBeenNthCalledWith(1, 'evolvedPokemon');
+      expect(store.error()).toBe('evolvedPokemon');
     });
   });
 
@@ -240,37 +206,15 @@ describe('PokemonTamagotchi — интеграция', () => {
     let fixture: ComponentFixture<PokemonTamagotchiPageComponent>;
 
     beforeEach(async () => {
-      const initial = createInitialTamagotchiState();
-      const storeMethods = {
-        checkEvolution: vi.fn(),
-        clearError: vi.fn(),
-      } as const satisfies Pick<TamagotchiStoreSmokeMethodsMock, 'checkEvolution' | 'clearError'>;
+      const store = createTamagotchiStoreMock({
+        error: 'noSelection',
+        hasPokemon: false,
+        pokemon: null,
+      });
 
-      const storeSignals = {
-        achievementList: signal(initial.achievementList),
-        canEvolve: signal(false),
-        dailyRoutine: signal(initial.dailyRoutine),
-        error: signal('noSelection'),
-        evolutionProgress: signal(initial.evolutionProgress),
-        hasPokemon: signal(false),
-        initialized: signal(true),
-        interactionHistory: signal(initial.interactionHistory),
-        isEvolving: signal(false),
-        isSleeping: signal(false),
-        isTraining: signal(false),
-        lastActionTime: signal(initial.lastActionTime),
-        lastDecayTime: signal(initial.lastDecayTime),
-        lastSaveTime: signal(initial.lastSaveTime),
-        notificationList: signal(initial.notificationList),
-        pokemon: signal(null),
-        status: signal(initial.status),
-        trainingExperienceReward: signal(null),
-        trainingStartedAt: signal(null),
-      };
-
-      const selection = {
+      const selection = createTamagotchiSelectionMock({
         validateSelectedPokemon: vi.fn(() => of({ error: 'noSelection' as const, valid: false })),
-      } as const satisfies Pick<TamagotchiSelectionSmokeMock, 'validateSelectedPokemon'>;
+      });
 
       await TestBed.configureTestingModule({
         imports: [
@@ -301,12 +245,9 @@ describe('PokemonTamagotchi — интеграция', () => {
           ...createFacadeSmokeProviders(),
           {
             provide: TamagotchiStore,
-            useValue: {
-              ...storeSignals,
-              ...storeMethods,
-            },
+            useValue: store,
           },
-          { provide: TamagotchiInitService, useValue: createInitSmokeMock() },
+          { provide: TamagotchiInitService, useValue: createTamagotchiInitMock() },
           { provide: TamagotchiSelectionService, useValue: selection },
         ],
       }).compileComponents();

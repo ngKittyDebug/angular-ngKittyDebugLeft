@@ -5,12 +5,15 @@ import type { PokemonModel } from '../models/pokemon.model';
 import {
   careForPokemonState,
   checkEvolutionState,
+  clearEvolutionReadyNotifiedState,
   completeEvolutionState,
   completeTrainingState,
   feedPokemonState,
+  healSelectionOriginIdState,
   interactWithPokemonState,
   markEvolutionReadyNotifiedState,
   putToSleepState,
+  restartTrainingTimerState,
   selectPokemonState,
   startTrainingState,
   updateStatusState,
@@ -199,6 +202,48 @@ describe('tamagotchiStateTransitions', () => {
       const notified = markEvolutionReadyNotifiedState(checked, notifiedAt);
 
       expect(notified.evolutionProgress.readyNotifiedAt).toBe(notifiedAt);
+    });
+
+    it('должен сбрасывать readyNotifiedAt через clearEvolutionReadyNotifiedState', () => {
+      const selected = selectPokemonState(initialTamagotchiState, stage2Pokemon);
+      const checked = checkEvolutionState(updateStatusState(selected, { level: 99 }));
+      const notified = markEvolutionReadyNotifiedState(checked, 1_700_000_000_000);
+      const cleared = clearEvolutionReadyNotifiedState(notified);
+
+      expect(cleared.evolutionProgress.readyNotifiedAt).toBeNull();
+    });
+
+    it('должен заполнять selectionOriginId через healSelectionOriginIdState', () => {
+      const selected = {
+        ...selectPokemonState(initialTamagotchiState, TEST_POKEMON),
+        selectionOriginId: null,
+      };
+      const healed = healSelectionOriginIdState(selected, '25');
+
+      expect(healed.selectionOriginId).toBe('25');
+    });
+
+    describe('детерминизм тренировки', () => {
+      const fixedReward = 42;
+
+      it('должен давать идентичное состояние тренировки для одинаковых входных данных', () => {
+        const selected = selectPokemonState(initialTamagotchiState, pokemon);
+        const first = startTrainingState(selected, FIXED_NOW, fixedReward);
+        const second = startTrainingState(selected, FIXED_NOW, fixedReward);
+
+        expect(first).toEqual(second);
+        expect(first.trainingExperienceReward).toBe(fixedReward);
+        expect(first.trainingStartedAt).toBe(FIXED_NOW);
+      });
+
+      it('должен перезапускать таймер тренировки без изменения награды', () => {
+        const selected = selectPokemonState(initialTamagotchiState, pokemon);
+        const training = startTrainingState(selected, FIXED_NOW, fixedReward);
+        const restarted = restartTrainingTimerState(training, FIXED_NOW + 10_000);
+
+        expect(restarted.trainingStartedAt).toBe(FIXED_NOW + 10_000);
+        expect(restarted.trainingExperienceReward).toBe(fixedReward);
+      });
     });
   });
 });

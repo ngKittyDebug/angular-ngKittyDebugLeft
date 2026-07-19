@@ -3,7 +3,7 @@ import { TEST_POKEMON } from '../fixtures/tamagotchi-arbitraries';
 import type { PokemonModel } from '../models/pokemon.model';
 import type { TamagotchiStateModel } from '../models/tamagotchi-state.model';
 import { createInitialTamagotchiState } from '../store/tamagotchi-initial';
-import { createTamagotchiStorageMock } from '../fixtures/tamagotchi-storage.mock';
+import { createTamagotchiStorageMock } from './tamagotchi-storage.service.mock';
 import { TamagotchiStorageService } from './tamagotchi-storage.service';
 import {
   TAMAGOTCHI_BACKUP_KEY,
@@ -11,6 +11,7 @@ import {
   TAMAGOTCHI_STORAGE_KEY,
   TamagotchiPersistenceService,
 } from './tamagotchi-persistence.service';
+import { TamagotchiSelectionStorageService } from './tamagotchi-selection-storage.service';
 
 describe('TamagotchiPersistenceService', () => {
   let service: TamagotchiPersistenceService;
@@ -22,6 +23,10 @@ describe('TamagotchiPersistenceService', () => {
       providers: [
         TamagotchiPersistenceService,
         { provide: TamagotchiStorageService, useValue: storageMock },
+        {
+          provide: TamagotchiSelectionStorageService,
+          useValue: { getReference: () => null },
+        },
       ],
     });
     service = TestBed.inject(TamagotchiPersistenceService);
@@ -95,20 +100,22 @@ describe('TamagotchiPersistenceService', () => {
   describe('Edge Cases', () => {
     it('должен мигрировать v5 состояние без timestamp-полей care и train', () => {
       const state = createInitialTamagotchiState();
-      const { lastCareTime, lastTrainTime, ...legacyStatus } = state.status;
-      const legacyState = {
-        ...state,
-        status: legacyStatus,
-        trainingExperienceReward: 25,
-        trainingStartedAt: 1_700_000_000_000,
-      } as unknown as TamagotchiStateModel;
+      const legacyStatus = { ...state.status };
 
-      void lastCareTime;
-      void lastTrainTime;
+      delete (legacyStatus as { lastCareTime?: number | null }).lastCareTime;
+      delete (legacyStatus as { lastTrainTime?: number | null }).lastTrainTime;
 
       storageMock.setItem(
         TAMAGOTCHI_STORAGE_KEY,
-        JSON.stringify({ state: legacyState, version: 5 }),
+        JSON.stringify({
+          state: {
+            ...state,
+            status: legacyStatus,
+            trainingExperienceReward: 25,
+            trainingStartedAt: 1_700_000_000_000,
+          },
+          version: 5,
+        }),
       );
 
       const loaded = service.load();
@@ -120,23 +127,24 @@ describe('TamagotchiPersistenceService', () => {
     });
 
     it('должен мигрировать legacy notification strings в явный text-контракт', () => {
-      const legacyState = {
-        ...createInitialTamagotchiState(),
-        notificationList: [
-          {
-            id: 'notification-1',
-            message: 'Mr. Mime',
-            priority: 'achievement',
-            read: false,
-            timestamp: 1_700_000_000_000,
-            title: 'evolution.readyTitle',
-          },
-        ],
-      } as unknown as TamagotchiStateModel;
-
       storageMock.setItem(
         TAMAGOTCHI_STORAGE_KEY,
-        JSON.stringify({ state: legacyState, version: 6 }),
+        JSON.stringify({
+          state: {
+            ...createInitialTamagotchiState(),
+            notificationList: [
+              {
+                id: 'notification-1',
+                message: 'Mr. Mime',
+                priority: 'achievement',
+                read: false,
+                timestamp: 1_700_000_000_000,
+                title: 'evolution.readyTitle',
+              },
+            ],
+          },
+          version: 6,
+        }),
       );
 
       const loaded = service.load();
@@ -147,6 +155,34 @@ describe('TamagotchiPersistenceService', () => {
           title: { key: 'evolution.readyTitle', kind: 'translationKey' },
         }),
       );
+    });
+
+    it('должен мигрировать interactionHistory в interactionHistoryList и убрать legacy-ключ', () => {
+      const interaction = {
+        intensity: 1,
+        moodIncrease: 5,
+        timestamp: 1_700_000_000_000,
+        type: 'pet' as const,
+      };
+      const legacyState = {
+        ...createInitialTamagotchiState(),
+        interactionHistory: [interaction],
+      };
+
+      delete (legacyState as Partial<TamagotchiStateModel>).interactionHistoryList;
+
+      storageMock.setItem(
+        TAMAGOTCHI_STORAGE_KEY,
+        JSON.stringify({ state: legacyState, version: 8 }),
+      );
+
+      const loaded = service.load();
+
+      expect(loaded?.state.interactionHistoryList).toEqual([interaction]);
+      expect(
+        (loaded?.state as TamagotchiStateModel & { interactionHistory?: unknown })
+          .interactionHistory,
+      ).toBeUndefined();
     });
 
     it('должен восстанавливаться из backup при повреждённом основном хранилище', () => {

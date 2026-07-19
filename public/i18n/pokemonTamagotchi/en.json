@@ -10,6 +10,7 @@
     "loading": "Loading your tamagotchi…",
     "saveFailedError": "Could not save progress. Your session is still active.",
     "stateLoadFailedError": "Could not load saved progress. Starting fresh.",
+    "evolutionPrepareFailedError": "Could not load the evolved form. Dismiss and we will try again.",
     "stateRecoveredWarning": "Progress was recovered from a backup.",
     "dismissNotice": "Dismiss",
     "resetProgress": "Reset progress",
@@ -31,7 +32,11 @@
     "hydration": "Hydration",
     "experience": "Experience",
     "tooltip": "{{label}}: {{value}} / {{max}}",
-    "levelTooltip": "Level {{level}} · {{experience}} XP"
+    "levelTooltip": "Level {{level}} · {{experience}} XP",
+    "warningBadge": "Warning",
+    "criticalBadge": "Critical",
+    "alertWarning": "{{label}}: {{value}} / {{max}} — warning",
+    "alertCritical": "{{label}}: {{value}} / {{max}} — critical"
   },
   "actions": {
     "feed": "Feed",
@@ -42,9 +47,14 @@
     "sleep": "Sleep",
     "wakeUp": "Wake up",
     "cooldown": "Available in {{seconds}}s",
+    "cooldownAria": "{{action}} — available in {{seconds}}s",
+    "disabledAria": "{{action}} — unavailable: {{reason}}",
     "disabledLowEnergy": "Not enough energy",
     "disabledCooldown": "On cooldown",
     "disabledTraining": "Training in progress"
+  },
+  "sprite": {
+    "petAria": "Pet {{name}}. Enter: tap, Shift+Enter: stroke, Alt+Enter: drag, Control+Enter: multi-touch"
   },
   "notifications": {
     "empty": "No notifications yet",

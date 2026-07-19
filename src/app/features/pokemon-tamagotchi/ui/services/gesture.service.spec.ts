@@ -51,18 +51,5 @@ describe('GestureService', () => {
       expect(result?.event.type).toBe('multiTouch');
       expect(result?.animationTrigger).toBe('sprite-sparkle');
     });
-
-    it('должен вычислять уровень связи из истории взаимодействий', () => {
-      const level = service.calculateBondLevel([
-        {
-          intensity: 1,
-          moodIncrease: 5,
-          timestamp: Date.now(),
-          type: 'multiTouch',
-        },
-      ]);
-
-      expect(level).toBeGreaterThan(0);
-    });
   });
 });

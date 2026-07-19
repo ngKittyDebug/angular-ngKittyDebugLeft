@@ -1,96 +1,93 @@
 import { TestBed } from '@angular/core/testing';
-import { GAME_BALANCE } from '../constants/game-balance.constants';
+import { of, throwError } from 'rxjs';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { PokemonTamagotchiApiService } from '../api/pokemon/services/pokemon-tamagotchi-api.service';
 import { EVOLUTION_REQUIREMENTS } from '../constants/evolution-criteria.constants';
-import { createInitialDailyRoutine } from '../store/tamagotchi-initial';
 import { TEST_POKEMON } from '../fixtures/tamagotchi-arbitraries';
+import type { EvolutionResultModel } from '../models/evolution.model';
 import type { PokemonModel } from '../models/pokemon.model';
-import type { PokemonStatusModel } from '../models/pokemon-status.model';
 import { EvolutionService } from './evolution.service';
 
 describe('EvolutionService', () => {
   let service: EvolutionService;
+  let loadPokemonByName: ReturnType<typeof vi.fn>;
 
   const basePokemon: PokemonModel = {
     ...TEST_POKEMON,
     evolutionChain: {
       currentStage: 1,
       nextEvolution: {
-        pokemonId: '26',
+        pokemonId: 'raichu',
         requirements: EVOLUTION_REQUIREMENTS,
       },
       totalStages: 3,
     },
   };
 
-  const readyStatus: PokemonStatusModel = {
-    energy: 80,
-    experience: GAME_BALANCE.EVOLUTION.MIN_EXPERIENCE,
-    health: 90,
-    hunger: 90,
-    hydration: 90,
-    lastCareTime: null,
-    lastFeedTime: null,
-    lastHydrationTime: null,
-    lastPlayTime: null,
-    lastSaveTime: null,
-    lastSleepTime: null,
-    lastTrainTime: null,
-    level: GAME_BALANCE.EVOLUTION.MIN_LEVEL,
-    mood: 90,
+  const fetchedRaichu: PokemonModel = {
+    ...TEST_POKEMON,
+    evolutionChain: {
+      currentStage: 2,
+      totalStages: 3,
+    },
+    id: '26',
+    isFirstStage: false,
+    name: 'raichu',
+    species: 'raichu',
+    spriteUrls: {
+      ...TEST_POKEMON.spriteUrls,
+      evolving: '/sprites/raichu-evolving.png',
+      normal: '/sprites/raichu-normal.png',
+    },
   };
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [EvolutionService] });
+    loadPokemonByName = vi.fn(() => of(fetchedRaichu));
+
+    TestBed.configureTestingModule({
+      providers: [
+        EvolutionService,
+        { provide: PokemonTamagotchiApiService, useValue: { loadPokemonByName } },
+      ],
+    });
     service = TestBed.inject(EvolutionService);
   });
 
   describe('Happy Path', () => {
-    describe('checkEvolutionCriteria', () => {
-      it('должен быть готов, только когда все требования выполнены', () => {
-        const result = service.checkEvolutionCriteria(
-          basePokemon,
-          readyStatus,
-          [],
-          createInitialDailyRoutine(),
-        );
-
-        expect(result.isReady).toBe(true);
-        expect(result.missingRequirements).toEqual([]);
-        expect(result.progress.currentProgress['level']).toBe(GAME_BALANCE.EVOLUTION.MIN_LEVEL);
-        expect(result.progress.currentProgress['experience']).toBe(
-          GAME_BALANCE.EVOLUTION.MIN_EXPERIENCE,
-        );
-      });
-    });
-
-    describe('getRequirementCompletionRatio', () => {
-      it('должен возвращать пропорциональный прогресс к требованию', () => {
-        const ratio = service.getRequirementCompletionRatio(
-          EVOLUTION_REQUIREMENTS[0],
-          { ...readyStatus, level: 5 },
-          [],
-          createInitialDailyRoutine(),
-        );
-
-        expect(ratio).toBeCloseTo(5 / GAME_BALANCE.EVOLUTION.MIN_LEVEL);
-      });
-    });
-
-    describe('triggerEvolution', () => {
-      it('должен возвращать эволюционировавшего покемона, когда данные критериев совпадают с цепочкой', () => {
-        const evolutionData = service.buildEvolutionData(basePokemon);
-
-        expect(evolutionData).not.toBeNull();
-
-        const result = service.triggerEvolution(basePokemon, evolutionData!);
-
-        expect(result).not.toBeNull();
-        expect(result?.evolvedPokemon.id).toBe('26');
-        expect(result?.evolvedPokemon.isFirstStage).toBe(false);
-        expect(result?.evolvedPokemon.evolutionChain.currentStage).toBe(2);
+    describe('prepareEvolution', () => {
+      it('должен вернуть эволюционировавшего покемона с новыми name, sprites и numeric id', () => {
+        service.prepareEvolution(basePokemon).subscribe((result) => {
+          expect(loadPokemonByName).toHaveBeenNthCalledWith(1, 'raichu');
+          expect(result).toEqual(
+            expect.objectContaining({
+              evolutionData: expect.objectContaining({ toPokemonId: 'raichu' }),
+              evolvedPokemon: expect.objectContaining({
+                id: '26',
+                name: 'raichu',
+                spriteUrls: expect.objectContaining({
+                  normal: '/sprites/raichu-normal.png',
+                }),
+              }),
+            }),
+          );
+          expect(result?.evolvedPokemon.spriteUrls.normal).not.toBe(basePokemon.spriteUrls.normal);
+        });
       });
 
-      it('должен сохранять nextEvolution для второй ступени из childNextEvolution', () => {
+      it('должен сохранять nextEvolution для второй ступени из загруженной модели', () => {
+        const threeStageFetched: PokemonModel = {
+          ...fetchedRaichu,
+          evolutionChain: {
+            currentStage: 2,
+            nextEvolution: {
+              pokemonId: 'venusaur',
+              requirements: EVOLUTION_REQUIREMENTS,
+            },
+            totalStages: 3,
+          },
+          name: 'ivysaur',
+          species: 'ivysaur',
+        };
         const threeStagePokemon: PokemonModel = {
           ...basePokemon,
           evolutionChain: {
@@ -106,44 +103,60 @@ describe('EvolutionService', () => {
             totalStages: 3,
           },
         };
-        const evolutionData = service.buildEvolutionData(threeStagePokemon);
 
-        expect(evolutionData).not.toBeNull();
+        loadPokemonByName.mockReturnValue(of(threeStageFetched));
 
-        const result = service.triggerEvolution(threeStagePokemon, evolutionData!);
+        let nextPokemonId: string | undefined;
 
-        expect(result?.evolvedPokemon.evolutionChain.nextEvolution?.pokemonId).toBe('venusaur');
-      });
-    });
+        service.prepareEvolution(threeStagePokemon).subscribe((value) => {
+          nextPokemonId = value?.evolvedPokemon.evolutionChain.nextEvolution?.pokemonId;
+        });
 
-    describe('getEvolutionChain', () => {
-      it('должен возвращать цепочку эволюции из покемона', () => {
-        expect(service.getEvolutionChain(basePokemon)).toEqual(basePokemon.evolutionChain);
+        expect(nextPokemonId).toBe('venusaur');
       });
     });
   });
 
   describe('Negative Cases', () => {
-    describe('checkEvolutionCriteria', () => {
-      it('не должен быть готов, когда не выполнено хотя бы одно требование', () => {
-        const result = service.checkEvolutionCriteria(
-          basePokemon,
-          { ...readyStatus, level: 1 },
-          [],
-          createInitialDailyRoutine(),
+    describe('prepareEvolution', () => {
+      it('должен возвращать null, когда API не загрузил форму эволюции', () => {
+        loadPokemonByName.mockReturnValue(throwError(() => new Error('network')));
+
+        let result: EvolutionResultModel | null | 'unset' = 'unset';
+
+        service.prepareEvolution(basePokemon).subscribe((value) => {
+          result = value;
+        });
+
+        expect(result).toBeNull();
+      });
+
+      it('должен возвращать null, когда загруженный вид не совпадает с nextEvolution', () => {
+        loadPokemonByName.mockReturnValue(
+          of({
+            ...fetchedRaichu,
+            name: 'pikachu',
+            species: 'pikachu',
+          }),
         );
 
-        expect(result.isReady).toBe(false);
-        expect(result.missingRequirements.length).toBeGreaterThan(0);
+        let result: EvolutionResultModel | null | 'unset' = 'unset';
+
+        service.prepareEvolution(basePokemon).subscribe((value) => {
+          result = value;
+        });
+
+        expect(result).toBeNull();
       });
-    });
 
-    describe('triggerEvolution', () => {
-      it('должен возвращать null, когда данные эволюции не совпадают с покемоном', () => {
-        const evolutionData = service.buildEvolutionData(basePokemon)!;
+      it('должен возвращать null, когда у покемона нет nextEvolution', () => {
+        let result: EvolutionResultModel | null | 'unset' = 'unset';
 
-        const result = service.triggerEvolution({ ...basePokemon, id: '999' }, evolutionData);
+        service.prepareEvolution(TEST_POKEMON).subscribe((value) => {
+          result = value;
+        });
 
+        expect(loadPokemonByName).toHaveBeenCalledTimes(0);
         expect(result).toBeNull();
       });
     });

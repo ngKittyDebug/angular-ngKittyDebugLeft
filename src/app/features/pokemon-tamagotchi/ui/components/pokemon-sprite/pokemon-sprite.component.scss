@@ -24,22 +24,6 @@
   @include sprite.reduced_motion_reset;
 }
 
-.pokemon-sprite__image--variation-default {
-  filter: none;
-}
-
-.pokemon-sprite__image--variation-shiny:not(.pokemon-sprite__image--reduced):not(
-    .pokemon-sprite__image--evolving
-  ) {
-  filter: saturate(1.45) brightness(1.14) hue-rotate(-12deg)
-    drop-shadow(0 0 0.45rem color-mix(in srgb, var(--tui-status-warning) 55%, transparent));
-}
-
-.pokemon-sprite__image--variation-retro:not(.pokemon-sprite__image--reduced) {
-  image-rendering: pixelated;
-  filter: contrast(1.12) saturate(0.82);
-}
-
 .pokemon-sprite__image--idle {
   animation: sprite-bob 2.4s ease-in-out infinite;
 }

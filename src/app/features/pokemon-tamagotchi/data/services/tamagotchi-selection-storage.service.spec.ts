@@ -4,7 +4,7 @@ import { TEST_POKEMON } from '../fixtures/tamagotchi-arbitraries';
 import { TAMAGOTCHI_STORAGE_KEY } from '../helpers/tamagotchi-progress-storage.helper';
 import { createInitialTamagotchiState } from '../store/tamagotchi-initial';
 import { selectPokemonState } from '../store/tamagotchi-state-transitions';
-import { createTamagotchiStorageMock } from '../fixtures/tamagotchi-storage.mock';
+import { createTamagotchiStorageMock } from './tamagotchi-storage.service.mock';
 import { TamagotchiStorageService } from './tamagotchi-storage.service';
 import {
   TAMAGOTCHI_SELECTED_POKEMON_KEY,
@@ -13,12 +13,6 @@ import {
 
 function buildPokemon(spriteUrls: PokemonSpriteUrlsModel): PokemonModel {
   return {
-    baseStats: {
-      energyRestorationRate: 1,
-      experienceMultiplier: 1,
-      hungerDecayRate: 1,
-      moodDecayRate: 1,
-    },
     evolutionChain: { currentStage: 1, totalStages: 3 },
     id: '4',
     isFirstStage: true,
@@ -95,6 +89,34 @@ describe('TamagotchiSelectionStorageService', () => {
         id: '4',
         name: 'charmander',
         species: 'charmander',
+      });
+    });
+
+    it('не должен очищать прогресс при сохранении не-first-stage ссылки с другим id', () => {
+      storageMock.setItem(
+        TAMAGOTCHI_STORAGE_KEY,
+        JSON.stringify({
+          state: selectPokemonState(createInitialTamagotchiState(), {
+            ...TEST_POKEMON,
+            id: '1',
+            name: 'bulbasaur',
+            species: 'bulbasaur',
+          }),
+        }),
+      );
+
+      service.save({
+        id: '2',
+        isFirstStage: false,
+        name: 'ivysaur',
+        species: 'ivysaur',
+      });
+
+      expect(storageMock.getItem(TAMAGOTCHI_STORAGE_KEY)).not.toBeNull();
+      expect(service.getReference()).toEqual({
+        id: '2',
+        name: 'ivysaur',
+        species: 'ivysaur',
       });
     });
   });

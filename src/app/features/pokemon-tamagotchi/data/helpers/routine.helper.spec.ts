@@ -7,7 +7,6 @@ import {
   recordRoutineActivity,
   toActivityDateKey,
 } from './routine.helper';
-import { calculateSleepRestorationBonus } from './sleep-restoration.helper';
 
 describe('routine.helper', () => {
   describe('Happy Path', () => {
@@ -63,20 +62,12 @@ describe('routine.helper', () => {
       expect(secondBonusSameDay.bonus).toBe(0);
     });
   });
-});
 
-describe('sleep-restoration.helper', () => {
   describe('Edge Cases', () => {
-    it('должен не начислять бонус за короткий сон', () => {
-      const startedAt = Date.now() - 30 * 60 * 1000;
-
-      expect(calculateSleepRestorationBonus(startedAt)).toBe(0);
-    });
-
-    it('должен начислять бонус энергии после достаточной длительности сна', () => {
-      const startedAt = Date.now() - TIMER_CONFIG.SLEEP.MIN_DURATION_MS - 1000;
-
-      expect(calculateSleepRestorationBonus(startedAt)).toBe(TIMER_CONFIG.SLEEP.BONUS_ENERGY);
+    it('должен требовать и подряд идущие дни, и достаточное число действий за день', () => {
+      expect(isRoutineBonusEligible(3, 3)).toBe(true);
+      expect(isRoutineBonusEligible(2, 5)).toBe(false);
+      expect(isRoutineBonusEligible(4, 2)).toBe(false);
     });
   });
 });

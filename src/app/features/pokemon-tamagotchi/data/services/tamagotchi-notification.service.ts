@@ -5,16 +5,16 @@ import { AppNotificationService } from '@core/services/app-notification.service'
 import {
   notificationFromEvolutionReady,
   notificationFromStatusAlert,
-} from '../../data/helpers/notification-factory.helper';
-import { detectPeriodicCriticalAlerts } from '../../data/helpers/status-decay.helper';
-import { TamagotchiStore } from '../../data/store/tamagotchi.store';
+} from '../helpers/notification-factory.helper';
+import { detectPeriodicCriticalAlerts } from '../helpers/status-decay.helper';
 import type {
   NotificationModel,
   NotificationPriority,
   NotificationText,
   StatusAlertType,
-} from '../../data/models/notification.model';
-import type { PokemonStatusModel } from '../../data/models/pokemon-status.model';
+} from '../models/notification.model';
+import type { PokemonStatusModel } from '../models/pokemon-status.model';
+import { TamagotchiStore } from '../store/tamagotchi.store';
 
 const NOTIFICATION_KEY_PREFIX = 'notifications';
 const TRANSLATION_SCOPE = 'pokemonTamagotchi';
@@ -41,12 +41,6 @@ export class TamagotchiNotificationService {
     );
     const alerts = [...new Set([...context.thresholdAlerts, ...periodicAlerts])];
 
-    for (const alertType of alerts) {
-      this.notifyStatusAlert(alertType, timestamp);
-    }
-  }
-
-  public notifyStatusAlerts(alerts: StatusAlertType[], timestamp?: number): void {
     for (const alertType of alerts) {
       this.notifyStatusAlert(alertType, timestamp);
     }

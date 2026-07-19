@@ -14,37 +14,35 @@ describe('TamagotchiLoggerService', () => {
     TestBed.configureTestingModule({ providers: [TamagotchiLoggerService] });
   });
 
-  describe('Edge Cases', () => {
-    it('должен писать предупреждения в console только вне production', () => {
-      const service = TestBed.inject(TamagotchiLoggerService);
-      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
-
-      service.warn('test', 'dev-only');
-
-      expect(warnSpy).toHaveBeenCalledTimes(1);
-
-      environment.production = true;
-      warnSpy.mockClear();
-
-      service.warn('test', 'silent in prod');
-
-      expect(warnSpy).not.toHaveBeenCalled();
-    });
-
-    it('должен писать ошибки в console только вне production', () => {
+  describe('Happy Path', () => {
+    it('должен писать ошибки в console вне production', () => {
       const service = TestBed.inject(TamagotchiLoggerService);
       const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
       service.error('test', 'dev-only');
 
       expect(errorSpy).toHaveBeenCalledTimes(1);
+    });
 
+    it('должен логировать message из Error через logError', () => {
+      const service = TestBed.inject(TamagotchiLoggerService);
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+      service.logError('saveState', new Error('disk full'));
+
+      expect(errorSpy).toHaveBeenNthCalledWith(1, '[Tamagotchi:saveState]', 'disk full');
+    });
+  });
+
+  describe('Edge Cases', () => {
+    it('должен молчать в production', () => {
       environment.production = true;
-      errorSpy.mockClear();
+      const service = TestBed.inject(TamagotchiLoggerService);
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
       service.error('test', 'silent in prod');
 
-      expect(errorSpy).not.toHaveBeenCalled();
+      expect(errorSpy).toHaveBeenCalledTimes(0);
     });
   });
 });

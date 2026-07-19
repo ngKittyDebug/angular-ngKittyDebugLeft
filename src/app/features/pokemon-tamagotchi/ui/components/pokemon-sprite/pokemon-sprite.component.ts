@@ -10,11 +10,15 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { TranslocoDirective } from '@jsverse/transloco';
 import {
   resolveSpriteUrl,
   resolveStatusSpriteKey,
 } from '../../../data/helpers/sprite-variation.helper';
-import type { InteractionEventModel } from '../../../data/models/interaction.model';
+import type {
+  InteractionEventModel,
+  InteractionType,
+} from '../../../data/models/interaction.model';
 import type { PokemonModel } from '../../../data/models/pokemon.model';
 import type { PokemonStatusModel } from '../../../data/models/pokemon-status.model';
 import { AnimationService } from '../../services/animation.service';
@@ -22,7 +26,7 @@ import { GestureService } from '../../services/gesture.service';
 
 @Component({
   selector: 'left-paw-pokemon-sprite',
-  imports: [],
+  imports: [TranslocoDirective],
   providers: [GestureService],
   templateUrl: './pokemon-sprite.component.html',
   styleUrl: './pokemon-sprite.component.scss',
@@ -41,6 +45,7 @@ export class PokemonSpriteComponent {
   public readonly pokemon = input.required<PokemonModel>();
   public readonly status = input.required<PokemonStatusModel>();
 
+  protected readonly canInteract = computed(() => !this.isSleeping() && !this.isEvolving());
   protected readonly feedbackAnimation = signal<string | null>(null);
   protected readonly useComplexAnimations = computed(() =>
     this.animationService.shouldUseComplexAnimations(),
@@ -112,7 +117,26 @@ export class PokemonSpriteComponent {
       return;
     }
 
-    this.applyGestureResult(this.gestureService.handleKeyboardActivate());
+    this.applyGestureResult(this.gestureService.handleKeyboardActivate('click'));
+  }
+
+  protected onKeydown(event: KeyboardEvent): void {
+    if (!this.canInteract()) {
+      return;
+    }
+
+    if (event.key !== 'Enter' && event.key !== ' ') {
+      return;
+    }
+
+    const gestureType = this.resolveKeyboardGesture(event);
+
+    if (!gestureType) {
+      return;
+    }
+
+    event.preventDefault();
+    this.applyGestureResult(this.gestureService.handleKeyboardActivate(gestureType));
   }
 
   protected onPointerDown(event: PointerEvent): void {
@@ -158,8 +182,20 @@ export class PokemonSpriteComponent {
     this.feedbackAnimation.set(null);
   }
 
-  private canInteract(): boolean {
-    return !this.isSleeping() && !this.isEvolving();
+  private resolveKeyboardGesture(event: KeyboardEvent): InteractionType | null {
+    if (event.ctrlKey || event.metaKey) {
+      return 'multiTouch';
+    }
+
+    if (event.altKey) {
+      return 'drag';
+    }
+
+    if (event.shiftKey) {
+      return 'pet';
+    }
+
+    return null;
   }
 
   private applyGestureResult(result: {

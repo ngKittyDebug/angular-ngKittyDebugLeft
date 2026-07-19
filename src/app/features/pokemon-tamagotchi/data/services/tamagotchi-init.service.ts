@@ -51,9 +51,18 @@ export class TamagotchiInitService {
     }
 
     const selectedReference = this.selection.getSelectedPokemonReference();
-    const persistedPokemon = this.store.pokemon();
+    let selectionOriginId = this.store.selectionOriginId();
 
-    if (selectedReference && persistedPokemon && selectedReference.id !== persistedPokemon.id) {
+    if (selectedReference && selectionOriginId === null) {
+      this.store.healSelectionOriginId(selectedReference.id);
+      selectionOriginId = selectedReference.id;
+    }
+
+    if (
+      selectedReference &&
+      selectionOriginId !== null &&
+      selectedReference.id !== selectionOriginId
+    ) {
       this.store.resetState();
 
       return this.selection.validateSelectedPokemon();

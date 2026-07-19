@@ -11,13 +11,6 @@ export interface PokemonSpriteUrlsModel {
   evolving: string;
 }
 
-export interface PokemonBaseStatsModel {
-  hungerDecayRate: number;
-  moodDecayRate: number;
-  energyRestorationRate: number;
-  experienceMultiplier: number;
-}
-
 export interface PokemonModel {
   id: string;
   name: string;
@@ -26,5 +19,4 @@ export interface PokemonModel {
   evolutionChain: EvolutionChainModel;
   spriteUrls: PokemonSpriteUrlsModel;
   spriteVariations: Record<SpriteVariation, PokemonSpriteUrlsModel>;
-  baseStats: PokemonBaseStatsModel;
 }

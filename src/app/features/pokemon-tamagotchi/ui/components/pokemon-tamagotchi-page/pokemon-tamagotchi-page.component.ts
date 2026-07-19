@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import type { ElementRef } from '@angular/core';
+import {
+  afterRenderEffect,
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  viewChild,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { TuiButton, TuiLoader, TuiNotification, TuiTitle } from '@taiga-ui/core';
@@ -34,9 +41,44 @@ import { StatusIndicatorComponent } from '../status-indicator/status-indicator.c
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PokemonTamagotchiPageComponent {
+  private readonly pageTitle = viewChild<ElementRef<HTMLElement>>('pageTitle');
+  private readonly systemNotice = viewChild<ElementRef<HTMLElement>>('systemNotice');
+  private focusInitialized = false;
+  private hadSystemNotice = false;
+  private wasLoading = false;
+
   public readonly facade = inject(TamagotchiFacade);
 
   public constructor() {
     this.facade.bootstrapFromProfile();
+
+    afterRenderEffect(() => {
+      const loading = this.facade.isLoading();
+      const noticeKey = this.facade.systemErrorMessageKey();
+      const titleElement = this.pageTitle()?.nativeElement;
+      const noticeElement = this.systemNotice()?.nativeElement;
+      const noticeVisible = noticeKey !== null;
+
+      if (!this.focusInitialized) {
+        this.focusInitialized = true;
+        this.wasLoading = loading;
+        this.hadSystemNotice = noticeVisible;
+
+        if (noticeVisible && noticeElement) {
+          noticeElement.focus();
+        }
+
+        return;
+      }
+
+      if (noticeVisible && noticeElement && !this.hadSystemNotice) {
+        noticeElement.focus();
+      } else if ((!loading && this.wasLoading) || (!noticeVisible && this.hadSystemNotice)) {
+        titleElement?.focus();
+      }
+
+      this.wasLoading = loading;
+      this.hadSystemNotice = noticeVisible;
+    });
   }
 }

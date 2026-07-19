@@ -54,36 +54,16 @@ const ALERT_TEMPLATES: Record<StatusAlertType, AlertNotificationTemplate> = {
   },
 };
 
-const PRIORITY_RANK: Record<NotificationPriority, number> = {
-  achievement: 2,
-  critical: 0,
-  info: 3,
-  warning: 1,
-};
-
-export function createNotificationId(): string {
+function createNotificationId(): string {
   return `notification-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-export function notificationPlainText(text: string): NotificationText {
+function notificationPlainText(text: string): NotificationText {
   return { kind: 'plainText', text };
 }
 
-export function notificationTranslationKey(key: string): NotificationText {
+function notificationTranslationKey(key: string): NotificationText {
   return { key, kind: 'translationKey' };
-}
-
-export function compareNotificationsByPriority(
-  left: NotificationModel,
-  right: NotificationModel,
-): number {
-  const priorityDelta = PRIORITY_RANK[left.priority] - PRIORITY_RANK[right.priority];
-
-  if (priorityDelta !== 0) {
-    return priorityDelta;
-  }
-
-  return right.timestamp - left.timestamp;
 }
 
 export function notificationFromStatusAlert(
@@ -114,10 +94,4 @@ export function notificationFromEvolutionReady(
     timestamp,
     title: notificationTranslationKey('evolution.readyTitle'),
   };
-}
-
-export function sortNotificationsByPriority(
-  notifications: NotificationModel[],
-): NotificationModel[] {
-  return [...notifications].sort(compareNotificationsByPriority);
 }

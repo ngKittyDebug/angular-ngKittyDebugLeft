@@ -4,10 +4,10 @@ import { of } from 'rxjs';
 import type { Observable } from 'rxjs';
 import { beforeEach, describe, expect, it, type MockedObject, vi } from 'vitest';
 import { AppNotificationService } from '@core/services/app-notification.service';
-import { TIMER_CONFIG } from '../../data/constants/timer.constants';
-import { TamagotchiStore } from '../../data/store/tamagotchi.store';
-import { createInitialPokemonStatus } from '../../data/store/tamagotchi-initial';
-import { TamagotchiNotificationService } from './notification.service';
+import { TIMER_CONFIG } from '../constants/timer.constants';
+import { createInitialPokemonStatus } from '../store/tamagotchi-initial';
+import { TamagotchiStore } from '../store/tamagotchi.store';
+import { TamagotchiNotificationService } from './tamagotchi-notification.service';
 
 const TRANSLATIONS: Record<string, string> = {
   'pokemonTamagotchi.notifications.alerts.energyCritical.message': 'No energy left.',
@@ -78,7 +78,25 @@ describe('TamagotchiNotificationService', () => {
 
   describe('Happy Path', () => {
     it('должен показывать warning toast и сохранять историю для status alerts', async () => {
-      service.notifyStatusAlerts(['hungerLow']);
+      service.processStatusAlerts({
+        status: {
+          energy: 100,
+          experience: 0,
+          health: 100,
+          hunger: 100,
+          hydration: 100,
+          lastCareTime: null,
+          lastFeedTime: null,
+          lastHydrationTime: null,
+          lastPlayTime: null,
+          lastSaveTime: null,
+          lastSleepTime: null,
+          lastTrainTime: null,
+          level: 1,
+          mood: 100,
+        },
+        thresholdAlerts: ['hungerLow'],
+      });
       await flushTranslation();
 
       expect(appNotifications.showWarningNotification).toHaveBeenNthCalledWith(
