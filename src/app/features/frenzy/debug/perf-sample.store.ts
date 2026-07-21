@@ -2,6 +2,7 @@ import { inject, Injectable, signal } from '@angular/core';
 
 import { environment } from '@environments/environment';
 
+import { FrenzyStorageService } from '../data/services/frenzy-storage.service';
 import { DebugSettingsStore } from './debug-settings.store';
 import { parseSamples, sampleMetrics, serializeSamples } from './perf-log';
 import type { PerfSample } from './perf-log';
@@ -21,8 +22,9 @@ const STORAGE_KEY = 'frenzy:perf-log';
  */
 @Injectable()
 export class PerfSampleStore {
+  private readonly storage = inject(FrenzyStorageService);
   private readonly settings = inject(DebugSettingsStore);
-  private readonly _samples = signal<readonly PerfSample[]>(readStored());
+  private readonly _samples = signal<readonly PerfSample[]>(readStored(this.storage));
 
   public readonly samples = this._samples.asReadonly();
 
@@ -52,20 +54,12 @@ export class PerfSampleStore {
   }
 
   private persist(): void {
-    if (typeof localStorage === 'undefined') {
-      return;
-    }
-
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(this._samples()));
+    this.storage.setJson(STORAGE_KEY, this._samples());
   }
 }
 
-function readStored(): readonly PerfSample[] {
-  if (typeof localStorage === 'undefined') {
-    return [];
-  }
-
-  const raw = localStorage.getItem(STORAGE_KEY);
+function readStored(storage: FrenzyStorageService): readonly PerfSample[] {
+  const raw = storage.getString(STORAGE_KEY);
 
   return raw === null ? [] : parseSamples(raw);
 }

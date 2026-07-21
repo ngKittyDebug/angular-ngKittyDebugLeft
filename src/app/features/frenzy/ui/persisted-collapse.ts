@@ -1,5 +1,7 @@
-import { linkedSignal } from '@angular/core';
+import { inject, linkedSignal } from '@angular/core';
 import type { WritableSignal } from '@angular/core';
+
+import { FrenzyStorageService } from '../data/services/frenzy-storage.service';
 
 // Per-panel localStorage keys for HUD-panel collapse state (see CONTEXT.md "Persisted collapse"). Each HUD panel
 // owns exactly one; kept next to the helper that reads/writes them so the storage shape has a single source.
@@ -20,7 +22,8 @@ export const COLLAPSE_KEY = {
  * used to inline against `PlayerPersistenceService`.
  */
 export function persistedCollapse(key: string, fallback: () => boolean): WritableSignal<boolean> {
-  const state = linkedSignal<boolean>(() => readStored(key) ?? fallback());
+  const storage = inject(FrenzyStorageService);
+  const state = linkedSignal<boolean>(() => readStored(storage, key) ?? fallback());
   // linkedSignal re-derives via its own internal write, never through the public `set`/`update` — so wrapping those
   // persists on user toggles only, leaving the reactive default free to track `fallback` until then.
   const baseSet = state.set.bind(state);
@@ -28,22 +31,18 @@ export function persistedCollapse(key: string, fallback: () => boolean): Writabl
 
   state.set = (value: boolean): void => {
     baseSet(value);
-    writeStored(key, value);
+    writeStored(storage, key, value);
   };
   state.update = (updater: (value: boolean) => boolean): void => {
     baseUpdate(updater);
-    writeStored(key, state());
+    writeStored(storage, key, state());
   };
 
   return state;
 }
 
-function readStored(key: string): boolean | null {
-  if (typeof localStorage === 'undefined') {
-    return null;
-  }
-
-  const raw = localStorage.getItem(key);
+function readStored(storage: FrenzyStorageService, key: string): boolean | null {
+  const raw = storage.getString(key);
 
   // Only the two values we ever write count as a stored choice; anything else (missing or corrupt) falls back.
   if (raw === 'true') {
@@ -57,10 +56,6 @@ function readStored(key: string): boolean | null {
   return null;
 }
 
-function writeStored(key: string, value: boolean): void {
-  if (typeof localStorage === 'undefined') {
-    return;
-  }
-
-  localStorage.setItem(key, String(value));
+function writeStored(storage: FrenzyStorageService, key: string, value: boolean): void {
+  storage.setString(key, String(value));
 }
