@@ -71,7 +71,7 @@ describe('PlayerEffectsTracker', () => {
   it('floats a shield quip and plays the shield sound for my own grant (no name)', () => {
     tracker.handle(granted('me'), context);
 
-    const messages = floats.ownedMessages();
+    const messages = floats.ownedMessageList();
 
     expect(messages).toHaveLength(1);
     expect(messages[0].ownerId).toBe('me');
@@ -83,7 +83,7 @@ describe('PlayerEffectsTracker', () => {
   it('plays the matching sound per effect kind when the effect lands on me', () => {
     tracker.handle(granted('me', 'laying'), context);
 
-    const messages = floats.ownedMessages();
+    const messages = floats.ownedMessageList();
 
     expect(messages[0].textKey).toContain('statusMessage.laying');
     expect(play).toHaveBeenCalledExactlyOnceWith('easterEgg');
@@ -92,7 +92,7 @@ describe('PlayerEffectsTracker', () => {
   it('floats a pooping quip and plays the poop-eat sound for my own poop grant', () => {
     tracker.handle(granted('me', 'pooping'), context);
 
-    const messages = floats.ownedMessages();
+    const messages = floats.ownedMessageList();
 
     expect(messages[0].textKey).toContain('statusMessage.pooping');
     expect(play).toHaveBeenCalledExactlyOnceWith('poopEat');
@@ -101,7 +101,7 @@ describe('PlayerEffectsTracker', () => {
   it('floats a wellFed quip and plays the wellFed sound for my own vitamin grant', () => {
     tracker.handle(granted('me', 'wellFed'), context);
 
-    const messages = floats.ownedMessages();
+    const messages = floats.ownedMessageList();
 
     expect(messages[0].textKey).toContain('statusMessage.wellFed');
     expect(play).toHaveBeenCalledExactlyOnceWith('wellFed');
@@ -110,7 +110,7 @@ describe('PlayerEffectsTracker', () => {
   it('floats a cactus quip and reuses the shield sound for my own cactus grant', () => {
     tracker.handle(granted('me', 'cactus'), context);
 
-    const messages = floats.ownedMessages();
+    const messages = floats.ownedMessageList();
 
     expect(messages[0].textKey).toContain('statusMessage.cactus');
     expect(play).toHaveBeenCalledExactlyOnceWith('shield');
@@ -119,7 +119,7 @@ describe('PlayerEffectsTracker', () => {
   it('floats a named quip for another player and stays silent (no sound)', () => {
     tracker.handle(granted('other', 'laying'), context);
 
-    const messages = floats.ownedMessages();
+    const messages = floats.ownedMessageList();
 
     expect(messages[0].ownerId).toBe('other');
     expect(messages[0].who).toBe('Ash');
@@ -130,7 +130,7 @@ describe('PlayerEffectsTracker', () => {
   it('ignores non-effect messages', () => {
     tracker.handle({ type: 'fainted', playerId: 'me' }, context);
 
-    expect(floats.ownedMessages()).toHaveLength(0);
+    expect(floats.ownedMessageList()).toHaveLength(0);
     expect(play).not.toHaveBeenCalled();
   });
 });

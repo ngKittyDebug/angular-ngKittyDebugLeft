@@ -86,7 +86,7 @@ describe('EatEffect', () => {
   });
 
   function last() {
-    const messages = floats.ownedMessages();
+    const messages = floats.ownedMessageList();
 
     return messages[messages.length - 1];
   }

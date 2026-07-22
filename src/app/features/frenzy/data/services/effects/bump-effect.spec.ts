@@ -34,7 +34,7 @@ describe('BumpEffect', () => {
   });
 
   function last() {
-    const messages = floats.ownedMessages();
+    const messages = floats.ownedMessageList();
 
     return messages[messages.length - 1];
   }
@@ -61,6 +61,6 @@ describe('BumpEffect', () => {
   it('ignores messages other than bumped', () => {
     effect.handle({ type: 'roomFull' });
 
-    expect(floats.ownedMessages()).toHaveLength(0);
+    expect(floats.ownedMessageList()).toHaveLength(0);
   });
 });

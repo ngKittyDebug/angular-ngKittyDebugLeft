@@ -63,7 +63,7 @@ const STATUS_CONFIG: Record<StatusKind, StatusConfig> = {
 
 /**
  * The single source of floating scene texts. Multiple producers (eat, status transitions, detonation)
- * push here. `ownedMessages` belong to a live sprite (rendered inside its container); `orphanMessages`
+ * push here. `ownedMessageList` belong to a live sprite (rendered inside its container); `orphanMessageList`
  * are stamped at a vanished player's last-known spot. Each entry self-removes after its own `durationMs`.
  */
 @Injectable()
@@ -76,8 +76,8 @@ export class FloatingMessagesStore {
     this.owned.add(float, float.durationMs),
   );
 
-  public readonly ownedMessages = this.owned.items;
-  public readonly orphanMessages = this.orphans.items;
+  public readonly ownedMessageList = this.owned.items;
+  public readonly orphanMessageList = this.orphans.items;
 
   public pushOwned(entry: OwnedFloat): void {
     this.queue.enqueue(entry);

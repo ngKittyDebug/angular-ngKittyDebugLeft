@@ -108,14 +108,14 @@ const KELP_VIEW_BOX = `0 0 ${KELP_VIEW_WIDTH} ${KELP_VIEW_HEIGHT}`;
 export class MinimapComponent {
   public readonly compact = input<boolean>(false);
   public readonly disconnected = input<number>(0);
-  public readonly items = input.required<readonly Item[]>();
+  public readonly itemList = input.required<readonly Item[]>();
   public readonly leader = input<Player | null>(null);
   // The crowned player id (alive hp-leader; null when there's no meaningful leader, e.g. a lone survivor). Marks
   // that player's blip with a crown and gates the compact leader chip — same gated source as the scene + pill.
   public readonly crownId = input<string | null>(null);
   public readonly myId = input<string | null>(null);
   public readonly online = input.required<number>();
-  public readonly players = input.required<readonly Player[]>();
+  public readonly playerList = input.required<readonly Player[]>();
 
   protected readonly snapshotIntervalMs = (FRENZY.snapshotEveryNTicks / FRENZY.tickRateHz) * 1000;
 
@@ -143,11 +143,11 @@ export class MinimapComponent {
   // and thereafter wins over the responsive default.
   protected readonly collapsed = persistedCollapse(COLLAPSE_KEY.minimap, () => this.compact());
 
-  protected readonly playerDots = computed<PlayerDot[]>(() => {
+  protected readonly playerDotList = computed<PlayerDot[]>(() => {
     const myId = this.myId();
     const crownId = this.crownId();
 
-    return this.players().map((player) => ({
+    return this.playerList().map((player) => ({
       id: player.id,
       x: player.x,
       y: player.y,
@@ -157,8 +157,8 @@ export class MinimapComponent {
     }));
   });
 
-  protected readonly itemDots = computed<ItemDot[]>(() =>
-    this.items().map((item) => ({
+  protected readonly itemDotList = computed<ItemDot[]>(() =>
+    this.itemList().map((item) => ({
       id: item.id,
       x: item.x,
       y: item.y,

@@ -22,7 +22,7 @@ function createFakeFacade(): {
   publishDebugFrame: ReturnType<typeof vi.fn>;
   updateCamera: ReturnType<typeof vi.fn>;
   cameraSnapshot: ReturnType<typeof vi.fn>;
-  renderedPlayers: ReturnType<typeof vi.fn>;
+  renderedPlayerList: ReturnType<typeof vi.fn>;
 } {
   const calls: string[] = [];
 
@@ -38,7 +38,7 @@ function createFakeFacade(): {
 
       return SNAPSHOT;
     }),
-    renderedPlayers: vi.fn(() => RENDERED),
+    renderedPlayerList: vi.fn(() => RENDERED),
   };
 }
 

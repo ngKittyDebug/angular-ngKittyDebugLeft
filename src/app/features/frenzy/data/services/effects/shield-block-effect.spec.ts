@@ -101,7 +101,7 @@ describe('ShieldBlockEffect', () => {
     dispatch(eaten({ playerId: 'victim', itemType: 'rock', delta: 0 }));
     dispatch(eaten({ playerId: 'me', itemType: 'brick', delta: 0 }));
 
-    const blocks = effect.ownedShieldBlocks();
+    const blocks = effect.ownedShieldBlockList();
 
     expect(blocks).toHaveLength(2);
     expect(blocks[0].ownerId).toBe('victim');
@@ -111,14 +111,14 @@ describe('ShieldBlockEffect', () => {
   it('marks a warded rotten bite (delta 0 via click) as a shield block', () => {
     dispatch(eaten({ playerId: 'me', itemType: 'rotten', via: 'click', delta: 0 }));
 
-    expect(effect.ownedShieldBlocks()).toHaveLength(1);
-    expect(effect.ownedShieldBlocks()[0].ownerId).toBe('me');
+    expect(effect.ownedShieldBlockList()).toHaveLength(1);
+    expect(effect.ownedShieldBlockList()[0].ownerId).toBe('me');
   });
 
   it('does NOT fire when a damaging hit actually dealt damage (delta < 0 — not warded)', () => {
     dispatch(eaten({ playerId: 'me', itemType: 'rock', delta: -20 }));
 
-    expect(effect.ownedShieldBlocks()).toHaveLength(0);
+    expect(effect.ownedShieldBlockList()).toHaveLength(0);
   });
 
   it('does NOT fire for a genuinely neutral delta-0 pickup (non-damaging type)', () => {
@@ -126,7 +126,7 @@ describe('ShieldBlockEffect', () => {
     // mushroom can roll a neutral 0 without a shield — excluded as ambiguous.
     dispatch(eaten({ playerId: 'me', itemType: 'mushroom', delta: 0 }));
 
-    expect(effect.ownedShieldBlocks()).toHaveLength(0);
+    expect(effect.ownedShieldBlockList()).toHaveLength(0);
   });
 
   it('on a bomb blast, marks shielded players within the radius — even though they are absent from hits', () => {
@@ -140,7 +140,7 @@ describe('ShieldBlockEffect', () => {
 
     dispatch(detonated({ x: 0.5, y: 0.5, radius: 0.18 }));
 
-    const blocks = effect.ownedShieldBlocks();
+    const blocks = effect.ownedShieldBlockList();
 
     expect(blocks).toHaveLength(1);
     expect(blocks[0].ownerId).toBe('shielded-near');
@@ -159,7 +159,7 @@ describe('ShieldBlockEffect', () => {
 
     dispatch(detonated({ x: 0.5, y: 0.5, radius: 0.18 }));
 
-    expect(effect.ownedShieldBlocks()).toHaveLength(0);
+    expect(effect.ownedShieldBlockList()).toHaveLength(0);
   });
 
   it('skips a dead shielded player caught in the blast radius', () => {
@@ -169,16 +169,16 @@ describe('ShieldBlockEffect', () => {
 
     dispatch(detonated({ x: 0.5, y: 0.5, radius: 0.18 }));
 
-    expect(effect.ownedShieldBlocks()).toHaveLength(0);
+    expect(effect.ownedShieldBlockList()).toHaveLength(0);
   });
 
   it('auto-removes the block cue after its TTL', () => {
     dispatch(eaten({ playerId: 'me', itemType: 'rock', delta: 0 }));
 
-    expect(effect.ownedShieldBlocks()).toHaveLength(1);
+    expect(effect.ownedShieldBlockList()).toHaveLength(1);
 
     vi.advanceTimersByTime(700);
 
-    expect(effect.ownedShieldBlocks()).toHaveLength(0);
+    expect(effect.ownedShieldBlockList()).toHaveLength(0);
   });
 });

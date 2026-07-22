@@ -22,7 +22,7 @@
     <!-- Item render backend toggle (DOM vs hybrid canvas) + the canvas DPR cap, for the on-device A/B. -->
     <p class="debug-configurator__title">{{ t('sections.render') }}</p>
     <div class="debug-configurator__chips">
-      @for (mode of renderModes; track mode) {
+      @for (mode of renderModeList; track mode) {
         <button
           type="button"
           class="debug-configurator__chip"
@@ -37,7 +37,7 @@
     <!-- Player sprite render backend (DOM animated GIF vs hybrid canvas) — A/B'd independently of the item backend. -->
     <p class="debug-configurator__title">{{ t('sections.players') }}</p>
     <div class="debug-configurator__chips">
-      @for (mode of renderModes; track mode) {
+      @for (mode of renderModeList; track mode) {
         <button
           type="button"
           class="debug-configurator__chip"
@@ -53,7 +53,7 @@
          item render backend above. -->
     <p class="debug-configurator__title">{{ t('sections.decor') }}</p>
     <div class="debug-configurator__chips">
-      @for (mode of renderModes; track mode) {
+      @for (mode of renderModeList; track mode) {
         <button
           type="button"
           class="debug-configurator__chip"
@@ -72,7 +72,7 @@
     ) {
       <p class="debug-configurator__title">{{ t('sections.canvasDpr') }}</p>
       <div class="debug-configurator__chips">
-        @for (cap of dprCaps; track cap) {
+        @for (cap of dprCapList; track cap) {
           <button
             type="button"
             class="debug-configurator__chip"
@@ -89,7 +89,7 @@
          uncapped (desktop default); a target ≥ the device rate stays inactive there. Persisted via DebugSettingsStore. -->
     <p class="debug-configurator__title">{{ t('sections.frameCap') }}</p>
     <div class="debug-configurator__chips">
-      @for (cap of frameCaps; track cap) {
+      @for (cap of frameCapList; track cap) {
         <button
           type="button"
           class="debug-configurator__chip"
@@ -116,7 +116,7 @@
     <!-- Scene render layers: uncheck one to HIDE that layer (in both DOM and canvas mode) and watch the FPS — bisects
          which layer costs the most fill-rate on a weak device. Persisted via DebugSettingsStore. -->
     <p class="debug-configurator__title">{{ t('sections.sceneLayers') }}</p>
-    @for (layer of layerKeys; track layer) {
+    @for (layer of layerKeyList; track layer) {
       <label class="debug-configurator__row">
         <input
           type="checkbox"
@@ -132,7 +132,7 @@
          one sub-element; `flatRays` is the speculative neutral fix (rays without the screen blend). Each CHECKED =
          probe active (default off). Persisted via DebugSettingsStore. -->
     <p class="debug-configurator__title">{{ t('sections.decorProbe') }}</p>
-    @for (probe of decorProbeKeys; track probe) {
+    @for (probe of decorProbeKeyList; track probe) {
       <label class="debug-configurator__row">
         <input
           type="checkbox"

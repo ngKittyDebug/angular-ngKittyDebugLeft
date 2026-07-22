@@ -4,7 +4,7 @@
   [class.leaderboard--collapsed]="collapsed()"
 >
   <!-- Toggle + collapse only exist when there's more than one player — with just you there's nothing to rank. -->
-  @if (rows().length > 1) {
+  @if (rowList().length > 1) {
     @if (collapsed()) {
       <button
         type="button"
@@ -12,7 +12,7 @@
         [attr.aria-label]="t('expand')"
         (click)="onToggle($event)"
       >
-        <!-- rows().length > 1 guarantees a leader, so no empty-state branch is needed here. -->
+        <!-- rowList().length > 1 guarantees a leader, so no empty-state branch is needed here. -->
         @if (leader(); as top) {
           <!-- Crown only when the top row is the actual alive crown (shared selector), so the pill never crowns a
                disconnected top-hp player while the scene shows the crown elsewhere. -->
@@ -38,7 +38,7 @@
           <tui-icon icon="@tui.minimize-2" class="leaderboard__header-icon" />
         </button>
         <ol class="leaderboard__list">
-          @for (row of rows(); track row.id) {
+          @for (row of rowList(); track row.id) {
             <li class="leaderboard__row" [class.leaderboard__row--me]="row.isMe">
               <span class="leaderboard__rank">{{ row.rank }}</span>
               <span

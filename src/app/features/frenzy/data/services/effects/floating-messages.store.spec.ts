@@ -49,18 +49,18 @@ describe('FloatingMessagesStore', () => {
     it('releases the first owned float immediately', () => {
       store.pushOwned(owned({ id: 'a' }));
 
-      expect(store.ownedMessages().map((float) => float.id)).toEqual(['a']);
+      expect(store.ownedMessageList().map((float) => float.id)).toEqual(['a']);
     });
 
     it('staggers a second float of the same owner behind the release gap', () => {
       store.pushOwned(owned({ id: 'a' }));
       store.pushOwned(owned({ id: 'b' }));
 
-      expect(store.ownedMessages().map((float) => float.id)).toEqual(['a']);
+      expect(store.ownedMessageList().map((float) => float.id)).toEqual(['a']);
 
       vi.advanceTimersByTime(FLOAT_RELEASE_STAGGER_MS);
 
-      expect(store.ownedMessages().map((float) => float.id)).toEqual(['a', 'b']);
+      expect(store.ownedMessageList().map((float) => float.id)).toEqual(['a', 'b']);
     });
 
     it('releases a higher-priority float ahead of a pending lower one', () => {
@@ -70,7 +70,7 @@ describe('FloatingMessagesStore', () => {
 
       vi.advanceTimersByTime(FLOAT_RELEASE_STAGGER_MS);
 
-      expect(store.ownedMessages().map((float) => float.id)).toEqual(['low', 'high']);
+      expect(store.ownedMessageList().map((float) => float.id)).toEqual(['low', 'high']);
     });
 
     it('releases floats of different owners independently, without staggering across owners', () => {
@@ -79,7 +79,7 @@ describe('FloatingMessagesStore', () => {
 
       expect(
         store
-          .ownedMessages()
+          .ownedMessageList()
           .map((float) => float.id)
           .sort(),
       ).toEqual(['a', 'b']);
@@ -90,7 +90,7 @@ describe('FloatingMessagesStore', () => {
 
       vi.advanceTimersByTime(500);
 
-      expect(store.ownedMessages()).toHaveLength(0);
+      expect(store.ownedMessageList()).toHaveLength(0);
     });
   });
 
@@ -102,7 +102,7 @@ describe('FloatingMessagesStore', () => {
       store.remove('pending');
       vi.advanceTimersByTime(FLOAT_RELEASE_STAGGER_MS);
 
-      expect(store.ownedMessages().map((float) => float.id)).toEqual(['a']);
+      expect(store.ownedMessageList().map((float) => float.id)).toEqual(['a']);
     });
 
     it('pulls a released float and lets a pending replacement surface at once', () => {
@@ -112,7 +112,7 @@ describe('FloatingMessagesStore', () => {
       store.remove('a');
 
       // Freeing the released slot must release the pending one without waiting out the stagger.
-      expect(store.ownedMessages().map((float) => float.id)).toEqual(['b']);
+      expect(store.ownedMessageList().map((float) => float.id)).toEqual(['b']);
     });
 
     it('is a no-op for an unknown id', () => {
@@ -120,7 +120,7 @@ describe('FloatingMessagesStore', () => {
 
       store.remove('missing');
 
-      expect(store.ownedMessages().map((float) => float.id)).toEqual(['a']);
+      expect(store.ownedMessageList().map((float) => float.id)).toEqual(['a']);
     });
   });
 
@@ -128,8 +128,8 @@ describe('FloatingMessagesStore', () => {
     it('adds an orphan float to the overlay list immediately', () => {
       store.pushOrphan(orphan({ id: 'o', x: 0.2, y: 0.8 }));
 
-      expect(store.orphanMessages()).toHaveLength(1);
-      expect(store.orphanMessages()[0]).toMatchObject({ id: 'o', x: 0.2, y: 0.8 });
+      expect(store.orphanMessageList()).toHaveLength(1);
+      expect(store.orphanMessageList()[0]).toMatchObject({ id: 'o', x: 0.2, y: 0.8 });
     });
 
     it('self-removes an orphan float once its lifetime elapses', () => {
@@ -137,7 +137,7 @@ describe('FloatingMessagesStore', () => {
 
       vi.advanceTimersByTime(800);
 
-      expect(store.orphanMessages()).toHaveLength(0);
+      expect(store.orphanMessageList()).toHaveLength(0);
     });
   });
 
@@ -145,7 +145,7 @@ describe('FloatingMessagesStore', () => {
     it('stamps an owned status float with the owner, who and a kind-derived text key', () => {
       store.pushOwnedStatus('appeared', 'p3', 'Misty');
 
-      const float = store.ownedMessages()[0];
+      const float = store.ownedMessageList()[0];
 
       expect(float.ownerId).toBe('p3');
       expect(float.who).toBe('Misty');
@@ -155,13 +155,13 @@ describe('FloatingMessagesStore', () => {
     it('returns the id of the owned status float so callers can replace or clear it', () => {
       const id = store.pushOwnedStatus('dying', 'me');
 
-      expect(store.ownedMessages().some((float) => float.id === id)).toBe(true);
+      expect(store.ownedMessageList().some((float) => float.id === id)).toBe(true);
     });
 
     it('stamps an orphan status float at the given scene position', () => {
       store.pushOrphanStatus('died', 0.3, 0.7, 'Ash');
 
-      const float = store.orphanMessages()[0];
+      const float = store.orphanMessageList()[0];
 
       expect(float).toMatchObject({ x: 0.3, y: 0.7, who: 'Ash' });
       expect(float.textKey).toContain('statusMessage.died');

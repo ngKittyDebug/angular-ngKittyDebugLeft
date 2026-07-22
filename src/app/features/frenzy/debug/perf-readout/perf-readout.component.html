@@ -29,7 +29,7 @@
     </button>
 
     <div class="perf-readout__metrics">
-      @for (row of rows(); track row.key) {
+      @for (row of rowList(); track row.key) {
         <div class="perf-readout__row" [class.perf-readout__row--off]="!row.enabled">
           <!-- Checkbox + label are the toggle; the value and the info icon sit OUTSIDE this label so a tap on either
                never flips the metric. -->

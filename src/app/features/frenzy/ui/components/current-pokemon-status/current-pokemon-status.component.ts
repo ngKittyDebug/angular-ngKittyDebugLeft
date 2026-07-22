@@ -56,11 +56,11 @@ export class CurrentPokemonStatusComponent {
   // A transient reaction (bomb/collision/poison/buff) that briefly takes over the avatar face; null most of the time.
   public readonly reaction = input<ReactionFace | null>(null);
   // My Pokémon's currently-active timed effects (parent pre-filters by `expiresAt`); mirrored as a buff-chip strip.
-  public readonly effects = input<readonly PlayerEffect[]>([]);
+  public readonly effectList = input<readonly PlayerEffect[]>([]);
   // Active effects projected to display chips (icon + tone + kind) via the shared EFFECT_BADGE registry — the same
   // single source the over-head sprite badges read, so the card and scene never show a different icon/colour.
-  protected readonly buffChips = computed<readonly RenderedEffectBadge[]>(() =>
-    this.effects().map((effect) => ({ kind: effect.kind, ...EFFECT_BADGE[effect.kind] })),
+  protected readonly buffChipList = computed<readonly RenderedEffectBadge[]>(() =>
+    this.effectList().map((effect) => ({ kind: effect.kind, ...EFFECT_BADGE[effect.kind] })),
   );
   // The bar uses one absolute scale (0 → hard ceiling); ticks mark BOTH evolution thresholds along it, and
   // `untilEvolution` is the HP still needed to reach the next one — the foot line vanishes on the final stage.

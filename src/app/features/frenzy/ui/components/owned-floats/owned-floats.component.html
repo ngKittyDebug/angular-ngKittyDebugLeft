@@ -1,5 +1,5 @@
 <ng-container *transloco="let t; prefix: 'frenzy.scene'">
-  @for (player of players(); track player.id) {
+  @for (player of playerList(); track player.id) {
     @if (floatsByOwner().get(player.id); as floats) {
       <div
         class="scene__owned-floats"

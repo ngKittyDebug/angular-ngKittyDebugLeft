@@ -50,16 +50,16 @@ interface LeaderboardRow {
 export class LeaderboardComponent {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
-  public readonly entries = input.required<readonly Player[]>();
+  public readonly entryList = input.required<readonly Player[]>();
   public readonly myId = input<string | null>(null);
   // The crowned player id (alive hp-leader via the shared selector). The pill shows its crown only when the top
   // row IS the crown — otherwise (e.g. a disconnected top-hp player) it shows the name without a crown, matching
-  // the scene. `entries` is sorted top-5 by raw hp, so its #1 isn't necessarily the alive crown.
+  // the scene. `entryList` is sorted top-5 by raw hp, so its #1 isn't necessarily the alive crown.
   public readonly crownId = input<string | null>(null);
-  protected readonly rows = computed<readonly LeaderboardRow[]>(() => {
+  protected readonly rowList = computed<readonly LeaderboardRow[]>(() => {
     const id = this.myId();
 
-    return this.entries().map((player, index) => ({
+    return this.entryList().map((player, index) => ({
       appearance: player.appearance,
       id: player.id,
       isDisconnected: player.status === 'disconnected',
@@ -73,7 +73,7 @@ export class LeaderboardComponent {
 
   // The current champion (top row), surfaced in the collapsed pill as crown + name + HP so the header still tells
   // you who's winning without expanding.
-  protected readonly leader = computed<LeaderboardRow | null>(() => this.rows()[0] ?? null);
+  protected readonly leader = computed<LeaderboardRow | null>(() => this.rowList()[0] ?? null);
 
   // Restore the saved open/closed state; with none saved, default to expanded (desktop-only widget). A manual
   // toggle persists (via the signal's write-through) and thereafter wins over the default.

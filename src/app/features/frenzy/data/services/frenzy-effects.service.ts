@@ -65,13 +65,13 @@ export class FrenzyEffectsService {
   ];
   private readonly router = new EffectRouter(this.handlers);
 
-  public readonly ownedFloats = this.floats.ownedMessages;
+  public readonly ownedFloatList = this.floats.ownedMessageList;
   public readonly reactionFace = this.reactiveMood.reactionFace;
-  public readonly orphanFloats = this.floats.orphanMessages;
-  public readonly blasts = this.detonation.blasts;
-  public readonly hitBursts = this.hitBurst.hitBursts;
-  public readonly ownedSparks = this.hitBurst.ownedSparks;
-  public readonly ownedShieldBlocks = this.shieldBlock.ownedShieldBlocks;
+  public readonly orphanFloatList = this.floats.orphanMessageList;
+  public readonly blastList = this.detonation.blastList;
+  public readonly hitBurstList = this.hitBurst.hitBurstList;
+  public readonly ownedSparkList = this.hitBurst.ownedSparkList;
+  public readonly ownedShieldBlockList = this.shieldBlock.ownedShieldBlockList;
   public readonly evolvingPlayers = this.evolution.evolvingPlayers;
 
   public constructor() {

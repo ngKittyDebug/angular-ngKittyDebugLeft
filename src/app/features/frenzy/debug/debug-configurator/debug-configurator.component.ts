@@ -28,11 +28,11 @@ import type { CanvasDprCap, FrameCapFps } from '../debug-settings.store';
 })
 export class DebugConfiguratorComponent {
   protected readonly store = inject(DebugSettingsStore);
-  protected readonly renderModes = RENDER_MODES;
-  protected readonly dprCaps = CANVAS_DPR_CAPS;
-  protected readonly frameCaps = FRAME_CAP_FPS;
-  protected readonly layerKeys = SCENE_LAYER_KEYS;
-  protected readonly decorProbeKeys = DECOR_PROBE_KEYS;
+  protected readonly renderModeList = RENDER_MODES;
+  protected readonly dprCapList = CANVAS_DPR_CAPS;
+  protected readonly frameCapList = FRAME_CAP_FPS;
+  protected readonly layerKeyList = SCENE_LAYER_KEYS;
+  protected readonly decorProbeKeyList = DECOR_PROBE_KEYS;
   // Collapsed by default, like the sibling perf panels: a compact header bar that expands to the controls on click,
   // so the configurator stops covering the scene until the developer opens it. Local UI state.
   protected readonly collapsed = signal(true);

@@ -62,23 +62,23 @@ interface PlayerBaseline {
 @Injectable()
 export class PlayerExtrapolatorService {
   private readonly baselines = new Map<string, PlayerBaseline>();
-  private readonly _rendered = signal<readonly RenderedPlayer[]>([]);
+  private readonly _renderedList = signal<readonly RenderedPlayer[]>([]);
   // The live per-frame view models. `tick` refreshes this (read by the imperative position writer, the `?debug=perf`
-  // gap and consumers that must see this frame) WITHOUT touching the `rendered` signal — players have no structural
+  // gap and consumers that must see this frame) WITHOUT touching the `renderedList` signal — players have no structural
   // field that changes mid-extrapolation (facing is a flag written imperatively; hp/stage/effects come from a
   // snapshot), so per-frame motion never triggers change detection. See ADR 0001.
-  private _frame: readonly RenderedPlayer[] = [];
+  private _frameList: readonly RenderedPlayer[] = [];
   // Frame-aware reconciliation τ, measured from the `tick` cadence (never `ingest` — the ~300ms snapshot cadence
   // isn't a frame) so a slow tablet stretches the correction glide across enough frames instead of snapping it.
   // Read by compute/sync/predictSteer so every reconciliation read this frame agrees. See ADR 0003.
   private readonly frameTau = new FrameTauTracker();
 
   // Structure signal: changes only on `ingest` (a server snapshot). Drives the `@for` and the `?debug` box overlay.
-  public readonly rendered = this._rendered.asReadonly();
+  public readonly renderedList = this._renderedList.asReadonly();
 
   // The latest per-frame view models (positions + facing), live every tick. Not a signal — read imperatively.
   public frame(): readonly RenderedPlayer[] {
-    return this._frame;
+    return this._frameList;
   }
 
   // Re-anchor baselines from a fresh snapshot, then publish the extrapolated positions (structure + frame).
@@ -89,12 +89,12 @@ export class PlayerExtrapolatorService {
     now: number,
   ): void {
     this.sync(players, now);
-    this._frame = this.compute(players, myId, evolving, now);
-    this._rendered.set(this._frame);
+    this._frameList = this.compute(players, myId, evolving, now);
+    this._renderedList.set(this._frameList);
   }
 
   // Per-frame recompute (rAF loop): advance along existing baselines without re-anchoring. Updates only the live
-  // `frame` — never the `rendered` signal — so moving sprites costs no change detection.
+  // `frame` — never the `renderedList` signal — so moving sprites costs no change detection.
   public tick(
     players: readonly Player[],
     myId: string | null,
@@ -102,13 +102,13 @@ export class PlayerExtrapolatorService {
     now: number,
   ): void {
     this.frameTau.measure(now);
-    this._frame = this.compute(players, myId, evolving, now);
+    this._frameList = this.compute(players, myId, evolving, now);
   }
 
   // Mirror the current frame into the structure signal. Used only by the `?debug` box overlay, which needs the
   // boxes to track the sprites every frame (a dev tool — the per-frame change detection it reintroduces is fine).
   public publishFrame(): void {
-    this._rendered.set(this._frame);
+    this._renderedList.set(this._frameList);
   }
 
   // Client-side prediction for the local Pokémon only: re-anchor my baseline at its current rendered position and
@@ -262,19 +262,19 @@ export class PlayerExtrapolatorService {
       const offsetX = baseline?.offsetX ?? 0;
       const offsetY = baseline?.offsetY ?? 0;
       const offsetAge = baseline === undefined ? 0 : now - baseline.offsetStamp;
-      const liveEffects = player.effects.filter((effect) => effect.expiresAt > wallNow);
-      const effectAuras = liveEffects
+      const liveEffectList = player.effects.filter((effect) => effect.expiresAt > wallNow);
+      const effectAuraList = liveEffectList
         .map((effect) => EFFECT_AURA[effect.kind])
         .filter((aura): aura is RenderedAura => aura !== null);
       // Single dominant effect tinting the grounding shadow — first match by precedence; none → neutral base.
       const dominantEffect = SHADOW_TINT_PRECEDENCE.find((kind) =>
-        liveEffects.some((effect) => effect.kind === kind),
+        liveEffectList.some((effect) => effect.kind === kind),
       );
       const shadowEffectClass =
         dominantEffect === undefined ? null : `scene__shadow--${dominantEffect}`;
       // Overhead buff badges track the same live effects as the auras — including the NPC, which CAN pick up an
       // effect by colliding with an item (e.g. shield), so its badge must match the aura ring it already shows.
-      const effectBadges = liveEffects.map((effect) => ({
+      const effectBadgeList = liveEffectList.map((effect) => ({
         kind: effect.kind,
         ...EFFECT_BADGE[effect.kind],
       }));
@@ -285,9 +285,9 @@ export class PlayerExtrapolatorService {
 
       return {
         appearance: player.appearance,
-        effectAuras,
+        effectAuraList,
         shadowEffectClass,
-        effectBadges,
+        effectBadgeList,
         facingRight: reflectDirection(x0, vx, elapsed, zone.minX, zone.maxX) > 0,
         id: player.id,
         isDisconnected: player.status === 'disconnected',

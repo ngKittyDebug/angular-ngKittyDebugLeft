@@ -22,8 +22,8 @@ import { DebugReadoutComponent } from '../debug-readout/debug-readout.component'
 })
 export class DebugOverlayComponent {
   public readonly flags = input.required<DebugFlags>();
-  public readonly players = input.required<readonly RenderedPlayer[]>();
-  public readonly items = input.required<readonly RenderedItem[]>();
+  public readonly playerList = input.required<readonly RenderedPlayer[]>();
+  public readonly itemList = input.required<readonly RenderedItem[]>();
   // Item box side (px string) from the shared contract — same value the scene feeds the item sprites.
   public readonly itemSize = input.required<string>();
   // The bomb's larger collidable side (px string) — its sensor-horn reach, so its box frames the real trigger area.
