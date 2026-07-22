@@ -2,7 +2,7 @@
   <div class="user">
     <div class="user-info">
       <div tuiAvatar size="xxl" [round]="true">
-        <img [src]="avatarUrl()" [alt]="t('profile.settings.avatarAlt')" />
+        <img [src]="facade.profile()?.avatar || 'images/profile/avatar.jpg'" [alt]="t('profile.settings.avatarAlt')" />
       </div>
       <div class="user-content">
         <h2 class="name">{{ facade.profile()?.username }}</h2>

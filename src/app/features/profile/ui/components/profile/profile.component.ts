@@ -1,9 +1,7 @@
-import { httpResource } from '@angular/common/http';
 import type { OnInit, TemplateRef } from '@angular/core';
 import {
   ChangeDetectionStrategy,
   Component,
-  computed,
   effect,
   inject,
   signal,
@@ -14,13 +12,11 @@ import { Router } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { TuiButton, TuiDialogService } from '@taiga-ui/core';
 import { TuiAvatar, TuiButtonLoading } from '@taiga-ui/kit';
-import { PokemonApiService } from '@core/api/pokemon-api.service';
 import {
   EMAIL_PATTERN,
   PASSWORD_PATTERN,
   USER_PATTERN,
 } from '@shared/constants/patterns-constants';
-import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
 import { ProfileFacade } from '../../../data/facades/profile.facade';
 import { AvatarPickerComponent } from '../avatar-picker/avatar-picker.component';
 import { PokemonCardProfileComponent } from '../pokemon-card-profile/pokemon-card-profile.component';
@@ -46,22 +42,10 @@ export class ProfileComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly dialogs = inject(TuiDialogService);
   private readonly pickerTemplate = viewChild.required<TemplateRef<unknown>>('pickerTemplate');
-  private readonly pokemonApiService = inject(PokemonApiService);
-
-  private readonly firstPokemonResource = httpResource<PokemonDetailApiData>(() =>
-    this.pokemonApiService.getPokemonData('1'),
-  );
 
   protected readonly facade = inject(ProfileFacade);
   protected readonly passwordEditing = signal(false);
   protected readonly showDeleteConfirm = signal(false);
-
-  protected readonly avatarUrl = computed(
-    () =>
-      this.facade.profile()?.avatar ||
-      this.firstPokemonResource.value()?.sprites.other['official-artwork'].front_default ||
-      '',
-  );
 
   protected readonly usernameFormControl = new FormControl('', {
     nonNullable: true,
