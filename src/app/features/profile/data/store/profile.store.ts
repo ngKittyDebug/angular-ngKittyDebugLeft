@@ -7,7 +7,7 @@ import type {
 } from '../models/profile.model';
 import { patchState, signalStore, withMethods, withState } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
-import { concatMap, pipe, switchMap, tap } from 'rxjs';
+import { concatMap, exhaustMap, pipe, switchMap, tap } from 'rxjs';
 import { ProfileService } from '../services/profile.service';
 import { extractFavoritePokemonList } from '../helpers/extract-favorite-pokemon-list';
 import { handleStoreError } from '../helpers/handle-store-error';
@@ -45,7 +45,7 @@ export const UserProfileStore = signalStore(
     updateProfile: rxMethod<UpdateUserModel>(
       pipe(
         tap(() => patchState(store, { isLoading: true, error: null })),
-        switchMap((dto) =>
+        exhaustMap((dto) =>
           api.updateUser(dto).pipe(
             tap((updatedProfile) => {
               const current = store.profile();
@@ -65,7 +65,7 @@ export const UserProfileStore = signalStore(
         tap(() =>
           patchState(store, { isLoading: true, error: null, isPasswordChangedSuccess: false }),
         ),
-        switchMap((dto) =>
+        exhaustMap((dto) =>
           api.changePassword(dto).pipe(
             tap(() => {
               patchState(store, { isLoading: false, isPasswordChangedSuccess: true });
@@ -78,7 +78,7 @@ export const UserProfileStore = signalStore(
     deleteAccount: rxMethod<void>(
       pipe(
         tap(() => patchState(store, { isLoading: true, error: null })),
-        switchMap(() =>
+        exhaustMap(() =>
           api.deleteAccount().pipe(
             tap(() => patchState(store, { ...initialState, isAccountDeleted: true })),
             handleStoreError(store),
@@ -89,7 +89,7 @@ export const UserProfileStore = signalStore(
     updateAvatar: rxMethod<UpdateAvatar>(
       pipe(
         tap(() => patchState(store, { isLoading: true, error: null })),
-        switchMap((dto) =>
+        exhaustMap((dto) =>
           api.updateAvatar(dto).pipe(
             tap((resource) => {
               const currentProfile = store.profile();
