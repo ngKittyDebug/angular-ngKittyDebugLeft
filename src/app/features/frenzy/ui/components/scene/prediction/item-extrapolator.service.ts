@@ -3,7 +3,8 @@ import { Injectable, signal } from '@angular/core';
 import { FRENZY, halfExtentNorm, restYFor } from '@game/frenzy/config';
 import type { Item } from '@game/frenzy/types';
 
-import { clamp, decayedOffset, OFFSET_DECAY_TAU_MS, reflect } from './drift-math';
+import { clamp, decayedOffset, reflect } from './drift-math';
+import { FrameTauTracker } from './frame-tau';
 import { spinFor } from './item-spin';
 import type { RenderedItem } from '../scene-view-models';
 
@@ -81,6 +82,10 @@ export class ItemExtrapolatorService {
   // during extrapolation (the fall reaching the seabed line), and it gates real structure — the buried shadow, the
   // wavy sand clip and the spin-freeze — which can't be moved imperatively, so that one edge republishes structure.
   private publishedLanded = new Set<string>();
+  // Frame-aware reconciliation τ for the bomb offset, measured from the `tick` cadence (never `ingest` — the
+  // snapshot cadence isn't a frame), mirroring the player extrapolator so a slow client stretches the shove glide
+  // across enough frames instead of snapping it. See ADR 0003.
+  private readonly frameTau = new FrameTauTracker();
 
   // Structure signal: changes on `ingest` (a snapshot) and on a `landed` rising edge. Drives the `@for` (incl. its
   // depth re-sort) and the `?debug` box overlay.
@@ -121,9 +126,9 @@ export class ItemExtrapolatorService {
         });
       } else if (item.type === 'bomb') {
         // The bomb re-anchors both axes together each snapshot, carrying the on-screen gap forward as a decaying
-        // offset (mirrors the player extrapolator) so a shove — a velocity change the client never predicted —
-        // glides in over ~3τ instead of snapping. In steady drift the client already matches the server, so the
-        // gap is ~0 and the offset is inert.
+        // offset (mirrors the player extrapolator, including its frame-aware τ) so a shove — a velocity change the
+        // client never predicted — glides in over ~3τ instead of snapping. In steady drift the client already
+        // matches the server, so the gap is ~0 and the offset is inert.
         const moved =
           baseline.x0 !== item.x ||
           baseline.vx !== vx ||
@@ -142,7 +147,7 @@ export class ItemExtrapolatorService {
               Math.max(0, now - baseline.hStart) / 1000,
               ITEM_HALF_WIDTH,
               1 - ITEM_HALF_WIDTH,
-            ) + decayedOffset(baseline.offsetX, dtMs, OFFSET_DECAY_TAU_MS),
+            ) + decayedOffset(baseline.offsetX, dtMs, this.frameTau.tauMs),
             ITEM_HALF_WIDTH,
             1 - ITEM_HALF_WIDTH,
           );
@@ -153,7 +158,7 @@ export class ItemExtrapolatorService {
                 ITEM_HALF_HEIGHT,
                 baseline.y0 + baseline.vy * ((now - baseline.vStart) / 1000),
               ),
-            ) + decayedOffset(baseline.offsetY, dtMs, OFFSET_DECAY_TAU_MS),
+            ) + decayedOffset(baseline.offsetY, dtMs, this.frameTau.tauMs),
             ITEM_HALF_HEIGHT,
             restY,
           );
@@ -193,6 +198,7 @@ export class ItemExtrapolatorService {
   // live `frame`; republishes the structure signal ONLY when the set of landed items changed (a `landed` rising
   // edge), so plain falling motion costs no change detection.
   public tick(items: readonly Item[], now: number): void {
+    this.frameTau.measure(now);
     this._frame = this.compute(items, now);
 
     const landed = landedIds(this._frame);
@@ -249,7 +255,9 @@ export class ItemExtrapolatorService {
 
   // Bomb render: constant-velocity 2D drift (reflective horizontal bounce + vertical sink toward the seabed, no
   // gravity) plus the decaying reconciliation offset captured on each re-anchor (see `ingest`), so an unpredicted
-  // shove glides in over ~3τ instead of snapping. `landed` flips at the seabed line for the rising-edge sand puff.
+  // shove glides in over ~3τ instead of snapping — at the frame-aware τ the player extrapolator also uses, so a
+  // slow client can't collapse the glide in one frame (ADR 0003). `landed` flips at the seabed line for the
+  // rising-edge sand puff.
   private renderBomb(item: Item, baseline: ItemBaseline | undefined, now: number): RenderedItem {
     const x0 = baseline?.x0 ?? item.x;
     const vx = baseline?.vx ?? item.vx ?? 0;
@@ -261,9 +269,9 @@ export class ItemExtrapolatorService {
     const spin = spinFor(item.id, item.type);
     const dtMs = baseline === undefined ? 0 : now - baseline.offsetStamp;
     const offsetX =
-      baseline === undefined ? 0 : decayedOffset(baseline.offsetX, dtMs, OFFSET_DECAY_TAU_MS);
+      baseline === undefined ? 0 : decayedOffset(baseline.offsetX, dtMs, this.frameTau.tauMs);
     const offsetY =
-      baseline === undefined ? 0 : decayedOffset(baseline.offsetY, dtMs, OFFSET_DECAY_TAU_MS);
+      baseline === undefined ? 0 : decayedOffset(baseline.offsetY, dtMs, this.frameTau.tauMs);
     const bx = clamp(
       reflect(x0, vx, Math.max(0, now - hStart) / 1000, ITEM_HALF_WIDTH, 1 - ITEM_HALF_WIDTH) +
         offsetX,

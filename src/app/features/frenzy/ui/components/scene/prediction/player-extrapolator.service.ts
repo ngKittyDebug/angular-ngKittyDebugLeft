@@ -8,14 +8,8 @@ import type { Player, PlayerEffectKind } from '@game/frenzy/types';
 import { isSad } from '../../../../data/logic/is-sad';
 import { EFFECT_BADGE } from '../../../../data/models/effect-badge';
 import { spriteRenderFor } from '../../../constants/pokemon-registry';
-import {
-  clamp,
-  decayedOffset,
-  frameAwareTau,
-  OFFSET_DECAY_TAU_MS,
-  reflect,
-  reflectDirection,
-} from './drift-math';
+import { clamp, decayedOffset, reflect, reflectDirection } from './drift-math';
+import { FrameTauTracker } from './frame-tau';
 import type { RenderedAura, RenderedPlayer } from '../scene-view-models';
 
 // Aura descriptor per active effect kind: the CSS class plus the render mode the template branches on (so the
@@ -41,14 +35,6 @@ const SHADOW_TINT_PRECEDENCE: readonly PlayerEffectKind[] = [
   'shield',
   'wellFed',
 ];
-
-// EMA weight for the frame-interval estimate that feeds the frame-aware reconciliation τ (higher = adapts faster
-// to an FPS change, noisier). Light smoothing so a single hitched frame doesn't spike τ.
-const FRAME_EMA_WEIGHT = 0.2;
-
-// Frame deltas above this (ms, ~4fps) are treated as a stall/hitch and skipped, so a backgrounded tab or GC pause
-// can't bloat the average and freeze the glide. Genuine low-end frames (down to ~4fps) still update it.
-const FRAME_DT_CAP_MS = 250;
 
 interface PlayerBaseline {
   x0: number;
@@ -82,13 +68,10 @@ export class PlayerExtrapolatorService {
   // field that changes mid-extrapolation (facing is a flag written imperatively; hp/stage/effects come from a
   // snapshot), so per-frame motion never triggers change detection. See ADR 0001.
   private _frame: readonly RenderedPlayer[] = [];
-  // Smoothed frame interval (ms), measured in `tick`; 0 until the first interval is seen. Feeds the frame-aware
-  // reconciliation τ so a slow tablet stretches the correction glide across enough frames instead of snapping it.
-  private smoothedFrameMs = 0;
-  private lastTickNow = 0;
-  // Current reconciliation τ: the base on a fast client, raised on a slow one (frame-aware). Read by
-  // compute/sync/predictSteer so every reconciliation read this frame agrees. See ADR 0003.
-  private tauMs = OFFSET_DECAY_TAU_MS;
+  // Frame-aware reconciliation τ, measured from the `tick` cadence (never `ingest` — the ~300ms snapshot cadence
+  // isn't a frame) so a slow tablet stretches the correction glide across enough frames instead of snapping it.
+  // Read by compute/sync/predictSteer so every reconciliation read this frame agrees. See ADR 0003.
+  private readonly frameTau = new FrameTauTracker();
 
   // Structure signal: changes only on `ingest` (a server snapshot). Drives the `@for` and the `?debug` box overlay.
   public readonly rendered = this._rendered.asReadonly();
@@ -118,7 +101,7 @@ export class PlayerExtrapolatorService {
     evolving: ReadonlyMap<string, number>,
     now: number,
   ): void {
-    this.measureFrame(now);
+    this.frameTau.measure(now);
     this._frame = this.compute(players, myId, evolving, now);
   }
 
@@ -177,26 +160,6 @@ export class PlayerExtrapolatorService {
       offsetY: 0,
       offsetStamp: now,
     });
-  }
-
-  // Track the smoothed frame interval from the rAF cadence and derive the frame-aware reconciliation τ. Only `tick`
-  // calls this (one per animation frame); `ingest` runs on the ~300ms snapshot cadence and must not be mistaken for
-  // a frame. Non-positive deltas and long stalls (backgrounded tab, GC pause) are skipped so they can't bloat the
-  // estimate and freeze the glide.
-  private measureFrame(now: number): void {
-    if (this.lastTickNow !== 0) {
-      const dt = now - this.lastTickNow;
-
-      if (dt > 0 && dt <= FRAME_DT_CAP_MS) {
-        this.smoothedFrameMs =
-          this.smoothedFrameMs === 0
-            ? dt
-            : this.smoothedFrameMs * (1 - FRAME_EMA_WEIGHT) + dt * FRAME_EMA_WEIGHT;
-        this.tauMs = frameAwareTau(OFFSET_DECAY_TAU_MS, this.smoothedFrameMs);
-      }
-    }
-
-    this.lastTickNow = now;
   }
 
   // Reset a player's baseline only when the server actually moved it (new snapshot position/velocity).
@@ -370,7 +333,7 @@ export class PlayerExtrapolatorService {
   ): number {
     return clamp(
       reflect(anchor, velocity, elapsedSeconds, min, max) +
-        decayedOffset(offset, offsetAgeMs, this.tauMs),
+        decayedOffset(offset, offsetAgeMs, this.frameTau.tauMs),
       min,
       max,
     );

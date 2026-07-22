@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { Item } from '@game/frenzy/types';
 
+import { MAX_OFFSET_COLLAPSE_PER_FRAME } from './drift-math';
 import { ItemExtrapolatorService } from './item-extrapolator.service';
 
 function item(partial: Partial<Item> & Pick<Item, 'id'>): Item {
@@ -83,6 +84,36 @@ describe('ItemExtrapolatorService', () => {
     service.tick([item({ id: 'b1', type: 'bomb', x: 0.5, y: 0.5, vx: 0, vy: 0.08 })], 2000);
     // Converged position lives in the live `frame` (still falling → no `landed` edge → no structure republish).
     expect(service.frame()[0].y).toBeCloseTo(0.58, 2);
+  });
+
+  it('stretches a bomb reconciliation glide on a slow client so no single frame snaps it', () => {
+    const service = new ItemExtrapolatorService();
+    const slowFrameMs = 60; // ~17fps
+    const drifting = item({ id: 'b1', type: 'bomb', x: 0.5, y: 0.3, vx: 0, vy: 0 });
+
+    // Establish the baseline, then warm the frame-interval estimate with several slow frames.
+    service.ingest([drifting], 0);
+
+    for (let frame = 1; frame <= 12; frame += 1) {
+      service.tick([drifting], frame * slowFrameMs);
+    }
+
+    // The server now reports the bomb far from the client's track (a shove it never predicted): the on-screen gap
+    // of ~0.3 is captured as a reconciliation offset.
+    const correctionNow = 13 * slowFrameMs;
+    const shoved = item({ id: 'b1', type: 'bomb', x: 0.5, y: 0.6, vx: 0, vy: 0 });
+
+    service.ingest([shoved], correctionNow);
+    const gap = Math.abs(0.6 - service.frame()[0].y);
+
+    // Advance one slow frame: the bomb must glide, not snap — at most MAX_OFFSET_COLLAPSE_PER_FRAME of the gap
+    // closes in this single frame (frame-aware τ, mirroring the player extrapolator). With the plain wall-clock τ
+    // ~half the gap would vanish here.
+    service.tick([shoved], correctionNow + slowFrameMs);
+    const remaining = Math.abs(0.6 - service.frame()[0].y);
+
+    expect(gap).toBeGreaterThan(0.2);
+    expect(remaining).toBeGreaterThanOrEqual((1 - MAX_OFFSET_COLLAPSE_PER_FRAME) * gap - 1e-6);
   });
 
   it('flips a bomb to landed once its drift sinks it to the seabed line', () => {
