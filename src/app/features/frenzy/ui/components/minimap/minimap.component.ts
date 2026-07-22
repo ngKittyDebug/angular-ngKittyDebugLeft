@@ -113,7 +113,7 @@ export class MinimapComponent {
   // The crowned player id (alive hp-leader; null when there's no meaningful leader, e.g. a lone survivor). Marks
   // that player's blip with a crown and gates the compact leader chip — same gated source as the scene + pill.
   public readonly crownId = input<string | null>(null);
-  public readonly myId = input.required<string | null>();
+  public readonly myId = input<string | null>(null);
   public readonly online = input.required<number>();
   public readonly players = input.required<readonly Player[]>();
 
