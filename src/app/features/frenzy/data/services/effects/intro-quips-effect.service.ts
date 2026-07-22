@@ -1,5 +1,7 @@
 import { effect, inject, Injectable } from '@angular/core';
 
+import { FRENZY } from '@game/frenzy/config';
+
 import type { OwnedFloat } from '../../models/floating-message';
 import { FrenzyStore } from '../../store/frenzy.store';
 import { FloatingMessagesStore } from './floating-messages.store';
@@ -7,6 +9,8 @@ import { createTransientId } from './transient-list';
 
 // Number of phrases in the `frenzy.scene.intro` set; a join picks a random 2–3 of them.
 const INTRO_PHRASE_COUNT = 9;
+// How long each intro quip stays on screen before fading.
+const INTRO_FLOAT_TTL_MS = 3500;
 
 /**
  * On every spawn (each null → alive transition of the player's own Pokémon, incl. respawns), float a random
@@ -41,9 +45,9 @@ export class IntroQuipsEffect {
         ownerId,
         tone: 'positive',
         textKey: `intro.${index}`,
-        durationMs: 3500,
+        durationMs: INTRO_FLOAT_TTL_MS,
         // Above the spawn/mood quips so the intro line leads the column.
-        priority: 75,
+        priority: FRENZY.floatPriority.intro,
       };
 
       this.floats.pushOwned(quip);

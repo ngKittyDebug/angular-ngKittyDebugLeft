@@ -127,7 +127,7 @@
         class="scene__blast"
         aria-hidden="true"
         [leftPawScenePosition]="{ x: blast.x, y: blast.y }"
-        [style.width.%]="blast.radius * 200"
+        [style.width.%]="blast.radius * blastRadiusToWidthPercent"
       >
         <span class="scene__blast-ring"></span>
         <span class="scene__blast-ring scene__blast-ring--secondary"></span>
