@@ -4,7 +4,7 @@ import { TranslocoTestingModule } from '@jsverse/transloco';
 import type { Stage } from '@game/frenzy/types';
 import { describe, expect, it } from 'vitest';
 
-import { bodyForAppearance } from '../../constants/pokemon-registry';
+import { bodyForAppearance } from '../../../data/constants/pokemon-body';
 import { CurrentPokemonStatusComponent } from './current-pokemon-status.component';
 
 function createFixture(

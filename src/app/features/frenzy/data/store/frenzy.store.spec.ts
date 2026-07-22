@@ -16,7 +16,7 @@ import type {
 import { FrenzyStore } from './frenzy.store';
 import { FrenzySocketService } from '../services/frenzy-socket.service';
 import { PlayerPersistenceService } from '../services/player-persistence.service';
-import { bodyForAppearance } from '../../ui/constants/pokemon-registry';
+import { bodyForAppearance } from '../constants/pokemon-body';
 
 function human(id: string, hp: number, status: PlayerStatus = 'alive'): HumanPlayer {
   return {

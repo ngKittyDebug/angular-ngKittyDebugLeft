@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { Player, ServerState, SlimPlayer } from '@game/frenzy/types';
 
-import { bodyForAppearance } from '../../ui/constants/pokemon-registry';
+import { bodyForAppearance } from '../constants/pokemon-body';
 import { applyServerMessage } from './apply-server-message';
 
 const PLAYER: Player = {
