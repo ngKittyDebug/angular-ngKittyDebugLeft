@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Player, ServerMessage } from '@game/frenzy/types';
 
-import { bodyForAppearance } from '../../../ui/constants/pokemon-registry';
+import { bodyForAppearance } from '../../constants/pokemon-body';
 import { effectContext } from './effect-context.mock';
 import { FloatingMessagesStore } from './floating-messages.store';
 import { PresenceTracker } from './presence-tracker.service';

@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Player } from '@game/frenzy/types';
 
-import { bodyForAppearance } from '../../../ui/constants/pokemon-registry';
+import { bodyForAppearance } from '../../constants/pokemon-body';
 import { FrenzyStore } from '../../store/frenzy.store';
 import { FloatingMessagesStore } from './floating-messages.store';
 import { IntroQuipsEffect } from './intro-quips-effect.service';

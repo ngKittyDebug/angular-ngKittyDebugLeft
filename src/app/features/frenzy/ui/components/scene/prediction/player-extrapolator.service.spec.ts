@@ -4,7 +4,7 @@ import { FRENZY } from '@game/frenzy/config';
 import { ANGRY_BOMB_NPC } from '@game/frenzy/definition/npcs/angry-bomb';
 import type { HumanPlayer, NpcPlayer, Player } from '@game/frenzy/types';
 
-import { bodyForAppearance } from '../../../constants/pokemon-registry';
+import { bodyForAppearance } from '../../../../data/constants/pokemon-body';
 import { MAX_OFFSET_COLLAPSE_PER_FRAME } from './drift-math';
 import { PlayerExtrapolatorService } from './player-extrapolator.service';
 

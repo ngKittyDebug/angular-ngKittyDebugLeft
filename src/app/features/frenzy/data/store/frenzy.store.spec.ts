@@ -15,8 +15,9 @@ import type {
 
 import { FrenzyStore } from './frenzy.store';
 import { FrenzySocketService } from '../services/frenzy-socket.service';
+import { createFrenzySocketServiceMock } from '../services/frenzy-socket.service.mock';
 import { PlayerPersistenceService } from '../services/player-persistence.service';
-import { bodyForAppearance } from '../../ui/constants/pokemon-registry';
+import { bodyForAppearance } from '../constants/pokemon-body';
 
 function human(id: string, hp: number, status: PlayerStatus = 'alive'): HumanPlayer {
   return {
@@ -75,22 +76,14 @@ describe('FrenzyStore — NPC excluded from human-facing UI (D11)', () => {
   let store: InstanceType<typeof FrenzyStore>;
 
   function setup(): void {
-    messages$ = new Subject<ServerMessage>();
-    send = vi.fn();
+    const socketMock = createFrenzySocketServiceMock();
+
+    messages$ = socketMock.messages$;
+    send = socketMock.send;
     TestBed.configureTestingModule({
       providers: [
         FrenzyStore,
-        {
-          provide: FrenzySocketService,
-          useValue: {
-            messages$: messages$.asObservable(),
-            status: signal('open'),
-            stale: signal(false),
-            connect: vi.fn(),
-            disconnect: vi.fn(),
-            send,
-          },
-        },
+        { provide: FrenzySocketService, useValue: socketMock },
         {
           provide: PlayerPersistenceService,
           useValue: { getOrCreateToken: () => 't', saveName: vi.fn(), saveAppearance: vi.fn() },
@@ -121,14 +114,18 @@ describe('FrenzyStore — NPC excluded from human-facing UI (D11)', () => {
     expect(store.disconnectedCount()).toBe(1);
   });
 
-  it('never crowns the NPC and does not count it toward the ≥2-alive gate', () => {
+  it('does not count the NPC toward the ≥2-alive crown gate', () => {
     setup();
     // One human + the NPC: the NPC must not count as the second alive, so no crown shows.
     messages$.next(snapshot([human('a', 50), bombNpc('bomb', 999)]));
-    expect(store.crownId()).toBeNull();
 
-    // Two humans: the higher-hp human wins, the NPC (highest hp overall) is ignored.
+    expect(store.crownId()).toBeNull();
+  });
+
+  it('never crowns the NPC — the higher-hp human wins while the NPC out-hps everyone', () => {
+    setup();
     messages$.next(snapshot([human('a', 80), human('b', 30), bombNpc('bomb', 999)]));
+
     expect(store.crownId()).toBe('a');
   });
 

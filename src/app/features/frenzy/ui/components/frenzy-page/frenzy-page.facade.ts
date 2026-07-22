@@ -8,7 +8,8 @@ import { FrenzyEffectsService } from '../../../data/services/frenzy-effects.serv
 import { PlayerPersistenceService } from '../../../data/services/player-persistence.service';
 import { FrenzyStatsStore } from '../../../data/store/frenzy-stats.store';
 import { FrenzyStore } from '../../../data/store/frenzy.store';
-import { bodyForAppearance, knownLine } from '../../constants/pokemon-registry';
+import { bodyForAppearance } from '../../../data/constants/pokemon-body';
+import { knownLine } from '../../constants/pokemon-registry';
 import { DeathEpitaphService } from '../../services/death-epitaph.service';
 import type { Epitaph } from '../../services/death-epitaph.service';
 import type { PickerSubmission } from '../pokemon-picker/pokemon-picker.component';
