@@ -30,6 +30,8 @@ const LABELS: Record<string, string> = {
 };
 
 const FRENZY_DEBUG = {
+  panelTitle: 'readout',
+  fpsLabel: 'FPS',
   infoAriaLabel: 'Details: {{metric}}',
   sections: { what: 'What', why: 'Why', interpret: 'How to read' },
   metrics: Object.fromEntries(

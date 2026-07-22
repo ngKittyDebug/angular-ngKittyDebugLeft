@@ -263,6 +263,7 @@ exports[`frenzy definition contract > keeps the flat FRENZY read-model values st
     "evolved": 70,
     "fainted": 100,
     "happy": 30,
+    "intro": 75,
     "laying": 60,
     "npcAppeared": 20,
     "npcDied": 100,

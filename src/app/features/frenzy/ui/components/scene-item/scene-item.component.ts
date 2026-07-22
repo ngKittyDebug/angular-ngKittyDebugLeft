@@ -9,6 +9,7 @@ import {
   viewChild,
 } from '@angular/core';
 import type { ElementRef } from '@angular/core';
+import { TranslocoDirective } from '@jsverse/transloco';
 
 import { FRENZY } from '@game/frenzy/config';
 
@@ -30,7 +31,7 @@ const SENSOR_FAST_S = 0.4; // duration at the last shove before it blows
  */
 @Component({
   selector: 'left-paw-scene-item',
-  imports: [ItemSpritePipe],
+  imports: [ItemSpritePipe, TranslocoDirective],
   templateUrl: './scene-item.component.html',
   styleUrl: './scene-item.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

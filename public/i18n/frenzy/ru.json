@@ -195,6 +195,7 @@
     "volumeAriaLabel": "Громкость звука"
   },
   "scene": {
+    "ariaLabel": "Сцена кормёжки",
     "pokeAriaLabel": "Потыкать своего покемона",
     "pokeNpcAriaLabel": "Потыкать злую бомбу",
     "floorLabel": "Дно",

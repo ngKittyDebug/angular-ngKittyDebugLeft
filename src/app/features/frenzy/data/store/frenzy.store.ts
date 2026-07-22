@@ -23,6 +23,9 @@ import { applyServerMessage } from './apply-server-message';
 import { FrenzySocketService } from '../services/frenzy-socket.service';
 import { PlayerPersistenceService } from '../services/player-persistence.service';
 
+// Business cap of the leaderboard widget: only the top-N players by the ranking below are listed.
+const LEADERBOARD_SIZE = 5;
+
 export type ConnectionStatus =
   'idle' | 'connecting' | 'open' | 'closed' | 'roomFull' | 'reconnecting';
 
@@ -103,7 +106,7 @@ export const FrenzyStore = signalStore(
 
             return aDown - bDown || b.hp - a.hp;
           })
-          .slice(0, 5),
+          .slice(0, LEADERBOARD_SIZE),
       ),
       // The crowned player (alive hp-leader, ties by id) via the shared selector — the single source the scene
       // marker, the leaderboard pill and the minimap all agree on, so the crown can't show on one and not another.

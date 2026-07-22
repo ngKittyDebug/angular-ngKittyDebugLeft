@@ -1,5 +1,6 @@
 import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
+import { TranslocoTestingModule } from '@jsverse/transloco';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PerfLogPanelComponent } from './perf-log-panel.component';
@@ -7,6 +8,23 @@ import { DebugSettingsStore } from '../debug-settings.store';
 import type { PerfMetricsSnapshot } from '../perf-metrics';
 import { PerfSampleStore } from '../perf-sample.store';
 import { FrenzyStorageService } from '../../data/services/frenzy-storage.service';
+
+// Stand-in frenzy-debug perf-log labels matching the production English values the buttons/fields are queried by.
+const FRENZY_DEBUG = {
+  perfLog: {
+    header: 'perf-log',
+    fields: { label: 'label', mode: 'mode', everySeconds: 'every (s)', format: 'format', to: 'to' },
+    options: {
+      manual: 'manual',
+      auto: 'auto',
+      clipboard: 'clipboard',
+      textarea: 'textarea',
+      download: 'download',
+    },
+    actions: { capture: 'capture', export: 'export', clear: 'clear' },
+    table: { label: 'label', fps: 'fps', p1: 'p1', jank: 'jank', loop: 'loop' },
+  },
+};
 
 function snapshot(): PerfMetricsSnapshot {
   return {
@@ -70,6 +88,12 @@ describe('PerfLogPanelComponent', () => {
   beforeEach(() => {
     localStorage.clear();
     TestBed.configureTestingModule({
+      imports: [
+        TranslocoTestingModule.forRoot({
+          langs: { en: { 'frenzy-debug': FRENZY_DEBUG } },
+          translocoConfig: { availableLangs: ['en'], defaultLang: 'en' },
+        }),
+      ],
       providers: [FrenzyStorageService, DebugSettingsStore, PerfSampleStore],
     });
   });

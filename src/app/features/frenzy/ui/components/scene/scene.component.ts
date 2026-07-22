@@ -76,6 +76,10 @@ const ITEM_HIT_HALF_X = (FRENZY.physicalSizePx.item / 2 + ITEM_TAP_PADDING_PX) /
 const ITEM_HIT_HALF_Y =
   (FRENZY.physicalSizePx.item / 2 + ITEM_TAP_PADDING_PX) / FRENZY.world.height;
 
+// Blast visual size from the contract's radius (a fraction of the world width): ×2 turns the radius into a
+// diameter, ×100 turns the fraction into a CSS percentage.
+const BLAST_RADIUS_TO_WIDTH_PERCENT = 200;
+
 @Component({
   selector: 'left-paw-scene',
   imports: [
@@ -224,6 +228,8 @@ export class SceneComponent {
   protected readonly itemSize = `${FRENZY.physicalSizePx.item}px`;
   // The bomb's larger collidable size (sensor-horn reach) — for the `?debug` box so it frames the real trigger area.
   protected readonly bombSize = `${FRENZY.physicalSizePx.bomb}px`;
+  // Radius→CSS-width factor for the blast ring (see the module constant).
+  protected readonly blastRadiusToWidthPercent = BLAST_RADIUS_TO_WIDTH_PERCENT;
   // Per-category `?debug` overlay toggles parsed from the query param (`?debug` = all; `?debug=pokemon-borders`,
   // `item-borders`, `speed` = pick) — lets a session draw just the boxes it needs against the sprite silhouette.
   // Snapshot read; no reactivity.

@@ -1,6 +1,10 @@
 <!-- ?debug=perf perf-log: capture (manual/auto) + export (format × destination) + sample table for on-device A/B.
      Dev-only, gated behind the master ?debug=perf flag. -->
-<div class="perf-log" [class.perf-log--collapsed]="collapsed()">
+<div
+  *transloco="let t; prefix: 'frenzy-debug.perfLog'"
+  class="perf-log"
+  [class.perf-log--collapsed]="collapsed()"
+>
   <!-- Header doubles as the collapse toggle (collapsed by default): when closed, only this bar shows, so the panel
        stops covering the scene; the sample count rides along as a one-glance summary. -->
   <button
@@ -10,25 +14,25 @@
     (click)="toggleCollapsed()"
   >
     <span class="perf-log__chevron">{{ collapsed() ? '▸' : '▾' }}</span>
-    <span>perf-log</span>
+    <span>{{ t('header') }}</span>
     <span class="perf-log__count">({{ sampleStore.samples().length }})</span>
   </button>
 
   @if (!collapsed()) {
     <div class="perf-log__controls">
       <label class="perf-log__field">
-        label
+        {{ t('fields.label') }}
         <input type="text" [value]="settings.perfLog().label" (input)="onLabel($event)" />
       </label>
       <label class="perf-log__field">
-        mode
+        {{ t('fields.mode') }}
         <select [value]="settings.perfLog().captureMode" (change)="onMode($event)">
-          <option value="manual">manual</option>
-          <option value="auto">auto</option>
+          <option value="manual">{{ t('options.manual') }}</option>
+          <option value="auto">{{ t('options.auto') }}</option>
         </select>
       </label>
       <label class="perf-log__field">
-        every (s)
+        {{ t('fields.everySeconds') }}
         <input
           type="number"
           min="1"
@@ -37,7 +41,8 @@
         />
       </label>
       <label class="perf-log__field">
-        format
+        {{ t('fields.format') }}
+        <!-- The format names (json/json+/csv) are identifiers, not copy — they render as-is. -->
         <select [value]="settings.perfLog().exportFormat" (change)="onFormat($event)">
           <option value="json-compact">json</option>
           <option value="json-pretty">json+</option>
@@ -45,17 +50,19 @@
         </select>
       </label>
       <label class="perf-log__field">
-        to
+        {{ t('fields.to') }}
         <select [value]="settings.perfLog().exportDestination" (change)="onDestination($event)">
-          <option value="clipboard">clipboard</option>
-          <option value="textarea">textarea</option>
-          <option value="download">download</option>
+          <option value="clipboard">{{ t('options.clipboard') }}</option>
+          <option value="textarea">{{ t('options.textarea') }}</option>
+          <option value="download">{{ t('options.download') }}</option>
         </select>
       </label>
       <div class="perf-log__buttons">
-        <button type="button" (click)="capture()">capture</button>
-        <button type="button" (click)="exportLog()">export</button>
-        <button type="button" (click)="clear()">clear ({{ sampleStore.samples().length }})</button>
+        <button type="button" (click)="capture()">{{ t('actions.capture') }}</button>
+        <button type="button" (click)="exportLog()">{{ t('actions.export') }}</button>
+        <button type="button" (click)="clear()">
+          {{ t('actions.clear') }} ({{ sampleStore.samples().length }})
+        </button>
       </div>
     </div>
 
@@ -67,11 +74,11 @@
       <table class="perf-log__table">
         <thead>
           <tr>
-            <th>label</th>
-            <th>fps</th>
-            <th>p1</th>
-            <th>jank</th>
-            <th>loop</th>
+            <th>{{ t('table.label') }}</th>
+            <th>{{ t('table.fps') }}</th>
+            <th>{{ t('table.p1') }}</th>
+            <th>{{ t('table.jank') }}</th>
+            <th>{{ t('table.loop') }}</th>
           </tr>
         </thead>
         <tbody>
