@@ -7,7 +7,13 @@ import {
   output,
 } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { TuiIcon } from '@taiga-ui/core';
+import {
+  TuiButton,
+  TuiIcon,
+  TuiInput,
+  TuiTextfieldComponent,
+  TuiTextfieldOptionsDirective,
+} from '@taiga-ui/core';
 
 import type { ItemType, JoinRejectReason } from '@game/frenzy/types';
 
@@ -23,7 +29,16 @@ export interface PickerSubmission {
 
 @Component({
   selector: 'left-paw-pokemon-picker',
-  imports: [ItemSpritePipe, PokemonSpritePipe, TranslocoDirective, TuiIcon],
+  imports: [
+    ItemSpritePipe,
+    PokemonSpritePipe,
+    TranslocoDirective,
+    TuiButton,
+    TuiIcon,
+    TuiInput,
+    TuiTextfieldComponent,
+    TuiTextfieldOptionsDirective,
+  ],
   templateUrl: './pokemon-picker.component.html',
   styleUrl: './pokemon-picker.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -53,29 +53,8 @@
     opacity: 0.6;
   }
 
-  &__input {
+  &__field {
     width: 100%;
-    padding: 0.75rem 1rem;
-    background: color-mix(in srgb, var(--tui-text-primary) 8%, transparent);
-    border: 1px solid color-mix(in srgb, var(--tui-text-primary) 18%, transparent);
-    border-radius: 0.625rem;
-    color: inherit;
-    font-size: 1rem;
-    transition:
-      border-color 0.15s,
-      box-shadow 0.15s,
-      background 0.15s;
-
-    &::placeholder {
-      opacity: 0.4;
-    }
-
-    &:focus {
-      outline: none;
-      background: color-mix(in srgb, var(--tui-text-primary) 11%, transparent);
-      border-color: var(--tui-status-positive);
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--tui-status-positive) 25%, transparent);
-    }
   }
 
   &__lines {
@@ -249,43 +228,10 @@
     font-weight: 600;
   }
 
+  // Visuals (gradient, glow, hover lift, disabled dim) live in the `frenzy-submit` tuiButton appearance
+  // (src/styles/buttons-taiga-appearances.scss); only the layout offset stays local.
   &__submit {
     margin-top: 0.25rem;
-    padding: 0.875rem 2rem;
-    background: linear-gradient(
-      135deg,
-      var(--tui-status-positive),
-      color-mix(in srgb, var(--tui-status-positive) 65%, var(--tui-status-info))
-    );
-    border: none;
-    border-radius: 0.75rem;
-    color: #04130d;
-    font-size: 1.05rem;
-    font-weight: 700;
-    letter-spacing: 0.01em;
-    cursor: pointer;
-    box-shadow: 0 8px 22px -8px color-mix(in srgb, var(--tui-status-positive) 70%, transparent);
-    transition:
-      transform 0.15s,
-      box-shadow 0.15s,
-      filter 0.15s,
-      opacity 0.15s;
-
-    &:disabled {
-      cursor: not-allowed;
-      opacity: 0.4;
-      box-shadow: none;
-    }
-
-    &:not(:disabled):hover {
-      transform: translateY(-2px);
-      filter: brightness(1.08);
-      box-shadow: 0 12px 28px -8px color-mix(in srgb, var(--tui-status-positive) 80%, transparent);
-    }
-
-    &:not(:disabled):active {
-      transform: translateY(0);
-    }
   }
 
   // Staggered tile reveal on open.
@@ -369,8 +315,7 @@
   }
 
   .picker__line,
-  .picker__line:hover .picker__sprite,
-  .picker__submit {
+  .picker__line:hover .picker__sprite {
     transition: none;
   }
 }
