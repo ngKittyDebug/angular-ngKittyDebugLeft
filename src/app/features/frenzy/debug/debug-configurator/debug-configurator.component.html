@@ -1,7 +1,11 @@
 <!-- ?debug=perf configurator: the render levers for the on-device A/B (render/players/decor backend, DPR + frame-pacing
      caps, sprite freeze, per-layer hides, decor probes). Choices persisted via DebugSettingsStore. Dev-only, gated
      behind the master ?debug=perf flag. The per-metric toggles live on their rows in the readout, not here. -->
-<div class="debug-configurator" [class.debug-configurator--collapsed]="collapsed()">
+<div
+  *transloco="let t; prefix: 'frenzy-debug.configurator'"
+  class="debug-configurator"
+  [class.debug-configurator--collapsed]="collapsed()"
+>
   <!-- Header doubles as the collapse toggle (collapsed by default): when closed, only this bar shows, so the
        configurator stops covering the scene. -->
   <button
@@ -11,12 +15,12 @@
     (click)="toggleCollapsed()"
   >
     <span class="debug-configurator__chevron">{{ collapsed() ? '▸' : '▾' }}</span>
-    <span>config</span>
+    <span>{{ t('header') }}</span>
   </button>
 
   @if (!collapsed()) {
     <!-- Item render backend toggle (DOM vs hybrid canvas) + the canvas DPR cap, for the on-device A/B. -->
-    <p class="debug-configurator__title">render</p>
+    <p class="debug-configurator__title">{{ t('sections.render') }}</p>
     <div class="debug-configurator__chips">
       @for (mode of renderModes; track mode) {
         <button
@@ -31,7 +35,7 @@
     </div>
 
     <!-- Player sprite render backend (DOM animated GIF vs hybrid canvas) — A/B'd independently of the item backend. -->
-    <p class="debug-configurator__title">players</p>
+    <p class="debug-configurator__title">{{ t('sections.players') }}</p>
     <div class="debug-configurator__chips">
       @for (mode of renderModes; track mode) {
         <button
@@ -47,7 +51,7 @@
 
     <!-- Decor backdrop render backend (DOM swaying-SVG kelp vs hybrid canvas, ADR 0007) — A/B'd independently of the
          item render backend above. -->
-    <p class="debug-configurator__title">decor</p>
+    <p class="debug-configurator__title">{{ t('sections.decor') }}</p>
     <div class="debug-configurator__chips">
       @for (mode of renderModes; track mode) {
         <button
@@ -66,7 +70,7 @@
       store.playerSpritesMode() === 'canvas' ||
       store.decorMode() === 'canvas'
     ) {
-      <p class="debug-configurator__title">canvas dpr</p>
+      <p class="debug-configurator__title">{{ t('sections.canvasDpr') }}</p>
       <div class="debug-configurator__chips">
         @for (cap of dprCaps; track cap) {
           <button
@@ -83,7 +87,7 @@
 
     <!-- Frame-pacing cap (slice 13): hold a steady FPS instead of a jittery 17↔30 swing on a weak tablet. `off` =
          uncapped (desktop default); a target ≥ the device rate stays inactive there. Persisted via DebugSettingsStore. -->
-    <p class="debug-configurator__title">frame cap</p>
+    <p class="debug-configurator__title">{{ t('sections.frameCap') }}</p>
     <div class="debug-configurator__chips">
       @for (cap of frameCaps; track cap) {
         <button
@@ -99,19 +103,19 @@
 
     <!-- Freeze player sprites: render a static first frame instead of the animated GIF (kills per-frame sprite decode
          — the FPS lever for weak tablets). On-device A/B; persisted via DebugSettingsStore. -->
-    <p class="debug-configurator__title">sprites</p>
+    <p class="debug-configurator__title">{{ t('sections.sprites') }}</p>
     <label class="debug-configurator__row">
       <input
         type="checkbox"
         [checked]="store.freezeSprites()"
         (change)="store.setFreezeSprites(!store.freezeSprites())"
       />
-      freeze (static)
+      {{ t('freezeStatic') }}
     </label>
 
     <!-- Scene render layers: uncheck one to HIDE that layer (in both DOM and canvas mode) and watch the FPS — bisects
          which layer costs the most fill-rate on a weak device. Persisted via DebugSettingsStore. -->
-    <p class="debug-configurator__title">scene layers</p>
+    <p class="debug-configurator__title">{{ t('sections.sceneLayers') }}</p>
     @for (layer of layerKeys; track layer) {
       <label class="debug-configurator__row">
         <input
@@ -127,7 +131,7 @@
          `freeze` stops decor animations (keeps it painted) → splits per-frame vs static cost; `noPlants`/`noRays` hide
          one sub-element; `flatRays` is the speculative neutral fix (rays without the screen blend). Each CHECKED =
          probe active (default off). Persisted via DebugSettingsStore. -->
-    <p class="debug-configurator__title">decor probe</p>
+    <p class="debug-configurator__title">{{ t('sections.decorProbe') }}</p>
     @for (probe of decorProbeKeys; track probe) {
       <label class="debug-configurator__row">
         <input

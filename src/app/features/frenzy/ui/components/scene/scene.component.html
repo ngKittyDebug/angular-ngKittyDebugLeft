@@ -12,7 +12,7 @@
   [class.scene--decor-no-rays]="decorProbe()?.noRays === true"
   [class.scene--decor-flat-rays]="decorProbe()?.flatRays === true"
   [class.scene--canvas-decor]="decorMode() === 'canvas'"
-  aria-label="Feeding frenzy scene"
+  [attr.aria-label]="t('ariaLabel')"
   (pointerdown)="onScenePointerDown($event)"
   (pointermove)="onScenePointerMove($event)"
   (pointerleave)="onScenePointerLeave()"

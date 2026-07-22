@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, effect, inject, input, signal } from '@angular/core';
+import { TranslocoDirective } from '@jsverse/transloco';
 
 import { DebugSettingsStore } from '../debug-settings.store';
 import type { CaptureMode, PerfExportDestination, PerfExportFormat } from '../debug-settings.store';
@@ -10,10 +11,11 @@ import { PerfSampleStore } from '../perf-sample.store';
  * export format + destination, run label), and review the captured samples in a small table for on-device A/B —
  * the way tablet measurements come back to the developer. Reads its frame snapshot via input (no scene-guts inject,
  * ADR 0004 §5); state/persistence lives in `PerfSampleStore`/`DebugSettingsStore`. Dev-only, rendered under the
- * master gate. This panel stays plain controls (no Taiga/i18n) by choice — a capture tool, not product UI.
+ * master gate. Labels go through the `frenzy-debug` i18n scope; option/metric values are identifiers and render as-is.
  */
 @Component({
   selector: 'left-paw-perf-log-panel',
+  imports: [TranslocoDirective],
   templateUrl: './perf-log-panel.component.html',
   styleUrl: './perf-log-panel.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
