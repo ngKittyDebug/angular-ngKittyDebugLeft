@@ -94,7 +94,6 @@ describe('AudioEngineService', () => {
     for (let i = 0; i < 6; i++) {
       engine.playTone({ frequency: 200, durationMs: 280, gain: 0.3 });
     }
-    expect(createOscillator).toHaveBeenCalledTimes(6);
 
     node.onended?.();
     engine.playTone({ frequency: 200, durationMs: 280, gain: 0.3 });

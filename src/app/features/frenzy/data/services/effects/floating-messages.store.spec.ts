@@ -45,7 +45,7 @@ describe('FloatingMessagesStore', () => {
     vi.useRealTimers();
   });
 
-  describe('owned floats', () => {
+  describe('Owned floats', () => {
     it('releases the first owned float immediately', () => {
       store.pushOwned(owned({ id: 'a' }));
 
@@ -94,7 +94,7 @@ describe('FloatingMessagesStore', () => {
     });
   });
 
-  describe('remove', () => {
+  describe('Remove', () => {
     it('drops a still-pending float so it never surfaces', () => {
       store.pushOwned(owned({ id: 'a' }));
       store.pushOwned(owned({ id: 'pending' }));
@@ -124,7 +124,7 @@ describe('FloatingMessagesStore', () => {
     });
   });
 
-  describe('orphan floats', () => {
+  describe('Orphan floats', () => {
     it('adds an orphan float to the overlay list immediately', () => {
       store.pushOrphan(orphan({ id: 'o', x: 0.2, y: 0.8 }));
 
@@ -141,7 +141,7 @@ describe('FloatingMessagesStore', () => {
     });
   });
 
-  describe('status floats', () => {
+  describe('Status floats', () => {
     it('stamps an owned status float with the owner, who and a kind-derived text key', () => {
       store.pushOwnedStatus('appeared', 'p3', 'Misty');
 
