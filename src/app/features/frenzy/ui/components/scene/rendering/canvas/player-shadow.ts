@@ -4,7 +4,7 @@
 // player's own DOM stack, so once the sprite moves to the canvas the DOM shadow would paint over it). Pure +
 // unit-tested; the canvas service applies the returned core colour + breathe transform via ctx.
 
-import { easeInOut, fractional, lerp } from '../shared/keyframe-easing';
+import { lerp, pingPong } from '../shared/keyframe-easing';
 
 // The ellipse is ~1.5× the sprite WIDTH with a flat 0.28 height profile (mirrors `.scene__shadow` width/height).
 export const SHADOW_WIDTH_SCALE = 1.5;
@@ -40,13 +40,6 @@ const BREATHE_MAX_SCALE = 1.06;
 export interface ShadowBreathe {
   opacity: number;
   scale: number;
-}
-
-// Eased there-and-back over a cycle (0 at phase 0/1, 1 at 0.5) — the shape the 0%/50%/100% breathe keyframes use.
-function pingPong(phase: number): number {
-  const t = fractional(phase);
-
-  return t < 0.5 ? easeInOut(t / 0.5) : easeInOut((1 - t) / 0.5);
 }
 
 // The tinted shadow's breathe (opacity + uniform scale) at draw-clock `now`; matches the 2.6s ease-in-out keyframes.

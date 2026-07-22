@@ -434,6 +434,6 @@ export class SceneComponent {
   // canvas draw order. Uses the live frame (not the throttled structure signal) so a fast faller is hit where it's
   // actually drawn. The bomb is included now (drawn on canvas), so a tap on it shoves it instead of steering past.
   private canvasHitItems(): readonly RenderedItem[] {
-    return [...this.facade.itemFrame()].sort((first, second) => first.y - second.y);
+    return sortByDepth(this.facade.itemFrame());
   }
 }
