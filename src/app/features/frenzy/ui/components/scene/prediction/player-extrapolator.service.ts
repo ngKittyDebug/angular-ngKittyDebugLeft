@@ -144,15 +144,22 @@ export class PlayerExtrapolatorService {
 
     const zone = FRENZY.playerDriftZone;
     const elapsed = (now - baseline.clientStartTime) / 1000;
-    const renderedX = clamp(
-      reflect(baseline.x0, baseline.vx, elapsed, zone.minX, zone.maxX) +
-        decayedOffset(baseline.offsetX, now - baseline.offsetStamp, this.tauMs),
+    const offsetAge = now - baseline.offsetStamp;
+    const renderedX = this.renderedAxis(
+      baseline.x0,
+      baseline.vx,
+      elapsed,
+      baseline.offsetX,
+      offsetAge,
       zone.minX,
       zone.maxX,
     );
-    const renderedY = clamp(
-      reflect(baseline.y0, baseline.vy, elapsed, zone.minY, zone.maxY) +
-        decayedOffset(baseline.offsetY, now - baseline.offsetStamp, this.tauMs),
+    const renderedY = this.renderedAxis(
+      baseline.y0,
+      baseline.vy,
+      elapsed,
+      baseline.offsetY,
+      offsetAge,
       zone.minY,
       zone.maxY,
     );
@@ -222,17 +229,24 @@ export class PlayerExtrapolatorService {
 
       if (prior !== undefined) {
         const elapsed = (now - prior.clientStartTime) / 1000;
+        const offsetAge = now - prior.offsetStamp;
         // Carry forward the ACTUALLY-rendered (clamped) gap — same clamp `compute` applies — so a snapshot taken
         // while the sprite was pinned at a wall can't capture an out-of-zone overshoot and keep gliding from it.
-        const renderedX = clamp(
-          reflect(prior.x0, prior.vx, elapsed, zone.minX, zone.maxX) +
-            decayedOffset(prior.offsetX, now - prior.offsetStamp, this.tauMs),
+        const renderedX = this.renderedAxis(
+          prior.x0,
+          prior.vx,
+          elapsed,
+          prior.offsetX,
+          offsetAge,
           zone.minX,
           zone.maxX,
         );
-        const renderedY = clamp(
-          reflect(prior.y0, prior.vy, elapsed, zone.minY, zone.maxY) +
-            decayedOffset(prior.offsetY, now - prior.offsetStamp, this.tauMs),
+        const renderedY = this.renderedAxis(
+          prior.y0,
+          prior.vy,
+          elapsed,
+          prior.offsetY,
+          offsetAge,
           zone.minY,
           zone.maxY,
         );
@@ -279,16 +293,12 @@ export class PlayerExtrapolatorService {
       const y0 = baseline?.y0 ?? player.y;
       const vx = baseline?.vx ?? player.vx;
       const vy = baseline?.vy ?? player.vy;
-      // Decaying reconciliation nudge layered on top of the authoritative drift — facing is read from the bare
-      // `reflect` direction below, so a correction never flips the sprite.
-      const decayX =
-        baseline === undefined
-          ? 0
-          : decayedOffset(baseline.offsetX, now - baseline.offsetStamp, this.tauMs);
-      const decayY =
-        baseline === undefined
-          ? 0
-          : decayedOffset(baseline.offsetY, now - baseline.offsetStamp, this.tauMs);
+      // Decaying reconciliation nudge layered on top of the authoritative drift (no baseline → zero offset, which
+      // `renderedAxis` decays to exactly 0) — facing is read from the bare `reflect` direction below, so a
+      // correction never flips the sprite.
+      const offsetX = baseline?.offsetX ?? 0;
+      const offsetY = baseline?.offsetY ?? 0;
+      const offsetAge = baseline === undefined ? 0 : now - baseline.offsetStamp;
       const liveEffects = player.effects.filter((effect) => effect.expiresAt > wallNow);
       const effectAuras = liveEffects
         .map((effect) => EFFECT_AURA[effect.kind])
@@ -340,11 +350,29 @@ export class PlayerExtrapolatorService {
         debugReadoutOffsetX: `${-render.offsetX - render.width / 2}px`,
         debugReadoutOffsetY: `${-render.offsetY - render.height / 2}px`,
         stage: player.stage,
-        // Clamp the offset-adjusted position to the drift zone: a large reconciliation gap (bomb knockback,
-        // reconnect snap) must glide the sprite back from the wall, never render it outside the scene.
-        x: clamp(reflect(x0, vx, elapsed, zone.minX, zone.maxX) + decayX, zone.minX, zone.maxX),
-        y: clamp(reflect(y0, vy, elapsed, zone.minY, zone.maxY) + decayY, zone.minY, zone.maxY),
+        x: this.renderedAxis(x0, vx, elapsed, offsetX, offsetAge, zone.minX, zone.maxX),
+        y: this.renderedAxis(y0, vy, elapsed, offsetY, offsetAge, zone.minY, zone.maxY),
       };
     });
+  }
+
+  // One axis of the rendered position: the reflective drift plus the decaying reconciliation offset (evaluated at
+  // the current frame-aware τ), clamped to the drift zone — a large reconciliation gap (bomb knockback, reconnect
+  // snap) must glide the sprite back from the wall, never render it outside the scene.
+  private renderedAxis(
+    anchor: number,
+    velocity: number,
+    elapsedSeconds: number,
+    offset: number,
+    offsetAgeMs: number,
+    min: number,
+    max: number,
+  ): number {
+    return clamp(
+      reflect(anchor, velocity, elapsedSeconds, min, max) +
+        decayedOffset(offset, offsetAgeMs, this.tauMs),
+      min,
+      max,
+    );
   }
 }
