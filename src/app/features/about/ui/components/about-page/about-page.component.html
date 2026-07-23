@@ -6,13 +6,14 @@
       target="_blank"
       rel="noopener noreferrer"
       class="team-card"
+      [attr.aria-label]="t('about.pavelkuvsh1noff.linkLabel')"
     >
       <div>
         <h3 class="name">{{ t('about.pavelkuvsh1noff.name') }}</h3>
         <p class="position">{{ t('about.pavelkuvsh1noff.position') }}</p>
       </div>
       <div class="img-wrapper">
-        <img src="images/team/PavelCat.jpg" [attr.alt]="t('about.pavelkuvsh1noff.alt')" />
+        <img ngSrc="images/team/PavelCat.jpg" [alt]="t('about.pavelkuvsh1noff.alt')" fill />
       </div>
     </a>
     <a
@@ -20,13 +21,14 @@
       target="_blank"
       rel="noopener noreferrer"
       class="team-card"
+      [attr.aria-label]="t('about.alexgorser.linkLabel')"
     >
       <div>
         <h3 class="name">{{ t('about.alexgorser.name') }}</h3>
         <p class="position">{{ t('about.alexgorser.position') }}</p>
       </div>
       <div class="img-wrapper">
-        <img src="images/team/AlexCat.jpg" [attr.alt]="t('about.alexgorser.alt')" />
+        <img ngSrc="images/team/AlexCat.jpg" [alt]="t('about.alexgorser.alt')" fill />
       </div>
     </a>
     <a
@@ -34,13 +36,14 @@
       target="_blank"
       rel="noopener noreferrer"
       class="team-card"
+      [attr.aria-label]="t('about.oksi2510.linkLabel')"
     >
       <div>
         <h3 class="name">{{ t('about.oksi2510.name') }}</h3>
         <p class="position">{{ t('about.oksi2510.position') }}</p>
       </div>
       <div class="img-wrapper">
-        <img src="images/team/OksanaCat.jpg" [attr.alt]="t('about.oksi2510.alt')" />
+        <img ngSrc="images/team/OksanaCat.jpg" [alt]="t('about.oksi2510.alt')" fill />
       </div>
     </a>
   </div>
@@ -69,7 +72,7 @@
     <li class="feature bg-orange">{{ t('about.feature.six') }}</li>
   </ul>
   <tui-accordion class="accordion">
-    @for (item of ACCORDION_LIST; track $index) {
+    @for (item of accordionList; track item.title) {
       <button [tuiAccordion]="$index === 0">{{ t(item.title) }}</button>
       <tui-expand class="accordion_content">{{ t(item.value) }}</tui-expand>
     }
