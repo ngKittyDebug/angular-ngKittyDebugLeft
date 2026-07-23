@@ -9,6 +9,7 @@ import type {
   UpdateUserModel,
 } from '../models/profile.model';
 import { UserProfileStore } from '../store/profile.store';
+
 @Service()
 export class ProfileFacade {
   private readonly store = inject(UserProfileStore);
