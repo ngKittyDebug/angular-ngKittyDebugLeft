@@ -1,15 +1,18 @@
 {
   "pavelkuvsh1noff": {
     "name": "Павел",
-    "position": "Frontend-разработчик / Дизайнер"
+    "position": "Frontend-разработчик / Дизайнер",
+    "alt": "Фото Павла"
   },
   "alexgorser": {
     "name": "Алексей👑",
-    "position": "Fullstack-разработчик / Тимлид"
+    "position": "Fullstack-разработчик / Тимлид",
+    "alt": "Фото Алексея"
   },
   "oksi2510": {
     "name": "Оксана",
-    "position": "Frontend-разработчик / Дизайнер"
+    "position": "Frontend-разработчик / Дизайнер",
+    "alt": "Фото Оксаны"
   },
   "description": {
     "partOne": " - интерактивный каталог покемонов, созданный в рамках командного проекта курса",

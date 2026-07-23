@@ -12,7 +12,7 @@
         <p class="position">{{ t('about.pavelkuvsh1noff.position') }}</p>
       </div>
       <div class="img-wrapper">
-        <img src="images/team/PavelCat.jpg" alt="Pavel" />
+        <img src="images/team/PavelCat.jpg" [attr.alt]="t('about.pavelkuvsh1noff.alt')" />
       </div>
     </a>
     <a
@@ -26,7 +26,7 @@
         <p class="position">{{ t('about.alexgorser.position') }}</p>
       </div>
       <div class="img-wrapper">
-        <img src="images/team/AlexCat.jpg" alt="Alex" />
+        <img src="images/team/AlexCat.jpg" [attr.alt]="t('about.alexgorser.alt')" />
       </div>
     </a>
     <a
@@ -40,7 +40,7 @@
         <p class="position">{{ t('about.oksi2510.position') }}</p>
       </div>
       <div class="img-wrapper">
-        <img src="images/team/OksanaCat.jpg" alt="Oksana" />
+        <img src="images/team/OksanaCat.jpg" [attr.alt]="t('about.oksi2510.alt')" />
       </div>
     </a>
   </div>
@@ -69,7 +69,7 @@
     <li class="feature bg-orange">{{ t('about.feature.six') }}</li>
   </ul>
   <tui-accordion class="accordion">
-    @for (item of ACCORDION_LIST; track item.title) {
+    @for (item of ACCORDION_LIST; track $index) {
       <button [tuiAccordion]="$index === 0">{{ t(item.title) }}</button>
       <tui-expand class="accordion_content">{{ t(item.value) }}</tui-expand>
     }
