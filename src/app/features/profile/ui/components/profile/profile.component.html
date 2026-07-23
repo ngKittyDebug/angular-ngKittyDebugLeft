@@ -2,7 +2,7 @@
   <div class="user">
     <div class="user-info">
       <div tuiAvatar size="xxl" [round]="true">
-        <img [src]="facade.profile()?.avatar || 'images/team/PavelCat.jpg'" alt="user" />
+        <img [src]="facade.avatarUrl()" [alt]="t('profile.settings.avatarAlt')" />
       </div>
       <div class="user-content">
         <h2 class="name">{{ facade.profile()?.username }}</h2>
@@ -167,7 +167,7 @@
         <left-paw-pokemon-card-profile [pokemonName]="name" />
       } @empty {
         <div class="caught-text">{{ t('profile.favorite.empty') }}</div>
-        <img class="gif" src="images/gif/hide.gif" alt="ups" />
+        <img class="gif" src="images/gif/hide.gif" alt="" />
       }
     </div>
   </div>
