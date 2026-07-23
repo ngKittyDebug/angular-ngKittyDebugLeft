@@ -1,4 +1,4 @@
-export const accordionData = [
+export const ACCORDION_LIST = [
   {
     title: `about.accordion.technologies.title`,
     value: `about.accordion.technologies.value`,

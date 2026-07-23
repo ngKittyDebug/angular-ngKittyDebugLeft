@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { TuiAccordion } from '@taiga-ui/kit';
-import { accordionData } from './constants/accordion-constants';
+import { ACCORDION_LIST } from './constants/accordion-constants';
 import { TranslocoDirective } from '@jsverse/transloco';
 
 @Component({
@@ -11,5 +11,5 @@ import { TranslocoDirective } from '@jsverse/transloco';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AboutPageComponent {
-  protected readonly accordionData = accordionData;
+  protected readonly ACCORDION_LIST = ACCORDION_LIST;
 }
