@@ -1,14 +1,14 @@
 import { inject } from '@angular/core';
 import type {
   ChangePasswordModel,
-  UpdateAvatar,
+  UpdateAvatarModel,
   UpdateUserModel,
   UserState,
 } from '../models/profile.model';
 import { patchState, signalStore, withMethods, withState } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { concatMap, pipe, switchMap, tap } from 'rxjs';
-import { ProfileService } from '../services/profile.service';
+import { UserApiService } from '../services/user-api.service';
 import { extractFavoritePokemonList } from '../helpers/extract-favorite-pokemon-list';
 import { handleStoreError } from '../helpers/handle-store-error';
 
@@ -24,7 +24,7 @@ const initialState: UserState = {
 export const UserProfileStore = signalStore(
   { providedIn: 'root' },
   withState(initialState),
-  withMethods((store, api = inject(ProfileService)) => ({
+  withMethods((store, api = inject(UserApiService)) => ({
     loadProfile: rxMethod<void>(
       pipe(
         tap(() => patchState(store, { isLoading: true, error: null, isAccountDeleted: false })),
@@ -86,7 +86,7 @@ export const UserProfileStore = signalStore(
         ),
       ),
     ),
-    updateAvatar: rxMethod<UpdateAvatar>(
+    updateAvatar: rxMethod<UpdateAvatarModel>(
       pipe(
         tap(() => patchState(store, { isLoading: true, error: null })),
         switchMap((dto) =>
