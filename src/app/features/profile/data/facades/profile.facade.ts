@@ -3,7 +3,11 @@ import { computed, inject, Service } from '@angular/core';
 import { PokemonApiService } from '@core/api/pokemon-api.service';
 import { AuthService } from '@core/services/auth.service';
 import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
-import type { ChangePasswordModel, UpdateAvatar, UpdateUserModel } from '../models/profile.model';
+import type {
+  ChangePasswordModel,
+  UpdateAvatarModel,
+  UpdateUserModel,
+} from '../models/profile.model';
 import { UserProfileStore } from '../store/profile.store';
 
 @Service()
@@ -64,7 +68,7 @@ export class ProfileFacade {
     this.store.updateProfile(data);
   }
 
-  public updateAvatar(data: UpdateAvatar): void {
+  public updateAvatar(data: UpdateAvatarModel): void {
     this.store.updateAvatar(data);
   }
 
