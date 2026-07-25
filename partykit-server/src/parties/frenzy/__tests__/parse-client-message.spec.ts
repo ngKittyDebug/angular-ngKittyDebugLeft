@@ -32,6 +32,18 @@ describe('parseClientMessage', () => {
     expect(parseClientMessage(JSON.stringify({ type: 'identify', sessionToken: 5 }))).toBeNull();
   });
 
+  it('rejects identify with an over-long sessionToken (anti-tamper cap at 64)', () => {
+    // A real token is a `crypto.randomUUID()` (36 chars); anything past the cap is a tampered/oversized string
+    // that must not cross the boundary (issue #324).
+    expect(
+      parseClientMessage(JSON.stringify({ type: 'identify', sessionToken: 'x'.repeat(65) })),
+    ).toBeNull();
+    // The boundary length itself is still accepted.
+    expect(
+      parseClientMessage(JSON.stringify({ type: 'identify', sessionToken: 'x'.repeat(64) })),
+    ).toEqual({ type: 'identify', sessionToken: 'x'.repeat(64) });
+  });
+
   it('parses join with an appearance id, body and trimmable name', () => {
     expect(
       parseClientMessage(
