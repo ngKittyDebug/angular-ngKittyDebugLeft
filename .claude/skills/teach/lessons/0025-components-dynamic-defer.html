@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Урок 25 — Dynamic Components + @defer</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<p class="subtitle">Урок 25 из серии «Angular Interview Prep»</p>
+<h1>Dynamic Components + @defer</h1>
+<p class="subtitle">ViewContainerRef, ngComponentOutlet, deferrable views.</p>
+
+<hr class="divider" />
+
+<h2>1. Динамические компоненты через ViewContainerRef</h2>
+<pre><code>@Component({
+  template: `&lt;div #container&gt;&lt;/div&gt;`,
+})
+export class ModalHostComponent {
+  private vcr = viewChild.required&lt;ViewContainerRef&gt;('container', {
+    read: ViewContainerRef,
+  });
+
+  open&lt;T&gt;(component: Type&lt;T&gt;, inputs?: Partial&lt;T&gt;) {
+    const vcr = this.vcr();
+    vcr.clear();
+
+    const ref = vcr.createComponent(component);
+
+    // Передача inputs:
+    if (inputs) {
+      Object.assign(ref.instance as object, inputs);
+      ref.changeDetectorRef.detectChanges();
+    }
+
+    return ref;
+  }
+}</code></pre>
+<div class="card accent">
+  <span class="tag accent">Когда использовать</span>
+  <p>
+    Динамическое создание через <code>ViewContainerRef</code> нужно когда тип компонента
+    неизвестен на этапе компиляции — например, в система плагинов, модальных окнах,
+    toast-нотификациях, динамических формах.
+  </p>
+</div>
+
+<h2>2. ngComponentOutlet — декларативный динамический рендер</h2>
+<pre><code>// В компоненте:
+export class TabsComponent {
+  protected activeTab = signal&lt;Type&lt;unknown&gt;&gt;(HomeTabComponent);
+
+  switch(tab: Type&lt;unknown&gt;) { this.activeTab.set(tab); }
+}
+
+// В шаблоне:
+&lt;ng-container [ngComponentOutlet]="activeTab()" /&gt;
+
+// С inputs и injector:
+&lt;ng-container
+  [ngComponentOutlet]="activeTab()"
+  [ngComponentOutletInputs]="{ userId: currentUserId() }"
+/&gt;</code></pre>
+<div class="card">
+  <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border); color:var(--text-muted);">
+        <th style="text-align:left; padding:6px 12px 6px 0;">ViewContainerRef</th>
+        <th style="text-align:left; padding:6px 12px;">ngComponentOutlet</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Императивный — в TypeScript</td>
+        <td style="padding:8px 12px;">Декларативный — в шаблоне</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Полный контроль lifecycle</td>
+        <td style="padding:8px 12px;">Автоматическое управление</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px 8px 0;">Для сложных сценариев</td>
+        <td style="padding:8px 12px;">Для простого switch компонентов</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>3. @defer — отложенный рендер</h2>
+<pre><code>@defer (on viewport) {
+  &lt;left-paw-heavy-chart [data]="chartData()" /&gt;
+} @placeholder {
+  &lt;div class="skeleton"&gt;Загрузка графика...&lt;/div&gt;
+} @loading (minimum 300ms) {
+  &lt;left-paw-spinner /&gt;
+} @error {
+  &lt;p&gt;Не удалось загрузить компонент&lt;/p&gt;
+}</code></pre>
+
+<h2>4. Условия @defer</h2>
+<div class="card">
+  <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border); color:var(--text-muted);">
+        <th style="text-align:left; padding:6px 12px 6px 0;">Условие</th>
+        <th style="text-align:left; padding:6px 12px;">Когда загружается</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>on viewport</code></td>
+        <td style="padding:8px 12px;">Когда placeholder попадает в область видимости</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>on idle</code></td>
+        <td style="padding:8px 12px;">Когда браузер простаивает (requestIdleCallback)</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>on interaction</code></td>
+        <td style="padding:8px 12px;">При клике/наведении на placeholder</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>on hover</code></td>
+        <td style="padding:8px 12px;">При наведении мыши</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>when condition()</code></td>
+        <td style="padding:8px 12px;">Когда сигнал/выражение станет truthy</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px 8px 0;"><code>on timer(2s)</code></td>
+        <td style="padding:8px 12px;">Через N миллисекунд/секунд</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>5. Как @defer помогает производительности</h2>
+<div class="card green">
+  <p>
+    Компоненты в <code>@defer</code> блоке <strong>не включаются в initial bundle</strong> —
+    они загружаются отдельным чанком только при выполнении условия.
+    Angular автоматически делает dynamic import() для этих компонентов.
+  </p>
+  <p style="margin-top:8px;">
+    Сравни с <code>@if</code>: @if скрывает компонент, но код всё равно в бандле.
+    @defer — код загружается позже.
+  </p>
+</div>
+<div class="card accent">
+  <span class="tag orange">Ловушка на интервью</span>
+  <p>
+    <code>@placeholder</code> всегда рендерится немедленно (синхронно) и виден
+    до загрузки компонента. <code>@loading</code> — только пока идёт загрузка бандла.
+    Оба опциональны, но @placeholder улучшает UX — пользователь видит «место» компонента.
+  </p>
+</div>
+
+<hr class="divider" />
+
+<h2>Проверь себя</h2>
+<p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:24px;">
+  Retrieval practice — не подглядывай в текст выше. Выбери один вариант.
+</p>
+
+<div class="quiz" id="q1">
+  <p class="quiz-question">1. Чем @defer отличается от @if для производительности?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q1',false)">@defer работает быстрее за счёт оптимизации change detection</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">@if загружает компонент лениво, @defer — сразу при первом рендере</button>
+    <button class="quiz-option" onclick="answer(this,'q1',true)">@defer исключает код компонента из initial bundle — загружает позже</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">@defer кеширует компонент в памяти, @if уничтожает при скрытии</button>
+  </div>
+  <div class="quiz-feedback" id="q1-fb"></div>
+</div>
+
+<div class="quiz" id="q2">
+  <p class="quiz-question">2. Когда использовать ViewContainerRef.createComponent() vs ngComponentOutlet?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q2',false)">ViewContainerRef — для статических компонентов, outlet — для динамических</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">ViewContainerRef — для standalone, outlet — для NgModule компонентов</button>
+    <button class="quiz-option" onclick="answer(this,'q2',true)">ViewContainerRef — для сложного контроля lifecycle, outlet — для простого switch</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">ViewContainerRef — только в Angular 17+, outlet работает в любой версии</button>
+  </div>
+  <div class="quiz-feedback" id="q2-fb"></div>
+</div>
+
+<div class="quiz" id="q3">
+  <p class="quiz-question">3. Блок @placeholder в @defer — когда он рендерится?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Только пока идёт загрузка бандла — заменяется на @loading потом</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">После ошибки загрузки — вместо @error если он не указан</button>
+    <button class="quiz-option" onclick="answer(this,'q3',true)">Немедленно и синхронно — виден до выполнения условия загрузки</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">При повторной навигации на страницу после первой загрузки</button>
+  </div>
+  <div class="quiz-feedback" id="q3-fb"></div>
+</div>
+
+<div class="quiz" id="q4">
+  <p class="quiz-question">4. @defer (on viewport) — что означает это условие?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q4',false)">Загрузить компонент при изменении размера viewport браузера</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">Загрузить компонент только на мобильных устройствах с малым экраном</button>
+    <button class="quiz-option" onclick="answer(this,'q4',true)">Загрузить когда placeholder входит в видимую область прокрутки</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">Загрузить компонент при полной загрузке страницы в viewport</button>
+  </div>
+  <div class="quiz-feedback" id="q4-fb"></div>
+</div>
+
+<hr class="divider" />
+
+<div class="source-link">
+  <strong>Первоисточник:</strong>
+  <a href="https://angular.dev/guide/defer" target="_blank">angular.dev — Deferrable views</a>
+  — @defer, @placeholder, @loading, @error, условия загрузки, тестирование.
+</div>
+
+<div class="ask-teacher">
+  <strong>Есть вопрос?</strong> Спроси прямо здесь, в чате. Учитель рядом — объяснит, уточнит или покажет пример из твоего реального кода.
+</div>
+
+<div class="nav-links">
+  <a href="0024-signals-resource-api.html">← Урок 24: Signals — Resource API</a>
+  <span style="color:var(--text-muted); margin:0 8px;">·</span>
+  <span style="color:var(--text-muted)">🎉 Курс завершён — ты прошла все 25 уроков!</span>
+</div>
+
+<script>
+  const feedback = {
+    q1: {
+      true: 'Верно. @if — код в бандле, просто скрыт. @defer — код грузится отдельным чанком при выполнении условия. Меньше initial bundle.',
+      false: 'Нет. @if не делает lazy loading. @defer именно выносит код в отдельный чанк и загружает его позже.'
+    },
+    q2: {
+      true: 'Верно. ngComponentOutlet — декларативен и прост. ViewContainerRef.createComponent() — для сложных сценариев: нужен доступ к ref, manage lifecycle, передать произвольные данные.',
+      false: 'Нет. Оба работают со standalone и NgModule компонентами. Разница — в сложности сценария и контроле.'
+    },
+    q3: {
+      true: 'Верно. @placeholder — синхронный, рендерится сразу. Виден пока условие не выполнено. @loading — только во время загрузки бандла.',
+      false: 'Нет. @placeholder — до загрузки. @loading — во время загрузки. @error — при ошибке. Это три разных блока.'
+    },
+    q4: {
+      true: 'Верно. on viewport использует IntersectionObserver. Как только placeholder становится видимым — начинается загрузка компонента.',
+      false: 'Нет. on viewport — IntersectionObserver, не resize события. Не связан с размером экрана или полной загрузкой страницы.'
+    },
+  };
+
+  function answer(btn, qId, isCorrect) {
+    const container = document.getElementById(qId);
+    const allBtns = container.querySelectorAll('.quiz-option');
+    allBtns.forEach(b => { b.disabled = true; });
+    btn.classList.add(isCorrect ? 'correct' : 'wrong');
+    const fb = document.getElementById(qId + '-fb');
+    fb.textContent = feedback[qId][String(isCorrect)];
+    fb.className = 'quiz-feedback show ' + (isCorrect ? 'correct' : 'wrong');
+  }
+</script>
+
+</body>
+</html>

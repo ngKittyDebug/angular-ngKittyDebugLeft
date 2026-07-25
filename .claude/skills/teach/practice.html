@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Практика — Angular Interview Prep</title>
+  <link rel="stylesheet" href="assets/style.css" />
+  <style>
+    .challenge-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 16px 0;
+    }
+    @media (max-width: 600px) { .challenge-grid { grid-template-columns: 1fr; } }
+
+    .challenge {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      cursor: default;
+    }
+    .challenge.active { border-color: var(--accent); }
+    .challenge.done   { border-color: var(--green); }
+
+    .challenge-title { font-weight: 600; margin-bottom: 4px; font-size: 0.95rem; }
+    .challenge-meta  { font-size: 0.8rem; color: var(--text-muted); display: flex; gap: 8px; align-items: center; }
+
+    .diff {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 1px 7px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .diff-1 { background: #14532d; color: var(--green); }
+    .diff-2 { background: #1e1b4b; color: var(--accent); }
+    .diff-3 { background: #431407; color: var(--orange); }
+    .diff-4 { background: #450a0a; color: var(--red); }
+
+    .task-box {
+      background: var(--surface);
+      border: 1px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 24px 28px;
+      margin: 24px 0;
+    }
+    .task-box h3 { color: var(--accent); margin-top: 0; }
+    .criteria li { margin-bottom: 6px; }
+    .criteria li::marker { color: var(--accent); }
+
+    .status-badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 2px 10px;
+      border-radius: 4px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+    .badge-active { background: #1e1b4b; color: var(--accent); }
+    .badge-done   { background: #14532d; color: var(--green); }
+    .badge-todo   { background: var(--surface-2); color: var(--text-muted); }
+
+    .how-it-works {
+      background: var(--surface-2);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      padding: 16px 20px;
+      margin: 24px 0;
+      font-size: 0.9rem;
+    }
+    .step { display: flex; gap: 12px; margin-bottom: 12px; align-items: flex-start; }
+    .step-num {
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+  </style>
+</head>
+<body>
+
+<p class="subtitle">Angular Interview Prep</p>
+<h1>Практика — пишем код</h1>
+<p class="subtitle">Задания на реальных компонентах проекта. Пишешь — я проверяю.</p>
+
+<hr class="divider" />
+
+<div class="how-it-works">
+  <strong>Как работает:</strong>
+  <br /><br />
+  <div class="step">
+    <div class="step-num">1</div>
+    <div>Выбери задание из списка ниже — скажи его номер в чате.</div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div>Учитель откроет полное ТЗ с критериями приёмки и подсказками.</div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div>Пишешь код в проекте. Когда готово — напиши «готово» в чате.</div>
+  </div>
+  <div class="step">
+    <div class="step-num">4</div>
+    <div>Учитель читает твой код и даёт фидбек: что верно, что исправить, как объяснить на интервью.</div>
+  </div>
+</div>
+
+<hr class="divider" />
+
+<h2>Задания — блок: About-страница</h2>
+<p style="color:var(--text-muted); font-size:0.9rem;">
+  Файлы: <code>src/app/features/about/</code> — реальный компонент проекта.
+</p>
+
+<div class="challenge-grid">
+
+  <div class="challenge done">
+    <div class="challenge-meta"><span class="diff diff-1">easy</span> <span class="badge-done status-badge">✓ done</span></div>
+    <div class="challenge-title">A-1 · Standalone-компонент</div>
+    <p style="font-size:0.85rem; color:var(--text-muted); margin:8px 0 0;">
+      AboutPageComponent уже standalone. Разберись со структурой и объясни, чем он отличается от модульного.
+    </p>
+  </div>
+
+  <div class="challenge" id="a2">
+    <div class="challenge-meta"><span class="diff diff-1">easy</span> <span class="badge-todo status-badge">todo</span></div>
+    <div class="challenge-title">A-2 · Вынести team-card в отдельный компонент</div>
+    <p style="font-size:0.85rem; color:var(--text-muted); margin:8px 0 0;">
+      Создать <code>TeamCardComponent</code> с <code>input()</code>. Родитель передаёт данные, дочерний рендерит карточку.
+    </p>
+  </div>
+
+  <div class="challenge" id="a3">
+    <div class="challenge-meta"><span class="diff diff-1">easy</span> <span class="badge-todo status-badge">todo</span></div>
+    <div class="challenge-title">A-3 · Счётчик аккордеона через signal</div>
+    <p style="font-size:0.85rem; color:var(--text-muted); margin:8px 0 0;">
+      Добавить счётчик «сколько раз открывали аккордеон» через <code>signal()</code> и <code>computed()</code>.
+    </p>
+  </div>
+
+  <div class="challenge" id="a4">
+    <div class="challenge-meta"><span class="diff diff-2">medium</span> <span class="badge-todo status-badge">todo</span></div>
+    <div class="challenge-title">A-4 · Pipe для форматирования позиции</div>
+    <p style="font-size:0.85rem; color:var(--text-muted); margin:8px 0 0;">
+      Создать pure pipe <code>PositionPipe</code>, который добавляет иконку к названию роли члена команды.
+    </p>
+  </div>
+
+  <div class="challenge" id="a5">
+    <div class="challenge-meta"><span class="diff diff-2">medium</span> <span class="badge-todo status-badge">todo</span></div>
+    <div class="challenge-title">A-5 · Директива highlight на team-card</div>
+    <p style="font-size:0.85rem; color:var(--text-muted); margin:8px 0 0;">
+      Атрибутная директива <code>[leftPawHighlight]</code>: при ховере меняет border-color через <code>Renderer2</code>.
+    </p>
+  </div>
+
+  <div class="challenge" id="a6">
+    <div class="challenge-meta"><span class="diff diff-3">hard</span> <span class="badge-todo status-badge">todo</span></div>
+    <div class="challenge-title">A-6 · Сервис аналитики + lifecycle</div>
+    <p style="font-size:0.85rem; color:var(--text-muted); margin:8px 0 0;">
+      Создать <code>PageAnalyticsService</code>, зафиксировать посещение в <code>ngOnInit</code>, очистить в <code>ngOnDestroy</code>.
+    </p>
+  </div>
+
+  <div class="challenge" id="a7">
+    <div class="challenge-meta"><span class="diff diff-3">hard</span> <span class="badge-todo status-badge">todo</span></div>
+    <div class="challenge-title">A-7 · output() — событие клика на карточку</div>
+    <p style="font-size:0.85rem; color:var(--text-muted); margin:8px 0 0;">
+      TeamCardComponent (из A-2) эмитит событие при клике. Родитель логирует имя выбранного участника.
+    </p>
+  </div>
+
+  <div class="challenge" id="a8">
+    <div class="challenge-meta"><span class="diff diff-4">expert</span> <span class="badge-todo status-badge">todo</span></div>
+    <div class="challenge-title">A-8 · contentChild + ng-content</div>
+    <p style="font-size:0.85rem; color:var(--text-muted); margin:8px 0 0;">
+      Рефакторинг TeamCardComponent: принимает произвольный слот через <code>ng-content</code> для badge-зоны.
+    </p>
+  </div>
+
+</div>
+
+<hr class="divider" />
+
+<h2>Задания — блок: свежие компоненты</h2>
+<p style="color:var(--text-muted); font-size:0.9rem;">Пишешь с нуля в отдельной ветке или в sandbox-файле.</p>
+
+<div class="challenge-grid">
+
+  <div class="challenge" id="b1">
+    <div class="challenge-meta"><span class="diff diff-1">easy</span> <span class="badge-todo status-badge">todo</span></div>
+    <div class="challenge-title">B-1 · FormGroup для поиска</div>
+    <p style="font-size:0.85rem; color:var(--text-muted); margin:8px 0 0;">
+      Reactive Forms: поле поиска + кнопка сброса. Валидатор: минимум 2 символа.
+    </p>
+  </div>
+
+  <div class="challenge" id="b2">
+    <div class="challenge-meta"><span class="diff diff-2">medium</span> <span class="badge-todo status-badge">todo</span></div>
+    <div class="challenge-title">B-2 · HTTP + обработка ошибок</div>
+    <p style="font-size:0.85rem; color:var(--text-muted); margin:8px 0 0;">
+      GET-запрос к PokéAPI, <code>catchError</code>, показать spinner пока грузит, показать ошибку если упало.
+    </p>
+  </div>
+
+  <div class="challenge" id="b3">
+    <div class="challenge-meta"><span class="diff diff-3">hard</span> <span class="badge-todo status-badge">todo</span></div>
+    <div class="challenge-title">B-3 · Interceptor с авторизацией</div>
+    <p style="font-size:0.85rem; color:var(--text-muted); margin:8px 0 0;">
+      HTTP interceptor: добавляет заголовок <code>Authorization</code> из localStorage, логирует время запроса.
+    </p>
+  </div>
+
+  <div class="challenge" id="b4">
+    <div class="challenge-meta"><span class="diff diff-4">expert</span> <span class="badge-todo status-badge">todo</span></div>
+    <div class="challenge-title">B-4 · ControlValueAccessor</div>
+    <p style="font-size:0.85rem; color:var(--text-muted); margin:8px 0 0;">
+      Custom form control — star-rating компонент, интегрируется с Reactive Forms через CVA.
+    </p>
+  </div>
+
+</div>
+
+<hr class="divider" />
+
+<div class="ask-teacher" style="margin-top:40px;">
+  <strong>Как начать:</strong> напиши в чат «хочу A-2» (или любой другой номер) — получишь полное ТЗ с критериями приёмки, файлами которые нужно изменить и подсказками на случай если застрянешь.
+</div>
+
+<div class="nav-links" style="margin-top:40px;">
+  <a href="lessons/0002-angular-basics-and-cli.html">← К урокам</a>
+</div>
+
+</body>
+</html>

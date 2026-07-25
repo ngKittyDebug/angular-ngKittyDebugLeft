@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Урок 22 — Testing</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<p class="subtitle">Урок 22 из серии «Angular Interview Prep»</p>
+<h1>Testing</h1>
+<p class="subtitle">TestBed, ComponentFixture, моки, fakeAsync, изоляция тестов.</p>
+
+<hr class="divider" />
+
+<h2>1. Виды тестирования</h2>
+<div class="card">
+  <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border); color:var(--text-muted);">
+        <th style="text-align:left; padding:6px 12px 6px 0;">Вид</th>
+        <th style="text-align:left; padding:6px 12px;">Что тестирует</th>
+        <th style="text-align:left; padding:6px 12px;">Инструмент</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Unit</td>
+        <td style="padding:8px 12px;">Один класс/функцию изолированно</td>
+        <td style="padding:8px 12px;">Vitest, Jest, Karma</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Integration</td>
+        <td style="padding:8px 12px;">Компонент + шаблон + DI</td>
+        <td style="padding:8px 12px;">TestBed + Vitest</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px 8px 0;">E2E</td>
+        <td style="padding:8px 12px;">Пользовательский сценарий в браузере</td>
+        <td style="padding:8px 12px;">Playwright, Cypress</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>2. TestBed</h2>
+<pre><code>describe('CardComponent', () => {
+  let fixture: ComponentFixture&lt;CardComponent&gt;;
+  let component: CardComponent;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [CardComponent],               // standalone компонент
+      providers: [
+        { provide: UserService, useValue: mockUserService },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(CardComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges(); // первый ngOnInit
+  });
+
+  it('renders title', () => {
+    const h1 = fixture.nativeElement.querySelector('h1');
+    expect(h1.textContent).toBe('Заголовок');
+  });
+});</code></pre>
+
+<h2>3. ComponentFixture и DebugElement</h2>
+<pre><code>// fixture — обёртка над компонентом
+fixture.detectChanges();          // запустить CD вручную
+fixture.whenStable();             // ждать всех async операций
+
+// nativeElement — прямой DOM
+const btn = fixture.nativeElement.querySelector('button');
+btn.click();
+fixture.detectChanges();
+
+// debugElement — Angular-обёртка
+const de = fixture.debugElement;
+const titleEl = de.query(By.css('h1'));
+const childComp = de.query(By.directive(ChildComponent));</code></pre>
+
+<h2>4. Моки зависимостей</h2>
+<pre><code>// Мок-объект:
+const mockUserService = {
+  getUser: vi.fn().mockReturnValue(of({ name: 'Oksana' })),
+};
+
+// Мок через jasmine.createSpyObj (если Karma):
+const mockUserService = jasmine.createSpyObj('UserService', ['getUser']);
+mockUserService.getUser.and.returnValue(of({ name: 'Oksana' }));
+
+// В providers:
+{ provide: UserService, useValue: mockUserService }
+
+// Проверка вызова:
+expect(mockUserService.getUser).toHaveBeenCalledWith('user-id');</code></pre>
+
+<h2>5. fakeAsync и tick</h2>
+<pre><code>it('loads data after 300ms debounce', fakeAsync(() => {
+  component.search.setValue('pikachu');
+
+  tick(300); // прокрутить виртуальное время на 300ms
+
+  fixture.detectChanges();
+
+  expect(component.results().length).toBe(1);
+}));
+
+// flush() — выполнить все оставшиеся таймеры
+// discardPeriodicTasks() — убрать незакрытые interval-ы</code></pre>
+<div class="card accent">
+  <span class="tag accent">fakeAsync vs async/waitForAsync</span>
+  <p>
+    <code>fakeAsync</code> — синхронный тест с виртуальным временем (tick). Идеален для debounceTime, setTimeout.
+    <code>waitForAsync</code> — реальный async, для HTTP и компиляции шаблонов.
+  </p>
+</div>
+
+<h2>6. Изоляция тестов</h2>
+<pre><code>afterEach(() => {
+  vi.clearAllMocks();     // сбросить вызовы моков
+  TestBed.resetTestingModule(); // сбросить DI граф (обычно делает Angular сам)
+});
+
+// В проекте: TuiRootComponentMock вместо реального TuiRoot
+// — чтобы не тащить тему и DI-граф Taiga в тесты
+import { TuiRootComponentMock } from '@shared/mocks';</code></pre>
+
+<hr class="divider" />
+
+<h2>Проверь себя</h2>
+<p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:24px;">
+  Retrieval practice — не подглядывай в текст выше. Выбери один вариант.
+</p>
+
+<div class="quiz" id="q1">
+  <p class="quiz-question">1. Что делает TestBed.configureTestingModule()?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Запускает тест в реальном браузере с настоящими зависимостями</button>
+    <button class="quiz-option" onclick="answer(this,'q1',true)">Создаёт изолированный Angular DI контекст для тестирования компонента</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Компилирует TypeScript в JavaScript для запуска unit-тестов</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Мокирует все HTTP-запросы компонента автоматически без настройки</button>
+  </div>
+  <div class="quiz-feedback" id="q1-fb"></div>
+</div>
+
+<div class="quiz" id="q2">
+  <p class="quiz-question">2. Зачем вызывать fixture.detectChanges() в тесте?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q2',false)">Чтобы принудительно выгрузить компонент после теста</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">Чтобы зарегистрировать компонент в тестовом NgModule</button>
+    <button class="quiz-option" onclick="answer(this,'q2',true)">Чтобы запустить ngOnInit и синхронизировать данные с DOM</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">Чтобы очистить моки между вызовами в рамках одного теста</button>
+  </div>
+  <div class="quiz-feedback" id="q2-fb"></div>
+</div>
+
+<div class="quiz" id="q3">
+  <p class="quiz-question">3. tick(300) в fakeAsync тесте — что делает?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Ждёт 300 миллисекунд реального времени и продолжает тест</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Выполняет 300 циклов change detection подряд для обновления DOM</button>
+    <button class="quiz-option" onclick="answer(this,'q3',true)">Прокручивает виртуальное время вперёд на 300мс без реального ожидания</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Выполняет все Promise и Observable в очереди микротасков</button>
+  </div>
+  <div class="quiz-feedback" id="q3-fb"></div>
+</div>
+
+<div class="quiz" id="q4">
+  <p class="quiz-question">4. Как найти дочерний компонент в DOM через DebugElement?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q4',false)">fixture.querySelector(ChildComponent) — как document.querySelector</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">fixture.getComponent(ChildComponent) — API ComponentFixture</button>
+    <button class="quiz-option" onclick="answer(this,'q4',true)">debugElement.query(By.directive(ChildComponent))</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">TestBed.inject(ChildComponent) — инжектировать компонент по классу</button>
+  </div>
+  <div class="quiz-feedback" id="q4-fb"></div>
+</div>
+
+<hr class="divider" />
+
+<div class="source-link">
+  <strong>Первоисточник:</strong>
+  <a href="https://angular.dev/guide/testing" target="_blank">angular.dev — Testing</a>
+  — TestBed, ComponentFixture, fakeAsync, HTTP testing, pipes.
+</div>
+
+<div class="ask-teacher">
+  <strong>Есть вопрос?</strong> Спроси прямо здесь, в чате. Учитель рядом — объяснит, уточнит или покажет пример из твоего реального кода.
+</div>
+
+<div class="nav-links">
+  <a href="0021-forms-cva.html">← Урок 21: Forms — CVA</a>
+  <span style="color:var(--text-muted); margin:0 8px;">·</span>
+  <a href="0023-di-injector-hierarchy.html">Урок 23: DI — иерархия инжекторов →</a>
+</div>
+
+<script>
+  const feedback = {
+    q1: {
+      true: 'Верно. TestBed создаёт изолированный Angular-контекст: компилирует шаблоны, настраивает DI с моками, не требует браузера.',
+      false: 'Нет. TestBed — изолированный контекст. Для реального браузера — E2E (Playwright/Cypress). HTTP-моки настраиваются отдельно.'
+    },
+    q2: {
+      true: 'Верно. Первый detectChanges() запускает ngOnInit и синхронизирует состояние компонента с DOM. Без него шаблон не отрисован.',
+      false: 'Нет. detectChanges() — для запуска CD и ngOnInit. Не для выгрузки, не для регистрации, не для очистки моков.'
+    },
+    q3: {
+      true: 'Верно. tick(300) сдвигает виртуальные часы на 300мс синхронно — debounceTime(300) срабатывает без реального ожидания.',
+      false: 'Нет. fakeAsync заменяет реальное время виртуальным. tick() — синхронный, мгновенный. Не связан с CD или микротасками.'
+    },
+    q4: {
+      true: 'Верно. By.directive() — Angular-способ найти элемент по директиве/компоненту. fixture.debugElement.query(By.directive(X)).',
+      false: 'Нет. querySelector() работает для CSS-селекторов на nativeElement. TestBed.inject() — для DI, не для поиска в DOM.'
+    },
+  };
+
+  function answer(btn, qId, isCorrect) {
+    const container = document.getElementById(qId);
+    const allBtns = container.querySelectorAll('.quiz-option');
+    allBtns.forEach(b => { b.disabled = true; });
+    btn.classList.add(isCorrect ? 'correct' : 'wrong');
+    const fb = document.getElementById(qId + '-fb');
+    fb.textContent = feedback[qId][String(isCorrect)];
+    fb.className = 'quiz-feedback show ' + (isCorrect ? 'correct' : 'wrong');
+  }
+</script>
+
+</body>
+</html>

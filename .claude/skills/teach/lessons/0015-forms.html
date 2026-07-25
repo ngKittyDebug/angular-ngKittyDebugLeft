@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Урок 15 — Forms</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<p class="subtitle">Урок 15 из серии «Angular Interview Prep»</p>
+<h1>Forms</h1>
+<p class="subtitle">Template-driven vs Reactive, FormBuilder, валидаторы, async validation.</p>
+
+<hr class="divider" />
+
+<h2>1. Template-driven vs Reactive Forms</h2>
+<div class="card">
+  <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border); color:var(--text-muted);">
+        <th style="text-align:left; padding:6px 12px 6px 0;">Template-driven</th>
+        <th style="text-align:left; padding:6px 12px;">Reactive Forms</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Логика в шаблоне (ngModel)</td>
+        <td style="padding:8px 12px;">Логика в TypeScript (FormControl)</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Асинхронная инициализация</td>
+        <td style="padding:8px 12px;">Синхронная, предсказуемая</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Проще для маленьких форм</td>
+        <td style="padding:8px 12px;">Лучше масштабируется, тестируется</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px 8px 0;">Требует FormsModule</td>
+        <td style="padding:8px 12px;">Требует ReactiveFormsModule</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>2. FormControl, FormGroup, FormArray</h2>
+<pre><code>// FormControl — один контрол
+const name = new FormControl('', [Validators.required, Validators.minLength(2)]);
+
+// FormGroup — группа контролов
+const form = new FormGroup({
+  name: new FormControl('', Validators.required),
+  email: new FormControl('', [Validators.required, Validators.email]),
+});
+
+// FormArray — динамический список контролов
+const phones = new FormArray([
+  new FormControl(''),
+  new FormControl(''),
+]);</code></pre>
+
+<h2>3. FormBuilder — краткий синтаксис</h2>
+<pre><code>export class LoginComponent {
+  private fb = inject(FormBuilder);
+
+  form = this.fb.group({
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required, Validators.minLength(8)]],
+  });
+
+  submit() {
+    if (this.form.valid) {
+      console.log(this.form.value); // { email: '...', password: '...' }
+    }
+  }
+}</code></pre>
+
+<h2>4. Валидация в Template-driven vs Reactive</h2>
+<div class="card">
+  <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0; width:50%;"><strong>Template-driven</strong></td>
+        <td style="padding:8px 12px;"><strong>Reactive</strong></td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>required minlength</code> атрибуты в HTML</td>
+        <td style="padding:8px 12px;"><code>Validators.required</code> в TS</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px 8px 0;">Кастомный: директива с <code>Validator</code></td>
+        <td style="padding:8px 12px;">Кастомный: функция <code>ValidatorFn</code></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<pre><code>// Кастомный валидатор (Reactive)
+function noSpaces(): ValidatorFn {
+  return (control) =>
+    control.value?.includes(' ')
+      ? { noSpaces: true }
+      : null;
+}
+
+// Использование:
+email: ['', [Validators.required, noSpaces()]]
+
+// В шаблоне:
+@if (form.get('email')?.errors?.['noSpaces']) {
+  &lt;span&gt;Пробелы не допускаются&lt;/span&gt;
+}</code></pre>
+
+<h2>5. Отслеживание состояния формы</h2>
+<pre><code>// valueChanges — реагируем на изменения значений
+this.form.get('email')!.valueChanges
+  .pipe(debounceTime(300), distinctUntilChanged())
+  .subscribe(value => this.checkEmail(value));
+
+// statusChanges — VALID | INVALID | PENDING | DISABLED
+this.form.statusChanges.subscribe(status => {
+  this.isLoading = status === 'PENDING';
+});</code></pre>
+
+<h2>6. Async валидация</h2>
+<pre><code>function emailUniqueValidator(userService: UserService): AsyncValidatorFn {
+  return (control) =>
+    userService.checkEmail(control.value).pipe(
+      map(isUnique => isUnique ? null : { emailTaken: true }),
+      catchError(() => of(null)),
+    );
+}
+
+// Регистрация:
+email: ['', [Validators.email], [emailUniqueValidator(userService)]]
+// 3-й аргумент — async validators</code></pre>
+<div class="card accent">
+  <span class="tag orange">Ловушка на интервью</span>
+  <p>
+    Пока async валидатор ждёт ответа, <code>control.status === 'PENDING'</code>.
+    Всегда добавляй <code>debounceTime</code> чтобы не слать запрос при каждом нажатии клавиши.
+  </p>
+</div>
+
+<hr class="divider" />
+
+<h2>Проверь себя</h2>
+<p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:24px;">
+  Retrieval practice — не подглядывай в текст выше. Выбери один вариант.
+</p>
+
+<div class="quiz" id="q1">
+  <p class="quiz-question">1. В чём ключевое преимущество Reactive Forms перед Template-driven?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Reactive Forms поддерживают NgModel и двустороннее связывание</button>
+    <button class="quiz-option" onclick="answer(this,'q1',true)">Логика в TypeScript — синхронная инициализация, лучше тестируется</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Reactive Forms не требуют импорта дополнительных модулей Angular</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Reactive Forms автоматически валидируют поля без написания кода</button>
+  </div>
+  <div class="quiz-feedback" id="q1-fb"></div>
+</div>
+
+<div class="quiz" id="q2">
+  <p class="quiz-question">2. Что такое FormArray?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q2',false)">Массив значений форм для передачи на сервер при отправке</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">Группа FormGroup объединённых в один валидируемый блок</button>
+    <button class="quiz-option" onclick="answer(this,'q2',true)">Динамический список FormControl/FormGroup с методами push/removeAt</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">Хранилище снапшотов состояния формы для undo/redo операций</button>
+  </div>
+  <div class="quiz-feedback" id="q2-fb"></div>
+</div>
+
+<div class="quiz" id="q3">
+  <p class="quiz-question">3. Какой статус у FormControl во время async валидации?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q3',false)">LOADING — специальный статус для асинхронной проверки</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">INVALID — ошибка устанавливается пока ответ не получен</button>
+    <button class="quiz-option" onclick="answer(this,'q3',true)">PENDING — промежуточный статус ожидания async валидатора</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">VALID — статус не меняется до получения результата</button>
+  </div>
+  <div class="quiz-feedback" id="q3-fb"></div>
+</div>
+
+<div class="quiz" id="q4">
+  <p class="quiz-question">4. Кастомный ValidatorFn должен вернуть null или объект ошибки. Что означает null?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q4',false)">Валидация ещё не завершилась, ожидаем результата проверки</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">Валидатор не применимый к данному типу контрола формы</button>
+    <button class="quiz-option" onclick="answer(this,'q4',true)">Значение валидно — ошибок нет, контрол в состоянии VALID</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">Значение не было проверено — контрол остаётся в PRISTINE</button>
+  </div>
+  <div class="quiz-feedback" id="q4-fb"></div>
+</div>
+
+<hr class="divider" />
+
+<div class="source-link">
+  <strong>Первоисточник:</strong>
+  <a href="https://angular.dev/guide/forms/reactive-forms" target="_blank">angular.dev — Reactive Forms</a>
+  — FormControl, FormGroup, FormArray, валидаторы, FormBuilder.
+</div>
+
+<div class="ask-teacher">
+  <strong>Есть вопрос?</strong> Спроси прямо здесь, в чате. Учитель рядом — объяснит, уточнит или покажет пример из твоего реального кода.
+</div>
+
+<div class="nav-links">
+  <a href="0014-pipes.html">← Урок 14: Pipes</a>
+  <span style="color:var(--text-muted); margin:0 8px;">·</span>
+  <a href="0016-components-advanced.html">Урок 16: Components — продвинутый →</a>
+</div>
+
+<script>
+  const feedback = {
+    q1: {
+      true: 'Верно. Reactive Forms — логика в TS, синхронная инициализация, unit-тестируемость без DOM. Template-driven — асинхронная, сложнее тестировать.',
+      false: 'Нет. NgModel — Template-driven. Reactive Forms не требуют FormsModule. Автовалидация не появляется без кода.'
+    },
+    q2: {
+      true: 'Верно. FormArray — динамический список: push() добавляет, removeAt(i) удаляет, at(i) обращается по индексу.',
+      false: 'Нет. FormArray — динамический список контролов, не хранилище значений и не группа FormGroup.'
+    },
+    q3: {
+      true: 'Верно. Пока async validator ожидает ответа — статус PENDING. Форму нельзя сабмитить пока есть PENDING контролы.',
+      false: 'Нет. LOADING — не статус Angular Forms. INVALID — при ошибках. VALID — при успехе. PENDING — при ожидании.'
+    },
+    q4: {
+      true: 'Верно. null = ошибок нет. Объект ошибки = ошибка. Например { required: true } или { minLength: { actual: 2, required: 5 } }.',
+      false: 'Нет. null — значит валидно. Ожидание — это PENDING статус и Observable/Promise из async validator.'
+    },
+  };
+
+  function answer(btn, qId, isCorrect) {
+    const container = document.getElementById(qId);
+    const allBtns = container.querySelectorAll('.quiz-option');
+    allBtns.forEach(b => { b.disabled = true; });
+    btn.classList.add(isCorrect ? 'correct' : 'wrong');
+    const fb = document.getElementById(qId + '-fb');
+    fb.textContent = feedback[qId][String(isCorrect)];
+    fb.className = 'quiz-feedback show ' + (isCorrect ? 'correct' : 'wrong');
+  }
+</script>
+
+</body>
+</html>

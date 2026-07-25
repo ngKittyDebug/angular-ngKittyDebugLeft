@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Урок 4 — Взаимодействие компонентов</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<p class="subtitle">Урок 4 из серии «Angular Interview Prep»</p>
+<h1>Взаимодействие компонентов</h1>
+<p class="subtitle">input(), output(), model(), shared service — и когда что выбрать.</p>
+
+<hr class="divider" />
+
+<h2>1. input() — данные от родителя к дочернему</h2>
+<pre><code>// child.component.ts
+export class ChildComponent {
+  name = input&lt;string&gt;();           // опциональный, тип string | undefined
+  count = input.required&lt;number&gt;(); // обязательный, ошибка если не передан
+  label = input('Default');         // с дефолтным значением
+}
+
+// parent.component.html
+&lt;app-child [name]="userName" [count]="42" /&gt;</code></pre>
+<div class="card accent">
+  <span class="tag accent">Формула ответа</span>
+  <p>
+    <code>input()</code> возвращает <strong>Signal</strong> — в шаблоне читается как
+    <code>{{ name() }}</code>, в TS как <code>this.name()</code>. Это важно — не как
+    обычное свойство.
+  </p>
+</div>
+
+<h2>2. output() — события от дочернего к родителю</h2>
+<pre><code>// child.component.ts
+export class ChildComponent {
+  saved = output&lt;string&gt;(); // эмитит string
+
+  onSave() {
+    this.saved.emit('данные');
+  }
+}
+
+// parent.component.html
+&lt;app-child (saved)="handleSave($event)" /&gt;</code></pre>
+<p>
+  <code>output()</code> — не Signal, это <code>OutputEmitterRef</code>. Вызывается через <code>.emit()</code>.
+  В шаблоне родителя биндится через <code>(eventName)</code>.
+</p>
+
+<h2>3. model() — двусторонняя привязка</h2>
+<pre><code>// child.component.ts
+export class ChildComponent {
+  value = model&lt;string&gt;(''); // readable + writable signal
+
+  clear() { this.value.set(''); } // изменяет и эмитит наружу
+}
+
+// parent.component.html
+&lt;app-child [(value)]="parentValue" /&gt;</code></pre>
+<div class="card accent">
+  <span class="tag accent">Когда использовать model()</span>
+  <p>
+    Когда дочерний компонент <strong>и читает, и изменяет</strong> значение — например,
+    поле ввода или переключатель. Это заменяет связку <code>input() + output()</code>
+    с событием <code>valueChange</code>.
+  </p>
+</div>
+
+<h2>4. Shared Service</h2>
+<pre><code>@Injectable({ providedIn: 'root' })
+export class CartService {
+  private items = signal&lt;Item[]&gt;([]);
+  readonly items$ = this.items.asReadonly();
+
+  add(item: Item) { this.items.update(list => [...list, item]); }
+}
+
+// в любом компоненте:
+export class ProductComponent {
+  private cart = inject(CartService);
+  add() { this.cart.add(this.product()); }
+}</code></pre>
+<p>
+  Сервис — синглтон: один экземпляр на всё приложение (при <code>providedIn: 'root'</code>).
+  Идеально для sibling-компонентов или компонентов далеко по дереву.
+</p>
+
+<h2>5. input()/output() vs сервис — когда что?</h2>
+<div class="card">
+  <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border); color:var(--text-muted);">
+        <th style="text-align:left; padding:6px 12px 6px 0;">Ситуация</th>
+        <th style="text-align:left; padding:6px 12px;">Выбор</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Родитель передаёт данные дочернему</td>
+        <td style="padding:8px 12px;"><code>input()</code></td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Дочерний сообщает родителю о событии</td>
+        <td style="padding:8px 12px;"><code>output()</code></td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Sibling, несвязанные по дереву</td>
+        <td style="padding:8px 12px;">Shared service</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Сложное глобальное состояние</td>
+        <td style="padding:8px 12px;">NgRx SignalStore</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px 8px 0;">Дочерний и читает, и изменяет значение</td>
+        <td style="padding:8px 12px;"><code>model()</code></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>6. input()/output() vs @Input()/@Output()</h2>
+<div class="card">
+  <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border); color:var(--text-muted);">
+        <th style="text-align:left; padding:6px 12px 6px 0;">Новый API (Signals)</th>
+        <th style="text-align:left; padding:6px 12px;">Устаревший (@Input/@Output)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>input()</code> → Signal</td>
+        <td style="padding:8px 12px;"><code>@Input()</code> → обычное свойство</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Читается через <code>this.name()</code></td>
+        <td style="padding:8px 12px;">Читается через <code>this.name</code></td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>output()</code> → OutputEmitterRef</td>
+        <td style="padding:8px 12px;"><code>@Output()</code> → EventEmitter</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px 8px 0;">Интегрирован с change detection сигналов</td>
+        <td style="padding:8px 12px;">Триггерит ngOnChanges</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<div class="card accent">
+  <span class="tag orange">Ловушка на интервью</span>
+  <p>
+    <code>input()</code> возвращает Signal, поэтому <code>ngOnChanges</code> на него <strong>не вызывается</strong>.
+    Для реакции на изменение input-сигнала используй <code>effect()</code> или <code>computed()</code>.
+  </p>
+</div>
+
+<hr class="divider" />
+
+<h2>Проверь себя</h2>
+<p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:24px;">
+  Retrieval practice — не подглядывай в текст выше. Выбери один вариант.
+</p>
+
+<div class="quiz" id="q1">
+  <p class="quiz-question">1. Как прочитать значение input-сигнала в TypeScript-классе?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q1',false)">this.name — как обычное свойство класса компонента</button>
+    <button class="quiz-option" onclick="answer(this,'q1',true)">this.name() — как вызов Signal-функции с круглыми скобками</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">this.name.value — через свойство value объекта сигнала</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">await this.name — через async/await как промис Angular</button>
+  </div>
+  <div class="quiz-feedback" id="q1-fb"></div>
+</div>
+
+<div class="quiz" id="q2">
+  <p class="quiz-question">2. Когда стоит использовать model() вместо input() + output()?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q2',false)">Когда нужна валидация данных на уровне компонента</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">Когда компонент получает данные от нескольких родителей</button>
+    <button class="quiz-option" onclick="answer(this,'q2',true)">Когда дочерний и читает, и изменяет одно и то же значение</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">Когда данные передаются через несколько уровней дерева</button>
+  </div>
+  <div class="quiz-feedback" id="q2-fb"></div>
+</div>
+
+<div class="quiz" id="q3">
+  <p class="quiz-question">3. Два sibling-компонента обмениваются данными. Что выбрать?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q3',false)">input() / output() через общего родительского компонента</button>
+    <button class="quiz-option" onclick="answer(this,'q3',true)">Shared service — синглтон держит состояние для обоих</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">model() — двусторонний сигнал между sibling-компонентами</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">viewChild() — родитель читает свойство дочернего компонента</button>
+  </div>
+  <div class="quiz-feedback" id="q3-fb"></div>
+</div>
+
+<div class="quiz" id="q4">
+  <p class="quiz-question">4. Вызывается ли ngOnChanges при изменении input(), объявленного через signal API?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q4',false)">Да, ngOnChanges вызывается всегда при любом изменении input</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">Да, но только если тип input — объект, а не примитив</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">Да, но только при первом рендере в ngOnChanges SimpleChanges</button>
+    <button class="quiz-option" onclick="answer(this,'q4',true)">Нет, для реакции на изменение нужен effect() или computed()</button>
+  </div>
+  <div class="quiz-feedback" id="q4-fb"></div>
+</div>
+
+<div class="quiz" id="q5">
+  <p class="quiz-question">5. Как сделать input() обязательным (ошибка если не передан)?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q5',false)">input({ required: true }) — передать опцию в объекте настроек</button>
+    <button class="quiz-option" onclick="answer(this,'q5',true)">input.required&lt;T&gt;() — статический метод required на функции input</button>
+    <button class="quiz-option" onclick="answer(this,'q5',false)">@Input({ required: true }) — декоратор с флагом обязательности</button>
+    <button class="quiz-option" onclick="answer(this,'q5',false)">input() с типом без undefined — TypeScript сам проверит</button>
+  </div>
+  <div class="quiz-feedback" id="q5-fb"></div>
+</div>
+
+<hr class="divider" />
+
+<div class="source-link">
+  <strong>Первоисточник:</strong>
+  <a href="https://angular.dev/guide/components/inputs" target="_blank">angular.dev — Component inputs</a>
+  — официальный гайд по input(), output(), model() с примерами и edge cases.
+</div>
+
+<div class="ask-teacher">
+  <strong>Есть вопрос?</strong> Спроси прямо здесь, в чате. Учитель рядом — объяснит, уточнит или покажет пример из твоего реального кода.
+</div>
+
+<div class="nav-links">
+  <a href="0003-components-basics.html">← Урок 3: Компоненты: базовые</a>
+  <span style="color:var(--text-muted); margin:0 8px;">·</span>
+  <a href="0005-signals-basics.html">Урок 5: Signals — базовый →</a>
+</div>
+
+<script>
+  const feedback = {
+    q1: {
+      true: 'Верно. input() возвращает Signal — читается через вызов: this.name() в TS, {{ name() }} в шаблоне.',
+      false: 'Нет. input() возвращает Signal, не обычное свойство. Нужен вызов: this.name(). this.name — это сам объект Signal, не его значение.'
+    },
+    q2: {
+      true: 'Верно. model() — двусторонняя привязка: дочерний и получает значение от родителя, и может менять его через .set().',
+      false: 'Нет. model() решает конкретную задачу — когда компонент и читает, и пишет одно значение. Валидация, несколько родителей, prop drilling — другие задачи.'
+    },
+    q3: {
+      true: 'Верно. Shared service — паттерн для sibling-компонентов. Оба инжектируют сервис и читают/пишут через него.',
+      false: 'Нет. input()/output() и model() работают только по иерархии parent-child. viewChild() — для доступа к дочернему из родителя.'
+    },
+    q4: {
+      true: 'Верно. input() — Signal, ngOnChanges на него не реагирует. Для side effects при изменении — effect(), для производных значений — computed().',
+      false: 'Нет. ngOnChanges триггерится только для @Input() (устаревший API). Signal-based input() с ngOnChanges не интегрируется.'
+    },
+    q5: {
+      true: 'Верно. input.required<T>() — статический метод. Если родитель не передаст значение — ошибка компиляции.',
+      false: 'Нет. Правильный способ — input.required<T>(). Нет опции {required: true} в новом API, и TypeScript не проверяет передачу input-ов из шаблона.'
+    },
+  };
+
+  function answer(btn, qId, isCorrect) {
+    const container = document.getElementById(qId);
+    const allBtns = container.querySelectorAll('.quiz-option');
+    allBtns.forEach(b => { b.disabled = true; });
+    btn.classList.add(isCorrect ? 'correct' : 'wrong');
+    const fb = document.getElementById(qId + '-fb');
+    fb.textContent = feedback[qId][String(isCorrect)];
+    fb.className = 'quiz-feedback show ' + (isCorrect ? 'correct' : 'wrong');
+  }
+</script>
+
+</body>
+</html>

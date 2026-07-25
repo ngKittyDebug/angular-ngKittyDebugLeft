@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Урок 13 — Directives: структурные</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<p class="subtitle">Урок 13 из серии «Angular Interview Prep»</p>
+<h1>Directives — структурные</h1>
+<p class="subtitle">ngIf/ngFor vs @if/@for, ng-container, кастомная структурная директива.</p>
+
+<hr class="divider" />
+
+<h2>1. Атрибутные vs структурные директивы</h2>
+<div class="card">
+  <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border); color:var(--text-muted);">
+        <th style="text-align:left; padding:6px 12px 6px 0;">Атрибутные</th>
+        <th style="text-align:left; padding:6px 12px;">Структурные</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Меняют вид/поведение элемента</td>
+        <td style="padding:8px 12px;">Добавляют/удаляют элементы из DOM</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>[ngClass]</code>, <code>[ngStyle]</code></td>
+        <td style="padding:8px 12px;"><code>*ngIf</code>, <code>*ngFor</code>, <code>*ngSwitch</code></td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px 8px 0;">Элемент остаётся в DOM</td>
+        <td style="padding:8px 12px;">Элемент удаляется из DOM при false/пустом массиве</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>2. ngIf / ngFor / ngSwitch vs control flow</h2>
+<div class="card">
+  <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border); color:var(--text-muted);">
+        <th style="text-align:left; padding:6px 12px 6px 0;">Старый (директивы)</th>
+        <th style="text-align:left; padding:6px 12px;">Новый (Angular 17+ built-in)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>*ngIf="cond; else tpl"</code></td>
+        <td style="padding:8px 12px;"><code>@if (cond) { } @else { }</code></td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>*ngFor="let i of items; trackBy: fn"</code></td>
+        <td style="padding:8px 12px;"><code>@for (i of items; track i.id) { }</code></td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px 8px 0;"><code>[ngSwitch]</code> / <code>*ngSwitchCase</code></td>
+        <td style="padding:8px 12px;"><code>@switch (x) { @case (v) { } }</code></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<p>
+  Новый control flow компилируется в оптимизированный код без накладных расходов директив.
+  Оба способа работают — но новый предпочтителен в Angular 17+.
+</p>
+
+<h2>3. ng-container</h2>
+<p>
+  <code>ng-container</code> — невидимый DOM-узел: позволяет применить директиву без добавления
+  лишнего элемента в DOM.
+</p>
+<pre><code>&lt;!-- Без ng-container пришлось бы обернуть в div --&gt;
+&lt;ng-container *ngIf="isLoggedIn"&gt;
+  &lt;h2&gt;Привет, {{ user.name }}&lt;/h2&gt;
+  &lt;app-dashboard /&gt;
+&lt;/ng-container&gt;
+
+&lt;!-- С Angular 17+ --&gt;
+@if (isLoggedIn) {
+  &lt;h2&gt;Привет, {{ user.name }}&lt;/h2&gt;
+  &lt;app-dashboard /&gt;
+}</code></pre>
+
+<h2>4. ngSwitch / ngSwitchCase / ngSwitchDefault</h2>
+<pre><code>&lt;div [ngSwitch]="role"&gt;
+  &lt;span *ngSwitchCase="'admin'"&gt;Администратор&lt;/span&gt;
+  &lt;span *ngSwitchCase="'user'"&gt;Пользователь&lt;/span&gt;
+  &lt;span *ngSwitchDefault&gt;Гость&lt;/span&gt;
+&lt;/div&gt;</code></pre>
+
+<h2>5. Кастомная структурная директива</h2>
+<pre><code>@Directive({
+  selector: '[leftPawIfRole]',
+  standalone: true,
+})
+export class IfRoleDirective {
+  private vcr = inject(ViewContainerRef);
+  private tmpl = inject(TemplateRef);
+  private auth = inject(AuthService);
+
+  leftPawIfRole = input&lt;string&gt;('');
+
+  constructor() {
+    effect(() => {
+      this.vcr.clear();
+      if (this.auth.role() === this.leftPawIfRole()) {
+        this.vcr.createEmbeddedView(this.tmpl);
+      }
+    });
+  }
+}
+
+// использование:
+&lt;button *leftPawIfRole="'admin'"&gt;Удалить&lt;/button&gt;</code></pre>
+<div class="card accent">
+  <span class="tag accent">Механика структурных директив</span>
+  <p>
+    <code>*directive</code> — это сахар над <code>[directive]</code> + <code>ng-template</code>.
+    Angular раскрывает <code>*leftPawIfRole="'admin'"</code> в:
+    <code>&lt;ng-template [leftPawIfRole]="'admin'"&gt;&lt;button&gt;...&lt;/button&gt;&lt;/ng-template&gt;</code>.
+    Директива управляет этим шаблоном через <code>ViewContainerRef</code>.
+  </p>
+</div>
+
+<hr class="divider" />
+
+<h2>Проверь себя</h2>
+<p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:24px;">
+  Retrieval practice — не подглядывай в текст выше. Выбери один вариант.
+</p>
+
+<div class="quiz" id="q1">
+  <p class="quiz-question">1. Что происходит с элементом при *ngIf="false"?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Элемент скрывается через display:none, остаётся в DOM</button>
+    <button class="quiz-option" onclick="answer(this,'q1',true)">Элемент удаляется из DOM — вместе с компонентом и его состоянием</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Элемент скрывается через visibility:hidden, занимает место в DOM</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Элемент переносится в ng-template и остаётся в памяти браузера</button>
+  </div>
+  <div class="quiz-feedback" id="q1-fb"></div>
+</div>
+
+<div class="quiz" id="q2">
+  <p class="quiz-question">2. Зачем нужен ng-container?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q2',false)">Создать невидимый компонент-обёртку со своим ChangeDetection</button>
+    <button class="quiz-option" onclick="answer(this,'q2',true)">Применить директиву без добавления лишнего DOM-элемента</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">Определить переиспользуемый шаблон для ngTemplateOutlet</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">Создать изолированный scope для переменных шаблона</button>
+  </div>
+  <div class="quiz-feedback" id="q2-fb"></div>
+</div>
+
+<div class="quiz" id="q3">
+  <p class="quiz-question">3. Во что Angular раскрывает *myDir="value" в шаблоне?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q3',false)">В &lt;div [myDir]="value"&gt; — обёртку в div с атрибутом</button>
+    <button class="quiz-option" onclick="answer(this,'q3',true)">В &lt;ng-template [myDir]="value"&gt; — директива на ng-template</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">В [myDir]="value" — просто property binding без обёртки</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">В &lt;ng-container [myDir]="value"&gt; — невидимый контейнер</button>
+  </div>
+  <div class="quiz-feedback" id="q3-fb"></div>
+</div>
+
+<div class="quiz" id="q4">
+  <p class="quiz-question">4. Что инжектирует структурная директива для управления DOM?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q4',false)">ElementRef и Renderer2 — для прямого доступа к DOM</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">ChangeDetectorRef — для ручного запуска change detection</button>
+    <button class="quiz-option" onclick="answer(this,'q4',true)">ViewContainerRef и TemplateRef — создаёт/удаляет embedded views</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">ComponentFactoryResolver — для динамического создания компонентов</button>
+  </div>
+  <div class="quiz-feedback" id="q4-fb"></div>
+</div>
+
+<hr class="divider" />
+
+<div class="source-link">
+  <strong>Первоисточник:</strong>
+  <a href="https://angular.dev/guide/directives/structural-directives" target="_blank">angular.dev — Structural directives</a>
+  — ng-template, ViewContainerRef, микро-синтаксис структурных директив.
+</div>
+
+<div class="ask-teacher">
+  <strong>Есть вопрос?</strong> Спроси прямо здесь, в чате. Учитель рядом — объяснит, уточнит или покажет пример из твоего реального кода.
+</div>
+
+<div class="nav-links">
+  <a href="0012-dependency-injection.html">← Урок 12: Dependency Injection</a>
+  <span style="color:var(--text-muted); margin:0 8px;">·</span>
+  <a href="0014-pipes.html">Урок 14: Pipes →</a>
+</div>
+
+<script>
+  const feedback = {
+    q1: {
+      true: 'Верно. *ngIf="false" удаляет элемент из DOM вместе с компонентом, его состоянием и подписками. Это отличает от [hidden] или display:none.',
+      false: 'Нет. display:none — это [hidden] или [style.display]. *ngIf полностью удаляет элемент и создаёт заново при true.'
+    },
+    q2: {
+      true: 'Верно. ng-container — невидимый узел: не создаёт DOM-элемент, но позволяет применить директиву или сгруппировать элементы.',
+      false: 'Нет. ng-container — не компонент. ng-template — для переиспользуемых шаблонов. Scope переменных определяется директивами, не ng-container.'
+    },
+    q3: {
+      true: 'Верно. *myDir="v" → <ng-template [myDir]="v"><original-element/></ng-template>. Angular называет это «microsyntax desugaring».',
+      false: 'Нет. Раскрывается именно в ng-template, не в div или ng-container или просто property binding.'
+    },
+    q4: {
+      true: 'Верно. ViewContainerRef — место вставки в DOM. TemplateRef — шаблон (<ng-template>). createEmbeddedView() добавляет, clear()/remove() удаляет.',
+      false: 'Нет. ElementRef/Renderer2 — для атрибутных директив. ChangeDetectorRef — для CD. ComponentFactoryResolver — для динамических компонентов.'
+    },
+  };
+
+  function answer(btn, qId, isCorrect) {
+    const container = document.getElementById(qId);
+    const allBtns = container.querySelectorAll('.quiz-option');
+    allBtns.forEach(b => { b.disabled = true; });
+    btn.classList.add(isCorrect ? 'correct' : 'wrong');
+    const fb = document.getElementById(qId + '-fb');
+    fb.textContent = feedback[qId][String(isCorrect)];
+    fb.className = 'quiz-feedback show ' + (isCorrect ? 'correct' : 'wrong');
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Урок 19 — HTTP</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<p class="subtitle">Урок 19 из серии «Angular Interview Prep»</p>
+<h1>HTTP</h1>
+<p class="subtitle">HttpClient, interceptors, обработка ошибок, кеширование.</p>
+
+<hr class="divider" />
+
+<h2>1. HttpClient — подключение и базовое использование</h2>
+<pre><code>// app.config.ts
+providers: [provideHttpClient(withInterceptors([authInterceptor]))]
+
+// В сервисе:
+@Injectable({ providedIn: 'root' })
+export class PokemonService {
+  private http = inject(HttpClient);
+
+  getAll() {
+    return this.http.get&lt;Pokemon[]&gt;('/api/pokemon');
+  }
+
+  getById(id: number) {
+    return this.http.get&lt;Pokemon&gt;(`/api/pokemon/${id}`);
+  }
+
+  create(data: CreatePokemonDto) {
+    return this.http.post&lt;Pokemon&gt;('/api/pokemon', data);
+  }
+
+  update(id: number, data: Partial&lt;Pokemon&gt;) {
+    return this.http.put&lt;Pokemon&gt;(`/api/pokemon/${id}`, data);
+  }
+
+  delete(id: number) {
+    return this.http.delete&lt;void&gt;(`/api/pokemon/${id}`);
+  }
+}</code></pre>
+<div class="card accent">
+  <span class="tag orange">Ловушка на интервью</span>
+  <p>
+    HttpClient возвращает <strong>cold Observable</strong> — запрос не отправляется
+    до подписки. Если не подписаться — сервер никогда не получит запрос.
+  </p>
+</div>
+
+<h2>2. Observable vs Promise для HTTP</h2>
+<div class="card">
+  <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border); color:var(--text-muted);">
+        <th style="text-align:left; padding:6px 12px 6px 0;">Observable (HttpClient)</th>
+        <th style="text-align:left; padding:6px 12px;">Promise</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Можно отменить (unsubscribe)</td>
+        <td style="padding:8px 12px;">Нельзя отменить</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Богатый набор операторов (retry, map)</td>
+        <td style="padding:8px 12px;">Только .then/.catch</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px 8px 0;">Работает с RxJS пайплайном</td>
+        <td style="padding:8px 12px;">Проще для одноразовых запросов</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>3. Обработка ошибок</h2>
+<pre><code>this.http.get&lt;User&gt;('/api/user')
+  .pipe(
+    catchError((error: HttpErrorResponse) => {
+      if (error.status === 401) {
+        this.auth.logout();
+      }
+      return throwError(() => new Error(error.message));
+    }),
+    retry(3), // повторить 3 раза при ошибке
+  )
+  .subscribe({
+    next: user => this.user.set(user),
+    error: err => this.error.set(err.message),
+  });</code></pre>
+
+<h2>4. HttpInterceptor — функциональный API</h2>
+<pre><code>// auth.interceptor.ts
+export const authInterceptor: HttpInterceptorFn = (req, next) => {
+  const token = inject(AuthService).getToken();
+
+  if (!token) return next(req);
+
+  const authReq = req.clone({
+    headers: req.headers.set('Authorization', `Bearer ${token}`),
+  });
+
+  return next(authReq);
+};
+
+// logging.interceptor.ts
+export const loggingInterceptor: HttpInterceptorFn = (req, next) => {
+  console.log(`--> ${req.method} ${req.url}`);
+  return next(req).pipe(
+    tap(event => {
+      if (event instanceof HttpResponse) {
+        console.log(`&lt;-- ${event.status}`);
+      }
+    }),
+  );
+};</code></pre>
+<p>Interceptors выполняются в порядке регистрации при запросе, в обратном — при ответе.</p>
+
+<h2>5. Кеширование</h2>
+<pre><code>// 1. shareReplay — кешировать Observable в памяти
+export class ConfigService {
+  private config$ = this.http.get&lt;Config&gt;('/api/config').pipe(
+    shareReplay(1), // кешируем последний ответ, повторные подписчики получают кеш
+  );
+}
+
+// 2. HttpContext — пометить запрос для interceptor кеша
+export const CACHEABLE = new HttpContextToken(() => false);
+
+this.http.get('/api/data', {
+  context: new HttpContext().set(CACHEABLE, true),
+});</code></pre>
+
+<hr class="divider" />
+
+<h2>Проверь себя</h2>
+<p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:24px;">
+  Retrieval practice — не подглядывай в текст выше. Выбери один вариант.
+</p>
+
+<div class="quiz" id="q1">
+  <p class="quiz-question">1. Когда HttpClient отправит запрос на сервер?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Сразу при вызове http.get() — Observable горячий по умолчанию</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">При первом рендере компонента в котором создан Observable</button>
+    <button class="quiz-option" onclick="answer(this,'q1',true)">При подписке — http.get() возвращает cold Observable</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">При вызове detectChanges() или markForCheck() в компоненте</button>
+  </div>
+  <div class="quiz-feedback" id="q1-fb"></div>
+</div>
+
+<div class="quiz" id="q2">
+  <p class="quiz-question">2. В чём ключевое преимущество Observable над Promise для HTTP?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q2',false)">Observable быстрее — браузер не ожидает ответа сервера</button>
+    <button class="quiz-option" onclick="answer(this,'q2',true)">Observable можно отменить и использовать операторы retry, map, catchError</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">Observable отправляет сразу несколько запросов параллельно</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">Observable автоматически повторяет запрос при любой ошибке сети</button>
+  </div>
+  <div class="quiz-feedback" id="q2-fb"></div>
+</div>
+
+<div class="quiz" id="q3">
+  <p class="quiz-question">3. Interceptors выполняются при запросе в порядке регистрации. А при ответе?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Тоже в порядке регистрации — последовательно как при запросе</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Случайно — зависит от времени ответа каждого interceptor</button>
+    <button class="quiz-option" onclick="answer(this,'q3',true)">В обратном порядке — последний зарегистрированный обрабатывает первым</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Параллельно — все interceptors обрабатывают ответ одновременно</button>
+  </div>
+  <div class="quiz-feedback" id="q3-fb"></div>
+</div>
+
+<div class="quiz" id="q4">
+  <p class="quiz-question">4. Как добавить Authorization header в запрос через interceptor?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q4',false)">req.headers['Authorization'] = token — прямая мутация объекта запроса</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">return next(req, { headers: { Authorization: token } }) — второй аргумент</button>
+    <button class="quiz-option" onclick="answer(this,'q4',true)">req.clone({ headers: req.headers.set('Authorization', token) }) — иммутабельно</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">req.setHeader('Authorization', token) — метод setHeader объекта запроса</button>
+  </div>
+  <div class="quiz-feedback" id="q4-fb"></div>
+</div>
+
+<hr class="divider" />
+
+<div class="source-link">
+  <strong>Первоисточник:</strong>
+  <a href="https://angular.dev/guide/http" target="_blank">angular.dev — HTTP Client</a>
+  — HttpClient, interceptors, error handling, testing HTTP requests.
+</div>
+
+<div class="ask-teacher">
+  <strong>Есть вопрос?</strong> Спроси прямо здесь, в чате. Учитель рядом — объяснит, уточнит или покажет пример из твоего реального кода.
+</div>
+
+<div class="nav-links">
+  <a href="0018-di-advanced.html">← Урок 18: DI — продвинутый</a>
+  <span style="color:var(--text-muted); margin:0 8px;">·</span>
+  <a href="0020-rxjs.html">Урок 20: RxJS →</a>
+</div>
+
+<script>
+  const feedback = {
+    q1: {
+      true: 'Верно. HttpClient возвращает cold Observable — запрос уходит только при subscribe(). Без подписки — нет запроса.',
+      false: 'Нет. Observable от HttpClient — cold, не горячий. Запрос не связан с рендером или CD.'
+    },
+    q2: {
+      true: 'Верно. Observable отменяем (unsubscribe() = отмена запроса), богат операторами, интегрируется в RxJS пайплайны.',
+      false: 'Нет. Скорость та же — сеть одна. Observable не параллелит автоматически. retry нужно настраивать явно.'
+    },
+    q3: {
+      true: 'Верно. Цепочка interceptors — "стек": при запросе снаружи внутрь, при ответе изнутри наружу (обратный порядок).',
+      false: 'Нет. Ответ обрабатывается в обратном порядке — как стек. Это важно для interceptors, которые оборачивают next().'
+    },
+    q4: {
+      true: 'Верно. HttpRequest иммутабелен. req.clone() создаёт копию с изменениями. Прямая мутация не работает — объект заморожен.',
+      false: 'Нет. HttpRequest нельзя мутировать напрямую. Нужен req.clone() с новыми параметрами.'
+    },
+  };
+
+  function answer(btn, qId, isCorrect) {
+    const container = document.getElementById(qId);
+    const allBtns = container.querySelectorAll('.quiz-option');
+    allBtns.forEach(b => { b.disabled = true; });
+    btn.classList.add(isCorrect ? 'correct' : 'wrong');
+    const fb = document.getElementById(qId + '-fb');
+    fb.textContent = feedback[qId][String(isCorrect)];
+    fb.className = 'quiz-feedback show ' + (isCorrect ? 'correct' : 'wrong');
+  }
+</script>
+
+</body>
+</html>

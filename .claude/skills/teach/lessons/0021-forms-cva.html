@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Урок 21 — Forms: ControlValueAccessor</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<p class="subtitle">Урок 21 из серии «Angular Interview Prep»</p>
+<h1>Forms — ControlValueAccessor</h1>
+<p class="subtitle">CVA — мост между кастомным компонентом и Angular Forms API.</p>
+
+<hr class="divider" />
+
+<h2>1. Что такое ControlValueAccessor?</h2>
+<p>
+  <code>ControlValueAccessor</code> (CVA) — интерфейс, позволяющий кастомному компоненту
+  работать как элемент формы: использоваться с <code>formControlName</code>, <code>[(ngModel)]</code>
+  и стандартными валидаторами.
+</p>
+<div class="card accent">
+  <span class="tag accent">Когда нужен CVA</span>
+  <p>
+    Когда создаёшь кастомный UI-элемент ввода (date picker, phone mask, star rating, tag input)
+    и хочешь, чтобы он нативно интегрировался с Angular Forms — работал как <code>&lt;input&gt;</code>.
+  </p>
+</div>
+
+<h2>2. Интерфейс CVA</h2>
+<pre><code>interface ControlValueAccessor {
+  writeValue(value: T): void;       // Forms → компонент: установить значение
+  registerOnChange(fn: Function): void;   // сохранить коллбек для уведомления Forms
+  registerOnTouched(fn: Function): void;  // сохранить коллбек "поле тронуто"
+  setDisabledState?(disabled: boolean): void; // опционально
+}</code></pre>
+
+<h2>3. Реализация кастомного контрола</h2>
+<pre><code>@Component({
+  selector: 'left-paw-rating',
+  standalone: true,
+  template: `
+    @for (star of stars; track star) {
+      &lt;button (click)="select(star)"
+              [class.active]="star &lt;= (value ?? 0)"&gt;★&lt;/button&gt;
+    }
+  `,
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: forwardRef(() => RatingComponent),
+      multi: true,
+    },
+  ],
+})
+export class RatingComponent implements ControlValueAccessor {
+  protected stars = [1, 2, 3, 4, 5];
+  protected value: number | null = null;
+  protected isDisabled = false;
+
+  private onChange = (_: number | null) => {};
+  private onTouched = () => {};
+
+  // Forms пишет в компонент
+  writeValue(v: number | null) { this.value = v; }
+
+  // Компонент уведомляет Forms
+  registerOnChange(fn: (v: number | null) => void) { this.onChange = fn; }
+  registerOnTouched(fn: () => void) { this.onTouched = fn; }
+  setDisabledState(disabled: boolean) { this.isDisabled = disabled; }
+
+  protected select(star: number) {
+    if (this.isDisabled) return;
+    this.value = star;
+    this.onChange(star);
+    this.onTouched();
+  }
+}
+
+// Использование:
+// &lt;left-paw-rating formControlName="rating" /&gt;</code></pre>
+
+<h2>4. Кастомный валидатор для Template-driven Forms</h2>
+<pre><code>@Directive({
+  selector: '[leftPawMinAge]',
+  standalone: true,
+  providers: [
+    { provide: NG_VALIDATORS, useExisting: MinAgeDirective, multi: true },
+  ],
+})
+export class MinAgeDirective implements Validator {
+  minAge = input(18);
+
+  validate(control: AbstractControl): ValidationErrors | null {
+    const age = Number(control.value);
+    return age &gt;= this.minAge()
+      ? null
+      : { minAge: { required: this.minAge(), actual: age } };
+  }
+}
+
+// Использование:
+// &lt;input ngModel leftPawMinAge [minAge]="21" name="age" /&gt;</code></pre>
+<div class="card accent">
+  <span class="tag orange">Ловушка на интервью</span>
+  <p>
+    Обязательно использовать <code>forwardRef(() => MyComponent)</code> при регистрации
+    через <code>useExisting</code> — иначе JavaScript выбросит ошибку «Class used before declaration».
+    Это одна из немногих ситуаций, где <code>forwardRef</code> реально нужен.
+  </p>
+</div>
+
+<hr class="divider" />
+
+<h2>Проверь себя</h2>
+<p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:24px;">
+  Retrieval practice — не подглядывай в текст выше. Выбери один вариант.
+</p>
+
+<div class="quiz" id="q1">
+  <p class="quiz-question">1. Для чего нужен ControlValueAccessor?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Для хранения значения формы на сервере при потере соединения</button>
+    <button class="quiz-option" onclick="answer(this,'q1',true)">Чтобы кастомный компонент работал как нативный элемент формы</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Для двустороннего связывания значений между двумя FormControl</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Для асинхронной валидации значений формы через HTTP запросы</button>
+  </div>
+  <div class="quiz-feedback" id="q1-fb"></div>
+</div>
+
+<div class="quiz" id="q2">
+  <p class="quiz-question">2. Метод writeValue() в CVA — кто его вызывает и зачем?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q2',false)">Компонент вызывает его чтобы уведомить Forms об изменении</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">Разработчик вызывает его напрямую вместо formControl.setValue()</button>
+    <button class="quiz-option" onclick="answer(this,'q2',true)">Angular Forms вызывает его чтобы передать значение в компонент</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">Валидатор вызывает его для сброса значения при ошибке</button>
+  </div>
+  <div class="quiz-feedback" id="q2-fb"></div>
+</div>
+
+<div class="quiz" id="q3">
+  <p class="quiz-question">3. Как зарегистрировать CVA в компоненте?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q3',false)">implements ControlValueAccessor достаточно — Angular обнаружит автоматически</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Декоратор @FormControl() — Angular регистрирует компонент как контрол</button>
+    <button class="quiz-option" onclick="answer(this,'q3',true)">providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(...)  multi: true }]</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">inject(FormBuilder).registerAccessor(MyComponent) в конструкторе</button>
+  </div>
+  <div class="quiz-feedback" id="q3-fb"></div>
+</div>
+
+<div class="quiz" id="q4">
+  <p class="quiz-question">4. onChange(value) в CVA — когда нужно его вызывать?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q4',false)">При каждом рендере компонента в цикле change detection</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">В writeValue() — чтобы Forms знал о получении нового значения</button>
+    <button class="quiz-option" onclick="answer(this,'q4',true)">Когда пользователь меняет значение — чтобы Forms получил обновление</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">В registerOnChange() — сразу при сохранении коллбека формы</button>
+  </div>
+  <div class="quiz-feedback" id="q4-fb"></div>
+</div>
+
+<hr class="divider" />
+
+<div class="source-link">
+  <strong>Первоисточник:</strong>
+  <a href="https://angular.dev/guide/forms/control-value-accessor" target="_blank">angular.dev — ControlValueAccessor</a>
+  — официальный гайд с примером кастомного form control.
+</div>
+
+<div class="ask-teacher">
+  <strong>Есть вопрос?</strong> Спроси прямо здесь, в чате. Учитель рядом — объяснит, уточнит или покажет пример из твоего реального кода.
+</div>
+
+<div class="nav-links">
+  <a href="0020-rxjs.html">← Урок 20: RxJS</a>
+  <span style="color:var(--text-muted); margin:0 8px;">·</span>
+  <a href="0022-testing.html">Урок 22: Testing →</a>
+</div>
+
+<script>
+  const feedback = {
+    q1: {
+      true: 'Верно. CVA — мост между кастомным компонентом и Angular Forms API. Позволяет использовать formControlName, ngModel, валидаторы.',
+      false: 'Нет. CVA — про интеграцию с Forms API, не про сервер, не про связывание двух контролов, не про async валидацию.'
+    },
+    q2: {
+      true: 'Верно. writeValue() — направление Forms → компонент. Angular вызывает его при setValue()/patchValue() или инициализации формы.',
+      false: 'Нет. writeValue() вызывает Forms, не компонент. Для уведомления Forms в обратном направлении — onChange().'
+    },
+    q3: {
+      true: 'Верно. NG_VALUE_ACCESSOR с multi:true + forwardRef — обязательная регистрация. Без неё Angular не знает о CVA.',
+      false: 'Нет. Implements интерфейса недостаточно — нужна регистрация в providers. @FormControl не существует.'
+    },
+    q4: {
+      true: 'Верно. onChange(value) — уведомление Forms о том, что пользователь изменил значение. Вызывать в обработчике пользовательского ввода.',
+      false: 'Нет. onChange() вызывается при пользовательском вводе, не при рендере или в writeValue() (это вызвало бы цикл).'
+    },
+  };
+
+  function answer(btn, qId, isCorrect) {
+    const container = document.getElementById(qId);
+    const allBtns = container.querySelectorAll('.quiz-option');
+    allBtns.forEach(b => { b.disabled = true; });
+    btn.classList.add(isCorrect ? 'correct' : 'wrong');
+    const fb = document.getElementById(qId + '-fb');
+    fb.textContent = feedback[qId][String(isCorrect)];
+    fb.className = 'quiz-feedback show ' + (isCorrect ? 'correct' : 'wrong');
+  }
+</script>
+
+</body>
+</html>

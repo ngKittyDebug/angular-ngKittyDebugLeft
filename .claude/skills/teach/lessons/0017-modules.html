@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Урок 17 — Modules</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<p class="subtitle">Урок 17 из серии «Angular Interview Prep»</p>
+<h1>Modules (NgModule)</h1>
+<p class="subtitle">Структура NgModule, роль в приложении, современный standalone-мир.</p>
+
+<hr class="divider" />
+
+<h2>1. Что такое NgModule?</h2>
+<p>
+  NgModule — контейнер, объединяющий компоненты, директивы, пайпы и сервисы
+  в связные функциональные блоки. До Angular 14 — единственный способ организации приложения.
+  В Angular 17+ standalone компоненты — дефолт, NgModule уходит в прошлое,
+  но спрашивают о нём на интервью постоянно.
+</p>
+
+<h2>2. Структура NgModule</h2>
+<pre><code>@NgModule({
+  declarations: [
+    AppComponent,
+    HeaderComponent,   // компоненты/директивы/пайпы этого модуля
+  ],
+  imports: [
+    BrowserModule,     // другие модули, чьи экспорты нужны здесь
+    RouterModule,
+    HttpClientModule,
+  ],
+  exports: [
+    HeaderComponent,   // что доступно другим модулям
+  ],
+  providers: [
+    UserService,       // сервисы для DI (лучше использовать providedIn)
+  ],
+  bootstrap: [AppComponent], // только в корневом AppModule
+})
+export class AppModule { }</code></pre>
+
+<div class="card">
+  <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border); color:var(--text-muted);">
+        <th style="text-align:left; padding:6px 12px 6px 0;">Поле</th>
+        <th style="text-align:left; padding:6px 12px;">Что в нём</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>declarations</code></td>
+        <td style="padding:8px 12px;">Компоненты, директивы, пайпы этого модуля</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>imports</code></td>
+        <td style="padding:8px 12px;">Модули, экспорты которых нужны в декларациях</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>exports</code></td>
+        <td style="padding:8px 12px;">Что становится доступным при импорте этого модуля</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>providers</code></td>
+        <td style="padding:8px 12px;">Сервисы для injector этого модуля</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px 8px 0;"><code>bootstrap</code></td>
+        <td style="padding:8px 12px;">Корневой компонент (только в AppModule)</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>3. Разделение на Feature Modules</h2>
+<pre><code>// user.module.ts
+@NgModule({
+  declarations: [UserListComponent, UserCardComponent],
+  imports: [CommonModule, RouterModule],
+  exports: [UserCardComponent], // только нужное наружу
+})
+export class UserModule { }
+
+// app.module.ts
+@NgModule({
+  imports: [BrowserModule, UserModule, ...],
+  bootstrap: [AppComponent],
+})
+export class AppModule { }</code></pre>
+
+<h2>4. Standalone vs NgModule — современный мир</h2>
+<div class="card green">
+  <p>В Angular 17+ standalone компоненты — дефолт. Новые проекты создаются без NgModule.</p>
+</div>
+<div class="card">
+  <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border); color:var(--text-muted);">
+        <th style="text-align:left; padding:6px 12px 6px 0;">NgModule подход</th>
+        <th style="text-align:left; padding:6px 12px;">Standalone подход</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Компонент в declarations модуля</td>
+        <td style="padding:8px 12px;"><code>standalone: true</code>, импорты в @Component</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Провайдеры в NgModule.providers</td>
+        <td style="padding:8px 12px;">Провайдеры в app.config.ts или маршруте</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px 8px 0;">Lazy: loadChildren → NgModule</td>
+        <td style="padding:8px 12px;">Lazy: loadChildren → Routes[], loadComponent → Component</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<div class="card accent">
+  <span class="tag orange">Ловушка на интервью</span>
+  <p>
+    Компонент объявлен в NgModule <strong>И</strong> помечен <code>standalone: true</code> —
+    ошибка компиляции. Standalone компонент нельзя добавлять в <code>declarations</code>.
+    Его можно только <code>import</code>ировать в другой standalone компонент или NgModule.
+  </p>
+</div>
+
+<hr class="divider" />
+
+<h2>Проверь себя</h2>
+<p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:24px;">
+  Retrieval practice — не подглядывай в текст выше. Выбери один вариант.
+</p>
+
+<div class="quiz" id="q1">
+  <p class="quiz-question">1. В каком поле NgModule объявляются компоненты этого модуля?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q1',false)">imports — поле для добавления компонентов данного модуля</button>
+    <button class="quiz-option" onclick="answer(this,'q1',true)">declarations — поле для компонентов, директив и пайпов</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">exports — поле для компонентов, видимых другим модулям</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">providers — поле для компонентов с собственным DI-деревом</button>
+  </div>
+  <div class="quiz-feedback" id="q1-fb"></div>
+</div>
+
+<div class="quiz" id="q2">
+  <p class="quiz-question">2. Что нужно добавить в exports, чтобы другой модуль мог использовать компонент?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q2',false)">Добавить компонент в imports другого модуля напрямую</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">Пометить компонент декоратором @PublicApi из Angular core</button>
+    <button class="quiz-option" onclick="answer(this,'q2',true)">Добавить компонент в exports текущего NgModule для доступа</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">Добавить компонент в bootstrap массив AppModule приложения</button>
+  </div>
+  <div class="quiz-feedback" id="q2-fb"></div>
+</div>
+
+<div class="quiz" id="q3">
+  <p class="quiz-question">3. Standalone компонент и NgModule: можно ли standalone объявить в declarations?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Да — это стандартный способ смешивать standalone с NgModule</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Да — но только если NgModule помечен как standalone: true тоже</button>
+    <button class="quiz-option" onclick="answer(this,'q3',true)">Нет — standalone компоненты нельзя в declarations, только в imports</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Нет — standalone нельзя использовать внутри NgModule вообще</button>
+  </div>
+  <div class="quiz-feedback" id="q3-fb"></div>
+</div>
+
+<div class="quiz" id="q4">
+  <p class="quiz-question">4. В каком поле NgModule указывается корневой компонент приложения?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q4',false)">entryComponents — устаревшее поле для точки входа</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">declarations — все компоненты модуля включая корневой</button>
+    <button class="quiz-option" onclick="answer(this,'q4',true)">bootstrap — только в AppModule, указывает корневой компонент</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">exports — компонент должен быть экспортирован наружу</button>
+  </div>
+  <div class="quiz-feedback" id="q4-fb"></div>
+</div>
+
+<hr class="divider" />
+
+<div class="source-link">
+  <strong>Первоисточник:</strong>
+  <a href="https://angular.dev/guide/ngmodules" target="_blank">angular.dev — NgModules</a>
+  — структура модулей, lazy loading NgModule, миграция на standalone.
+</div>
+
+<div class="ask-teacher">
+  <strong>Есть вопрос?</strong> Спроси прямо здесь, в чате. Учитель рядом — объяснит, уточнит или покажет пример из твоего реального кода.
+</div>
+
+<div class="nav-links">
+  <a href="0016-components-advanced.html">← Урок 16: Components — продвинутый</a>
+  <span style="color:var(--text-muted); margin:0 8px;">·</span>
+  <a href="0018-di-advanced.html">Урок 18: DI — продвинутый →</a>
+</div>
+
+<script>
+  const feedback = {
+    q1: {
+      true: 'Верно. declarations — компоненты, директивы и пайпы этого NgModule. imports — другие модули.',
+      false: 'Нет. imports — для других модулей. exports — что видно снаружи. providers — для сервисов DI. declarations — для компонентов.'
+    },
+    q2: {
+      true: 'Верно. Добавляешь компонент в exports модуля → другой модуль импортирует этот модуль → компонент доступен.',
+      false: 'Нет. Напрямую добавить компонент другого модуля в imports — нельзя. Нужно добавить сам NgModule или standalone компонент.'
+    },
+    q3: {
+      true: 'Верно. Standalone компоненты нельзя в declarations — ошибка компиляции. Их добавляют в imports (NgModule или другого standalone).',
+      false: 'Нет. declarations строго для non-standalone. Standalone компоненты — только в imports.'
+    },
+    q4: {
+      true: 'Верно. bootstrap: [AppComponent] — только в корневом AppModule. Указывает компонент, который Angular рендерит в <app-root>.',
+      false: 'Нет. entryComponents — устарело в Angular 9+. declarations — все компоненты модуля. exports — публичное API.'
+    },
+  };
+
+  function answer(btn, qId, isCorrect) {
+    const container = document.getElementById(qId);
+    const allBtns = container.querySelectorAll('.quiz-option');
+    allBtns.forEach(b => { b.disabled = true; });
+    btn.classList.add(isCorrect ? 'correct' : 'wrong');
+    const fb = document.getElementById(qId + '-fb');
+    fb.textContent = feedback[qId][String(isCorrect)];
+    fb.className = 'quiz-feedback show ' + (isCorrect ? 'correct' : 'wrong');
+  }
+</script>
+
+</body>
+</html>

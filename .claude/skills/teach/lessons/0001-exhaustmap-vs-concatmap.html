@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Урок 1 — exhaustMap vs concatMap</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<p class="subtitle">Урок 1 из серии «RxJS Higher-Order Mapping»</p>
+<h1>exhaustMap vs concatMap</h1>
+<p class="subtitle">Оба оператора защищают от гонки запросов — но по-разному.</p>
+
+<hr class="divider" />
+
+<h2>Общий контекст</h2>
+<p>
+  Когда источник Observable эмитит значение, а предыдущий «внутренний» Observable
+  ещё не завершился, у нас возникает конфликт. Разные операторы решают его по-разному:
+</p>
+
+<div class="card">
+  <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border); color:var(--text-muted);">
+        <th style="text-align:left; padding:8px 12px 8px 0;">Оператор</th>
+        <th style="text-align:left; padding:8px 12px;">Что делает с новым значением, пока идёт предыдущий запрос</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:10px 12px 10px 0;"><code>switchMap</code></td>
+        <td style="padding:10px 12px;"><strong>Отменяет</strong> предыдущий, запускает новый</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:10px 12px 10px 0;"><code>exhaustMap</code></td>
+        <td style="padding:10px 12px;"><strong>Игнорирует</strong> новое — предыдущий продолжает работать</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:10px 12px 10px 0;"><code>concatMap</code></td>
+        <td style="padding:10px 12px;"><strong>Ставит в очередь</strong> — запустит после завершения предыдущего</td>
+      </tr>
+      <tr>
+        <td style="padding:10px 12px 10px 0;"><code>mergeMap</code></td>
+        <td style="padding:10px 12px;"><strong>Запускает параллельно</strong> — не ждёт никого</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<hr class="divider" />
+
+<h2>exhaustMap — «Занято, перезвоните позже»</h2>
+
+<p>
+  Представь кнопку «Сохранить». Пользователь кликает дважды.
+  <code>exhaustMap</code> обрабатывает <strong>первый клик</strong>, второй <strong>выбрасывает</strong>.
+  Когда первый запрос завершится — оператор снова готов принять следующий.
+</p>
+
+<div style="margin: 20px 0;">
+  <p style="color:var(--text-muted); font-size:0.8rem; margin-bottom:8px;">Мраморная диаграмма:</p>
+  <div class="marble-row">
+    <span class="marble-label">клики:</span>
+    <div class="marble-track">
+      <span class="m m-a">1</span>
+      <span class="m-gap"></span>
+      <span class="m m-a m-ignored">2</span>
+      <span class="m-gap"></span>
+      <span class="m m-a">3</span>
+    </div>
+  </div>
+  <div class="marble-row">
+    <span class="marble-label">запросы:</span>
+    <div class="marble-track">
+      <span class="m m-b">1</span>
+      <span class="m-gap"></span>
+      <span style="color:var(--red); font-size:0.75rem; align-self:center;">×2 игнор</span>
+      <span class="m-gap"></span>
+      <span class="m m-b">3</span>
+    </div>
+  </div>
+  <p style="font-size:0.8rem; color:var(--text-muted); margin-top:6px;">
+    Клик 2 пришёл пока выполнялся запрос 1 — он отброшен навсегда.
+  </p>
+</div>
+
+<div class="card orange">
+  <span class="tag orange">Ключевое</span>
+  <p><strong>exhaustMap теряет промежуточные события.</strong> Это сознательно — нам не важно,
+  сколько раз пользователь нажал «Удалить аккаунт» пока идёт первый запрос.</p>
+</div>
+
+<h3>В твоём коде</h3>
+<pre><code>// profile.store.ts — updateProfile
+updateProfile: rxMethod&lt;UpdateUserModel&gt;(
+  pipe(
+    tap(() =&gt; patchState(store, { isLoading: true })),
+    exhaustMap((dto) =&gt;           // &lt;-- если пользователь кликнул "Сохранить" дважды —
+      api.updateUser(dto).pipe(   //     второй клик игнорируется
+        tap(...)
+      )
+    ),
+  ),
+),</code></pre>
+
+<p>Так же используется для <code>deleteAccount</code> и <code>changePassword</code> — там тоже недопустимо дублировать запрос.</p>
+
+<hr class="divider" />
+
+<h2>concatMap — «Стань в очередь»</h2>
+
+<p>
+  Представь что пользователь быстро добавил покемона в избранное, потом убрал.
+  Нам важно что <strong>оба</strong> запроса выполнятся, и <strong>в правильном порядке</strong>.
+  <code>concatMap</code> ставит второй запрос в очередь и ждёт завершения первого.
+</p>
+
+<div style="margin: 20px 0;">
+  <p style="color:var(--text-muted); font-size:0.8rem; margin-bottom:8px;">Мраморная диаграмма:</p>
+  <div class="marble-row">
+    <span class="marble-label">события:</span>
+    <div class="marble-track">
+      <span class="m m-a">+</span>
+      <span class="m-gap"></span>
+      <span class="m m-a m-queued">–</span>
+    </div>
+  </div>
+  <div class="marble-row">
+    <span class="marble-label">запросы:</span>
+    <div class="marble-track">
+      <span class="m m-b">+</span>
+      <span class="m-gap"></span>
+      <span style="color:var(--text-muted); font-size:0.75rem; align-self:center;">ждёт...</span>
+      <span class="m-gap"></span>
+      <span class="m m-b">–</span>
+    </div>
+  </div>
+  <p style="font-size:0.8rem; color:var(--text-muted); margin-top:6px;">
+    Минус пришёл пока выполнялся плюс — он поставлен в очередь, не потерян.
+  </p>
+</div>
+
+<div class="card green">
+  <span class="tag green">Ключевое</span>
+  <p><strong>concatMap не теряет ни одно событие.</strong> Все запросы выполнятся
+  последовательно в том порядке, в котором пришли.</p>
+</div>
+
+<h3>В твоём коде</h3>
+<pre><code>// profile.store.ts — addToFavorites
+addToFavorites: rxMethod&lt;string&gt;(
+  pipe(
+    tap(() =&gt; patchState(store, { isLoading: true })),
+    concatMap((pokemonName) =&gt;         // &lt;-- быстрое "добавить + убрать":
+      api.addFavorite(pokemonName).pipe(//     оба запроса выполнятся по очереди
+        tap(...)
+      )
+    ),
+  ),
+),</code></pre>
+
+<hr class="divider" />
+
+<h2>Как их различить на собеседовании</h2>
+
+<div class="card accent">
+  <p>Задай себе один вопрос:<br/>
+  <strong>«Важно ли мне, что произойдёт с этим событием, пока идёт предыдущий запрос?»</strong></p>
+  <p style="margin-top:12px;">
+    — <strong>Нет, потеря допустима</strong> → <code>exhaustMap</code><br/>
+    — <strong>Да, нельзя терять</strong> → <code>concatMap</code>
+  </p>
+</div>
+
+<hr class="divider" />
+
+<h2>Проверь себя</h2>
+
+<div class="quiz" id="q1">
+  <p class="quiz-question">1. Пользователь трижды быстро кликает «Удалить аккаунт». Какой оператор правильный?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q1',false)">concatMap — все три запроса выполнятся по очереди</button>
+    <button class="quiz-option" onclick="answer(this,'q1',true)">exhaustMap — первый запрос выполнится, два других отброшены</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">switchMap — каждый новый клик отменяет предыдущий запрос</button>
+  </div>
+  <div class="quiz-feedback" id="q1-feedback"></div>
+</div>
+
+<div class="quiz" id="q2" style="display:none;">
+  <p class="quiz-question">2. Пользователь быстро добавил в избранное «Pikachu», потом убрал. Итого 2 запроса. Важно что оба выполнятся и в правильном порядке. Какой оператор?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q2',false)">exhaustMap — второй запрос будет проигнорирован</button>
+    <button class="quiz-option" onclick="answer(this,'q2',true)">concatMap — оба запроса выполнятся последовательно</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">mergeMap — оба запроса выполнятся параллельно</button>
+  </div>
+  <div class="quiz-feedback" id="q2-feedback"></div>
+</div>
+
+<div class="quiz" id="q3" style="display:none;">
+  <p class="quiz-question">3. Что возвращает exhaustMap если новое событие пришло пока старый запрос ещё в полёте?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Ставит новое событие в очередь и ждёт завершения текущего</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Отменяет текущий запрос и стартует новый</button>
+    <button class="quiz-option" onclick="answer(this,'q3',true)">Полностью игнорирует новое событие — оно потеряно</button>
+  </div>
+  <div class="quiz-feedback" id="q3-feedback"></div>
+</div>
+
+<div id="quiz-done" style="display:none;" class="card green">
+  <strong>Отлично! Все вопросы пройдены.</strong><br/>
+  Вернись к этому уроку завтра и попробуй ответить без подсказок — это укрепит долгосрочную память.
+</div>
+
+<hr class="divider" />
+
+<div class="source-link">
+  <strong>Первоисточник для чтения:</strong><br/>
+  <a href="https://rxjs.dev/api/operators/exhaustMap" target="_blank">RxJS docs — exhaustMap</a> ·
+  <a href="https://rxjs.dev/api/operators/concatMap" target="_blank">RxJS docs — concatMap</a><br/>
+  <span style="color:var(--text-muted); font-size:0.85rem;">
+    Официальная документация RxJS с мраморными диаграммами — самый надёжный источник.
+  </span>
+</div>
+
+<div class="ask-teacher">
+  <strong>Остались вопросы?</strong> Напиши учителю прямо в чат —
+  он объяснит любой момент, разберёт дополнительный пример или устроит мини-опрос.
+</div>
+
+<script>
+const feedback = {
+  q1: {
+    correct: 'Верно. exhaustMap обрабатывает первый запрос и игнорирует остальные пока он не завершится. Для деструктивных операций это правильная защита.',
+    wrong: 'Подумай: нам важно выполнить все три удаления? Или достаточно одного?'
+  },
+  q2: {
+    correct: 'Верно. concatMap ставит второй запрос в очередь — он выполнится сразу после первого, порядок сохранён.',
+    wrong: 'Подумай: нам важно что оба запроса выполнятся? Тогда нельзя использовать оператор, который теряет события.'
+  },
+  q3: {
+    correct: 'Верно. Это ключевое свойство exhaustMap — новые события в полёте просто отбрасываются.',
+    wrong: 'Это описание другого оператора. exhaustMap не ставит в очередь и не отменяет — он игнорирует.'
+  }
+};
+
+const order = ['q1','q2','q3'];
+
+function answer(btn, quizId, isCorrect) {
+  const quiz = document.getElementById(quizId);
+  const options = quiz.querySelectorAll('.quiz-option');
+  options.forEach(o => { o.disabled = true; });
+  btn.classList.add(isCorrect ? 'correct' : 'wrong');
+
+  const fb = document.getElementById(quizId + '-feedback');
+  fb.textContent = isCorrect ? '✓ ' + feedback[quizId].correct : '✗ ' + feedback[quizId].wrong;
+  fb.className = 'quiz-feedback show ' + (isCorrect ? 'correct' : 'wrong');
+
+  if (isCorrect) {
+    const idx = order.indexOf(quizId);
+    const next = order[idx + 1];
+    setTimeout(() => {
+      if (next) {
+        document.getElementById(next).style.display = 'block';
+      } else {
+        document.getElementById('quiz-done').style.display = 'block';
+      }
+    }, 800);
+  }
+}
+</script>
+
+<div class="nav-links">
+  <span style="color:var(--text-muted)">← начало курса</span>
+  <span style="color:var(--text-muted); margin:0 8px;">·</span>
+  <a href="0002-angular-basics-and-cli.html">Урок 2: Angular: основы и CLI →</a>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Урок 16 — Components: продвинутый</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<p class="subtitle">Урок 16 из серии «Angular Interview Prep»</p>
+<h1>Components — продвинутый</h1>
+<p class="subtitle">ViewEncapsulation, host, ng-content, ng-template, ngTemplateOutlet, contentChild.</p>
+
+<hr class="divider" />
+
+<h2>1. ViewEncapsulation</h2>
+<div class="card">
+  <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border); color:var(--text-muted);">
+        <th style="text-align:left; padding:6px 12px 6px 0;">Режим</th>
+        <th style="text-align:left; padding:6px 12px;">Поведение</th>
+        <th style="text-align:left; padding:6px 12px;">Когда</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>Emulated</code> (default)</td>
+        <td style="padding:8px 12px;">Angular добавляет уникальные атрибуты к селекторам</td>
+        <td style="padding:8px 12px;">Всегда, кроме исключений</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>None</code></td>
+        <td style="padding:8px 12px;">Стили глобальные, нет изоляции</td>
+        <td style="padding:8px 12px;">Когда нужны глобальные стили из компонента</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px 8px 0;"><code>ShadowDom</code></td>
+        <td style="padding:8px 12px;">Нативный Shadow DOM браузера</td>
+        <td style="padding:8px 12px;">Web Components, полная изоляция</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>2. host в @Component</h2>
+<pre><code>@Component({
+  selector: 'left-paw-card',
+  host: {
+    'class': 'card',              // статический класс
+    '[class.active]': 'isActive()', // динамический класс
+    '[attr.aria-label]': 'label()', // атрибут
+    '(click)': 'onClick()',         // событие
+    'role': 'article',              // статический атрибут
+  },
+})</code></pre>
+<div class="card accent">
+  <span class="tag accent">host vs @HostBinding/@HostListener</span>
+  <p>
+    Оба делают одно и то же. <code>host: {}</code> — декларативно, всё в одном месте,
+    предпочтительно. <code>@HostBinding/@HostListener</code> — декораторы на методах/свойствах,
+    старый стиль.
+  </p>
+</div>
+
+<h2>3. exportAs и providers в @Component</h2>
+<pre><code>@Component({
+  selector: 'left-paw-modal',
+  exportAs: 'modal',            // имя для ссылки в шаблоне
+  providers: [ModalService],    // изолированный сервис
+})
+export class ModalComponent {
+  open() { ... }
+  close() { ... }
+}
+
+// В шаблоне:
+&lt;left-paw-modal #myModal="modal" /&gt;
+&lt;button (click)="myModal.open()"&gt;Открыть&lt;/button&gt;</code></pre>
+
+<h2>4. ng-content — слоты</h2>
+<pre><code>// card.component.html
+&lt;div class="card"&gt;
+  &lt;ng-content select="[slot=header]" /&gt;
+  &lt;ng-content /&gt;  &lt;!-- дефолтный слот --&gt;
+  &lt;ng-content select="[slot=footer]" /&gt;
+&lt;/div&gt;
+
+// использование:
+&lt;left-paw-card&gt;
+  &lt;h2 slot="header"&gt;Заголовок&lt;/h2&gt;
+  &lt;p&gt;Основной контент&lt;/p&gt;
+  &lt;button slot="footer"&gt;Закрыть&lt;/button&gt;
+&lt;/left-paw-card&gt;</code></pre>
+
+<h2>5. ng-template и ngTemplateOutlet</h2>
+<pre><code>// Определяем шаблон
+&lt;ng-template #loadingTpl&gt;
+  &lt;div class="spinner"&gt;Загрузка...&lt;/div&gt;
+&lt;/ng-template&gt;
+
+// Рендерим через outlet:
+&lt;ng-container *ngTemplateOutlet="loadingTpl" /&gt;
+
+// С контекстом:
+&lt;ng-template #greet let-name="name"&gt;
+  &lt;p&gt;Привет, {{ name }}&lt;/p&gt;
+&lt;/ng-template&gt;
+&lt;ng-container *ngTemplateOutlet="greet; context: { name: 'Оксана' }" /&gt;</code></pre>
+
+<h2>6. contentChild и contentChildren</h2>
+<pre><code>// Компонент получает доступ к проецируемому контенту:
+@Component({ template: '&lt;ng-content /&gt;' })
+export class TabGroupComponent {
+  // Signal API (Angular 17+):
+  activeTab = contentChild(TabComponent);
+  allTabs = contentChildren(TabComponent);
+
+  ngAfterContentInit() {
+    // contentChild доступен здесь
+    console.log(this.activeTab()?.label);
+  }
+}</code></pre>
+<div class="card accent">
+  <span class="tag orange">ViewChild vs ContentChild</span>
+  <p>
+    <code>viewChild</code> — для элементов в собственном шаблоне компонента.<br />
+    <code>contentChild</code> — для элементов, проецируемых через <code>ng-content</code>
+    (приходят от родителя).
+  </p>
+</div>
+
+<hr class="divider" />
+
+<h2>Проверь себя</h2>
+<p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:24px;">
+  Retrieval practice — не подглядывай в текст выше. Выбери один вариант.
+</p>
+
+<div class="quiz" id="q1">
+  <p class="quiz-question">1. Какой ViewEncapsulation режим добавляет атрибуты вида _ngcontent-xxx?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q1',false)">ShadowDom — через нативный Shadow DOM браузера</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">None — стили становятся глобальными без атрибутов</button>
+    <button class="quiz-option" onclick="answer(this,'q1',true)">Emulated — Angular эмулирует изоляцию через уникальные атрибуты</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Scoped — режим из CSS Modules для Angular компонентов</button>
+  </div>
+  <div class="quiz-feedback" id="q1-fb"></div>
+</div>
+
+<div class="quiz" id="q2">
+  <p class="quiz-question">2. Для чего нужен параметр exportAs в @Component?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q2',false)">Экспортировать компонент для использования в других модулях</button>
+    <button class="quiz-option" onclick="answer(this,'q2',true)">Дать имя для template reference — #ref="exportAs" в шаблоне</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">Сделать компонент публичным API библиотеки Angular Elements</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">Определить имя компонента для Angular DevTools отладки</button>
+  </div>
+  <div class="quiz-feedback" id="q2-fb"></div>
+</div>
+
+<div class="quiz" id="q3">
+  <p class="quiz-question">3. Что такое ng-content?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Элемент для создания переиспользуемых шаблонов в компоненте</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Контейнер для lazy-loaded компонентов через динамический импорт</button>
+    <button class="quiz-option" onclick="answer(this,'q3',true)">Слот проекции контента — рендерит дочерние элементы от родителя</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Место для рендеринга активного маршрута в layout компоненте</button>
+  </div>
+  <div class="quiz-feedback" id="q3-fb"></div>
+</div>
+
+<div class="quiz" id="q4">
+  <p class="quiz-question">4. Чем contentChild() отличается от viewChild()?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q4',false)">contentChild() доступен в ngOnInit, viewChild() только в ngAfterViewInit</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">contentChild() для родительских компонентов, viewChild() для дочерних</button>
+    <button class="quiz-option" onclick="answer(this,'q4',true)">contentChild() ищет в ng-content проекции, viewChild() — в своём шаблоне</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">contentChild() возвращает Observable, viewChild() возвращает Signal</button>
+  </div>
+  <div class="quiz-feedback" id="q4-fb"></div>
+</div>
+
+<hr class="divider" />
+
+<div class="source-link">
+  <strong>Первоисточник:</strong>
+  <a href="https://angular.dev/guide/components/content-projection" target="_blank">angular.dev — Content projection</a>
+  — ng-content, multi-slot projection, ngTemplateOutlet, contentChild.
+</div>
+
+<div class="ask-teacher">
+  <strong>Есть вопрос?</strong> Спроси прямо здесь, в чате. Учитель рядом — объяснит, уточнит или покажет пример из твоего реального кода.
+</div>
+
+<div class="nav-links">
+  <a href="0015-forms.html">← Урок 15: Forms</a>
+  <span style="color:var(--text-muted); margin:0 8px;">·</span>
+  <a href="0017-modules.html">Урок 17: Modules →</a>
+</div>
+
+<script>
+  const feedback = {
+    q1: {
+      true: 'Верно. Emulated — дефолт. Angular добавляет _ngcontent-xxx атрибуты, эмулируя изоляцию стилей без Shadow DOM.',
+      false: 'Нет. ShadowDom — нативный Shadow DOM браузера. None — нет изоляции. Scoped — не существует в Angular.'
+    },
+    q2: {
+      true: 'Верно. exportAs позволяет использовать компонент/директиву через template reference: <comp #ref="myAlias">, затем ref.method().',
+      false: 'Нет. exportAs — не про модули и не про DevTools. Это механизм для доступа к компоненту из шаблона через template reference.'
+    },
+    q3: {
+      true: 'Верно. ng-content — слот для контент-проекции. Родитель передаёт дочерние элементы, компонент рендерит их в слот.',
+      false: 'Нет. ng-template — для переиспользуемых шаблонов. router-outlet — для маршрутов. ng-content — проекция.'
+    },
+    q4: {
+      true: 'Верно. viewChild() ищет в собственном шаблоне компонента. contentChild() — в контенте, спроецированном через ng-content.',
+      false: 'Нет. Оба возвращают Signal (Angular 17+). Доступность: contentChild в ngAfterContentInit, viewChild в ngAfterViewInit.'
+    },
+  };
+
+  function answer(btn, qId, isCorrect) {
+    const container = document.getElementById(qId);
+    const allBtns = container.querySelectorAll('.quiz-option');
+    allBtns.forEach(b => { b.disabled = true; });
+    btn.classList.add(isCorrect ? 'correct' : 'wrong');
+    const fb = document.getElementById(qId + '-fb');
+    fb.textContent = feedback[qId][String(isCorrect)];
+    fb.className = 'quiz-feedback show ' + (isCorrect ? 'correct' : 'wrong');
+  }
+</script>
+
+</body>
+</html>

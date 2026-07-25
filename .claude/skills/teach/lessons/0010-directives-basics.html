@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Урок 10 — Directives: базовые</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<p class="subtitle">Урок 10 из серии «Angular Interview Prep»</p>
+<h1>Directives — базовые</h1>
+<p class="subtitle">Типы директив, @Directive, HostBinding, HostListener, ElementRef vs Renderer2.</p>
+
+<hr class="divider" />
+
+<h2>1. Что такое Directives?</h2>
+<p>
+  Директивы — классы, расширяющие поведение HTML-элементов без создания отдельного компонента.
+  Компонент — это директива с шаблоном.
+</p>
+
+<h2>2. Три типа директив</h2>
+<div class="card">
+  <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border); color:var(--text-muted);">
+        <th style="text-align:left; padding:6px 12px 6px 0;">Тип</th>
+        <th style="text-align:left; padding:6px 12px;">Пример</th>
+        <th style="text-align:left; padding:6px 12px;">Что делает</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Компонентная</td>
+        <td style="padding:8px 12px;"><code>&lt;app-card /&gt;</code></td>
+        <td style="padding:8px 12px;">Директива + шаблон + стили</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Атрибутная</td>
+        <td style="padding:8px 12px;"><code>[leftPawHideContent]</code></td>
+        <td style="padding:8px 12px;">Меняет вид/поведение элемента</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px 8px 0;">Структурная</td>
+        <td style="padding:8px 12px;"><code>*ngIf</code>, <code>*ngFor</code></td>
+        <td style="padding:8px 12px;">Добавляет/удаляет DOM-элементы</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>3. Создание атрибутной директивы</h2>
+<pre><code>@Directive({
+  selector: '[leftPawHighlight]',
+  standalone: true,
+})
+export class HighlightDirective {
+  private el = inject(ElementRef);
+  color = input('yellow');
+
+  @HostListener('mouseenter')
+  onEnter() {
+    this.el.nativeElement.style.backgroundColor = this.color();
+  }
+
+  @HostListener('mouseleave')
+  onLeave() {
+    this.el.nativeElement.style.backgroundColor = '';
+  }
+}
+
+// использование:
+&lt;p leftPawHighlight [color]="'pink'"&gt;Наведи мышь&lt;/p&gt;</code></pre>
+
+<h2>4. HostBinding и HostListener</h2>
+<pre><code>@Directive({ selector: '[leftPawActive]' })
+export class ActiveDirective {
+  private isActive = signal(false);
+
+  // Привязывает CSS-класс к хост-элементу
+  @HostBinding('class.active')
+  get active() { return this.isActive(); }
+
+  // Слушает событие на хост-элементе
+  @HostListener('click')
+  onClick() { this.isActive.update(v => !v); }
+}</code></pre>
+<p>
+  Современная альтернатива — свойство <code>host</code> в декораторе (предпочтительно):
+</p>
+<pre><code>@Directive({
+  selector: '[leftPawActive]',
+  host: {
+    '[class.active]': 'isActive()',
+    '(click)': 'onClick()',
+  },
+})
+export class ActiveDirective {
+  protected isActive = signal(false);
+  protected onClick() { this.isActive.update(v => !v); }
+}</code></pre>
+<div class="card accent">
+  <span class="tag accent">Формула ответа</span>
+  <p>
+    <code>host: { ... }</code> в декораторе = декларативно, всё видно сразу.
+    <code>@HostBinding/@HostListener</code> — декораторы на методах/свойствах.
+    Оба подхода эквивалентны, но <code>host</code> предпочтительнее в современном Angular.
+  </p>
+</div>
+
+<h2>5. ElementRef vs Renderer2</h2>
+<div class="card">
+  <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border); color:var(--text-muted);">
+        <th style="text-align:left; padding:6px 12px 6px 0;">ElementRef</th>
+        <th style="text-align:left; padding:6px 12px;">Renderer2</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Прямой доступ к DOM-элементу</td>
+        <td style="padding:8px 12px;">Абстракция над DOM-манипуляциями</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Небезопасно (XSS, SSR)</td>
+        <td style="padding:8px 12px;">Безопасно для SSR и Web Workers</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px 8px 0;"><code>el.nativeElement.style.color = 'red'</code></td>
+        <td style="padding:8px 12px;"><code>renderer.setStyle(el.nativeElement, 'color', 'red')</code></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<div class="card accent">
+  <span class="tag orange">Ловушка на интервью</span>
+  <p>
+    <code>ElementRef.nativeElement</code> напрямую — антипаттерн при SSR (там нет DOM)
+    и потенциальная дыра XSS. Предпочитай <code>Renderer2</code> для DOM-манипуляций в директивах.
+  </p>
+</div>
+
+<hr class="divider" />
+
+<h2>Проверь себя</h2>
+<p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:24px;">
+  Retrieval practice — не подглядывай в текст выше. Выбери один вариант.
+</p>
+
+<div class="quiz" id="q1">
+  <p class="quiz-question">1. Что отличает структурную директиву от атрибутной?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Структурные объявляются с декоратором @StructuralDirective</button>
+    <button class="quiz-option" onclick="answer(this,'q1',true)">Структурные добавляют или удаляют элементы из DOM</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Структурные меняют только стили хост-элемента директивы</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Структурные всегда работают с ng-template и ViewContainerRef</button>
+  </div>
+  <div class="quiz-feedback" id="q1-fb"></div>
+</div>
+
+<div class="quiz" id="q2">
+  <p class="quiz-question">2. Зачем использовать Renderer2 вместо ElementRef.nativeElement?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q2',false)">Renderer2 быстрее — он батчит DOM-операции и применяет их разом</button>
+    <button class="quiz-option" onclick="answer(this,'q2',true)">Renderer2 безопасен при SSR и защищает от XSS в отличие от прямого DOM</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">Renderer2 поддерживает анимации, ElementRef — нет</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">Renderer2 работает со стилями, ElementRef — только с атрибутами</button>
+  </div>
+  <div class="quiz-feedback" id="q2-fb"></div>
+</div>
+
+<div class="quiz" id="q3">
+  <p class="quiz-question">3. Как современный Angular рекомендует объявлять host-привязки?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Через @HostBinding/@HostListener — единственный поддерживаемый способ</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Через ngAfterViewInit — навешивать слушатели на this.el.nativeElement</button>
+    <button class="quiz-option" onclick="answer(this,'q3',true)">Через host: { ... } в декораторе — декларативно, рядом с selector</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Через ViewChild — получать ссылку на элемент и вешать события</button>
+  </div>
+  <div class="quiz-feedback" id="q3-fb"></div>
+</div>
+
+<div class="quiz" id="q4">
+  <p class="quiz-question">4. Компонент — это разновидность директивы? </p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q4',false)">Нет — компонент и директива — принципиально разные сущности</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">Нет — компонент создаётся с помощью @Component, директива — @Directive</button>
+    <button class="quiz-option" onclick="answer(this,'q4',true)">Да — компонент это директива с шаблоном и стилями (@Component extends @Directive)</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">Да — но компоненты могут только один раз использоваться в шаблоне</button>
+  </div>
+  <div class="quiz-feedback" id="q4-fb"></div>
+</div>
+
+<hr class="divider" />
+
+<div class="source-link">
+  <strong>Первоисточник:</strong>
+  <a href="https://angular.dev/guide/directives" target="_blank">angular.dev — Directives</a>
+  — атрибутные, структурные, host binding, примеры создания.
+</div>
+
+<div class="ask-teacher">
+  <strong>Есть вопрос?</strong> Спроси прямо здесь, в чате. Учитель рядом — объяснит, уточнит или покажет пример из твоего реального кода.
+</div>
+
+<div class="nav-links">
+  <a href="0009-signals-advanced.html">← Урок 9: Signals — продвинутый</a>
+  <span style="color:var(--text-muted); margin:0 8px;">·</span>
+  <a href="0011-change-detection.html">Урок 11: Change Detection →</a>
+</div>
+
+<script>
+  const feedback = {
+    q1: {
+      true: 'Верно. Структурные директивы изменяют DOM-структуру — добавляют/удаляют элементы. Атрибутные — только меняют вид/поведение существующих.',
+      false: 'Нет. Нет @StructuralDirective. Структурность — способность манипулировать DOM-деревом, работа с ng-template опциональна.'
+    },
+    q2: {
+      true: 'Верно. ElementRef.nativeElement напрямую — небезопасно при SSR (там нет DOM) и риск XSS. Renderer2 абстрагирует платформу.',
+      false: 'Нет. Renderer2 не батчит, не работает с анимациями специально. Главная причина — SSR-безопасность и защита от XSS.'
+    },
+    q3: {
+      true: 'Верно. host: { "[class.active]": "flag()", "(click)": "handler()" } — декларативный подход, предпочтительный в Angular 17+.',
+      false: 'Нет. @HostBinding/@HostListener работают, но host: {} в декораторе — современный предпочтительный способ.'
+    },
+    q4: {
+      true: 'Верно. @Component — это @Directive с дополнительными метаданными: template, styleUrl. Технически компонент — частный случай директивы.',
+      false: 'Нет. Компонент — частный случай директивы. @Component расширяет возможности @Directive, добавляя шаблон и стили.'
+    },
+  };
+
+  function answer(btn, qId, isCorrect) {
+    const container = document.getElementById(qId);
+    const allBtns = container.querySelectorAll('.quiz-option');
+    allBtns.forEach(b => { b.disabled = true; });
+    btn.classList.add(isCorrect ? 'correct' : 'wrong');
+    const fb = document.getElementById(qId + '-fb');
+    fb.textContent = feedback[qId][String(isCorrect)];
+    fb.className = 'quiz-feedback show ' + (isCorrect ? 'correct' : 'wrong');
+  }
+</script>
+
+</body>
+</html>

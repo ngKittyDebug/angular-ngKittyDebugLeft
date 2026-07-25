@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Урок 5 — Signals: базовый</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<p class="subtitle">Урок 5 из серии «Angular Interview Prep»</p>
+<h1>Signals — базовый</h1>
+<p class="subtitle">signal(), computed(), effect() — реактивные примитивы Angular.</p>
+
+<hr class="divider" />
+
+<h2>1. Что такое Signals?</h2>
+<p>
+  <strong>Signal</strong> — обёртка над значением, которая отслеживает, кто её читает,
+  и уведомляет зависимости при изменении. Введены в Angular 16, стабильны с Angular 17.
+</p>
+<div class="card accent">
+  <span class="tag accent">Формула ответа</span>
+  <p>
+    Сигнал — это <strong>реактивный контейнер</strong>: при изменении значения Angular
+    автоматически знает, какие шаблоны и computed нужно обновить, без ручного
+    <code>detectChanges()</code> или <code>markForCheck()</code>.
+  </p>
+</div>
+
+<h2>2. Как читать и изменять значение</h2>
+<pre><code>import { signal, computed, effect } from '@angular/core';
+
+// Создание
+const count = signal(0);          // WritableSignal&lt;number&gt;
+const name  = signal&lt;string&gt;(''); // явный тип
+
+// Чтение — вызов как функции
+console.log(count()); // 0
+
+// Изменение
+count.set(5);          // прямая замена
+count.update(n => n + 1); // через предыдущее значение
+count.mutate(arr => arr.push(item)); // для объектов/массивов (mutate)
+
+// Производное значение
+const doubled = computed(() => count() * 2); // ReadonlySignal
+console.log(doubled()); // 10 — пересчитывается автоматически</code></pre>
+
+<div class="card">
+  <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border); color:var(--text-muted);">
+        <th style="text-align:left; padding:6px 12px 6px 0;">Метод</th>
+        <th style="text-align:left; padding:6px 12px;">Что делает</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>signal(v)</code></td>
+        <td style="padding:8px 12px;">Создаёт WritableSignal с начальным значением v</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>sig.set(v)</code></td>
+        <td style="padding:8px 12px;">Заменяет значение новым</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>sig.update(fn)</code></td>
+        <td style="padding:8px 12px;">Вычисляет новое значение через предыдущее</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>computed(() => ...)</code></td>
+        <td style="padding:8px 12px;">Производный ReadonlySignal, кешируется до изменения зависимостей</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px 8px 0;"><code>effect(() => ...)</code></td>
+        <td style="padding:8px 12px;">Side effect: выполняется при изменении читаемых сигналов</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>3. Главное преимущество перед примитивными значениями</h2>
+<p>
+  С обычной переменной Angular не знает, изменилась ли она — нужен Zone.js или ручной триггер.
+  Signal <strong>отслеживает зависимости автоматически</strong>: шаблон читает <code>count()</code>,
+  Angular запоминает эту связь и перерисовывает только нужные части при <code>count.set()</code>.
+</p>
+<div class="card green">
+  <p>
+    Signals — основа для <strong>Zoneless Angular</strong> (без Zone.js): полная реактивность
+    без monkey-patching браузерных API. Это будущее Angular.
+  </p>
+</div>
+
+<h2>4. В шаблоне</h2>
+<pre><code>@Component({
+  template: `
+    &lt;p&gt;Счёт: {{ count() }}&lt;/p&gt;       &lt;!-- вызов с () --&gt;
+    &lt;p&gt;Удвоен: {{ doubled() }}&lt;/p&gt;
+    &lt;button (click)="increment()"&gt;+&lt;/button&gt;
+  `,
+})
+export class CounterComponent {
+  protected count = signal(0);
+  protected doubled = computed(() => this.count() * 2);
+
+  protected increment() {
+    this.count.update(n => n + 1);
+  }
+}</code></pre>
+<div class="card accent">
+  <span class="tag orange">Ловушка на интервью</span>
+  <p>
+    В шаблоне сигнал читается с <code>()</code>: <code>{{ count() }}</code>, не <code>{{ count }}</code>.
+    Без скобок выведется объект Signal, а не его значение.
+  </p>
+</div>
+
+<hr class="divider" />
+
+<h2>Проверь себя</h2>
+<p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:24px;">
+  Retrieval practice — не подглядывай в текст выше. Выбери один вариант.
+</p>
+
+<div class="quiz" id="q1">
+  <p class="quiz-question">1. Что возвращает функция signal(0)?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Observable&lt;number&gt; — поток значений для подписки</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Promise&lt;number&gt; — асинхронное значение number</button>
+    <button class="quiz-option" onclick="answer(this,'q1',true)">WritableSignal&lt;number&gt; — реактивный контейнер с set/update</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">BehaviorSubject&lt;number&gt; — RxJS Subject с начальным значением</button>
+  </div>
+  <div class="quiz-feedback" id="q1-fb"></div>
+</div>
+
+<div class="quiz" id="q2">
+  <p class="quiz-question">2. Как обновить signal через предыдущее значение?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q2',false)">count.set(count() + 1) — прочитать и установить новое</button>
+    <button class="quiz-option" onclick="answer(this,'q2',true)">count.update(n => n + 1) — функция получает предыдущее значение</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">count.next(n => n + 1) — метод next как в Subject RxJS</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">count.emit(count() + 1) — аналог EventEmitter.emit()</button>
+  </div>
+  <div class="quiz-feedback" id="q2-fb"></div>
+</div>
+
+<div class="quiz" id="q3">
+  <p class="quiz-question">3. Что такое computed()?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Writable signal с автоматически вычисляемым начальным значением</button>
+    <button class="quiz-option" onclick="answer(this,'q3',true)">ReadonlySignal — производное значение, кешируется автоматически</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Observable с оператором map от другого Observable потока</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Декоратор для вычисляемых свойств компонента в Angular</button>
+  </div>
+  <div class="quiz-feedback" id="q3-fb"></div>
+</div>
+
+<div class="quiz" id="q4">
+  <p class="quiz-question">4. Как прочитать signal в шаблоне?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q4',true)">{{ count() }} — вызов сигнала как функции с скобками</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">{{ count }} — биндинг на объект сигнала без вызова</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">{{ count | async }} — через AsyncPipe для Signal</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">{{ count.value }} — через свойство value объекта Signal</button>
+  </div>
+  <div class="quiz-feedback" id="q4-fb"></div>
+</div>
+
+<hr class="divider" />
+
+<div class="source-link">
+  <strong>Первоисточник:</strong>
+  <a href="https://angular.dev/guide/signals" target="_blank">angular.dev — Signals</a>
+  — официальный гайд: принципы работы, API, интеграция с change detection.
+</div>
+
+<div class="ask-teacher">
+  <strong>Есть вопрос?</strong> Спроси прямо здесь, в чате. Учитель рядом — объяснит, уточнит или покажет пример из твоего реального кода.
+</div>
+
+<div class="nav-links">
+  <a href="0004-component-interaction.html">← Урок 4: Взаимодействие компонентов</a>
+  <span style="color:var(--text-muted); margin:0 8px;">·</span>
+  <a href="0006-lifecycle-hooks.html">Урок 6: Lifecycle hooks →</a>
+</div>
+
+<script>
+  const feedback = {
+    q1: {
+      true: 'Верно. signal(0) возвращает WritableSignal<number> — контейнер с методами set(), update(), и чтением через вызов count().',
+      false: 'Нет. Signal — не Observable и не Promise. Это синхронный реактивный контейнер Angular, не RxJS.'
+    },
+    q2: {
+      true: 'Верно. update(fn) — функция получает предыдущее значение и возвращает новое. Это атомарно и правильно.',
+      false: 'Нет. count.set(count() + 1) тоже работает, но менее идиоматично. next() и emit() — не методы Signal.'
+    },
+    q3: {
+      true: 'Верно. computed() создаёт ReadonlySignal — только для чтения. Пересчитывается лениво при изменении зависимостей, кешируется.',
+      false: 'Нет. computed() — ReadonlySignal, не WritableSignal. Не Observable. Не декоратор.'
+    },
+    q4: {
+      true: 'Верно. В шаблоне сигнал читается через вызов: {{ count() }}. Angular отслеживает эту зависимость.',
+      false: 'Нет. {{ count }} выведет объект Signal. AsyncPipe — для Observable/Promise. .value — не свойство Signal.'
+    },
+  };
+
+  function answer(btn, qId, isCorrect) {
+    const container = document.getElementById(qId);
+    const allBtns = container.querySelectorAll('.quiz-option');
+    allBtns.forEach(b => { b.disabled = true; });
+    btn.classList.add(isCorrect ? 'correct' : 'wrong');
+    const fb = document.getElementById(qId + '-fb');
+    fb.textContent = feedback[qId][String(isCorrect)];
+    fb.className = 'quiz-feedback show ' + (isCorrect ? 'correct' : 'wrong');
+  }
+</script>
+
+</body>
+</html>

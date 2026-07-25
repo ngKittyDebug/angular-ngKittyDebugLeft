@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Урок 9 — Signals: продвинутый</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<p class="subtitle">Урок 9 из серии «Angular Interview Prep»</p>
+<h1>Signals — продвинутый</h1>
+<p class="subtitle">effect(), untracked(), linkedSignal, change detection, отладка.</p>
+
+<hr class="divider" />
+
+<h2>1. effect() — реакция на изменения</h2>
+<pre><code>export class ThemeComponent {
+  private theme = inject(ThemeService).currentTheme;
+
+  constructor() {
+    effect(() => {
+      // Читаем theme() — создаём зависимость
+      document.body.classList.toggle('dark', this.theme() === 'dark');
+    });
+  }
+}</code></pre>
+<p>
+  <code>effect()</code> выполняется при создании и при каждом изменении сигналов,
+  которые читались внутри него. Автоматически очищается при уничтожении компонента.
+</p>
+<div class="card accent">
+  <span class="tag orange">Ловушка на интервью</span>
+  <p>
+    <code>effect()</code> должен объявляться в <strong>injection context</strong> —
+    в конструкторе или через <code>runInInjectionContext()</code>. Нельзя вызывать
+    произвольно в методах класса.
+  </p>
+</div>
+
+<h2>2. untracked() — чтение без зависимости</h2>
+<pre><code>import { untracked } from '@angular/core';
+
+effect(() => {
+  const userId = this.selectedId();       // зависимость: re-run при изменении
+  const token = untracked(() => this.authToken()); // без зависимости: не триггерит
+  this.load(userId, token);
+});</code></pre>
+<p>
+  <code>untracked()</code> позволяет прочитать сигнал внутри <code>computed</code> или <code>effect</code>
+  <em>без</em> создания зависимости — effect не будет перезапускаться при изменении этого сигнала.
+</p>
+
+<h2>3. Signals и Change Detection</h2>
+<div class="card">
+  <p>
+    Компонент с <code>OnPush</code> и сигналами: Angular автоматически помечает компонент
+    для перепроверки, когда сигнал, читаемый в шаблоне, изменяется.
+    <strong>Не нужны</strong> <code>markForCheck()</code> или <code>detectChanges()</code>.
+  </p>
+</div>
+<pre><code>@Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `&lt;p&gt;{{ count() }}&lt;/p&gt;`, // читаем signal
+})
+export class MyComponent {
+  count = signal(0);
+  increment() { this.count.update(n => n + 1); } // Angular сам знает об обновлении
+}</code></pre>
+<p>
+  Signals — основа для будущего <strong>Zoneless Angular</strong>: без Zone.js change detection
+  запускается только при изменении сигналов, не при каждом browser event.
+</p>
+
+<h2>4. linkedSignal — реактивная замена defaultValue</h2>
+<pre><code>import { linkedSignal } from '@angular/core';
+
+export class PaginationComponent {
+  pageSize = input(10);
+
+  // При изменении pageSize — сбрасывается до 1
+  currentPage = linkedSignal(() => {
+    this.pageSize(); // зависимость
+    return 1;        // значение при сбросе
+  });
+}</code></pre>
+<div class="card accent">
+  <span class="tag accent">linkedSignal vs computed</span>
+  <p>
+    <code>computed</code> — ReadOnly, нельзя изменить извне.<br />
+    <code>linkedSignal</code> — WritableSignal: можно менять локально (<code>.set()</code>),
+    но при изменении зависимости — сбрасывается по функции. Идеален для «сброс при изменении параметра».
+  </p>
+</div>
+
+<h2>5. Отладка сигналов</h2>
+<div class="card">
+  <p><strong>Angular DevTools (расширение Chrome):</strong> показывает граф зависимостей сигналов и computed-цепочки.</p>
+  <p style="margin-top:8px;"><strong>effect() для логирования:</strong></p>
+</div>
+<pre><code>// Временно — для отладки
+effect(() => console.log('count changed:', this.count()));
+
+// Проверить, есть ли зависимость в computed:
+const debug = computed(() => {
+  console.log('recomputing');
+  return this.a() + this.b();
+});</code></pre>
+<div class="card accent">
+  <span class="tag orange">Ловушка на интервью</span>
+  <p>
+    Если <code>computed</code> пересчитывается слишком часто — проверь, не читаешь ли ты
+    объект по ссылке. <code>signal({ a: 1 })</code> при <code>.set({ a: 1 })</code> создаёт
+    <em>новый объект</em>, что считается изменением. Используй <code>.update()</code> с мутацией
+    или <code>equalsFn</code> в <code>signal(val, { equal: deepEqual })</code>.
+  </p>
+</div>
+
+<hr class="divider" />
+
+<h2>Проверь себя</h2>
+<p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:24px;">
+  Retrieval practice — не подглядывай в текст выше. Выбери один вариант.
+</p>
+
+<div class="quiz" id="q1">
+  <p class="quiz-question">1. Что происходит, если вызвать effect() в методе класса (не в конструкторе)?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Всё работает корректно — effect() не требует injection context</button>
+    <button class="quiz-option" onclick="answer(this,'q1',true)">Ошибка — effect() требует injection context (constructor/runInInjectionContext)</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Effect выполнится один раз и не будет отслеживать зависимости</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Effect выполнится, но не будет очищаться при уничтожении компонента</button>
+  </div>
+  <div class="quiz-feedback" id="q1-fb"></div>
+</div>
+
+<div class="quiz" id="q2">
+  <p class="quiz-question">2. Зачем нужен untracked() внутри effect()?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q2',false)">Для синхронного чтения async-сигнала без промисов и await</button>
+    <button class="quiz-option" onclick="answer(this,'q2',true)">Прочитать сигнал без создания зависимости — effect не перезапустится</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">Для защиты от циклических зависимостей между сигналами</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">Отложить выполнение чтения сигнала до следующего тика Angular</button>
+  </div>
+  <div class="quiz-feedback" id="q2-fb"></div>
+</div>
+
+<div class="quiz" id="q3">
+  <p class="quiz-question">3. Нужно ли вызывать markForCheck() при изменении signal в OnPush компоненте?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Да — OnPush не реагирует на сигналы без явного markForCheck()</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Да — только при изменении внутри effect(), не в обычных методах</button>
+    <button class="quiz-option" onclick="answer(this,'q3',true)">Нет — Angular сам обновит компонент при изменении signal в шаблоне</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Нет — но нужен detectChanges() для немедленного обновления DOM</button>
+  </div>
+  <div class="quiz-feedback" id="q3-fb"></div>
+</div>
+
+<div class="quiz" id="q4">
+  <p class="quiz-question">4. Чем linkedSignal отличается от computed()?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q4',false)">linkedSignal поддерживает асинхронные зависимости через Observable</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">linkedSignal вычисляет значение только один раз при инициализации</button>
+    <button class="quiz-option" onclick="answer(this,'q4',true)">linkedSignal — WritableSignal: можно менять вручную и он сбрасывается при зависимостях</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">linkedSignal создаёт двустороннюю связь между двумя сигналами</button>
+  </div>
+  <div class="quiz-feedback" id="q4-fb"></div>
+</div>
+
+<div class="quiz" id="q5">
+  <p class="quiz-question">5. signal({ a: 1 }).set({ a: 1 }) — пересчитается ли зависимый computed?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q5',false)">Нет — Angular сравнивает значения глубоко и видит, что они равны</button>
+    <button class="quiz-option" onclick="answer(this,'q5',false)">Нет — Angular игнорирует изменения объектов, только примитивы</button>
+    <button class="quiz-option" onclick="answer(this,'q5',true)">Да — по умолчанию сравнивается ссылка, новый объект = изменение</button>
+    <button class="quiz-option" onclick="answer(this,'q5',false)">Да — но только если computed явно читает свойство a внутри</button>
+  </div>
+  <div class="quiz-feedback" id="q5-fb"></div>
+</div>
+
+<hr class="divider" />
+
+<div class="source-link">
+  <strong>Первоисточник:</strong>
+  <a href="https://angular.dev/guide/signals" target="_blank">angular.dev — Signals (advanced)</a>
+  — effect, untracked, signal equality, интеграция с RxJS через toSignal/toObservable.
+</div>
+
+<div class="ask-teacher">
+  <strong>Есть вопрос?</strong> Спроси прямо здесь, в чате. Учитель рядом — объяснит, уточнит или покажет пример из твоего реального кода.
+</div>
+
+<div class="nav-links">
+  <a href="0008-lazy-loading.html">← Урок 8: Lazy Loading</a>
+  <span style="color:var(--text-muted); margin:0 8px;">·</span>
+  <a href="0010-directives-basics.html">Урок 10: Directives — базовые →</a>
+</div>
+
+<script>
+  const feedback = {
+    q1: {
+      true: 'Верно. effect() требует injection context. Вне конструктора — RuntimeError. Для вызова вне конструктора — runInInjectionContext(injector, () => effect(...)).',
+      false: 'Нет. effect() строго требует injection context. Без него — ошибка во время выполнения.'
+    },
+    q2: {
+      true: 'Верно. untracked(() => signal()) читает значение, но не регистрирует зависимость — effect не будет перезапускаться при изменении этого сигнала.',
+      false: 'Нет. untracked — для управления зависимостями, не для async или защиты от циклов.'
+    },
+    q3: {
+      true: 'Верно. Signal-based обновления автоматически планируют перерисовку OnPush компонента. markForCheck() — только для случаев вне signal-системы.',
+      false: 'Нет. Signals интегрированы с Angular change detection. При изменении сигнала Angular сам видит нужные компоненты.'
+    },
+    q4: {
+      true: 'Верно. computed() — ReadOnly, нельзя .set(). linkedSignal — WritableSignal: можно менять вручную, но при изменении зависимостей — сбрасывается.',
+      false: 'Нет. Главное отличие — writability. linkedSignal можно менять через .set()/.update(), computed — нельзя.'
+    },
+    q5: {
+      true: 'Верно. По умолчанию Angular сравнивает ссылки (===). Новый объект { a: 1 } !== предыдущий { a: 1 }, поэтому computed пересчитается.',
+      false: 'Нет. Дефолтное сравнение — по ссылке. Для глубокого сравнения нужен signal(val, { equal: customDeepEqual }).'
+    },
+  };
+
+  function answer(btn, qId, isCorrect) {
+    const container = document.getElementById(qId);
+    const allBtns = container.querySelectorAll('.quiz-option');
+    allBtns.forEach(b => { b.disabled = true; });
+    btn.classList.add(isCorrect ? 'correct' : 'wrong');
+    const fb = document.getElementById(qId + '-fb');
+    fb.textContent = feedback[qId][String(isCorrect)];
+    fb.className = 'quiz-feedback show ' + (isCorrect ? 'correct' : 'wrong');
+  }
+</script>
+
+</body>
+</html>

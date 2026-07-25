@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Урок 24 — Signals: Resource API</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<p class="subtitle">Урок 24 из серии «Angular Interview Prep»</p>
+<h1>Signals — Resource API</h1>
+<p class="subtitle">resource() и rxResource() — асинхронная загрузка данных на Signals.</p>
+
+<hr class="divider" />
+
+<h2>1. Проблема без Resource API</h2>
+<p>
+  Традиционный подход — подписка на Observable + ручное управление состоянием:
+</p>
+<pre><code>// Старый способ — много бойлерплейта
+export class PokemonComponent {
+  private pokemonService = inject(PokemonService);
+
+  protected pokemon = signal&lt;Pokemon | null&gt;(null);
+  protected isLoading = signal(false);
+  protected error = signal&lt;string | null&gt;(null);
+  protected id = input.required&lt;number&gt;();
+
+  constructor() {
+    effect(() => {
+      const id = this.id();
+      this.isLoading.set(true);
+      this.error.set(null);
+
+      this.pokemonService.getById(id)
+        .pipe(takeUntilDestroyed())
+        .subscribe({
+          next: p => { this.pokemon.set(p); this.isLoading.set(false); },
+          error: e => { this.error.set(e.message); this.isLoading.set(false); },
+        });
+    });
+  }
+}</code></pre>
+
+<h2>2. resource() — нативный async API</h2>
+<p>
+  <code>resource()</code> (Angular 19+, stable) — декларативный способ загрузить данные асинхронно,
+  реагирующий на изменения сигналов-параметров.
+</p>
+<pre><code>import { resource } from '@angular/core';
+
+export class PokemonComponent {
+  protected id = input.required&lt;number&gt;();
+
+  // resource() автоматически:
+  // - перезапускает запрос при изменении id()
+  // - отменяет предыдущий запрос при новом
+  // - отслеживает loading/error состояния
+  protected pokemonResource = resource({
+    request: () => this.id(),      // параметр — Signal
+    loader: ({ request: id }) =>
+      fetch(`/api/pokemon/${id}`).then(r => r.json()), // → Promise
+  });
+
+  // Доступные сигналы:
+  // pokemonResource.value()    — Signal&lt;Pokemon | undefined&gt;
+  // pokemonResource.isLoading() — Signal&lt;boolean&gt;
+  // pokemonResource.error()    — Signal&lt;unknown&gt;
+  // pokemonResource.status()   — Signal&lt;ResourceStatus&gt;
+}</code></pre>
+<pre><code>&lt;!-- В шаблоне: --&gt;
+@if (pokemonResource.isLoading()) {
+  &lt;p&gt;Загрузка...&lt;/p&gt;
+} @else if (pokemonResource.error()) {
+  &lt;p&gt;Ошибка: {{ pokemonResource.error() }}&lt;/p&gt;
+} @else {
+  &lt;h1&gt;{{ pokemonResource.value()?.name }}&lt;/h1&gt;
+}</code></pre>
+
+<h2>3. rxResource() — для Observable</h2>
+<pre><code>import { rxResource } from '@angular/core/rxjs-interop';
+
+export class PokemonComponent {
+  protected id = input.required&lt;number&gt;();
+  private pokemonService = inject(PokemonService);
+
+  protected pokemonResource = rxResource({
+    request: () => this.id(),
+    loader: ({ request: id }) =>
+      this.pokemonService.getById(id), // → Observable
+  });
+}</code></pre>
+<div class="card">
+  <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border); color:var(--text-muted);">
+        <th style="text-align:left; padding:6px 12px 6px 0;">resource()</th>
+        <th style="text-align:left; padding:6px 12px;">rxResource()</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">loader возвращает <strong>Promise</strong></td>
+        <td style="padding:8px 12px;">loader возвращает <strong>Observable</strong></td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Нет зависимости от RxJS</td>
+        <td style="padding:8px 12px;">Требует <code>@angular/core/rxjs-interop</code></td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px 8px 0;">Подходит для fetch API</td>
+        <td style="padding:8px 12px;">Подходит для HttpClient (возвращает Observable)</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>4. Дополнительные возможности Resource</h2>
+<pre><code>// Ручное обновление (refresh):
+pokemonResource.reload();
+
+// Локальная запись (optimistic update):
+pokemonResource.set({ ...pokemonResource.value()!, hp: 100 });
+
+// Статусы:
+// ResourceStatus.Idle      — запрос не был сделан
+// ResourceStatus.Loading   — запрос в процессе
+// ResourceStatus.Resolved  — успех
+// ResourceStatus.Error     — ошибка
+// ResourceStatus.Reloading — перезагрузка</code></pre>
+
+<div class="card green">
+  <p>
+    <strong>Зачем Resource API?</strong>
+    Заменяет паттерн «signal + effect + subscribe + loading/error флаги» одной декларацией.
+    Автоматически отменяет предыдущие запросы при изменении параметров.
+    Полностью интегрирован с Angular change detection через Signals.
+  </p>
+</div>
+
+<div class="card accent">
+  <span class="tag orange">Ловушка на интервью</span>
+  <p>
+    <code>resource()</code> вызывает loader только при изменении <code>request</code> — сигнала-параметра.
+    Если <code>request: () => undefined</code> — запрос не отправляется.
+    Это полезно для условной загрузки: <code>request: () => this.userId() || undefined</code>.
+  </p>
+</div>
+
+<hr class="divider" />
+
+<h2>Проверь себя</h2>
+<p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:24px;">
+  Retrieval practice — не подглядывай в текст выше. Выбери один вариант.
+</p>
+
+<div class="quiz" id="q1">
+  <p class="quiz-question">1. Что делает resource() при изменении сигнала в поле request?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Ничего — нужно вручную вызвать reload() чтобы обновить данные</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Добавляет новые данные к уже загруженным через append стратегию</button>
+    <button class="quiz-option" onclick="answer(this,'q1',true)">Отменяет текущий запрос и запускает новый с обновлёнными параметрами</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Запускает новый запрос параллельно, не отменяя предыдущий</button>
+  </div>
+  <div class="quiz-feedback" id="q1-fb"></div>
+</div>
+
+<div class="quiz" id="q2">
+  <p class="quiz-question">2. Чем rxResource() отличается от resource()?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q2',false)">rxResource() быстрее — использует оптимизированный RxJS планировщик</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">rxResource() поддерживает несколько параметров, resource() — только один</button>
+    <button class="quiz-option" onclick="answer(this,'q2',true)">rxResource() принимает Observable в loader, resource() — только Promise</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">rxResource() работает без injection context в отличие от resource()</button>
+  </div>
+  <div class="quiz-feedback" id="q2-fb"></div>
+</div>
+
+<div class="quiz" id="q3">
+  <p class="quiz-question">3. resource() не отправляет запрос если request возвращает undefined. Как это использовать?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Нельзя — resource() всегда отправляет запрос при инициализации</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Через if внутри loader — проверять параметр перед fetch</button>
+    <button class="quiz-option" onclick="answer(this,'q3',true)">request: () => this.userId() || undefined — не загружать если нет id</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Через enabled: signal(false) — флаг включения загрузки</button>
+  </div>
+  <div class="quiz-feedback" id="q3-fb"></div>
+</div>
+
+<div class="quiz" id="q4">
+  <p class="quiz-question">4. Какой статус у ResourceStatus при успешной загрузке?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q4',false)">Success — статус успешного получения данных от сервера</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">Complete — аналог complete() Observable при завершении потока</button>
+    <button class="quiz-option" onclick="answer(this,'q4',true)">Resolved — данные загружены, value() содержит результат запроса</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">Done — финальный статус после завершения асинхронной операции</button>
+  </div>
+  <div class="quiz-feedback" id="q4-fb"></div>
+</div>
+
+<hr class="divider" />
+
+<div class="source-link">
+  <strong>Первоисточник:</strong>
+  <a href="https://angular.dev/guide/signals/resource" target="_blank">angular.dev — Resource API</a>
+  — официальный гайд с примерами resource(), rxResource(), statuses, manual update.
+</div>
+
+<div class="ask-teacher">
+  <strong>Есть вопрос?</strong> Спроси прямо здесь, в чате. Учитель рядом — объяснит, уточнит или покажет пример из твоего реального кода.
+</div>
+
+<div class="nav-links">
+  <a href="0023-di-injector-hierarchy.html">← Урок 23: DI — иерархия инжекторов</a>
+  <span style="color:var(--text-muted); margin:0 8px;">·</span>
+  <a href="0025-components-dynamic-defer.html">Урок 25: Dynamic + @defer →</a>
+</div>
+
+<script>
+  const feedback = {
+    q1: {
+      true: 'Верно. resource() реактивно отслеживает сигнал в request. При изменении — отменяет in-flight запрос и делает новый.',
+      false: 'Нет. resource() реактивен — не нужен ручной reload() при изменении параметра. reload() — для принудительного обновления.'
+    },
+    q2: {
+      true: 'Верно. rxResource() принимает Observable в loader — удобно для HttpClient. resource() — только Promise (fetch API).',
+      false: 'Нет. Скорость одинакова. Оба поддерживают любые параметры через request. Оба требуют injection context.'
+    },
+    q3: {
+      true: 'Верно. request: () => this.userId() || undefined — если userId() не установлен, вернёт undefined → запрос не отправляется.',
+      false: 'Нет. resource() не запускает запрос при undefined из request. Это намеренное поведение для условной загрузки.'
+    },
+    q4: {
+      true: 'Верно. ResourceStatus.Resolved — данные успешно загружены. value() содержит результат. isLoading() = false, error() = undefined.',
+      false: 'Нет. Success, Complete, Done — не статусы Resource API. Angular использует: Idle, Loading, Resolved, Error, Reloading.'
+    },
+  };
+
+  function answer(btn, qId, isCorrect) {
+    const container = document.getElementById(qId);
+    const allBtns = container.querySelectorAll('.quiz-option');
+    allBtns.forEach(b => { b.disabled = true; });
+    btn.classList.add(isCorrect ? 'correct' : 'wrong');
+    const fb = document.getElementById(qId + '-fb');
+    fb.textContent = feedback[qId][String(isCorrect)];
+    fb.className = 'quiz-feedback show ' + (isCorrect ? 'correct' : 'wrong');
+  }
+</script>
+
+</body>
+</html>

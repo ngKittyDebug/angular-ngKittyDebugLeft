@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Урок 20 — RxJS</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<p class="subtitle">Урок 20 из серии «Angular Interview Prep»</p>
+<h1>RxJS</h1>
+<p class="subtitle">Observable/Subject/BehaviorSubject, операторы, hot vs cold, отписка.</p>
+
+<hr class="divider" />
+
+<h2>1. Observable, Observer, Subscription</h2>
+<pre><code>// Observable — поток значений (ленивый)
+const count$ = new Observable&lt;number&gt;(observer => {
+  observer.next(1);
+  observer.next(2);
+  observer.complete();
+  // или observer.error(err)
+});
+
+// Observer — потребитель
+const sub = count$.subscribe({
+  next: v => console.log(v),    // 1, 2
+  error: e => console.error(e),
+  complete: () => console.log('done'),
+});
+
+// Subscription — управление подпиской
+sub.unsubscribe();</code></pre>
+
+<h2>2. Observable vs Promise</h2>
+<div class="card">
+  <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border); color:var(--text-muted);">
+        <th style="text-align:left; padding:6px 12px 6px 0;">Observable</th>
+        <th style="text-align:left; padding:6px 12px;">Promise</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Ленивый — запускается при subscribe</td>
+        <td style="padding:8px 12px;">Eager — запускается немедленно</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Может эмитить 0..N значений</td>
+        <td style="padding:8px 12px;">Одно значение или ошибка</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Отменяем (unsubscribe)</td>
+        <td style="padding:8px 12px;">Не отменяем</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px 8px 0;">Богатые операторы</td>
+        <td style="padding:8px 12px;">Только .then/.catch/.finally</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>3. Базовые операторы</h2>
+<pre><code>source$.pipe(
+  map(v => v * 2),                 // трансформация каждого значения
+  filter(v => v > 0),              // фильтрация
+  tap(v => console.log(v)),        // side effect без трансформации
+  take(5),                         // взять первые 5 значений
+  debounceTime(300),               // ждать 300мс тишины
+  distinctUntilChanged(),          // пропустить если не изменилось
+)
+
+// Комбинирование:
+combineLatest([a$, b$])   // эмитит при изменении любого, нужны оба
+forkJoin([req1$, req2$])  // ждёт завершения всех, эмитит один массив результатов
+merge(a$, b$)             // объединяет потоки
+zip(a$, b$)               // пары по порядку</code></pre>
+
+<h2>4. Subject и BehaviorSubject</h2>
+<pre><code>// Subject — hot observable, нет начального значения
+const events$ = new Subject&lt;string&gt;();
+events$.next('click'); // подписчики получат, если уже подписаны
+
+// BehaviorSubject — хранит последнее значение, новые подписчики получают его сразу
+const currentUser$ = new BehaviorSubject&lt;User | null&gt;(null);
+currentUser$.next(user);
+currentUser$.getValue(); // синхронное чтение текущего значения
+
+// В сервисе Angular:
+@Injectable({ providedIn: 'root' })
+export class AuthService {
+  private user$ = new BehaviorSubject&lt;User | null&gt;(null);
+  readonly currentUser$ = this.user$.asObservable(); // только чтение
+
+  login(user: User) { this.user$.next(user); }
+  logout() { this.user$.next(null); }
+}</code></pre>
+
+<h2>5. Hot vs Cold Observable</h2>
+<div class="card">
+  <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border); color:var(--text-muted);">
+        <th style="text-align:left; padding:6px 12px 6px 0;">Cold</th>
+        <th style="text-align:left; padding:6px 12px;">Hot</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Поток создаётся для каждого подписчика</td>
+        <td style="padding:8px 12px;">Поток существует независимо от подписчиков</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>HttpClient</code>, <code>new Observable()</code></td>
+        <td style="padding:8px 12px;"><code>Subject</code>, DOM events, <code>shareReplay()</code></td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px 8px 0;">Поздний подписчик получает ВСЕ значения с начала</td>
+        <td style="padding:8px 12px;">Поздний подписчик пропускает прошлые события</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>6. Правильная отписка</h2>
+<pre><code>// 1. takeUntilDestroyed() — лучший способ (Angular 16+)
+export class MyComponent {
+  private destroyRef = inject(DestroyRef);
+
+  ngOnInit() {
+    this.data$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(...);
+  }
+}
+
+// 2. async pipe — авторазотписка в шаблоне
+// {{ data$ | async }}
+
+// 3. takeUntil с Subject (старый способ)
+private destroy$ = new Subject&lt;void&gt;();
+ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
+source$.pipe(takeUntil(this.destroy$)).subscribe(...);</code></pre>
+
+<h2>7. Retry и обработка ошибок</h2>
+<pre><code>this.http.get('/api/data').pipe(
+  retry(3),                         // повторить 3 раза
+  catchError(err => {
+    this.toast.error('Ошибка загрузки');
+    return of([]);                  // вернуть дефолтное значение
+    // или:
+    // return throwError(() => err); // пробросить ошибку дальше
+  }),
+);</code></pre>
+
+<hr class="divider" />
+
+<h2>Проверь себя</h2>
+<p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:24px;">
+  Retrieval practice — не подглядывай в текст выше. Выбери один вариант.
+</p>
+
+<div class="quiz" id="q1">
+  <p class="quiz-question">1. BehaviorSubject получает нового подписчика. Что он получит сразу?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Ничего — только будущие значения после момента подписки</button>
+    <button class="quiz-option" onclick="answer(this,'q1',true)">Последнее эмитированное значение (или начальное если ничего не было)</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Все ранее эмитированные значения в порядке их появления</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Complete событие — BehaviorSubject завершается при новой подписке</button>
+  </div>
+  <div class="quiz-feedback" id="q1-fb"></div>
+</div>
+
+<div class="quiz" id="q2">
+  <p class="quiz-question">2. Чем отличается combineLatest от forkJoin?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q2',false)">combineLatest ждёт завершения всех, forkJoin — только первого</button>
+    <button class="quiz-option" onclick="answer(this,'q2',true)">combineLatest эмитит при каждом изменении, forkJoin — один раз при завершении</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">combineLatest объединяет в один поток, forkJoin — в массив значений</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">combineLatest работает с горячими, forkJoin только с холодными потоками</button>
+  </div>
+  <div class="quiz-feedback" id="q2-fb"></div>
+</div>
+
+<div class="quiz" id="q3">
+  <p class="quiz-question">3. Какой современный способ отписаться от Observable при destroy компонента?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Реализовать OnDestroy и вызвать subscription.unsubscribe() в хуке</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Создать Subject destroy$ и использовать takeUntil(this.destroy$)</button>
+    <button class="quiz-option" onclick="answer(this,'q3',true)">takeUntilDestroyed(inject(DestroyRef)) — автоотписка через Angular DI</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Использовать async pipe — он сам отписывается без дополнительного кода</button>
+  </div>
+  <div class="quiz-feedback" id="q3-fb"></div>
+</div>
+
+<div class="quiz" id="q4">
+  <p class="quiz-question">4. HttpClient — это hot или cold Observable?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q4',false)">Hot — запрос уходит сразу при создании Observable</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">Hot — все подписчики получают один ответ от сервера</button>
+    <button class="quiz-option" onclick="answer(this,'q4',true)">Cold — каждая подписка создаёт отдельный HTTP-запрос к серверу</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">Cold — запрос отменяется при первой ошибке и не повторяется</button>
+  </div>
+  <div class="quiz-feedback" id="q4-fb"></div>
+</div>
+
+<hr class="divider" />
+
+<div class="source-link">
+  <strong>Первоисточник:</strong>
+  <a href="https://rxjs.dev/guide/overview" target="_blank">rxjs.dev — RxJS Overview</a>
+  — Observable, operators, subjects, testing, migration guide.
+</div>
+
+<div class="ask-teacher">
+  <strong>Есть вопрос?</strong> Спроси прямо здесь, в чате. Учитель рядом — объяснит, уточнит или покажет пример из твоего реального кода.
+</div>
+
+<div class="nav-links">
+  <a href="0019-http.html">← Урок 19: HTTP</a>
+  <span style="color:var(--text-muted); margin:0 8px;">·</span>
+  <a href="0021-forms-cva.html">Урок 21: Forms — CVA →</a>
+</div>
+
+<script>
+  const feedback = {
+    q1: {
+      true: 'Верно. BehaviorSubject хранит последнее значение. Новый подписчик получает его немедленно — это "behavior" в названии.',
+      false: 'Нет. Это Subject (ничего не получит). BehaviorSubject отличается именно тем, что даёт последнее значение новым подписчикам.'
+    },
+    q2: {
+      true: 'Верно. combineLatest эмитит при каждом изменении любого источника (нужны начальные значения от всех). forkJoin ждёт complete всех.',
+      false: 'Нет. combineLatest не ждёт завершения. forkJoin — не про "только первый". Оба возвращают массивы.'
+    },
+    q3: {
+      true: 'Верно. takeUntilDestroyed(destroyRef) — современный Angular API. DestroyRef инжектируется, отписка происходит в нужный момент.',
+      false: 'Нет. Всё перечисленное работает, но takeUntilDestroyed() — современный, наиболее лаконичный способ.'
+    },
+    q4: {
+      true: 'Верно. HttpClient — cold. Каждый subscribe отправляет НОВЫЙ запрос. Для sharing используй shareReplay(1).',
+      false: 'Нет. HttpClient cold — запрос уходит при подписке, не при создании Observable. Несколько подписчиков = несколько запросов.'
+    },
+  };
+
+  function answer(btn, qId, isCorrect) {
+    const container = document.getElementById(qId);
+    const allBtns = container.querySelectorAll('.quiz-option');
+    allBtns.forEach(b => { b.disabled = true; });
+    btn.classList.add(isCorrect ? 'correct' : 'wrong');
+    const fb = document.getElementById(qId + '-fb');
+    fb.textContent = feedback[qId][String(isCorrect)];
+    fb.className = 'quiz-feedback show ' + (isCorrect ? 'correct' : 'wrong');
+  }
+</script>
+
+</body>
+</html>
