@@ -85,7 +85,8 @@ const NPC_SPRITES: Record<NpcKind, { sprite: string; size: Record<Stage, number>
 // True when the appearance id is a known NPC (rendered as a static PNG), not a playable Pokémon line. A type guard
 // so callers can index `NPC_SPRITES` with the narrowed `NpcKind`.
 export function isNpcAppearance(appearance: string): appearance is NpcKind {
-  return appearance in NPC_SPRITES;
+  // Own-property check, not `in` - an untrusted appearance id must not match inherited names (constructor, etc.).
+  return Object.hasOwn(NPC_SPRITES, appearance);
 }
 
 export function spritePathFor(appearance: string, stage: Stage = 1): string {
