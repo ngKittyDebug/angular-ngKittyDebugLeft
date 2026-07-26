@@ -77,7 +77,9 @@ Separate `package.json` (partykit, vitest, typescript). **Multi-party:** each ac
 party in `partykit.json` + a folder `partykit-server/src/parties/<game>/`:
 
 - `index.ts` — thin `Party.Server` adapter: transport + lifecycle, stores `players`/`items` as
-  arrays, calls only the BOUND engine.
+  arrays, calls only the BOUND engine. Also owns the session/abuse guards (#323/#324): a
+  per-connection `identify`/`join` rate budget, the join cap (→ `roomFull`), the identify
+  re-key guard and orphan-session eviction — a session never outlives its player.
 - `game.ts` — composition root: `createEngine(definition, npcRegistry)`; exports `frenzyEngine`,
   `FRENZY_NPC_REGISTRY`, `frenzyNpcHooks` (for specs).
 - `slices/<kind>/` — NPC runtime code (see below).
