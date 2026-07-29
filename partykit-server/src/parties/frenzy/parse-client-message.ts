@@ -4,6 +4,9 @@ import type { ClientMessage, PlayerBody } from '@game/frenzy/types';
 // npcId is a server-generated UUID (36 chars); cap the parsed length so a tampered client can't push an oversized
 // string through the boundary (mirrors the named appearance length policy — `APPEARANCE_MAX_LENGTH` — in validate-join).
 const NPC_ID_MAX_LENGTH = 64;
+// sessionToken is a client-generated opaque secret (issue #124) — a `crypto.randomUUID()` (36 chars). Cap the parsed
+// length so a tampered client can't push an oversized string through the boundary (mirrors `NPC_ID_MAX_LENGTH`).
+const SESSION_TOKEN_MAX_LENGTH = 64;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -55,7 +58,8 @@ export function parseClientMessage(raw: string): ClientMessage | null {
 
   switch (data.type) {
     case 'identify': {
-      return isNonEmptyString(data.sessionToken)
+      return isNonEmptyString(data.sessionToken) &&
+        data.sessionToken.length <= SESSION_TOKEN_MAX_LENGTH
         ? { type: 'identify', sessionToken: data.sessionToken }
         : null;
     }
