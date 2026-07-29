@@ -108,7 +108,7 @@ describe('CurrentPokemonStatusComponent', () => {
   it('renders a buff chip per active effect, labelled from frenzy.effects', () => {
     const fixture = createFixture();
 
-    fixture.componentRef.setInput('effects', [
+    fixture.componentRef.setInput('effectList', [
       { kind: 'shield', expiresAt: 0 },
       { kind: 'pooping', expiresAt: 0 },
     ]);

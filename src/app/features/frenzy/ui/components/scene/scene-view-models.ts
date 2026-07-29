@@ -51,16 +51,16 @@ export interface RenderedAura {
 
 export interface RenderedPlayer {
   appearance: string;
-  effectAuras: readonly RenderedAura[];
+  effectAuraList: readonly RenderedAura[];
   // Modifier class for the grounding-shadow tint: the single dominant active effect by fixed precedence
   // (emitter egg/poop > shield > wellFed), as `scene__shadow--<kind>`. `null` when no effect is active — the
   // shadow stays its neutral theme-flipped base. The shadow always echoes the visible bubble; wellFed (which
   // has no bubble) only tints the shadow when it is the sole effect.
   shadowEffectClass: string | null;
   // Active timed effects as overhead badges (icon + tone + kind), present while `expiresAt` is in the future —
-  // same instant-expiry filter as `effectAuras`, shown for every actor including the NPC (it can pick up an effect
+  // same instant-expiry filter as `effectAuraList`, shown for every actor including the NPC (it can pick up an effect
   // by colliding with an item, and then shows the matching aura ring already).
-  effectBadges: readonly RenderedEffectBadge[];
+  effectBadgeList: readonly RenderedEffectBadge[];
   facingRight: boolean;
   id: string;
   isDisconnected: boolean;

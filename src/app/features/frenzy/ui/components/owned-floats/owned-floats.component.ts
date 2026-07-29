@@ -24,6 +24,6 @@ import type { RenderedPlayer } from '../scene/scene-view-models';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OwnedFloatsComponent {
-  public readonly players = input.required<readonly RenderedPlayer[]>();
+  public readonly playerList = input.required<readonly RenderedPlayer[]>();
   public readonly floatsByOwner = input.required<ReadonlyMap<string, readonly OwnedFloat[]>>();
 }

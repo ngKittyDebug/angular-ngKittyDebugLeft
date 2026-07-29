@@ -26,7 +26,7 @@ export class DetonationEffect implements FrenzyEffect {
   private readonly sound = inject(SoundPlayerService);
   private readonly list = new TransientList<Blast>();
 
-  public readonly blasts = this.list.items;
+  public readonly blastList = this.list.items;
   public readonly messageTypes = ['detonated'] as const;
 
   public handle(message: ServerMessage): void {

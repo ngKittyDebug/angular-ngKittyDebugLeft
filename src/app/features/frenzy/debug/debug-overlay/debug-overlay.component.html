@@ -1,5 +1,5 @@
 @if (flags().pokemonBorders || flags().speed) {
-  @for (player of players(); track player.id) {
+  @for (player of playerList(); track player.id) {
     @if (flags().pokemonBorders) {
       <!-- Yellow = full art box (render size), shifted by the same centring offset as the sprite. -->
       <left-paw-debug-box
@@ -35,7 +35,7 @@
 }
 
 @if (flags().itemBorders) {
-  @for (item of items(); track item.id) {
+  @for (item of itemList(); track item.id) {
     <!-- The bomb's box is its larger sensor-horn reach (the real detonation contact), others use the item size. -->
     <left-paw-debug-box
       variant="item"
@@ -48,7 +48,7 @@
 }
 
 @if (flags().speed) {
-  @for (item of items(); track item.id) {
+  @for (item of itemList(); track item.id) {
     <!-- Drift-speed readout for physics items that carry one (the bomb), sitting flush on the box top, left-aligned
          to it — same as the per-Pokémon pills. The box is centred on the point, so its top-left corner is at
          (-itemSize/2, -itemSize/2); the readout's own translateY(-100%) lifts the pill onto the top edge. -->

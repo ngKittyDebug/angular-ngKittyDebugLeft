@@ -55,14 +55,14 @@
           </svg>
         </div>
         <div class="minimap__field">
-          @for (dot of itemDots(); track dot.id) {
+          @for (dot of itemDotList(); track dot.id) {
             <span
               class="minimap__item"
               [leftPawScenePosition]="{ x: dot.x, y: dot.y }"
               [style.background]="dot.color"
             ></span>
           }
-          @for (dot of playerDots(); track dot.id) {
+          @for (dot of playerDotList(); track dot.id) {
             <span
               class="minimap__player"
               [class.minimap__player--me]="dot.me"

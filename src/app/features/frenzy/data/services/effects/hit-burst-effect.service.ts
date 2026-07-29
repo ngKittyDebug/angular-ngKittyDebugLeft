@@ -28,11 +28,11 @@ const SPARK_TTL_MS = 800;
  */
 @Injectable()
 export class HitBurstEffect implements FrenzyEffect {
-  private readonly bursts = new TransientList<HitBurst>();
+  private readonly burstList = new TransientList<HitBurst>();
   private readonly sparks = new TransientList<OwnedSpark>();
 
-  public readonly hitBursts = this.bursts.items;
-  public readonly ownedSparks = this.sparks.items;
+  public readonly hitBurstList = this.burstList.items;
+  public readonly ownedSparkList = this.sparks.items;
   public readonly messageTypes = ['eaten', 'effectGranted', 'bumped'] as const;
 
   public handle(message: ServerMessage, context: EffectContext): void {
@@ -75,7 +75,7 @@ export class HitBurstEffect implements FrenzyEffect {
     via: PickupVia,
     context: EffectContext,
   ): void {
-    this.bursts.add(
+    this.burstList.add(
       {
         id: createTransientId(),
         x,

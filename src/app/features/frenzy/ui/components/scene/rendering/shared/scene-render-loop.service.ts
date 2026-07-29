@@ -126,7 +126,7 @@ export class SceneRenderLoopService {
         // its own structural recompute internally.
         context
           .offscreenIndicators()
-          ?.frame(this.facade.cameraSnapshot(), now, this.facade.renderedPlayers());
+          ?.frame(this.facade.cameraSnapshot(), now, this.facade.renderedPlayerList());
       }
 
       // Under `?debug=perf` only: this frame's scene-loop JS time (from frame start to here — our script, not the

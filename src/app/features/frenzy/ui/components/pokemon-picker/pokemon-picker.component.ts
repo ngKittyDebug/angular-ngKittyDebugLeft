@@ -55,11 +55,11 @@ export class PokemonPickerComponent {
   protected readonly canSubmit = computed(
     () => this.name().trim().length > 0 && this.selectedLine() !== null,
   );
-  protected readonly lineOptions = POKEMON_LINES;
+  protected readonly lineOptionList = POKEMON_LINES;
   // Item primer (2.3): a couple of obviously-good / obviously-bad items shown right in the picker so a first-timer
   // knows the basics before diving in. A curated subset — the full classification lives in the in-game HUD legend.
-  protected readonly safeItems: readonly ItemType[] = ['food', 'rareCandy'];
-  protected readonly dangerItems: readonly ItemType[] = ['bomb', 'rock'];
+  protected readonly safeItemList: readonly ItemType[] = ['food', 'rareCandy'];
+  protected readonly dangerItemList: readonly ItemType[] = ['bomb', 'rock'];
   // Seed the editable fields from the supplied identity. `linkedSignal` so the seed lands once the inputs resolve
   // (they bind after construction); a user edit thereafter sticks (the inputs are read-once and never change again).
   protected readonly name = linkedSignal<string>(() => this.initialName());

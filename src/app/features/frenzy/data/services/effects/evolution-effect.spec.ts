@@ -80,7 +80,7 @@ describe('EvolutionEffect', () => {
   it('plays the chime and floats an evolved quip for my own evolution', () => {
     effect.handle(evolved('me'), context);
 
-    const messages = floats.ownedMessages();
+    const messages = floats.ownedMessageList();
 
     expect(play).toHaveBeenCalledExactlyOnceWith('evolve');
     expect(messages[messages.length - 1].ownerId).toBe('me');
@@ -91,7 +91,7 @@ describe('EvolutionEffect', () => {
     effect.handle(evolved('other'), context);
 
     expect(play).not.toHaveBeenCalled();
-    expect(floats.ownedMessages()).toHaveLength(0);
+    expect(floats.ownedMessageList()).toHaveLength(0);
   });
 
   it('ignores messages other than evolved', () => {

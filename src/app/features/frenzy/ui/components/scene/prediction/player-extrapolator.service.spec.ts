@@ -61,7 +61,7 @@ describe('PlayerExtrapolatorService', () => {
 
     service.ingest([player({ id: 'p1', x: 0.4, y: 0.6 })], null, NONE, 0);
 
-    const rendered = service.rendered()[0];
+    const rendered = service.renderedList()[0];
 
     expect(rendered.x).toBeCloseTo(0.4);
     expect(rendered.y).toBeCloseTo(0.6);
@@ -72,8 +72,8 @@ describe('PlayerExtrapolatorService', () => {
 
     service.ingest([player({ id: 'p1' }), player({ id: 'p2' })], 'p2', NONE, 0);
 
-    expect(service.rendered().find((p) => p.id === 'p2')?.isMe).toBe(true);
-    expect(service.rendered().find((p) => p.id === 'p1')?.isMe).toBe(false);
+    expect(service.renderedList().find((p) => p.id === 'p2')?.isMe).toBe(true);
+    expect(service.renderedList().find((p) => p.id === 'p1')?.isMe).toBe(false);
   });
 
   it('emits an aura render descriptor for a live effect and drops it once expired', () => {
@@ -84,7 +84,7 @@ describe('PlayerExtrapolatorService', () => {
     });
 
     service.ingest([live], null, NONE, 0);
-    expect(service.rendered()[0].effectAuras).toEqual([
+    expect(service.renderedList()[0].effectAuraList).toEqual([
       { className: 'scene__shield', render: 'shield' },
     ]);
 
@@ -94,7 +94,7 @@ describe('PlayerExtrapolatorService', () => {
     });
 
     service.ingest([expired], null, NONE, 1);
-    expect(service.rendered()[0].effectAuras).toEqual([]);
+    expect(service.renderedList()[0].effectAuraList).toEqual([]);
   });
 
   it('maps each aura-bearing effect to its render mode (shield / bubble / bespoke)', () => {
@@ -116,7 +116,7 @@ describe('PlayerExtrapolatorService', () => {
       0,
     );
 
-    expect(service.rendered()[0].effectAuras).toEqual([
+    expect(service.renderedList()[0].effectAuraList).toEqual([
       { className: 'scene__shield', render: 'shield' },
       { className: 'scene__poop', render: 'bubble' },
       { className: 'scene__laying', render: 'bespoke' },
@@ -133,10 +133,10 @@ describe('PlayerExtrapolatorService', () => {
       0,
     );
 
-    const rendered = service.rendered()[0];
+    const rendered = service.renderedList()[0];
 
-    expect(rendered.effectAuras).toEqual([]);
-    expect(rendered.effectBadges).toEqual([
+    expect(rendered.effectAuraList).toEqual([]);
+    expect(rendered.effectBadgeList).toEqual([
       { kind: 'wellFed', icon: '@tui.heart', tone: 'positive' },
     ]);
   });
@@ -146,7 +146,7 @@ describe('PlayerExtrapolatorService', () => {
 
     service.ingest([player({ id: 'p1' })], null, NONE, 0);
 
-    expect(service.rendered()[0].shadowEffectClass).toBeNull();
+    expect(service.renderedList()[0].shadowEffectClass).toBeNull();
   });
 
   it('tints the grounding shadow for the sole active effect (wellFed alone, which has no bubble)', () => {
@@ -159,7 +159,7 @@ describe('PlayerExtrapolatorService', () => {
       0,
     );
 
-    expect(service.rendered()[0].shadowEffectClass).toBe('scene__shadow--wellFed');
+    expect(service.renderedList()[0].shadowEffectClass).toBe('scene__shadow--wellFed');
   });
 
   it('prefers shield over wellFed for the grounding-shadow tint when both stack', () => {
@@ -180,7 +180,7 @@ describe('PlayerExtrapolatorService', () => {
       0,
     );
 
-    expect(service.rendered()[0].shadowEffectClass).toBe('scene__shadow--shield');
+    expect(service.renderedList()[0].shadowEffectClass).toBe('scene__shadow--shield');
   });
 
   it('prefers the emitter (laying) over shield and wellFed for the grounding-shadow tint', () => {
@@ -202,7 +202,7 @@ describe('PlayerExtrapolatorService', () => {
       0,
     );
 
-    expect(service.rendered()[0].shadowEffectClass).toBe('scene__shadow--laying');
+    expect(service.renderedList()[0].shadowEffectClass).toBe('scene__shadow--laying');
   });
 
   it('drops the grounding-shadow tint once the only effect expires (neutral again)', () => {
@@ -215,7 +215,7 @@ describe('PlayerExtrapolatorService', () => {
       0,
     );
 
-    expect(service.rendered()[0].shadowEffectClass).toBeNull();
+    expect(service.renderedList()[0].shadowEffectClass).toBeNull();
   });
 
   it('emits an effect badge (icon + tone) for a live effect and drops it once expired', () => {
@@ -226,7 +226,7 @@ describe('PlayerExtrapolatorService', () => {
     });
 
     service.ingest([live], null, NONE, 0);
-    expect(service.rendered()[0].effectBadges).toEqual([
+    expect(service.renderedList()[0].effectBadgeList).toEqual([
       { kind: 'shield', icon: '@tui.shield', tone: 'positive' },
     ]);
 
@@ -236,7 +236,7 @@ describe('PlayerExtrapolatorService', () => {
     });
 
     service.ingest([expired], null, NONE, 1);
-    expect(service.rendered()[0].effectBadges).toEqual([]);
+    expect(service.renderedList()[0].effectBadgeList).toEqual([]);
   });
 
   it('tones the pooping debuff badge as a warning, distinct from positive buffs', () => {
@@ -249,7 +249,7 @@ describe('PlayerExtrapolatorService', () => {
       0,
     );
 
-    expect(service.rendered()[0].effectBadges).toEqual([
+    expect(service.renderedList()[0].effectBadgeList).toEqual([
       { kind: 'pooping', icon: '@tui.wind', tone: 'warning' },
     ]);
   });
@@ -264,7 +264,7 @@ describe('PlayerExtrapolatorService', () => {
       0,
     );
 
-    expect(service.rendered()[0].effectBadges).toEqual([
+    expect(service.renderedList()[0].effectBadgeList).toEqual([
       { kind: 'shield', icon: '@tui.shield', tone: 'positive' },
     ]);
   });
@@ -275,7 +275,7 @@ describe('PlayerExtrapolatorService', () => {
 
     service.ingest([npc({ id: 'bomb', mana: half })], null, NONE, 0);
 
-    const rendered = service.rendered()[0];
+    const rendered = service.renderedList()[0];
 
     expect(rendered.isNpc).toBe(true);
     expect(rendered.npcAnger).toBeCloseTo(0.5);
@@ -286,7 +286,7 @@ describe('PlayerExtrapolatorService', () => {
 
     service.ingest([npc({ id: 'bomb', mana: FRENZY.npc.anger.max * 2 })], null, NONE, 0);
 
-    expect(service.rendered()[0].npcAnger).toBe(1);
+    expect(service.renderedList()[0].npcAnger).toBe(1);
   });
 
   it('leaves humans non-NPC with zero anger regardless of mana', () => {
@@ -294,7 +294,7 @@ describe('PlayerExtrapolatorService', () => {
 
     service.ingest([player({ id: 'p1', mana: 50 })], null, NONE, 0);
 
-    const rendered = service.rendered()[0];
+    const rendered = service.renderedList()[0];
 
     expect(rendered.isNpc).toBe(false);
     expect(rendered.npcAnger).toBe(0);
@@ -305,7 +305,7 @@ describe('PlayerExtrapolatorService', () => {
 
     service.ingest([player({ id: 'p1' })], null, new Map([['p1', 2]]), 0);
 
-    expect(service.rendered()[0].isEvolving).toBe(true);
+    expect(service.renderedList()[0].isEvolving).toBe(true);
   });
 
   it('turns the local heading toward a steer target on the same frame', () => {
@@ -401,9 +401,9 @@ describe('PlayerExtrapolatorService', () => {
     const service = new PlayerExtrapolatorService();
 
     service.ingest([player({ id: 'a' }), player({ id: 'b' })], null, NONE, 0);
-    expect(service.rendered()).toHaveLength(2);
+    expect(service.renderedList()).toHaveLength(2);
 
     service.ingest([player({ id: 'a' })], null, NONE, 1);
-    expect(service.rendered()).toHaveLength(1);
+    expect(service.renderedList()).toHaveLength(1);
   });
 });

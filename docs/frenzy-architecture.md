@@ -225,5 +225,5 @@ calls only the bound `frenzyEngine.*`. Extract logic into small named functions 
   `NpcQuipEffect`, `EmissionSoundEffect`, `PlayerEffectsTracker`. Queue/lifetime helpers:
   `transient-list.ts`, `owner-release-queue.ts`. All push into `FloatingMessagesStore`
   (`pushOwned*` / `pushOrphan*`); `FrenzyEffectsService` is a thin orchestrator that fans
-  `messages$` out to handlers and re-exposes `ownedFloats` / `orphanFloats`. A new producer =
-  a new file in `effects/` following the same template — don't bloat existing ones.
+  `messages$` out to handlers and re-exposes `ownedFloatList` / `orphanFloatList`. A new
+  producer = a new file in `effects/` following the same template — don't bloat existing ones.

@@ -10,9 +10,9 @@ import { ScenePlayerComponent } from './scene-player.component';
 function renderedPlayer(partial: Partial<RenderedPlayer> = {}): RenderedPlayer {
   return {
     appearance: 'pidgey',
-    effectAuras: [],
+    effectAuraList: [],
     shadowEffectClass: null,
-    effectBadges: [],
+    effectBadgeList: [],
     facingRight: false,
     id: 'p1',
     isDisconnected: false,
@@ -79,7 +79,7 @@ describe('ScenePlayerComponent', () => {
   it('renders one badge per active effect, labelled from frenzy.effects', () => {
     const element = createFixture(
       renderedPlayer({
-        effectBadges: [
+        effectBadgeList: [
           { kind: 'shield', icon: '@tui.shield', tone: 'positive' },
           { kind: 'pooping', icon: '@tui.wind', tone: 'warning' },
         ],
@@ -94,7 +94,7 @@ describe('ScenePlayerComponent', () => {
   });
 
   it('renders no badges when the player has no active effects', () => {
-    const element = createFixture(renderedPlayer({ effectBadges: [] }))
+    const element = createFixture(renderedPlayer({ effectBadgeList: [] }))
       .nativeElement as HTMLElement;
 
     expect(element.querySelectorAll('.scene__effect-badge')).toHaveLength(0);
@@ -119,7 +119,7 @@ describe('ScenePlayerComponent', () => {
 
   it('renders the bespoke egg aura as a bare span — no single-tint bubble-skin directive', () => {
     const element = createFixture(
-      renderedPlayer({ effectAuras: [{ className: 'scene__laying', render: 'bespoke' }] }),
+      renderedPlayer({ effectAuraList: [{ className: 'scene__laying', render: 'bespoke' }] }),
     ).nativeElement as HTMLElement;
 
     const aura = element.querySelector<HTMLElement>('.scene__laying');
@@ -131,7 +131,7 @@ describe('ScenePlayerComponent', () => {
 
   it('wears the bubble-skin directive on bubble-mode auras (inline glass background)', () => {
     const element = createFixture(
-      renderedPlayer({ effectAuras: [{ className: 'scene__shield', render: 'shield' }] }),
+      renderedPlayer({ effectAuraList: [{ className: 'scene__shield', render: 'shield' }] }),
     ).nativeElement as HTMLElement;
 
     expect(element.querySelector<HTMLElement>('.scene__shield')?.style.backgroundImage).not.toBe(

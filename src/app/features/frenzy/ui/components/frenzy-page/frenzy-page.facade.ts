@@ -40,13 +40,13 @@ export class FrenzyPageFacade {
     return Math.max(0, FRENZY.cooldownAfterFaintedMs - (this.nowMs() - faintedAt));
   });
 
-  public readonly blasts = this.effects.blasts;
+  public readonly blastList = this.effects.blastList;
   public readonly cooldownSeconds = computed(() => Math.ceil(this.cooldownLeftMs() / 1000));
   public readonly disconnectedCount = this.store.disconnectedCount;
   public readonly evolvingPlayers = this.effects.evolvingPlayers;
-  public readonly hitBursts = this.effects.hitBursts;
-  public readonly ownedSparks = this.effects.ownedSparks;
-  public readonly ownedShieldBlocks = this.effects.ownedShieldBlocks;
+  public readonly hitBurstList = this.effects.hitBurstList;
+  public readonly ownedSparkList = this.effects.ownedSparkList;
+  public readonly ownedShieldBlockList = this.effects.ownedShieldBlockList;
   public readonly faintedStats = computed<FaintedStats>(() => ({
     eatenByType: this.stats.eatenByType(),
     lifespanSeconds: this.stats.lifespanSeconds(),
@@ -65,31 +65,31 @@ export class FrenzyPageFacade {
 
     return this.epitaphs.compose(cause, this.store.myKillerName(), selfDestruct);
   });
-  public readonly orphanFloats = this.effects.orphanFloats;
-  public readonly ownedFloats = this.effects.ownedFloats;
+  public readonly orphanFloatList = this.effects.orphanFloatList;
+  public readonly ownedFloatList = this.effects.ownedFloatList;
   // The transient reaction face for my own Pokémon (bomb/collision/poison/buff), overlaid on the status avatar.
   public readonly reactionFace = this.effects.reactionFace;
   public readonly joinError = this.store.joinError;
   public readonly isMobile = computed(() => this.breakpoint() === 'mobile');
-  public readonly items = computed(() => this.store.state()?.items ?? []);
-  public readonly leaderboard = this.store.leaderboard;
+  public readonly itemList = computed(() => this.store.state()?.items ?? []);
+  public readonly leaderboardList = this.store.leaderboard;
   // The single current leader (top of the sorted leaderboard), or null when nobody's in — feeds the minimap header.
   public readonly leader = computed(() => {
-    const entries = this.leaderboard();
+    const entryList = this.leaderboardList();
 
-    return entries.length > 0 ? entries[0] : null;
+    return entryList.length > 0 ? entryList[0] : null;
   });
   public readonly me = this.store.me;
   // My Pokémon's currently-active timed effects, pruned by `expiresAt` on the cooldown ticker (and on snapshot
   // change), feeding the status-card buff strip. Empty when I'm not in play.
-  public readonly activeEffects = computed(() =>
+  public readonly activeEffectList = computed(() =>
     (this.me()?.effects ?? []).filter((effect) => effect.expiresAt > this.nowMs()),
   );
   public readonly myId = this.store.myId;
   // The crowned player id (alive hp-leader, shared selector) — gates the leaderboard pill's crown so it never
   // disagrees with the scene marker.
   public readonly crownId = this.store.crownId;
-  public readonly players = computed(() => this.store.state()?.players ?? []);
+  public readonly playerList = computed(() => this.store.state()?.players ?? []);
   public readonly presenceCount = this.store.presenceCount;
   // The player's last saved identity (read once at load) — seeds the picker so a returning player keeps their name
   // and Pokémon. The picker takes these as inputs instead of injecting persistence itself (ADR 0004 §2/§3); the
@@ -167,7 +167,7 @@ export class FrenzyPageFacade {
     // saved on every join and survive a reload). Without this, reaching the fainted modal without having used
     // the picker THIS session — e.g. a page reload while alive, where the player is restored from the server's
     // grace window — left `lastSubmission` null and the button silently did nothing.
-    const submission = this.lastSubmission() ?? this.persistedSubmission();
+    const submission = this.lastSubmission() ?? this.getPersistedSubmission();
 
     if (submission === null) {
       // No identity to rejoin with at all (truly fresh load straight into a fainted state) — open the picker
@@ -180,7 +180,7 @@ export class FrenzyPageFacade {
     this.join(submission);
   }
 
-  private persistedSubmission(): PickerSubmission | null {
+  private getPersistedSubmission(): PickerSubmission | null {
     const name = this.persistence.getName().trim();
     const line = knownLine(this.persistence.getAppearance());
 
