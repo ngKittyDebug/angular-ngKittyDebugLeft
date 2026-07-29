@@ -21,6 +21,14 @@ describe('validateJoin', () => {
     expect(validateJoin('Ash', 'x'.repeat(33), TEST_BODY)).toBe('invalidAppearance');
   });
 
+  it('rejects a prototype-chain builtin name as the appearance', () => {
+    // Defence in depth: a builtin name would pass a length-only cap and, relayed to peers, break their render.
+    expect(validateJoin('Ash', 'constructor', TEST_BODY)).toBe('invalidAppearance');
+    expect(validateJoin('Ash', '__proto__', TEST_BODY)).toBe('invalidAppearance');
+    expect(validateJoin('Ash', 'toString', TEST_BODY)).toBe('invalidAppearance');
+    expect(validateJoin('Ash', 'hasOwnProperty', TEST_BODY)).toBe('invalidAppearance');
+  });
+
   it('rejects a body with out-of-bounds dimensions or speeds', () => {
     const tooWide = { ...TEST_BODY, 1: { ...TEST_BODY[1], width: 9999 } };
     const negativeHeight = { ...TEST_BODY, 2: { ...TEST_BODY[2], height: -1 } };

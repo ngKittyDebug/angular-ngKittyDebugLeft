@@ -13,7 +13,8 @@ export type Line = 'bulbasaur' | 'caterpie' | 'charmander' | 'magikarp' | 'pidge
 const FALLBACK_LINE: Line = 'caterpie';
 
 export function resolveLine(appearance: string): Line {
-  return appearance in STAGE_ART ? (appearance as Line) : FALLBACK_LINE;
+  // Own-property check, not `in` - an untrusted appearance id must not match inherited names (constructor, etc.).
+  return Object.hasOwn(STAGE_ART, appearance) ? (appearance as Line) : FALLBACK_LINE;
 }
 
 // On-screen sprite height per stage (world px) — the growth bands. Render width follows each sprite's native

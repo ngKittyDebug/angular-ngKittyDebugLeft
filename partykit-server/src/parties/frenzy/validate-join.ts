@@ -4,6 +4,11 @@ import type { JoinRejectReason, PlayerBody, StageBody } from '@game/frenzy/types
 
 // Length cap of the opaque appearance id — bounds garbage without coupling the server to the client's roster.
 const APPEARANCE_MAX_LENGTH = 32;
+// Well-formed appearance id shape: a plain lowercase slug. Roster-agnostic (the server never enumerates the
+// client's lines); it stops a tampered join smuggling a prototype-chain builtin name (constructor, __proto__,
+// toString, ...) that the client would index into its sprite maps and break every peer's render. The slug rules
+// out the underscore/uppercase builtins; the Object.prototype check also rejects `constructor`, a valid-looking slug.
+const APPEARANCE_ID_PATTERN = /^[a-z0-9-]+$/;
 // Max stored player-name length — mirrors the client input's maxlength (pokemon-picker) and is shared with the
 // join adapter (index.ts) so the cap has one source. An over-long name is truncated to this there, not rejected.
 export const NAME_MAX_LENGTH = 24;
@@ -36,6 +41,15 @@ function isBodyValid(body: PlayerBody): boolean {
   return body[1].hp <= body[2].hp && body[2].hp <= body[3].hp;
 }
 
+/** A plain-slug appearance id that names no Object.prototype member - defence in depth for the client's lookups. */
+function isSafeAppearance(appearance: string): boolean {
+  if (!APPEARANCE_ID_PATTERN.test(appearance)) {
+    return false;
+  }
+
+  return !Object.hasOwn(Object.prototype, appearance);
+}
+
 /**
  * Game-policy validation of a (form-valid) join, returning the first failing reason or null if it's accepted.
  * Split from `parse-client-message` (which guarantees shape/types) so the join handler can answer a rejected
@@ -50,7 +64,7 @@ export function validateJoin(
     return 'invalidName';
   }
 
-  if (appearance.length === 0 || appearance.length > APPEARANCE_MAX_LENGTH) {
+  if (appearance.length > APPEARANCE_MAX_LENGTH || !isSafeAppearance(appearance)) {
     return 'invalidAppearance';
   }
 

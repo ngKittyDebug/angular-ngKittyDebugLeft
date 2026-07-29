@@ -51,8 +51,9 @@ enumerate theme entities (the pokemon roster, "evolve at 200/500"). Everything a
 appearance, physical size, speed, stage thresholds — arrives from the client on `join` as opaque
 values; the server only stores them on `Player` and applies them. Implemented today:
 
-- `Player.appearance` — an opaque string (validated only as non-empty, ≤32 chars). The client
-  resolves it to a `Line`/sprite with an unknown-fallback in `ui/constants/pokemon-registry.ts`.
+- `Player.appearance` — an opaque lowercase slug (1–32 chars, and never an
+  `Object.prototype` member). The client resolves it to a `Line`/sprite with an
+  unknown-fallback in `ui/constants/pokemon-registry.ts`.
 - `Player.body: PlayerBody` (per-stage `{ width, height, speed, maxSpeed, hp }`) — size,
   cruise/cap speed and the stage HP gates travel on `join`; `calculateStage(hp, body)` reads the
   player's gates (there is no `FRENZY.thresholds` anymore). AABB collision
