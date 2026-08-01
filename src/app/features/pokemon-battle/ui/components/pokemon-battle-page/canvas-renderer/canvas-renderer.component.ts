@@ -1,5 +1,5 @@
-import type { ElementRef, OnDestroy, OnInit } from '@angular/core';
 import {
+  afterNextRender,
   ChangeDetectionStrategy,
   Component,
   inject,
@@ -8,6 +8,7 @@ import {
   output,
   viewChild,
 } from '@angular/core';
+import type { ElementRef, OnDestroy } from '@angular/core';
 
 import type { BattleEvent, BattlePokemon, BattleState } from '../../../../data/models/battle.model';
 import { AudioManagerService } from '../../../../data/services/audio-manager.service';
@@ -26,6 +27,11 @@ const PLATFORM_PLAYER_Y = 320;
 const PLATFORM_OPPONENT_X = 580;
 const PLATFORM_OPPONENT_Y = 200;
 
+const PLATFORM_PLAYER_RADIUS_X = 120;
+const PLATFORM_PLAYER_RADIUS_Y = 30;
+const PLATFORM_OPPONENT_RADIUS_X = 100;
+const PLATFORM_OPPONENT_RADIUS_Y = 25;
+
 const BREATH_SPEED = 0.003;
 const LUNGE_DISTANCE_PX = 40;
 
@@ -35,11 +41,12 @@ const LUNGE_DISTANCE_PX = 40;
   styleUrl: './canvas-renderer.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CanvasRendererComponent implements OnInit, OnDestroy {
-  private readonly canvasRef = viewChild<ElementRef<HTMLCanvasElement>>('battleCanvas');
+export class CanvasRendererComponent implements OnDestroy {
+  private readonly canvasReference =
+    viewChild.required<ElementRef<HTMLCanvasElement>>('battleCanvas');
   private readonly ngZone = inject(NgZone);
   private readonly audioManager = inject(AudioManagerService);
-  private ctx!: CanvasRenderingContext2D;
+  private context!: CanvasRenderingContext2D;
   private animationFrameId: number | null = null;
   private readonly imageCache = new Map<string, HTMLImageElement>();
   private readonly cryTimers: ReturnType<typeof setTimeout>[] = [];
@@ -57,29 +64,33 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
   public readonly eventTriggered = output<BattleEvent>();
   public readonly animationFinished = output<void>();
 
-  public ngOnInit(): void {
-    const canvas = this.canvasRef()?.nativeElement;
+  constructor() {
+    afterNextRender({
+      write: () => {
+        const canvas = this.canvasReference().nativeElement;
 
-    if (!canvas) {
-      return;
-    }
+        // Calculate and apply devicePixelRatio for HiDPI/Retina screens
+        const devicePixelRatio = Math.min(window.devicePixelRatio || 1, 2);
 
-    // Set standard high resolution coordinates
-    canvas.width = CANVAS_WIDTH;
-    canvas.height = CANVAS_HEIGHT;
-    this.ctx = canvas.getContext('2d')!;
+        canvas.width = CANVAS_WIDTH * devicePixelRatio;
+        canvas.height = CANVAS_HEIGHT * devicePixelRatio;
 
-    // Play initial cries at the start of battle
-    this.playInitialCries();
+        this.context = canvas.getContext('2d')!;
+        this.context.scale(devicePixelRatio, devicePixelRatio);
 
-    // Run the continuous rendering loop entirely outside Angular's Zone
-    this.ngZone.runOutsideAngular(() => {
-      const tick = (timestamp: number) => {
-        this.render(timestamp);
-        this.animationFrameId = requestAnimationFrame(tick);
-      };
+        // Play initial cries at the start of battle
+        this.playInitialCries();
 
-      this.animationFrameId = requestAnimationFrame(tick);
+        // Run the continuous rendering loop entirely outside Angular's Zone
+        this.ngZone.runOutsideAngular(() => {
+          const tick = (timestamp: number) => {
+            this.render(timestamp);
+            this.animationFrameId = requestAnimationFrame(tick);
+          };
+
+          this.animationFrameId = requestAnimationFrame(tick);
+        });
+      },
     });
   }
 
@@ -95,12 +106,18 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
     this.eventQueue.push(...events);
   }
 
+  public reset(): void {
+    this.eventQueue.length = 0;
+    this.currentEvent = null;
+    this.eventStartTime = 0;
+    this.eventDuration = 0;
+    this.animatedHps.clear();
+    this.cryTimers.forEach(clearTimeout);
+    this.cryTimers.length = 0;
+  }
+
   private playInitialCries(): void {
     const state = this.state();
-
-    if (!state) {
-      return;
-    }
 
     const allActiveIds = [
       ...state.playerSide.activePokemonIds,
@@ -202,12 +219,11 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
   }
 
   private render(timestamp: number): void {
-    const context = this.ctx;
-    const canvas = this.canvasRef()?.nativeElement;
-
-    if (!canvas) {
+    if (!this.context) {
       return;
     }
+
+    const context = this.context;
 
     // Update animations state
     this.updateAnimations(timestamp);
@@ -225,83 +241,57 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
     }
 
     // Clear canvas
-    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
     // Draw background platform circles
     // Player side platform
     context.fillStyle = 'rgba(100, 180, 100, 0.6)';
     context.beginPath();
-    context.ellipse(PLATFORM_PLAYER_X, PLATFORM_PLAYER_Y, 120, 30, 0, 0, 2 * Math.PI);
+    context.ellipse(
+      PLATFORM_PLAYER_X,
+      PLATFORM_PLAYER_Y,
+      PLATFORM_PLAYER_RADIUS_X,
+      PLATFORM_PLAYER_RADIUS_Y,
+      0,
+      0,
+      2 * Math.PI,
+    );
     context.fill();
 
     // Opponent side platform
     context.fillStyle = 'rgba(180, 100, 100, 0.6)';
     context.beginPath();
-    context.ellipse(PLATFORM_OPPONENT_X, PLATFORM_OPPONENT_Y, 100, 25, 0, 0, 2 * Math.PI);
+    context.ellipse(
+      PLATFORM_OPPONENT_X,
+      PLATFORM_OPPONENT_Y,
+      PLATFORM_OPPONENT_RADIUS_X,
+      PLATFORM_OPPONENT_RADIUS_Y,
+      0,
+      0,
+      2 * Math.PI,
+    );
     context.fill();
 
     // Idle breathing animation based on timestamp
     const wave = Math.sin(timestamp * BREATH_SPEED) * 4;
 
-    // Render player active pokemons
-    const playerSide = this.state().playerSide;
+    // Render player and opponent active pokemons
+    this.renderSide('player', timestamp, wave);
+    this.renderSide('opponent', timestamp, wave);
+  }
 
-    playerSide.activePokemonIds.forEach((id, index) => {
-      const pokemon = playerSide.pokemons.find((p) => p.id === id);
+  private renderSide(side: 'player' | 'opponent', timestamp: number, wave: number): void {
+    const isPlayer = side === 'player';
+    const sideData = isPlayer ? this.state().playerSide : this.state().opponentSide;
 
-      if (!pokemon) {
-        return;
-      }
+    const baseX = isPlayer ? PLATFORM_PLAYER_X : PLATFORM_OPPONENT_X;
+    const baseY = isPlayer ? PLATFORM_PLAYER_Y : PLATFORM_OPPONENT_Y;
+    const lungeSign = isPlayer ? 1 : -1;
+    const spriteType = isPlayer ? 'back' : 'front';
+    const uiOffset = isPlayer ? -95 : -75;
 
-      let offsetX = 0;
-      let offsetY = 0;
-      let alpha = 1.0;
-
-      if (this.currentEvent) {
-        const elapsed = timestamp - this.eventStartTime;
-        const progress = Math.min(1, elapsed / this.eventDuration);
-
-        if (
-          this.currentEvent.type === 'use-move' &&
-          this.currentEvent.payload?.attackerId === pokemon.id
-        ) {
-          const lungeDistribution = LUNGE_DISTANCE_PX;
-          const factor = Math.sin(progress * Math.PI);
-
-          offsetX = lungeDistribution * factor;
-          offsetY = -lungeDistribution * 0.3 * factor;
-        } else if (
-          this.currentEvent.type === 'damage' &&
-          this.currentEvent.payload?.targetId === pokemon.id
-        ) {
-          if (progress < 0.6) {
-            offsetX = Math.sin(elapsed * 0.05) * 5;
-          }
-        } else if (
-          this.currentEvent.type === 'faint' &&
-          this.currentEvent.payload?.pokemonId === pokemon.id
-        ) {
-          offsetY = progress * 50;
-          alpha = 1.0 - progress;
-        }
-      }
-
-      // Base layout coordinates
-      const uiX = PLATFORM_PLAYER_X - index * 60;
-      const uiY = PLATFORM_PLAYER_Y - 40 + index * 30 + wave;
-
-      this.drawPokemon(pokemon, uiX + offsetX, uiY + offsetY, 'back', alpha);
-
-      if (alpha > 0) {
-        this.drawUi(pokemon, uiX, uiY - 95, alpha);
-      }
-    });
-
-    // Render opponent active pokemons
-    const opponentSide = this.state().opponentSide;
-
-    opponentSide.activePokemonIds.forEach((id, index) => {
-      const pokemon = opponentSide.pokemons.find((p) => p.id === id);
+    sideData.activePokemonIds.forEach((id, index) => {
+      const pokemon = sideData.pokemons.find((p) => p.id === id);
 
       if (!pokemon) {
         return;
@@ -319,11 +309,11 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
           this.currentEvent.type === 'use-move' &&
           this.currentEvent.payload?.attackerId === pokemon.id
         ) {
-          const lungeDistribution = -LUNGE_DISTANCE_PX; // Lunge left
+          const lungeDistance = lungeSign * LUNGE_DISTANCE_PX;
           const factor = Math.sin(progress * Math.PI);
 
-          offsetX = lungeDistribution * factor;
-          offsetY = -lungeDistribution * 0.3 * factor;
+          offsetX = lungeDistance * factor;
+          offsetY = -lungeDistance * 0.3 * factor;
         } else if (
           this.currentEvent.type === 'damage' &&
           this.currentEvent.payload?.targetId === pokemon.id
@@ -341,13 +331,13 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
       }
 
       // Base layout coordinates
-      const uiX = PLATFORM_OPPONENT_X + index * 50;
-      const uiY = PLATFORM_OPPONENT_Y - 40 - index * 25 - wave;
+      const uiX = isPlayer ? baseX - index * 60 : baseX + index * 50;
+      const uiY = isPlayer ? baseY - 40 + index * 30 + wave : baseY - 40 - index * 25 - wave;
 
-      this.drawPokemon(pokemon, uiX + offsetX, uiY + offsetY, 'front', alpha);
+      this.drawPokemon(pokemon, uiX + offsetX, uiY + offsetY, spriteType, alpha);
 
       if (alpha > 0) {
-        this.drawUi(pokemon, uiX, uiY - 75, alpha);
+        this.drawUi(pokemon, uiX, uiY + uiOffset, alpha);
       }
     });
   }
@@ -368,7 +358,7 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
       this.imageCache.set(spriteUrl, img);
     }
 
-    const context = this.ctx;
+    const context = this.context;
     const oldAlpha = context.globalAlpha;
 
     context.globalAlpha = alpha;
@@ -390,7 +380,7 @@ export class CanvasRendererComponent implements OnInit, OnDestroy {
   }
 
   private drawUi(pokemon: BattlePokemon, x: number, y: number, alpha = 1.0): void {
-    const context = this.ctx;
+    const context = this.context;
     const oldAlpha = context.globalAlpha;
 
     context.globalAlpha = alpha;

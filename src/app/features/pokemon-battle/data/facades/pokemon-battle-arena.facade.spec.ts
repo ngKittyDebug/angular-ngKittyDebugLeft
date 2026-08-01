@@ -5,15 +5,7 @@ import { PokemonBattleArenaFacade } from './pokemon-battle-arena.facade';
 import { BotPlayerService } from '../services/bot-player.service';
 import { AudioManagerService } from '../services/audio-manager.service';
 import { PokemonBattleStore } from '../store/pokemon-battle.store';
-import {
-  BULBASAUR_FIXTURE,
-  CHARMANDER_FIXTURE,
-  IVYSAUR_FIXTURE,
-  SQUIRTLE_FIXTURE,
-} from '../fixtures/pokemon.fixture';
-
-type Public<T> = { [K in keyof T as K extends string ? K : never]: T[K] };
-type StoreType = Public<InstanceType<typeof PokemonBattleStore>>;
+import { createPokemonBattleStoreMock, type StoreType } from '../mocks/pokemon-battle-store.mock';
 
 describe('PokemonBattleArenaFacade', () => {
   let mockStore: MockedObject<Partial<StoreType>>;
@@ -22,27 +14,7 @@ describe('PokemonBattleArenaFacade', () => {
   let facade: PokemonBattleArenaFacade;
 
   beforeEach(() => {
-    mockStore = {
-      pokemonList: signal([
-        BULBASAUR_FIXTURE,
-        CHARMANDER_FIXTURE,
-        SQUIRTLE_FIXTURE,
-        IVYSAUR_FIXTURE,
-      ]),
-      selectedTeam: signal([BULBASAUR_FIXTURE, SQUIRTLE_FIXTURE]),
-      opponentTeam: signal([CHARMANDER_FIXTURE, IVYSAUR_FIXTURE]),
-      battleStarted: signal(true),
-      currentPage: signal(0),
-      totalCount: signal(4),
-      limit: signal(10),
-      isLoading: signal(false),
-      error: signal(null),
-      loadPokemons: vi.fn() as unknown as StoreType['loadPokemons'],
-      selectPokemonForTeam: vi.fn() as unknown as StoreType['selectPokemonForTeam'],
-      clearSelectedTeam: vi.fn() as unknown as StoreType['clearSelectedTeam'],
-      startBattle: vi.fn() as unknown as StoreType['startBattle'],
-      endBattle: vi.fn() as unknown as StoreType['endBattle'],
-    } as const satisfies MockedObject<Partial<StoreType>>;
+    mockStore = createPokemonBattleStoreMock();
 
     mockAudioManager = {
       enabled: signal(true),
@@ -54,7 +26,7 @@ describe('PokemonBattleArenaFacade', () => {
     } as const satisfies MockedObject<Partial<AudioManagerService>>;
 
     mockBotPlayerService = {
-      getCommands: vi.fn().mockReturnValue([]),
+      getCommandList: vi.fn().mockReturnValue([]),
     } as const satisfies MockedObject<Partial<BotPlayerService>>;
 
     TestBed.configureTestingModule({
@@ -75,7 +47,7 @@ describe('PokemonBattleArenaFacade', () => {
         expect(facade).toBeDefined();
         expect(facade.battleState()).not.toBeNull();
         expect(facade.battleState()?.playerSide.pokemons[0].name).toBe('bulbasaur');
-        expect(facade.activeAlivePlayerPokemons().length).toBe(2);
+        expect(facade.activeAlivePlayerPokemonList().length).toBe(2);
       });
     });
 
@@ -86,8 +58,8 @@ describe('PokemonBattleArenaFacade', () => {
       });
 
       it('должен изменять громкость', () => {
-        facade.onVolumeChange(0.5);
-        expect(mockAudioManager.setVolume).toHaveBeenCalledWith(0.5);
+        facade.changeVolume(0.5);
+        expect(mockAudioManager.setVolume).toHaveBeenNthCalledWith(1, 0.5);
       });
     });
 
@@ -95,43 +67,76 @@ describe('PokemonBattleArenaFacade', () => {
       it('должен переходить к следующему покемону при выборе приема и цели', () => {
         expect(facade.selectedMove()).toBeNull();
 
-        const move = facade.activeAlivePlayerPokemons()[0].moves[0];
+        const move = facade.activeAlivePlayerPokemonList()[0].moves[0];
 
-        facade.onSelectMove(move);
+        facade.selectMove(move);
         expect(facade.selectedMove()?.name).toBe(move.name);
 
-        const target = facade.activeAliveOpponentPokemons()[0];
+        const target = facade.activeAliveOpponentPokemonList()[0];
 
-        facade.onSelectTarget(target);
+        facade.selectTarget(target);
 
         expect(facade.currentSelectingPokemonIndex()).toBe(1);
         expect(facade.selectedMove()).toBeNull();
       });
 
       it('должен сбрасывать выбранный прием', () => {
-        const move = facade.activeAlivePlayerPokemons()[0].moves[0];
+        const move = facade.activeAlivePlayerPokemonList()[0].moves[0];
 
-        facade.onSelectMove(move);
-        expect(facade.selectedMove()?.name).toBe(move.name);
+        facade.selectMove(move);
 
         facade.cancelMoveSelection();
+
         expect(facade.selectedMove()).toBeNull();
       });
 
       it('должен очищать выбор раунда', () => {
-        const move = facade.activeAlivePlayerPokemons()[0].moves[0];
+        const move = facade.activeAlivePlayerPokemonList()[0].moves[0];
 
-        facade.onSelectMove(move);
-        facade.onSelectTarget(facade.activeAliveOpponentPokemons()[0]);
-
-        expect(facade.currentSelectingPokemonIndex()).toBe(1);
-        expect(facade.pendingCommands().length).toBe(1);
+        facade.selectMove(move);
+        facade.selectTarget(facade.activeAliveOpponentPokemonList()[0]);
 
         facade.resetSelection();
 
         expect(facade.currentSelectingPokemonIndex()).toBe(0);
-        expect(facade.pendingCommands().length).toBe(0);
+        expect(facade.pendingCommandList().length).toBe(0);
         expect(facade.selectedMove()).toBeNull();
+      });
+
+      it('должен корректно обновлять список живых активных покемонов после разрешения хода', () => {
+        // Устанавливаем HP первого покемона соперника в 1 в сторе и сбрасываем бой,
+        // чтобы движок создался с этим значением HP
+        const opponentTeamSignal = mockStore.opponentTeam as any;
+        const opponentTeam = structuredClone(opponentTeamSignal());
+
+        opponentTeam[0].hp = 1;
+        opponentTeamSignal.set(opponentTeam);
+        facade.resetBattle();
+
+        expect(facade.activeAliveOpponentPokemonList().length).toBe(2);
+
+        const firstActivePlayer = facade.activeAlivePlayerPokemonList()[0];
+        const move1 = firstActivePlayer.moves[0];
+
+        facade.selectMove(move1);
+
+        const target1 = facade.activeAliveOpponentPokemonList()[0];
+
+        facade.selectTarget(target1);
+
+        const secondActivePlayer = facade.activeAlivePlayerPokemonList()[1];
+        const move2 = secondActivePlayer.moves[0];
+
+        facade.selectMove(move2);
+
+        const target2 = facade.activeAliveOpponentPokemonList()[0];
+
+        facade.selectTarget(target2);
+
+        const state = facade.battleState();
+
+        expect(state?.opponentSide.pokemons[0].hp).toBe(0);
+        expect(facade.activeAliveOpponentPokemonList().length).toBe(1);
       });
     });
   });

@@ -1,9 +1,18 @@
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import type { ComponentFixture } from '@angular/core/testing';
 import { TranslocoTestingModule } from '@jsverse/transloco';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { EVOLUTION_ANIMATION_DURATION_MS } from '../../../data/constants/evolution-criteria.constants';
+import {
+  EVOLUTION_ANIMATION_DURATION_MS,
+  EVOLUTION_REDUCED_ANIMATION_DURATION_MS,
+  EVOLUTION_REVEAL_DURATION_MS,
+} from '../../../data/constants/evolution-criteria.constants';
+import { PERFORMANCE_PROFILES } from '../../../data/constants/performance-mode.constants';
+import type { PerformanceMode } from '../../../data/models/performance-mode.model';
 import type { PokemonModel } from '../../../data/models/pokemon.model';
+import { PerformanceService } from '../../../data/services/performance.service';
+import { AnimationService } from '../../services/animation.service';
 import { EvolutionAnimationComponent } from './evolution-animation.component';
 
 const basePokemon = (id: string, name: string): PokemonModel => {
@@ -17,12 +26,6 @@ const basePokemon = (id: string, name: string): PokemonModel => {
   };
 
   return {
-    baseStats: {
-      energyRestorationRate: 1,
-      experienceMultiplier: 1,
-      hungerDecayRate: 1,
-      moodDecayRate: 1,
-    },
     evolutionChain: { currentStage: 1, totalStages: 3 },
     id,
     isFirstStage: true,
@@ -41,9 +44,12 @@ function createFixture(
   inputs: {
     active?: boolean;
     fromPokemon?: PokemonModel;
+    performanceMode?: PerformanceMode;
     toPokemon?: PokemonModel | null;
   } = {},
 ): ComponentFixture<EvolutionAnimationComponent> {
+  const performanceMode = signal<PerformanceMode>(inputs.performanceMode ?? 'balanced');
+
   TestBed.configureTestingModule({
     imports: [
       EvolutionAnimationComponent,
@@ -60,6 +66,17 @@ function createFixture(
         },
         translocoConfig: { availableLangs: ['en'], defaultLang: 'en' },
       }),
+    ],
+    providers: [
+      AnimationService,
+      {
+        provide: PerformanceService,
+        useValue: {
+          mode: performanceMode.asReadonly(),
+          profile: () => PERFORMANCE_PROFILES[performanceMode()],
+          setMode: vi.fn(),
+        },
+      },
     ],
   });
 
@@ -80,6 +97,7 @@ describe('EvolutionAnimationComponent', () => {
 
   afterEach(() => {
     vi.useRealTimers();
+    TestBed.resetTestingModule();
   });
 
   describe('Happy Path', () => {
@@ -96,7 +114,7 @@ describe('EvolutionAnimationComponent', () => {
       expect(fixture.nativeElement.textContent).toContain('Evolving…');
     });
 
-    it('должен эмитить animationComplete с эволюционировавшим покемоном после длительности анимации', () => {
+    it('должен показывать фазу reveal до эмита animationComplete', () => {
       const fixture = createFixture({ active: true });
       const evolved = basePokemon('26', 'Raichu');
       const completeSpy = vi.fn();
@@ -106,6 +124,37 @@ describe('EvolutionAnimationComponent', () => {
       fixture.detectChanges();
 
       vi.advanceTimersByTime(EVOLUTION_ANIMATION_DURATION_MS);
+      fixture.detectChanges();
+
+      expect(completeSpy).toHaveBeenCalledTimes(0);
+      expect(fixture.nativeElement.querySelector('.evolution-animation')).toBeTruthy();
+      expect(
+        fixture.nativeElement.querySelector('.evolution-animation__sprite--reveal'),
+      ).toBeTruthy();
+
+      vi.advanceTimersByTime(EVOLUTION_REVEAL_DURATION_MS);
+      fixture.detectChanges();
+
+      expect(completeSpy).toHaveBeenNthCalledWith(1, evolved);
+      expect(fixture.nativeElement.querySelector('.evolution-animation')).toBeNull();
+    });
+  });
+
+  describe('Edge Cases', () => {
+    it('должен завершать анимацию по короткому пути в performance low', () => {
+      const fixture = createFixture({ active: true, performanceMode: 'low' });
+      const evolved = basePokemon('26', 'Raichu');
+      const completeSpy = vi.fn();
+
+      fixture.componentRef.setInput('toPokemon', evolved);
+      fixture.componentInstance.animationComplete.subscribe(completeSpy);
+      fixture.detectChanges();
+
+      expect(
+        fixture.nativeElement.querySelector('.evolution-animation__sprite--reduced'),
+      ).toBeTruthy();
+
+      vi.advanceTimersByTime(EVOLUTION_REDUCED_ANIMATION_DURATION_MS);
       fixture.detectChanges();
 
       expect(completeSpy).toHaveBeenNthCalledWith(1, evolved);

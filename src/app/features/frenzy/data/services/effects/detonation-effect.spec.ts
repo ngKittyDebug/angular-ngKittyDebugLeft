@@ -49,8 +49,8 @@ describe('DetonationEffect', () => {
     effect.handle(detonated({ x: 0.3, y: 0.7, radius: 0.25 }));
 
     expect(play).toHaveBeenCalledExactlyOnceWith('explosion');
-    expect(effect.blasts()).toHaveLength(1);
-    expect(effect.blasts()[0]).toMatchObject({ x: 0.3, y: 0.7, radius: 0.25 });
+    expect(effect.blastList()).toHaveLength(1);
+    expect(effect.blastList()[0]).toMatchObject({ x: 0.3, y: 0.7, radius: 0.25 });
   });
 
   it('floats one negative-toned damage quip per hit, anchored to each victim', () => {
@@ -63,7 +63,7 @@ describe('DetonationEffect', () => {
       }),
     );
 
-    const messages = floats.ownedMessages();
+    const messages = floats.ownedMessageList();
 
     expect(messages).toHaveLength(2);
     expect(messages.map((message) => message.ownerId)).toEqual(['a', 'b']);
@@ -73,7 +73,7 @@ describe('DetonationEffect', () => {
   it('carries each victim`s exact lost hp on its float', () => {
     effect.handle(detonated({ hits: [{ playerId: 'a', delta: -25 }] }));
 
-    expect(floats.ownedMessages()[0].delta).toBe(-25);
+    expect(floats.ownedMessageList()[0].delta).toBe(-25);
   });
 
   it('caps simultaneous blasts at three, dropping the oldest', () => {
@@ -81,9 +81,9 @@ describe('DetonationEffect', () => {
       effect.handle(detonated({ x: i / 10 }));
     }
 
-    const xs = effect.blasts().map((blast) => blast.x);
+    const xs = effect.blastList().map((blast) => blast.x);
 
-    expect(effect.blasts()).toHaveLength(3);
+    expect(effect.blastList()).toHaveLength(3);
     expect(xs).toEqual([0.1, 0.2, 0.3]);
   });
 
@@ -91,6 +91,6 @@ describe('DetonationEffect', () => {
     effect.handle({ type: 'roomFull' });
 
     expect(play).not.toHaveBeenCalled();
-    expect(effect.blasts()).toHaveLength(0);
+    expect(effect.blastList()).toHaveLength(0);
   });
 });

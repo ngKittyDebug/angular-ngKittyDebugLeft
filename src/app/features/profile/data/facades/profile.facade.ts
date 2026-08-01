@@ -1,12 +1,24 @@
-import { inject, Service } from '@angular/core';
+import { httpResource } from '@angular/common/http';
+import { computed, inject, Service } from '@angular/core';
+import { PokemonApiService } from '@core/api/pokemon-api.service';
 import { AuthService } from '@core/services/auth.service';
-import type { ChangePasswordModel, UpdateAvatar, UpdateUserModel } from '../models/profile.model';
+import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
+import type {
+  ChangePasswordModel,
+  UpdateAvatarModel,
+  UpdateUserModel,
+} from '../models/profile.model';
 import { UserProfileStore } from '../store/profile.store';
 
 @Service()
 export class ProfileFacade {
   private readonly store = inject(UserProfileStore);
   private readonly authService = inject(AuthService);
+  private readonly pokemonApiService = inject(PokemonApiService);
+
+  private readonly firstPokemonResource = httpResource<PokemonDetailApiData>(() =>
+    this.pokemonApiService.getPokemonData('1'),
+  );
 
   public readonly profile = this.store.profile;
   public readonly favoritePokemonList = this.store.favoritePokemonList;
@@ -14,6 +26,13 @@ export class ProfileFacade {
   public readonly error = this.store.error;
   public readonly isPasswordChangedSuccess = this.store.isPasswordChangedSuccess;
   public readonly isAccountDeleted = this.store.isAccountDeleted;
+
+  public readonly avatarUrl = computed(
+    () =>
+      this.profile()?.avatar ||
+      this.firstPokemonResource.value()?.sprites.other['official-artwork'].front_default ||
+      '',
+  );
 
   public loadProfile(): void {
     this.store.loadProfile();
@@ -49,7 +68,7 @@ export class ProfileFacade {
     this.store.updateProfile(data);
   }
 
-  public updateAvatar(data: UpdateAvatar): void {
+  public updateAvatar(data: UpdateAvatarModel): void {
     this.store.updateAvatar(data);
   }
 

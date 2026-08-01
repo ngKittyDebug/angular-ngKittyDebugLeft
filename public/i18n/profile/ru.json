@@ -6,6 +6,7 @@
     "cancel": "Отмена",
     "username": "Имя",
     "email": "Email",
+    "avatarAlt": "Аватар пользователя",
     "uploadAvatar": "Выбрать аватар",
     "avatarPicker": {
       "title": "Выберите аватар",

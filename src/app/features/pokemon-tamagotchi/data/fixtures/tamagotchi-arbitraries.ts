@@ -10,15 +10,24 @@ import type {
   StatusUpdateModel,
 } from '../models/pokemon-status.model';
 import type { TamagotchiStateModel } from '../models/tamagotchi-state.model';
-import { createInitialTamagotchiState } from '../store/tamagotchi-initial';
+import { createInitialTamagotchiState, initialTamagotchiState } from '../store/tamagotchi-initial';
+import {
+  applyStatusDecayState,
+  careForPokemonState,
+  completeTrainingState,
+  feedPokemonState,
+  interactWithPokemonState,
+  playWithPokemonState,
+  selectPokemonState,
+  startTrainingState,
+  updateStatusState,
+  waterPokemonState,
+} from '../store/tamagotchi-state-transitions';
+
+export const PROPERTY_FIXED_NOW = 1_700_000_000_000;
+export const PROPERTY_FIXED_TRAINING_REWARD = 25;
 
 export const TEST_POKEMON = {
-  baseStats: {
-    energyRestorationRate: 1,
-    experienceMultiplier: 1,
-    hungerDecayRate: 1,
-    moodDecayRate: 1,
-  },
   evolutionChain: { currentStage: 1, totalStages: 3 },
   id: '25',
   isFirstStage: true,
@@ -237,8 +246,60 @@ export const arbitraryTamagotchiState = (): fc.Arbitrary<TamagotchiStateModel> =
       };
     });
 
-export const arbitraryEvolutionRequirement = arbitraryEvolutionRequirementModel;
 export const arbitraryEvolutionRequirements = arbitraryEvolutionRequirementModels;
 export const arbitraryLinearEvolutionChain = arbitraryLinearEvolutionChainModel;
 export const arbitraryTrainingAchievements = arbitraryTrainingAchievementModels;
 export const arbitraryInteractionEvent = arbitraryInteractionEventModel;
+
+export function stateWithPokemon(
+  status: PokemonStatusModel,
+  isSleeping = false,
+): TamagotchiStateModel {
+  const selected = selectPokemonState(initialTamagotchiState, TEST_POKEMON);
+
+  return {
+    ...selected,
+    isSleeping,
+    status,
+  };
+}
+
+export function applyCareAction(
+  state: TamagotchiStateModel,
+  action: CareAction,
+  now = PROPERTY_FIXED_NOW,
+  trainingReward = PROPERTY_FIXED_TRAINING_REWARD,
+): TamagotchiStateModel {
+  switch (action.kind) {
+    case 'applyStatusDecay':
+      return applyStatusDecayState(state, action.decay!);
+
+    case 'care':
+      return careForPokemonState(state, now);
+
+    case 'feed':
+      return feedPokemonState(state, now);
+
+    case 'interact':
+      return interactWithPokemonState(state, action.interaction!);
+
+    case 'play':
+      return playWithPokemonState(state, now);
+
+    case 'train': {
+      const started = startTrainingState(state, now, trainingReward);
+
+      if (started.trainingStartedAt === null) {
+        return started;
+      }
+
+      return completeTrainingState(started, now, trainingReward);
+    }
+
+    case 'updateStatus':
+      return updateStatusState(state, action.statusUpdate!);
+
+    case 'water':
+      return waterPokemonState(state, now);
+  }
+}

@@ -1,7 +1,8 @@
 import { computed, signal, type WritableSignal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import type { ComponentFixture } from '@angular/core/testing';
-import { describe, expect, it } from 'vitest';
+import { TranslocoTestingModule } from '@jsverse/transloco';
+import { describe, expect, it, vi } from 'vitest';
 
 import { PERFORMANCE_PROFILES } from '../../../data/constants/performance-mode.constants';
 import { TEST_POKEMON } from '../../../data/fixtures/tamagotchi-arbitraries';
@@ -27,7 +28,21 @@ async function createFixture(
   } as const satisfies PerformanceServiceSpriteMock;
 
   await TestBed.configureTestingModule({
-    imports: [PokemonSpriteComponent],
+    imports: [
+      PokemonSpriteComponent,
+      TranslocoTestingModule.forRoot({
+        langs: {
+          en: {
+            pokemonTamagotchi: {
+              sprite: {
+                petAria: 'Pet {{name}}. Enter: tap, Shift+Enter: stroke',
+              },
+            },
+          },
+        },
+        translocoConfig: { availableLangs: ['en'], defaultLang: 'en' },
+      }),
+    ],
     providers: [
       AnimationService,
       { provide: PerformanceService, useValue: performanceServiceMock },
@@ -68,6 +83,29 @@ function dispatchPointerEvent(
 
 describe('PokemonSpriteComponent', () => {
   describe('Happy Path', () => {
+    it('должен подписывать кнопку как действие погладить и прятать декоративный alt', async () => {
+      const fixture = await createFixture();
+      const button = fixture.nativeElement.querySelector('button') as HTMLButtonElement;
+      const image = fixture.nativeElement.querySelector('img') as HTMLImageElement;
+
+      expect(button.getAttribute('aria-label')).toContain(`Pet ${TEST_POKEMON.name}`);
+      expect(button.hasAttribute('aria-disabled')).toBe(false);
+      expect(image.getAttribute('alt')).toBe('');
+    });
+
+    it('должен эмитить pet при Shift+Enter', async () => {
+      const fixture = await createFixture();
+      const emitSpy = vi.spyOn(fixture.componentInstance.interacted, 'emit');
+      const button = fixture.nativeElement.querySelector('button') as HTMLButtonElement;
+
+      button.dispatchEvent(
+        new KeyboardEvent('keydown', { bubbles: true, key: 'Enter', shiftKey: true }),
+      );
+      fixture.detectChanges();
+
+      expect(emitSpy).toHaveBeenCalledWith(expect.objectContaining({ type: 'pet' }));
+    });
+
     it('должен держать feedback-класс до завершения соответствующей анимации', async () => {
       const fixture = await createFixture();
       const button = fixture.nativeElement.querySelector('button') as HTMLButtonElement;
@@ -88,6 +126,16 @@ describe('PokemonSpriteComponent', () => {
   });
 
   describe('Edge Cases', () => {
+    it('должен помечать спрайт недоступным во время сна', async () => {
+      const fixture = await createFixture();
+      const button = fixture.nativeElement.querySelector('button') as HTMLButtonElement;
+
+      fixture.componentRef.setInput('isSleeping', true);
+      fixture.detectChanges();
+
+      expect(button.getAttribute('aria-disabled')).toBe('true');
+    });
+
     it('не должен добавлять feedback-класс, если сложные анимации отключены', async () => {
       const fixture = await createFixture(false);
       const button = fixture.nativeElement.querySelector('button') as HTMLButtonElement;

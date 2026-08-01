@@ -14,11 +14,11 @@ const BURST_LIFETIME_MS = 1000;
 @Injectable()
 export class SceneBurstsService {
   private readonly destroyRef = inject(DestroyRef);
-  private readonly _bursts = signal<readonly BubbleBurst[]>([]);
+  private readonly _burstList = signal<readonly BubbleBurst[]>([]);
   private readonly timers = new Set<ReturnType<typeof setTimeout>>();
   private counter = 0;
 
-  public readonly bursts = this._bursts.asReadonly();
+  public readonly burstList = this._burstList.asReadonly();
 
   public constructor() {
     this.destroyRef.onDestroy(() => {
@@ -31,11 +31,11 @@ export class SceneBurstsService {
   public spawn(x: number, y: number): void {
     const id = ++this.counter;
 
-    this._bursts.update((bursts) => [...bursts, { id, x, y }]);
+    this._burstList.update((burstList) => [...burstList, { id, x, y }]);
 
     const timer = setTimeout(() => {
       this.timers.delete(timer);
-      this._bursts.update((bursts) => bursts.filter((burst) => burst.id !== id));
+      this._burstList.update((burstList) => burstList.filter((burst) => burst.id !== id));
     }, BURST_LIFETIME_MS);
 
     this.timers.add(timer);

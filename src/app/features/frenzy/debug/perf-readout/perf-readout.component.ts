@@ -41,7 +41,9 @@ export class PerfReadoutComponent {
 
   protected readonly store = inject(DebugSettingsStore);
   // One line per metric, in canonical order — recomputes when the snapshot or any toggle changes.
-  protected readonly rows = computed(() => perfReadoutRows(this.snapshot(), this.store.metrics()));
+  protected readonly rowList = computed(() =>
+    perfReadoutRows(this.snapshot(), this.store.metrics()),
+  );
   // The collapsed-pill glance: the current (rounded) FPS, or «—» before the first frame.
   protected readonly fpsText = computed(() => {
     const snapshot = this.snapshot();

@@ -23,7 +23,7 @@ describe('NpcQuipEffect', () => {
   });
 
   function last() {
-    const messages = floats.ownedMessages();
+    const messages = floats.ownedMessageList();
 
     return messages[messages.length - 1];
   }
@@ -41,7 +41,7 @@ describe('NpcQuipEffect', () => {
 
     effect.pokeNpc('npc-1');
 
-    expect(floats.ownedMessages().some((message) => message.id === first.id)).toBe(false);
+    expect(floats.ownedMessageList().some((message) => message.id === first.id)).toBe(false);
     expect(last().textKey).toContain('statusMessage.npcPoke');
   });
 
@@ -49,7 +49,7 @@ describe('NpcQuipEffect', () => {
     effect.pokeNpc('npc-1');
     effect.pokeNpc('npc-2');
 
-    const owners = floats.ownedMessages().map((message) => message.ownerId);
+    const owners = floats.ownedMessageList().map((message) => message.ownerId);
 
     expect(owners).toContain('npc-1');
     expect(owners).toContain('npc-2');

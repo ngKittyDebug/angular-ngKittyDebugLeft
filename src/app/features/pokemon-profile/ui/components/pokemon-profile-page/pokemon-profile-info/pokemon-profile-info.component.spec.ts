@@ -15,7 +15,7 @@ import {
 import { TamagotchiSelectionFacade } from '@features/pokemon-profile/data/facades/tamagotchi-selection.facade';
 import { ProfileFacade } from '@features/profile/data/facades/profile.facade';
 import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
-import { PokemonTamagotchiSelectionComponent } from '@shared/ui/components/pokemon-tamagotchi-selection/pokemon-tamagotchi-selection.component';
+import { PokemonTamagotchiSelectionComponent } from '../pokemon-tamagotchi-selection/pokemon-tamagotchi-selection.component';
 import { PokemonProfileInfoComponent } from './pokemon-profile-info.component';
 
 const FAVORITES_TRANSLATIONS = {

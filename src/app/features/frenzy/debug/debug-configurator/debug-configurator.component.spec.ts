@@ -1,10 +1,29 @@
 import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
+import { TranslocoTestingModule } from '@jsverse/transloco';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { DebugConfiguratorComponent } from './debug-configurator.component';
 import { DebugSettingsStore } from '../debug-settings.store';
 import { FrenzyStorageService } from '../../data/services/frenzy-storage.service';
+
+// Stand-in frenzy-debug configurator labels matching the production English values the sections are queried by.
+const FRENZY_DEBUG = {
+  configurator: {
+    header: 'config',
+    sections: {
+      render: 'render',
+      players: 'players',
+      decor: 'decor',
+      canvasDpr: 'canvas dpr',
+      frameCap: 'frame cap',
+      sprites: 'sprites',
+      sceneLayers: 'scene layers',
+      decorProbe: 'decor probe',
+    },
+    freezeStatic: 'freeze (static)',
+  },
+};
 
 function host(fixture: ComponentFixture<DebugConfiguratorComponent>): HTMLElement {
   return fixture.nativeElement as HTMLElement;
@@ -42,6 +61,12 @@ describe('DebugConfiguratorComponent', () => {
     localStorage.clear();
 
     TestBed.configureTestingModule({
+      imports: [
+        TranslocoTestingModule.forRoot({
+          langs: { en: { 'frenzy-debug': FRENZY_DEBUG } },
+          translocoConfig: { availableLangs: ['en'], defaultLang: 'en' },
+        }),
+      ],
       providers: [FrenzyStorageService, DebugSettingsStore],
     });
 

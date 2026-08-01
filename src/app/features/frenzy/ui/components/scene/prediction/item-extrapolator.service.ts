@@ -3,7 +3,8 @@ import { Injectable, signal } from '@angular/core';
 import { FRENZY, halfExtentNorm, restYFor } from '@game/frenzy/config';
 import type { Item } from '@game/frenzy/types';
 
-import { clamp, decayedOffset, OFFSET_DECAY_TAU_MS, reflect } from './drift-math';
+import { clamp, decayedOffset, reflect } from './drift-math';
+import { FrameTauTracker } from './frame-tau';
 import { spinFor } from './item-spin';
 import type { RenderedItem } from '../scene-view-models';
 
@@ -72,29 +73,33 @@ function sameIds(a: Set<string>, b: Set<string>): boolean {
 @Injectable()
 export class ItemExtrapolatorService {
   private readonly baselines = new Map<string, ItemBaseline>();
-  private readonly _rendered = signal<readonly RenderedItem[]>([]);
+  private readonly _renderedList = signal<readonly RenderedItem[]>([]);
   // The live per-frame view models, refreshed every `tick` (read by the imperative position writer and the
-  // sand-puff detector) WITHOUT republishing the `rendered` signal — plain position changes never trigger change
+  // sand-puff detector) WITHOUT republishing the `renderedList` signal — plain position changes never trigger change
   // detection. See ADR 0001.
-  private _frame: readonly RenderedItem[] = [];
+  private _frameList: readonly RenderedItem[] = [];
   // Ids of items currently published as `landed` in the structure signal. An item's `landed` rising edge happens
   // during extrapolation (the fall reaching the seabed line), and it gates real structure — the buried shadow, the
   // wavy sand clip and the spin-freeze — which can't be moved imperatively, so that one edge republishes structure.
   private publishedLanded = new Set<string>();
+  // Frame-aware reconciliation τ for the bomb offset, measured from the `tick` cadence (never `ingest` — the
+  // snapshot cadence isn't a frame), mirroring the player extrapolator so a slow client stretches the shove glide
+  // across enough frames instead of snapping it. See ADR 0003.
+  private readonly frameTau = new FrameTauTracker();
 
   // Structure signal: changes on `ingest` (a snapshot) and on a `landed` rising edge. Drives the `@for` (incl. its
   // depth re-sort) and the `?debug` box overlay.
-  public readonly rendered = this._rendered.asReadonly();
+  public readonly renderedList = this._renderedList.asReadonly();
 
   // The latest per-frame view models (positions + landed/spin), live every tick. Not a signal — read imperatively.
   public frame(): readonly RenderedItem[] {
-    return this._frame;
+    return this._frameList;
   }
 
   // Mirror the current frame into the structure signal. Used only by the `?debug` box overlay (boxes must track the
   // items every frame); the per-frame change detection it reintroduces is acceptable for a dev tool.
   public publishFrame(): void {
-    this._rendered.set(this._frame);
+    this._renderedList.set(this._frameList);
   }
 
   // Re-anchor baselines from a fresh snapshot, then publish the extrapolated positions.
@@ -121,9 +126,9 @@ export class ItemExtrapolatorService {
         });
       } else if (item.type === 'bomb') {
         // The bomb re-anchors both axes together each snapshot, carrying the on-screen gap forward as a decaying
-        // offset (mirrors the player extrapolator) so a shove — a velocity change the client never predicted —
-        // glides in over ~3τ instead of snapping. In steady drift the client already matches the server, so the
-        // gap is ~0 and the offset is inert.
+        // offset (mirrors the player extrapolator, including its frame-aware τ) so a shove — a velocity change the
+        // client never predicted — glides in over ~3τ instead of snapping. In steady drift the client already
+        // matches the server, so the gap is ~0 and the offset is inert.
         const moved =
           baseline.x0 !== item.x ||
           baseline.vx !== vx ||
@@ -142,7 +147,7 @@ export class ItemExtrapolatorService {
               Math.max(0, now - baseline.hStart) / 1000,
               ITEM_HALF_WIDTH,
               1 - ITEM_HALF_WIDTH,
-            ) + decayedOffset(baseline.offsetX, dtMs, OFFSET_DECAY_TAU_MS),
+            ) + decayedOffset(baseline.offsetX, dtMs, this.frameTau.tauMs),
             ITEM_HALF_WIDTH,
             1 - ITEM_HALF_WIDTH,
           );
@@ -153,7 +158,7 @@ export class ItemExtrapolatorService {
                 ITEM_HALF_HEIGHT,
                 baseline.y0 + baseline.vy * ((now - baseline.vStart) / 1000),
               ),
-            ) + decayedOffset(baseline.offsetY, dtMs, OFFSET_DECAY_TAU_MS),
+            ) + decayedOffset(baseline.offsetY, dtMs, this.frameTau.tauMs),
             ITEM_HALF_HEIGHT,
             restY,
           );
@@ -184,22 +189,23 @@ export class ItemExtrapolatorService {
       }
     }
 
-    this._frame = this.compute(items, now);
-    this._rendered.set(this._frame);
-    this.publishedLanded = landedIds(this._frame);
+    this._frameList = this.compute(items, now);
+    this._renderedList.set(this._frameList);
+    this.publishedLanded = landedIds(this._frameList);
   }
 
   // Per-frame recompute (rAF loop): advance each item along its existing baseline without re-anchoring. Updates the
   // live `frame`; republishes the structure signal ONLY when the set of landed items changed (a `landed` rising
   // edge), so plain falling motion costs no change detection.
   public tick(items: readonly Item[], now: number): void {
-    this._frame = this.compute(items, now);
+    this.frameTau.measure(now);
+    this._frameList = this.compute(items, now);
 
-    const landed = landedIds(this._frame);
+    const landed = landedIds(this._frameList);
 
     if (!sameIds(landed, this.publishedLanded)) {
       this.publishedLanded = landed;
-      this._rendered.set(this._frame);
+      this._renderedList.set(this._frameList);
     }
   }
 
@@ -249,7 +255,9 @@ export class ItemExtrapolatorService {
 
   // Bomb render: constant-velocity 2D drift (reflective horizontal bounce + vertical sink toward the seabed, no
   // gravity) plus the decaying reconciliation offset captured on each re-anchor (see `ingest`), so an unpredicted
-  // shove glides in over ~3τ instead of snapping. `landed` flips at the seabed line for the rising-edge sand puff.
+  // shove glides in over ~3τ instead of snapping — at the frame-aware τ the player extrapolator also uses, so a
+  // slow client can't collapse the glide in one frame (ADR 0003). `landed` flips at the seabed line for the
+  // rising-edge sand puff.
   private renderBomb(item: Item, baseline: ItemBaseline | undefined, now: number): RenderedItem {
     const x0 = baseline?.x0 ?? item.x;
     const vx = baseline?.vx ?? item.vx ?? 0;
@@ -261,9 +269,9 @@ export class ItemExtrapolatorService {
     const spin = spinFor(item.id, item.type);
     const dtMs = baseline === undefined ? 0 : now - baseline.offsetStamp;
     const offsetX =
-      baseline === undefined ? 0 : decayedOffset(baseline.offsetX, dtMs, OFFSET_DECAY_TAU_MS);
+      baseline === undefined ? 0 : decayedOffset(baseline.offsetX, dtMs, this.frameTau.tauMs);
     const offsetY =
-      baseline === undefined ? 0 : decayedOffset(baseline.offsetY, dtMs, OFFSET_DECAY_TAU_MS);
+      baseline === undefined ? 0 : decayedOffset(baseline.offsetY, dtMs, this.frameTau.tauMs);
     const bx = clamp(
       reflect(x0, vx, Math.max(0, now - hStart) / 1000, ITEM_HALF_WIDTH, 1 - ITEM_HALF_WIDTH) +
         offsetX,

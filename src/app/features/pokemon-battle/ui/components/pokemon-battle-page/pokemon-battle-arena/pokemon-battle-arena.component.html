@@ -1,6 +1,6 @@
 @let state = facade.battleState();
 @let pokemon = facade.currentSelectingPokemon();
-@let textLog = facade.textLog();
+@let textLogList = facade.textLogList();
 
 <main class="battle-main" *transloco="let t; prefix: 'pokemonBattle.arena'">
   <div class="battle-arena">
@@ -18,12 +18,21 @@
       <div class="battle-controls">
         <div class="controls-header">
           <h3 class="controls-title">
-            {{ t('controls.turn') }} {{ facade.currentSelectingPokemonIndex() + 1 }}
-            {{ t('controls.of') }}
-            {{ facade.activeAlivePlayerPokemons().length }}
+            {{
+              t('controls.turnOfTotal', {
+                current: facade.currentSelectingPokemonIndex() + 1,
+                total: facade.activeAlivePlayerPokemonList().length,
+              })
+            }}
           </h3>
           @if (facade.currentSelectingPokemonIndex() > 0) {
-            <button class="reset-selection-button" (click)="onResetSelection()">
+            <button
+              tuiButton
+              appearance="secondary"
+              size="s"
+              class="reset-selection-button"
+              (click)="onResetSelection()"
+            >
               {{ t('controls.resetSelection') }}
             </button>
           }
@@ -36,10 +45,19 @@
           </div>
           <div class="moves-grid">
             @for (move of pokemon.moves; track move.name) {
-              <button class="move-button" (click)="onSelectMove(move)">
-                <span class="move-name">{{ move.name }}</span>
-                <span class="move-type" [attr.data-type]="move.type">{{ move.type }}</span>
-                <span class="move-power">{{ t('controls.power') }}: {{ move.power }}</span>
+              <button
+                tuiButton
+                appearance="move-outline"
+                class="move-button"
+                (click)="onSelectMove(move)"
+              >
+                <div class="move-button-content">
+                  <span class="move-name">{{ move.name }}</span>
+                  <span tuiBadge size="s" class="move-type" [attr.data-type]="move.type">{{
+                    move.type
+                  }}</span>
+                  <span class="move-power">{{ t('controls.power') }}: {{ move.power }}</span>
+                </div>
               </button>
             }
           </div>
@@ -50,17 +68,30 @@
             }}):
           </div>
           <div class="targets-grid">
-            @for (target of facade.activeAliveOpponentPokemons(); track target.id) {
-              <button class="target-button" (click)="onSelectTarget(target)">
-                <span class="target-name">{{ target.name | uppercase }}</span>
-                <span class="target-hp"
-                  >{{ t('controls.hp') }}: {{ target.hp }}/{{ target.maxHp }}</span
-                >
+            @for (target of facade.activeAliveOpponentPokemonList(); track target.id) {
+              <button
+                tuiButton
+                appearance="target-outline"
+                class="target-button"
+                (click)="onSelectTarget(target)"
+              >
+                <div class="target-button-content">
+                  <span class="target-name">{{ target.name | uppercase }}</span>
+                  <span class="target-hp"
+                    >{{ t('controls.hp') }}: {{ target.hp }}/{{ target.maxHp }}</span
+                  >
+                </div>
               </button>
             }
           </div>
           <div class="target-actions">
-            <button class="back-button" (click)="onCancelMoveSelection()">
+            <button
+              tuiButton
+              appearance="secondary"
+              size="s"
+              class="back-button"
+              (click)="onCancelMoveSelection()"
+            >
               {{ t('controls.backToMoves') }}
             </button>
           </div>
@@ -76,10 +107,22 @@
           }}</span>
         </p>
         <div class="result-actions">
-          <button class="restart-button" (click)="onResetBattle()">
+          <button
+            tuiButton
+            appearance="brand-primary"
+            size="m"
+            class="restart-button"
+            (click)="onResetBattle()"
+          >
             {{ t('result.restart') }}
           </button>
-          <button class="restart-button select-team-btn" (click)="onGoBackToSelection()">
+          <button
+            tuiButton
+            appearance="secondary"
+            size="m"
+            class="restart-button select-team-btn"
+            (click)="onGoBackToSelection()"
+          >
             {{ t('result.newTeam') }}
           </button>
         </div>
@@ -88,19 +131,19 @@
 
     <div class="log-panel">
       <h3 class="log-title">{{ t('log.title') }}</h3>
-      <div class="log-box">
-        @for (log of textLog; track $index) {
+      <tui-scrollbar class="log-box" role="log" aria-live="polite">
+        @for (log of textLogList; track $index) {
           <p class="log-entry" [class.round-header]="log.key === 'roundHeader'">
-            @if (log.key === 'roundHeader') {
-              {{ t('log.' + log.key, log.params) }}
+            @if (log.key === 'raw' && log.params?.['message']) {
+              {{ log.params['message'] }}
             } @else {
-              {{ log.params?.['message'] || log.key }}
+              {{ t('log.' + log.key, log.params) }}
             }
           </p>
         } @empty {
           <p class="empty-log-message">{{ t('log.empty') }}</p>
         }
-      </div>
+      </tui-scrollbar>
     </div>
   </div>
 
@@ -114,7 +157,9 @@
         </div>
         <div class="info-item">
           <span class="info-label">{{ t('info.status') }}</span>
-          <span class="info-value status-badge">{{ t('status.' + state.status) }}</span>
+          <span tuiBadge appearance="info" size="m" class="info-value">{{
+            t('status.' + facade.statusKey())
+          }}</span>
         </div>
         <div class="info-item">
           <span class="info-label">{{ t('info.mode') }}</span>

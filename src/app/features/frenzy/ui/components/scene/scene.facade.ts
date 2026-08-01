@@ -29,10 +29,10 @@ export class SceneFacade {
   private readonly actorCanvas = inject(SceneActorCanvasService);
   private readonly decorCanvas = inject(SceneDecorCanvasService);
 
-  public readonly renderedItems = this.items.rendered;
-  public readonly renderedPlayers = this.players.rendered;
-  public readonly bursts = this.burstsService.bursts;
-  public readonly sandPuffs = this.sandPuffsService.puffs;
+  public readonly renderedItemList = this.items.renderedList;
+  public readonly renderedPlayerList = this.players.renderedList;
+  public readonly burstList = this.burstsService.burstList;
+  public readonly sandPuffList = this.sandPuffsService.puffList;
 
   public ingestItems(items: readonly Item[], now: number): void {
     this.items.ingest(items, now);
@@ -80,7 +80,7 @@ export class SceneFacade {
   }
 
   // The live per-frame item view models — for the canvas hit-test, which needs the current drawn positions (not the
-  // throttled `renderedItems` structure signal, which lags a falling item between snapshots).
+  // throttled `renderedItemList` structure signal, which lags a falling item between snapshots).
   public itemFrame(): readonly RenderedItem[] {
     return this.items.frame();
   }

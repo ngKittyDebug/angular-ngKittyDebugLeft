@@ -28,7 +28,7 @@ const WARDED_EATEN_TYPES = new Set<ItemType>(['rock', 'brick', 'rotten']);
 export class ShieldBlockEffect implements FrenzyEffect {
   private readonly blocks = new TransientList<OwnedShieldBlock>();
 
-  public readonly ownedShieldBlocks = this.blocks.items;
+  public readonly ownedShieldBlockList = this.blocks.items;
   public readonly messageTypes = ['eaten', 'detonated'] as const;
 
   public handle(message: ServerMessage, context: EffectContext): void {

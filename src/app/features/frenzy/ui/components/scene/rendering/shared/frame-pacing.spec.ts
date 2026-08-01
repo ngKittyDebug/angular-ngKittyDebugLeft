@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { frameIntervalMs, paceFrame } from './frame-pacing';
 
-describe('frameIntervalMs', () => {
+describe('Frame interval', () => {
   it('maps an fps cap to its frame interval', () => {
     expect(frameIntervalMs(20)).toBeCloseTo(50);
     expect(frameIntervalMs(30)).toBeCloseTo(33.333, 2);
@@ -14,7 +14,7 @@ describe('frameIntervalMs', () => {
   });
 });
 
-describe('paceFrame', () => {
+describe('Frame pacing', () => {
   it('renders every tick when the cap is disabled', () => {
     expect(paceFrame(4, 0)).toEqual({ render: true, carryMs: 0 });
     expect(paceFrame(999, 0)).toEqual({ render: true, carryMs: 0 });

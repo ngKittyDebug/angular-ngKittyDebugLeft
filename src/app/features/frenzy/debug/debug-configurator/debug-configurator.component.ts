@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { TranslocoDirective } from '@jsverse/transloco';
 
 import {
   CANVAS_DPR_CAPS,
@@ -15,21 +16,23 @@ import type { CanvasDprCap, FrameCapFps } from '../debug-settings.store';
  * and frame-pacing caps, sprite freeze, per-layer hides and the decor probes. State lives in (and persists through)
  * `DebugSettingsStore`. Dev-only and gated behind the master `?debug=perf` flag (rendered under the scene template
  * `@if`), so it never instantiates the store for a real player. The per-metric toggles live on their readout rows, not
- * here; this panel itself stays plain controls (no Taiga/i18n) by choice.
+ * here. Labels go through the `frenzy-debug` i18n scope; the toggle values themselves (modes, layer/probe keys) are
+ * identifiers and render as-is.
  */
 @Component({
   selector: 'left-paw-debug-configurator',
+  imports: [TranslocoDirective],
   templateUrl: './debug-configurator.component.html',
   styleUrl: './debug-configurator.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DebugConfiguratorComponent {
   protected readonly store = inject(DebugSettingsStore);
-  protected readonly renderModes = RENDER_MODES;
-  protected readonly dprCaps = CANVAS_DPR_CAPS;
-  protected readonly frameCaps = FRAME_CAP_FPS;
-  protected readonly layerKeys = SCENE_LAYER_KEYS;
-  protected readonly decorProbeKeys = DECOR_PROBE_KEYS;
+  protected readonly renderModeList = RENDER_MODES;
+  protected readonly dprCapList = CANVAS_DPR_CAPS;
+  protected readonly frameCapList = FRAME_CAP_FPS;
+  protected readonly layerKeyList = SCENE_LAYER_KEYS;
+  protected readonly decorProbeKeyList = DECOR_PROBE_KEYS;
   // Collapsed by default, like the sibling perf panels: a compact header bar that expands to the controls on click,
   // so the configurator stops covering the scene until the developer opens it. Local UI state.
   protected readonly collapsed = signal(true);

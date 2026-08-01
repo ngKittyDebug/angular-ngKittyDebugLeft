@@ -1,17 +1,26 @@
 import { signal } from '@angular/core';
+import type { WritableSignal } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { persistedCollapse } from './persisted-collapse';
+import { FrenzyStorageService } from '../data/services/frenzy-storage.service';
 
 const KEY = 'frenzy-test-collapsed';
+
+// persistedCollapse injects FrenzyStorageService, so it must run in an injection context — same as in components.
+function createCollapse(key: string, fallback: () => boolean): WritableSignal<boolean> {
+  return TestBed.runInInjectionContext(() => persistedCollapse(key, fallback));
+}
 
 describe('persistedCollapse', () => {
   beforeEach(() => {
     localStorage.clear();
+    TestBed.configureTestingModule({ providers: [FrenzyStorageService] });
   });
 
   it('seeds from the fallback when nothing is stored', () => {
-    const collapsed = persistedCollapse(KEY, () => true);
+    const collapsed = createCollapse(KEY, () => true);
 
     expect(collapsed()).toBe(true);
   });
@@ -19,7 +28,7 @@ describe('persistedCollapse', () => {
   it('seeds from the stored value, ignoring the fallback', () => {
     localStorage.setItem(KEY, 'false');
 
-    const collapsed = persistedCollapse(KEY, () => true);
+    const collapsed = createCollapse(KEY, () => true);
 
     expect(collapsed()).toBe(false);
   });
@@ -27,13 +36,13 @@ describe('persistedCollapse', () => {
   it('falls back when the stored value is not a boolean string', () => {
     localStorage.setItem(KEY, 'garbage');
 
-    const collapsed = persistedCollapse(KEY, () => true);
+    const collapsed = createCollapse(KEY, () => true);
 
     expect(collapsed()).toBe(true);
   });
 
   it('writes through to storage on an explicit set', () => {
-    const collapsed = persistedCollapse(KEY, () => false);
+    const collapsed = createCollapse(KEY, () => false);
 
     collapsed.set(true);
 
@@ -42,7 +51,7 @@ describe('persistedCollapse', () => {
   });
 
   it('writes through to storage on an explicit update', () => {
-    const collapsed = persistedCollapse(KEY, () => false);
+    const collapsed = createCollapse(KEY, () => false);
 
     collapsed.update((value) => !value);
 
@@ -52,7 +61,7 @@ describe('persistedCollapse', () => {
 
   it('keeps following the reactive fallback while nothing has been stored', () => {
     const compact = signal(false);
-    const collapsed = persistedCollapse(KEY, () => compact());
+    const collapsed = createCollapse(KEY, () => compact());
 
     expect(collapsed()).toBe(false);
 
@@ -63,7 +72,7 @@ describe('persistedCollapse', () => {
 
   it('lets an explicit choice win over the fallback thereafter', () => {
     const compact = signal(true);
-    const collapsed = persistedCollapse(KEY, () => compact());
+    const collapsed = createCollapse(KEY, () => compact());
 
     collapsed.set(false);
     compact.set(true);

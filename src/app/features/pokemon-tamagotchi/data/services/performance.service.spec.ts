@@ -8,7 +8,7 @@ import {
 import {
   createTamagotchiStorageMock,
   type TamagotchiStorageMock,
-} from '../fixtures/tamagotchi-storage.mock';
+} from './tamagotchi-storage.service.mock';
 import { TamagotchiStorageService } from './tamagotchi-storage.service';
 import { PerformanceService } from './performance.service';
 

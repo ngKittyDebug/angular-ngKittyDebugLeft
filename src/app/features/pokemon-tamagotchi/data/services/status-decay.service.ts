@@ -50,11 +50,4 @@ export class StatusDecayService {
       nextStatus,
     };
   }
-
-  public detectCriticalAlerts(
-    before: PokemonStatusModel,
-    after: PokemonStatusModel,
-  ): StatusAlertType[] {
-    return detectStatusAlerts(before, after);
-  }
 }

@@ -4,7 +4,7 @@ import { Injectable, signal } from '@angular/core';
  * Bakes a static first frame of an animated sprite (GIF) to a PNG data URL, so the scene can render players FROZEN —
  * killing the per-frame GIF decode/re-raster that pins the FPS floor on a weak tablet. Used only when the
  * `?debug=perf` "freeze sprites" toggle is on; the bake happens once per sprite URL and is cached. The cache is a
- * signal, so a consumer reading `frozenUrl` inside a `computed` re-renders when the bake lands. Scene-scoped, so the
+ * signal, so a consumer reading `getFrozenUrl` inside a `computed` re-renders when the bake lands. Scene-scoped, so the
  * cache is shared across all players in one scene (one bake per Pokémon line) and collected when the scene is.
  */
 @Injectable()
@@ -17,7 +17,7 @@ export class SpriteFreezeService {
   // The frozen (static first-frame) data URL for a sprite, or null until it's baked — the caller falls back to the
   // live (animated) URL meanwhile, so a sprite animates briefly on first sight then freezes. Kicks off the one-time
   // bake on first request.
-  public frozenUrl(spriteUrl: string): string | null {
+  public getFrozenUrl(spriteUrl: string): string | null {
     const cached = this.baked().get(spriteUrl);
 
     if (cached !== undefined) {

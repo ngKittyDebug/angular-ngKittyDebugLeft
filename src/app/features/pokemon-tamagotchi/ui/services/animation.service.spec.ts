@@ -1,7 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { ANIMATION_PERFORMANCE } from '../../data/constants/animation-performance.constants';
 import { PerformanceService } from '../../data/services/performance.service';
 import { AnimationService } from './animation.service';
 
@@ -22,21 +21,33 @@ describe('AnimationService', () => {
   });
 
   describe('Happy Path', () => {
-    it('должен предоставлять константы таргета 60fps', () => {
-      const service = TestBed.inject(AnimationService);
-
-      expect(service.targetFps).toBe(ANIMATION_PERFORMANCE.TARGET_FPS);
-      expect(service.targetFrameMs).toBe(ANIMATION_PERFORMANCE.TARGET_FRAME_MS);
-    });
-
-    it('должен переключать gpu compositing класс на элементах', () => {
+    it('должен включать gpu compositing класс на элементе', () => {
       const service = TestBed.inject(AnimationService);
       const element = document.createElement('div');
 
       service.enableGpuCompositing(element);
+
       expect(element.classList.contains('tamagotchi-gpu-layer')).toBe(true);
+    });
+
+    it('должен снимать gpu compositing класс с элемента', () => {
+      const service = TestBed.inject(AnimationService);
+      const element = document.createElement('div');
+
+      service.enableGpuCompositing(element);
+      service.releaseGpuCompositing(element);
+
+      expect(element.classList.contains('tamagotchi-gpu-layer')).toBe(false);
+    });
+  });
+
+  describe('Edge Cases', () => {
+    it('не должен добавлять класс при release без предшествующего enable', () => {
+      const service = TestBed.inject(AnimationService);
+      const element = document.createElement('div');
 
       service.releaseGpuCompositing(element);
+
       expect(element.classList.contains('tamagotchi-gpu-layer')).toBe(false);
     });
   });

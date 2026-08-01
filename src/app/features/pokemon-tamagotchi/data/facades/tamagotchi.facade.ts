@@ -4,7 +4,7 @@ import { GAME_BALANCE } from '../constants/game-balance.constants';
 import { isTamagotchiSelectionError } from '../constants/selection-errors.constants';
 import { TAMAGOTCHI_SYSTEM_ERRORS } from '../constants/system-errors.constants';
 import {
-  DISPLAYED_STATUS_TYPES,
+  DISPLAYED_STATUS_TYPE_LIST,
   maxValueForStatusType,
   statusValueForType,
 } from '../helpers/status-indicator-sync.helper';
@@ -13,6 +13,7 @@ import { rollTrainingExperienceGain } from '../helpers/training-reward.helper';
 import { EvolutionService } from '../services/evolution.service';
 import { PerformanceService } from '../services/performance.service';
 import { TamagotchiInitService } from '../services/tamagotchi-init.service';
+import { TamagotchiNotificationService } from '../services/tamagotchi-notification.service';
 import { type TamagotchiActionContext, TamagotchiService } from '../services/tamagotchi.service';
 import {
   type TamagotchiTimerContext,
@@ -24,8 +25,7 @@ import type { InteractionEventModel } from '../models/interaction.model';
 import type { PerformanceMode } from '../models/performance-mode.model';
 import type { PokemonModel } from '../models/pokemon.model';
 import type { StatusType } from '../models/pokemon-status.model';
-import type { ActionCooldowns, ActionType } from '../models/tamagotchi-state.model';
-import { TamagotchiNotificationService } from '../../ui/services/notification.service';
+import type { ActionCooldownsModel, ActionType } from '../models/tamagotchi-state.model';
 
 const COOLDOWN_ACTIONS: ActionType[] = ['feed', 'water', 'care', 'play', 'train', 'sleep'];
 const COOLDOWN_REFRESH_INTERVAL_MS = 1_000;
@@ -42,9 +42,11 @@ export class TamagotchiFacade {
   private readonly timerService = inject(TimerService);
   private readonly isInitialized = computed(() => this.store.initialized());
   private readonly now = signal(Date.now());
+  private readonly pendingEvolvedPokemon = signal<PokemonModel | null>(null);
+  private readonly evolutionPrepareInFlight = signal(false);
   private readonly actionContext = computed(() => this.buildActionContext(this.now()));
 
-  public readonly displayedStatusTypes = DISPLAYED_STATUS_TYPES;
+  public readonly displayedStatusTypeList = DISPLAYED_STATUS_TYPE_LIST;
 
   public readonly trainingStartedAt = this.store.trainingStartedAt;
   public readonly isTraining = this.store.isTraining;
@@ -53,11 +55,11 @@ export class TamagotchiFacade {
   public readonly hasPokemon = this.store.hasPokemon;
   public readonly isEvolving = this.store.isEvolving;
   public readonly isSleeping = this.store.isSleeping;
-  public readonly notifications = this.store.notificationList;
+  public readonly notificationList = this.store.notificationList;
   public readonly pokemon = this.store.pokemon;
   public readonly status = this.store.status;
 
-  public readonly evolvedPokemon = computed(() => this.resolveEvolvedPokemon(this.pokemon()));
+  public readonly evolvedPokemon = this.pendingEvolvedPokemon.asReadonly();
 
   public readonly isLoading = computed(() => !this.isInitialized());
 
@@ -78,6 +80,10 @@ export class TamagotchiFacade {
 
     if (currentError === TAMAGOTCHI_SYSTEM_ERRORS.SAVE_FAILED) {
       return 'saveFailedError';
+    }
+
+    if (currentError === TAMAGOTCHI_SYSTEM_ERRORS.EVOLUTION_PREPARE_FAILED) {
+      return 'evolutionPrepareFailedError';
     }
 
     if (currentError === TAMAGOTCHI_SYSTEM_ERRORS.RECOVERED_FROM_BACKUP) {
@@ -102,9 +108,9 @@ export class TamagotchiFacade {
   );
 
   public readonly performanceMode = this.performanceService.mode;
-  public readonly performanceModes: PerformanceMode[] = ['high', 'balanced', 'low'];
+  public readonly performanceModeList: PerformanceMode[] = ['high', 'balanced', 'low'];
   public readonly performanceModeIndex = computed(() =>
-    this.performanceModes.indexOf(this.performanceMode()),
+    this.performanceModeList.indexOf(this.performanceMode()),
   );
 
   public constructor() {
@@ -128,16 +134,40 @@ export class TamagotchiFacade {
       });
     });
 
-    effect(() => {
+    effect((onCleanup) => {
       const ready = this.canEvolve();
       const species = this.pokemon();
       const readyNotifiedAt = untracked(() => this.store.evolutionProgress().readyNotifiedAt);
+      const prepareInFlight = untracked(() => this.evolutionPrepareInFlight());
 
-      if (ready && readyNotifiedAt === null && species) {
+      if (!ready || readyNotifiedAt !== null || !species || prepareInFlight) {
+        return;
+      }
+
+      const subscription = untracked(() => {
+        this.evolutionPrepareInFlight.set(true);
         this.notificationService.notifyEvolutionReady(species.name);
         this.store.markEvolutionReadyNotified(Date.now());
-        this.store.startEvolution();
-      }
+
+        return this.evolutionService.prepareEvolution(species).subscribe((result) => {
+          this.evolutionPrepareInFlight.set(false);
+
+          if (!result) {
+            this.pendingEvolvedPokemon.set(null);
+            this.store.setError(TAMAGOTCHI_SYSTEM_ERRORS.EVOLUTION_PREPARE_FAILED);
+
+            return;
+          }
+
+          this.store.startEvolution();
+          this.pendingEvolvedPokemon.set(result.evolvedPokemon);
+        });
+      });
+
+      onCleanup(() => {
+        subscription.unsubscribe();
+        this.evolutionPrepareInFlight.set(false);
+      });
     });
 
     effect((onCleanup) => {
@@ -251,6 +281,7 @@ export class TamagotchiFacade {
 
   public onEvolutionComplete(evolvedPokemon: PokemonModel): void {
     this.store.completeEvolution(evolvedPokemon);
+    this.pendingEvolvedPokemon.set(null);
   }
 
   public onInteraction(interaction: InteractionEventModel): void {
@@ -259,6 +290,10 @@ export class TamagotchiFacade {
   }
 
   public onSystemErrorDismiss(): void {
+    if (this.error() === TAMAGOTCHI_SYSTEM_ERRORS.EVOLUTION_PREPARE_FAILED) {
+      this.store.clearEvolutionReadyNotified();
+    }
+
     this.store.clearError();
   }
 
@@ -267,7 +302,7 @@ export class TamagotchiFacade {
   }
 
   public onPerformanceModeIndexChange(index: number): void {
-    const mode = this.performanceModes[index];
+    const mode = this.performanceModeList[index];
 
     if (mode) {
       this.onPerformanceModeChange(mode);
@@ -318,20 +353,6 @@ export class TamagotchiFacade {
     return this.tamagotchiService.validateAction(this.actionContext(), action).allowed;
   }
 
-  private resolveEvolvedPokemon(species: PokemonModel | null): PokemonModel | null {
-    if (!species) {
-      return null;
-    }
-
-    const evolutionData = this.evolutionService.buildEvolutionData(species);
-
-    if (!evolutionData) {
-      return null;
-    }
-
-    return this.evolutionService.triggerEvolution(species, evolutionData)?.evolvedPokemon ?? null;
-  }
-
   private buildActionContext(now: number): TamagotchiActionContext {
     return {
       hasPokemon: this.hasPokemon(),
@@ -343,7 +364,7 @@ export class TamagotchiFacade {
     };
   }
 
-  private hasActiveCooldown(cooldowns: ActionCooldowns): boolean {
+  private hasActiveCooldown(cooldowns: ActionCooldownsModel): boolean {
     return COOLDOWN_ACTIONS.some((action) => {
       const remaining = cooldowns[action];
 

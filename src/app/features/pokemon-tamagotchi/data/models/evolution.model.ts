@@ -32,12 +32,6 @@ export interface EvolutionDataModel {
   requirements: EvolutionRequirementModel[];
 }
 
-export interface EvolutionCheckResultModel {
-  isReady: boolean;
-  progress: EvolutionProgressModel;
-  missingRequirements: EvolutionRequirementModel[];
-}
-
 export interface EvolutionResultModel {
   evolvedPokemon: PokemonModel;
   evolutionData: EvolutionDataModel;

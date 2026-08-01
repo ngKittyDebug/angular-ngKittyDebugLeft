@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { Player, ServerState, SlimPlayer } from '@game/frenzy/types';
 
-import { bodyForAppearance } from '../../ui/constants/pokemon-registry';
+import { bodyForAppearance } from '../constants/pokemon-body';
 import { applyServerMessage } from './apply-server-message';
 
 const PLAYER: Player = {
@@ -186,9 +186,19 @@ describe('applyServerMessage', () => {
     });
 
     expect(next?.players).toEqual(SNAPSHOT_STATE.players);
-    expect(
-      applyServerMessage(null, { type: 'steered', playerId: 't1', x: 0, y: 0, vx: 0, vy: 0 }),
-    ).toBeNull();
+  });
+
+  it('ignores a pre-bootstrap steered (no state to re-anchor before the first snapshot)', () => {
+    const next = applyServerMessage(null, {
+      type: 'steered',
+      playerId: 't1',
+      x: 0,
+      y: 0,
+      vx: 0,
+      vy: 0,
+    });
+
+    expect(next).toBeNull();
   });
 
   it('updates the NPC mana on npcAngered', () => {
@@ -273,11 +283,16 @@ describe('applyServerMessage', () => {
     expect(next?.players[0].effects).toEqual([{ kind: 'shield', expiresAt: 9000 }]);
   });
 
-  it('returns previous on rejoined and roomFull (no-op in reducer)', () => {
-    expect(applyServerMessage(SNAPSHOT_STATE, { type: 'rejoined', playerId: 't1' })).toBe(
-      SNAPSHOT_STATE,
-    );
-    expect(applyServerMessage(SNAPSHOT_STATE, { type: 'roomFull' })).toBe(SNAPSHOT_STATE);
+  it('returns previous on rejoined (no-op in reducer)', () => {
+    const next = applyServerMessage(SNAPSHOT_STATE, { type: 'rejoined', playerId: 't1' });
+
+    expect(next).toBe(SNAPSHOT_STATE);
+  });
+
+  it('returns previous on roomFull (no-op in reducer)', () => {
+    const next = applyServerMessage(SNAPSHOT_STATE, { type: 'roomFull' });
+
+    expect(next).toBe(SNAPSHOT_STATE);
   });
 
   it('returns previous unchanged on ping (liveness heartbeat carries no state)', () => {

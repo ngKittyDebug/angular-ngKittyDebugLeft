@@ -28,7 +28,7 @@ dormant **barbed-wire** demo slice (`definition/items/barbed-wire.ts` +
 2. A line in `definition/effects/index.ts` (order matters only for emitters: the FIRST active
    one wins).
 3. The grant — an item's `grantEffect` descriptor or `spawnEffects.onJoin`.
-4. On enabling, the client will fail tsc in `EFFECT_AURA_CLASS`, `STATUS_FOR_EFFECT`,
+4. On enabling, the client will fail tsc in `EFFECT_AURA`, `STATUS_FOR_EFFECT`,
    `soundForEffect`.
 
 **Flag bundling:** enable an item but forget its effect → `game.ts` won't compile (the grant

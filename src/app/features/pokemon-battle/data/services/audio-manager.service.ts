@@ -4,9 +4,7 @@ const ENABLED_KEY = 'pokemon-sound-enabled';
 const VOLUME_KEY = 'pokemon-sound-volume';
 const DEFAULT_VOLUME = 0.3;
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable()
 export class AudioManagerService {
   private readonly ngZone = inject(NgZone);
 

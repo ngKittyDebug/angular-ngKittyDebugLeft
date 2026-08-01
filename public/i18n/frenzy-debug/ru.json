@@ -1,4 +1,49 @@
 {
+  "panelTitle": "readout",
+  "fpsLabel": "FPS",
+  "configurator": {
+    "header": "настройки",
+    "sections": {
+      "render": "рендер",
+      "players": "игроки",
+      "decor": "декор",
+      "canvasDpr": "dpr канваса",
+      "frameCap": "лимит кадров",
+      "sprites": "спрайты",
+      "sceneLayers": "слои сцены",
+      "decorProbe": "пробы декора"
+    },
+    "freezeStatic": "заморозить (статично)"
+  },
+  "perfLog": {
+    "header": "perf-лог",
+    "fields": {
+      "label": "метка",
+      "mode": "режим",
+      "everySeconds": "каждые (с)",
+      "format": "формат",
+      "to": "куда"
+    },
+    "options": {
+      "manual": "вручную",
+      "auto": "авто",
+      "clipboard": "буфер обмена",
+      "textarea": "текстовое поле",
+      "download": "скачать"
+    },
+    "actions": {
+      "capture": "замер",
+      "export": "экспорт",
+      "clear": "очистить"
+    },
+    "table": {
+      "label": "метка",
+      "fps": "fps",
+      "p1": "p1",
+      "jank": "jank",
+      "loop": "loop"
+    }
+  },
   "infoAriaLabel": "Подробнее: {{metric}}",
   "sections": {
     "what": "Что отслеживает",

@@ -7,13 +7,17 @@
 
     <div class="sound-controls">
       <button
+        tuiButton
+        appearance="icon"
+        size="s"
         class="sound-toggle-button"
-        (click)="toggleMute()"
+        (click)="onSoundToggleClick()"
         [attr.aria-label]="soundEnabled() ? t('sound.off') : t('sound.on')"
       >
         <span class="sound-icon">{{ soundEnabled() ? '🔊' : '🔇' }}</span>
       </button>
       <input
+        tuiSlider
         type="range"
         min="0"
         max="1"

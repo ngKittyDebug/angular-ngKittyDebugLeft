@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import type { Player } from '@game/frenzy/types';
 
-import { bodyForAppearance } from '../../../ui/constants/pokemon-registry';
+import { bodyForAppearance } from '../../constants/pokemon-body';
 import { FrenzyStore } from '../../store/frenzy.store';
 import { FloatingMessagesStore } from './floating-messages.store';
 import { SelfMoodEffect } from './self-mood-effect.service';
@@ -52,7 +52,7 @@ describe('SelfMoodEffect', () => {
   });
 
   function last() {
-    const messages = floats.ownedMessages();
+    const messages = floats.ownedMessageList();
 
     return messages[messages.length - 1];
   }
@@ -61,7 +61,7 @@ describe('SelfMoodEffect', () => {
     meSignal.set(me(150));
     TestBed.tick();
 
-    expect(floats.ownedMessages()).toHaveLength(0);
+    expect(floats.ownedMessageList()).toHaveLength(0);
   });
 
   it('floats sad once when the Pokémon gets hungry, then happy on recovery', () => {
@@ -72,11 +72,11 @@ describe('SelfMoodEffect', () => {
     TestBed.tick();
     expect(last().textKey).toContain('statusMessage.sad');
 
-    const afterSad = floats.ownedMessages().length;
+    const afterSad = floats.ownedMessageList().length;
 
     meSignal.set(me(40));
     TestBed.tick();
-    expect(floats.ownedMessages()).toHaveLength(afterSad);
+    expect(floats.ownedMessageList()).toHaveLength(afterSad);
 
     meSignal.set(me(150));
     TestBed.tick();
@@ -93,14 +93,14 @@ describe('SelfMoodEffect', () => {
 
     meSignal.set(me(150));
     TestBed.tick();
-    expect(floats.ownedMessages().some((message) => message.id === dying.id)).toBe(false);
+    expect(floats.ownedMessageList().some((message) => message.id === dying.id)).toBe(false);
   });
 
   it('raises only the dying warning (not sad) when hp is critically low', () => {
     meSignal.set(me(4));
     TestBed.tick();
 
-    const keys = floats.ownedMessages().map((message) => message.textKey);
+    const keys = floats.ownedMessageList().map((message) => message.textKey);
 
     expect(keys.some((key) => key.includes('statusMessage.dying'))).toBe(true);
     expect(keys.some((key) => key.includes('statusMessage.sad'))).toBe(false);
@@ -109,7 +109,7 @@ describe('SelfMoodEffect', () => {
   it('pokeSelf does nothing when there is no local Pokémon', () => {
     mood.pokeSelf();
 
-    expect(floats.ownedMessages()).toHaveLength(0);
+    expect(floats.ownedMessageList()).toHaveLength(0);
   });
 
   it('pokeSelf floats a quip and replaces the previous one on rapid clicks', () => {
@@ -121,7 +121,7 @@ describe('SelfMoodEffect', () => {
     expect(first.textKey).toContain('statusMessage.poke');
 
     mood.pokeSelf();
-    expect(floats.ownedMessages().some((message) => message.id === first.id)).toBe(false);
+    expect(floats.ownedMessageList().some((message) => message.id === first.id)).toBe(false);
     expect(last().textKey).toContain('statusMessage.poke');
   });
 });

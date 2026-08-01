@@ -1,3 +1,10 @@
+import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
+
+export interface PokemonBattlePageModel {
+  pokemonList: PokemonDetailApiData[];
+  totalCount: number;
+}
+
 export interface PokemonStats {
   hp: number;
   attack: number;

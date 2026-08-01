@@ -13,13 +13,15 @@
 >
   @if (item().type === 'bomb') {
     <!-- Sea mine inlined (not an <img [src]>) so the sensor running-lights can be driven from `--sensor-speed`,
-         which this component derives per-frame from the mine's remaining click budget. -->
+         which this component derives per-frame from the mine's remaining click budget. The accessible name reuses
+         the legend's item key, so the sprite and the HUD legend always agree on what a mine is called. -->
     <svg
+      *transloco="let t; prefix: 'frenzy.legend.items'"
       class="scene__item-sprite scene__item-sprite--bomb"
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 96 96"
       role="img"
-      aria-label="Sea mine"
+      [attr.aria-label]="t('bomb')"
     >
       <defs>
         <radialGradient id="mineBody" cx="0.38" cy="0.32" r="0.78">

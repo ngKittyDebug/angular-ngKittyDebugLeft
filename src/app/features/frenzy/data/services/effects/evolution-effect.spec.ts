@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Player, ServerMessage } from '@game/frenzy/types';
 
 import { SoundPlayerService } from '../sound/sound-player.service';
-import { bodyForAppearance } from '../../../ui/constants/pokemon-registry';
+import { bodyForAppearance } from '../../constants/pokemon-body';
 import { effectContext } from './effect-context.mock';
 import { EvolutionEffect } from './evolution-effect.service';
 import { FloatingMessagesStore } from './floating-messages.store';
@@ -80,7 +80,7 @@ describe('EvolutionEffect', () => {
   it('plays the chime and floats an evolved quip for my own evolution', () => {
     effect.handle(evolved('me'), context);
 
-    const messages = floats.ownedMessages();
+    const messages = floats.ownedMessageList();
 
     expect(play).toHaveBeenCalledExactlyOnceWith('evolve');
     expect(messages[messages.length - 1].ownerId).toBe('me');
@@ -91,7 +91,7 @@ describe('EvolutionEffect', () => {
     effect.handle(evolved('other'), context);
 
     expect(play).not.toHaveBeenCalled();
-    expect(floats.ownedMessages()).toHaveLength(0);
+    expect(floats.ownedMessageList()).toHaveLength(0);
   });
 
   it('ignores messages other than evolved', () => {

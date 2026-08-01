@@ -79,6 +79,6 @@ export class ScenePlayerComponent {
       return url;
     }
 
-    return this.spriteFreeze.frozenUrl(url) ?? url;
+    return this.spriteFreeze.getFrozenUrl(url) ?? url;
   });
 }

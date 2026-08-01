@@ -24,6 +24,49 @@ a[tuiButton][data-appearance='brand-accent'] {
   }
 }
 
+// Frenzy pokemon-picker submit CTA: gradient from the positive status color into a positive/info mix,
+// soft glow, hover lift. Ported one-to-one from the picker's former hand-rolled `.picker__submit` styles.
+button[tuiButton][data-appearance='frenzy-submit'],
+a[tuiButton][data-appearance='frenzy-submit'] {
+  background: linear-gradient(
+    135deg,
+    var(--tui-status-positive),
+    color-mix(in srgb, var(--tui-status-positive) 65%, var(--tui-status-info))
+  );
+  border-radius: 0.75rem;
+  // Dark ink for contrast on the bright gradient in either theme (kept from the original design).
+  color: #04130d;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  box-shadow: 0 8px 22px -8px color-mix(in srgb, var(--tui-status-positive) 70%, transparent);
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s,
+    filter 0.15s,
+    opacity 0.15s;
+
+  &:disabled {
+    opacity: 0.4;
+    box-shadow: none;
+  }
+
+  @media (hover: hover) {
+    &:not(:disabled):hover {
+      transform: translateY(-2px);
+      filter: brightness(1.08);
+      box-shadow: 0 12px 28px -8px color-mix(in srgb, var(--tui-status-positive) 80%, transparent);
+    }
+  }
+
+  &:not(:disabled):active {
+    transform: translateY(0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
 button[tuiButton][data-appearance='brand-primary'],
 a[tuiButton][data-appearance='brand-primary'] {
   background: var(--gradient-secondary);
@@ -47,5 +90,43 @@ a[tuiButton][data-appearance='brand-primary'] {
     box-shadow: none;
     transform: none;
     cursor: not-allowed;
+  }
+}
+
+button[tuiButton][data-appearance='move-outline'],
+a[tuiButton][data-appearance='move-outline'] {
+  background-color: transparent;
+  border: 2px solid var(--primary);
+  color: var(--tui-text-primary);
+  transition: all 0.2s ease;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: var(--muted);
+      transform: translateY(-2px);
+    }
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+button[tuiButton][data-appearance='target-outline'],
+a[tuiButton][data-appearance='target-outline'] {
+  background-color: transparent;
+  border: 2px solid var(--destructive);
+  color: var(--tui-text-primary);
+  transition: all 0.2s ease;
+
+  @media (hover: hover) {
+    &:hover {
+      background-color: color-mix(in srgb, var(--destructive) 10%, transparent);
+      transform: translateY(-2px);
+    }
+  }
+
+  &:active {
+    transform: translateY(0);
   }
 }

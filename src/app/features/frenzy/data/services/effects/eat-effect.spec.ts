@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ItemType, Player, ServerMessage } from '@game/frenzy/types';
 
 import { SoundPlayerService } from '../sound/sound-player.service';
-import { bodyForAppearance } from '../../../ui/constants/pokemon-registry';
+import { bodyForAppearance } from '../../constants/pokemon-body';
 import { EatEffect } from './eat-effect.service';
 import { effectContext } from './effect-context.mock';
 import { FloatingMessagesStore } from './floating-messages.store';
@@ -86,7 +86,7 @@ describe('EatEffect', () => {
   });
 
   function last() {
-    const messages = floats.ownedMessages();
+    const messages = floats.ownedMessageList();
 
     return messages[messages.length - 1];
   }

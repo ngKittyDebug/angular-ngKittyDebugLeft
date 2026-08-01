@@ -1,18 +1,20 @@
 <section class="picker" *transloco="let t; prefix: 'frenzy.picker'">
   <label class="picker__name">
     <span class="picker__label">{{ t('nameLabel') }}</span>
-    <input
-      class="picker__input"
-      type="text"
-      maxlength="24"
-      [placeholder]="t('namePlaceholder')"
-      [value]="name()"
-      (input)="onNameInput($event)"
-    />
+    <tui-textfield class="picker__field" [tuiTextfieldCleaner]="false">
+      <input
+        tuiInput
+        type="text"
+        maxlength="24"
+        [placeholder]="t('namePlaceholder')"
+        [value]="name()"
+        (input)="onNameInput($event)"
+      />
+    </tui-textfield>
   </label>
 
   <div class="picker__lines">
-    @for (option of lineOptions; track option.id) {
+    @for (option of lineOptionList; track option.id) {
       <button
         type="button"
         class="picker__line"
@@ -51,13 +53,13 @@
   <div class="picker__items">
     <span class="picker__items-group">
       <span class="picker__items-label picker__items-label--good">{{ t('items.eat') }}</span>
-      @for (item of safeItems; track item) {
+      @for (item of safeItemList; track item) {
         <img class="picker__items-sprite" [src]="item | itemSprite" alt="" draggable="false" />
       }
     </span>
     <span class="picker__items-group">
       <span class="picker__items-label picker__items-label--bad">{{ t('items.avoid') }}</span>
-      @for (item of dangerItems; track item) {
+      @for (item of dangerItemList; track item) {
         <img class="picker__items-sprite" [src]="item | itemSprite" alt="" draggable="false" />
       }
     </span>
@@ -69,7 +71,15 @@
     </p>
   }
 
-  <button type="button" class="picker__submit" [disabled]="!canSubmit()" (click)="onSubmit()">
+  <button
+    tuiButton
+    type="button"
+    size="l"
+    appearance="frenzy-submit"
+    class="picker__submit"
+    [disabled]="!canSubmit()"
+    (click)="onSubmit()"
+  >
     {{ t('submit') }}
   </button>
 </section>

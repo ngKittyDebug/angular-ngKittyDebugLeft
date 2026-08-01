@@ -26,7 +26,7 @@ export class PokemonApiService {
   }
 
   public getPokemonData(pokemonEndpoint: string): string {
-    return `${POKEMON_BASE_API}pokemon/${pokemonEndpoint}`;
+    return `${POKEMON_BASE_API}pokemon/${encodeURIComponent(pokemonEndpoint)}`;
   }
 
   public getPokemonDetail(pokemonEndpoint: string): Observable<PokemonDetailApiData> {
@@ -58,11 +58,11 @@ export class PokemonApiService {
   }
 
   public getPokemonSpecies(pokemonEndpoint: string): string {
-    return `${POKEMON_BASE_API}pokemon-species/${pokemonEndpoint}`;
+    return `${POKEMON_BASE_API}pokemon-species/${encodeURIComponent(pokemonEndpoint)}`;
   }
 
   public getEvolutionChain(pokemonEndpoint: string): string {
-    return `${POKEMON_BASE_API}evolution-chain/${pokemonEndpoint}`;
+    return `${POKEMON_BASE_API}evolution-chain/${encodeURIComponent(pokemonEndpoint)}`;
   }
 
   public getTypeList(): Observable<PokemonListApiData> {

@@ -10,9 +10,7 @@ import {
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { debounceTime, pipe, tap } from 'rxjs';
 import { TAMAGOTCHI_SYSTEM_ERRORS } from '../constants/system-errors.constants';
-import { calculateBondLevel } from '../helpers/gesture.helper';
-import { sortNotificationsByPriority } from '../helpers/notification-factory.helper';
-import { TamagotchiErrorRecoveryService } from '../services/tamagotchi-error-recovery.service';
+import { TamagotchiLoggerService } from '../services/tamagotchi-logger.service';
 import { TamagotchiPersistenceService } from '../services/tamagotchi-persistence.service';
 import type { InteractionEventModel } from '../models/interaction.model';
 import type { NotificationModel } from '../models/notification.model';
@@ -25,9 +23,11 @@ import {
   careForPokemonState,
   checkEvolutionState,
   clearErrorState,
+  clearEvolutionReadyNotifiedState,
   completeEvolutionState,
   completeTrainingState,
   feedPokemonState,
+  healSelectionOriginIdState,
   initializeTamagotchiState,
   interactWithPokemonState,
   loadStateSuccessState,
@@ -55,7 +55,7 @@ function snapshotState(store: {
   error: () => TamagotchiStateModel['error'];
   evolutionProgress: () => TamagotchiStateModel['evolutionProgress'];
   initialized: () => boolean;
-  interactionHistory: () => TamagotchiStateModel['interactionHistory'];
+  interactionHistoryList: () => TamagotchiStateModel['interactionHistoryList'];
   isEvolving: () => boolean;
   isSleeping: () => boolean;
   lastActionTime: () => TamagotchiStateModel['lastActionTime'];
@@ -63,6 +63,7 @@ function snapshotState(store: {
   lastSaveTime: () => TamagotchiStateModel['lastSaveTime'];
   notificationList: () => TamagotchiStateModel['notificationList'];
   pokemon: () => TamagotchiStateModel['pokemon'];
+  selectionOriginId: () => TamagotchiStateModel['selectionOriginId'];
   status: () => TamagotchiStateModel['status'];
   trainingExperienceReward: () => TamagotchiStateModel['trainingExperienceReward'];
   trainingStartedAt: () => TamagotchiStateModel['trainingStartedAt'];
@@ -73,7 +74,7 @@ function snapshotState(store: {
     error: store.error(),
     evolutionProgress: store.evolutionProgress(),
     initialized: store.initialized(),
-    interactionHistory: store.interactionHistory(),
+    interactionHistoryList: store.interactionHistoryList(),
     isEvolving: store.isEvolving(),
     isSleeping: store.isSleeping(),
     lastActionTime: store.lastActionTime(),
@@ -81,6 +82,7 @@ function snapshotState(store: {
     lastSaveTime: store.lastSaveTime(),
     notificationList: store.notificationList(),
     pokemon: store.pokemon(),
+    selectionOriginId: store.selectionOriginId(),
     status: store.status(),
     trainingExperienceReward: store.trainingExperienceReward(),
     trainingStartedAt: store.trainingStartedAt(),
@@ -93,17 +95,11 @@ export const TamagotchiStore = signalStore(
     hasPokemon: computed(() => store.pokemon() !== null),
     isTraining: computed(() => store.trainingStartedAt() !== null),
     canEvolve: computed(() => store.evolutionProgress().isReady && !store.isEvolving()),
-    unreadNotifications: computed(() =>
-      sortNotificationsByPriority(
-        store.notificationList().filter((notification) => !notification.read),
-      ),
-    ),
-    bondLevel: computed(() => calculateBondLevel(store.interactionHistory())),
   })),
   withMethods(
     (
       store,
-      errorRecovery = inject(TamagotchiErrorRecoveryService),
+      logger = inject(TamagotchiLoggerService),
       persistence = inject(TamagotchiPersistenceService),
     ) => {
       let pendingSave = false;
@@ -121,7 +117,7 @@ export const TamagotchiStore = signalStore(
 
           patchState(store, (current) => saveStateSuccessState(current, savedAt));
         } catch (error) {
-          errorRecovery.logError('saveState', error);
+          logger.logError('saveState', error);
           patchState(store, (current) =>
             setErrorState(current, TAMAGOTCHI_SYSTEM_ERRORS.SAVE_FAILED),
           );
@@ -187,7 +183,7 @@ export const TamagotchiStore = signalStore(
               }),
             );
           } catch (error) {
-            errorRecovery.logError('loadFromPersistence', error);
+            logger.logError('loadFromPersistence', error);
             patchState(store, (current) =>
               initializeTamagotchiState(
                 setErrorState(current, TAMAGOTCHI_SYSTEM_ERRORS.LOAD_FAILED),
@@ -198,6 +194,10 @@ export const TamagotchiStore = signalStore(
 
         selectPokemon(pokemon: PokemonModel): void {
           mutateAndSave((state) => selectPokemonState(state, pokemon));
+        },
+
+        healSelectionOriginId(selectionOriginId: string): void {
+          mutateAndSave((state) => healSelectionOriginIdState(state, selectionOriginId));
         },
 
         feed(now: number): void {
@@ -258,6 +258,10 @@ export const TamagotchiStore = signalStore(
 
         markEvolutionReadyNotified(notifiedAt: number): void {
           mutateAndSave((state) => markEvolutionReadyNotifiedState(state, notifiedAt));
+        },
+
+        clearEvolutionReadyNotified(): void {
+          mutateAndSave(clearEvolutionReadyNotifiedState);
         },
 
         startEvolution(): void {
