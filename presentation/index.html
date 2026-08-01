@@ -5,10 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ngKittyDebugLeft — PokeDex, который мы заслужили</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/reveal.css" />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/theme/white.css"
-    />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/theme/white.css" />
     <style>
       :root {
         --poke-dark: #22283e;
@@ -29,9 +26,7 @@
         color: var(--poke-text);
       }
 
-      .reveal h1,
-      .reveal h2,
-      .reveal h3 {
+      .reveal h1, .reveal h2, .reveal h3 {
         font-family: inherit;
         color: var(--poke-dark);
         text-transform: none;
@@ -45,21 +40,11 @@
         text-align: left;
       }
 
-      .reveal h2.blue {
-        border-color: var(--poke-blue);
-      }
-      .reveal h2.green {
-        border-color: var(--poke-green);
-      }
-      .reveal h2.gold {
-        border-color: var(--poke-yellow);
-      }
-      .reveal h2.violet {
-        border-color: var(--poke-violet);
-      }
-      .reveal h2.pink {
-        border-color: var(--poke-pink);
-      }
+      .reveal h2.blue   { border-color: var(--poke-blue); }
+      .reveal h2.green  { border-color: var(--poke-green); }
+      .reveal h2.gold   { border-color: var(--poke-yellow); }
+      .reveal h2.violet { border-color: var(--poke-violet); }
+      .reveal h2.pink   { border-color: var(--poke-pink); }
 
       .reveal .subtitle {
         text-align: left;
@@ -74,31 +59,21 @@
         font-size: 0.72em;
         line-height: 1.45;
       }
-
-      .reveal ul li {
-        margin-bottom: 0.45em;
-      }
-      .reveal ul li::marker {
-        color: var(--poke-red);
-      }
-
-      .reveal ul ul {
-        font-size: 0.92em;
-        color: var(--poke-muted);
-      }
+      .reveal ul li { margin-bottom: 0.45em; }
+      .reveal ul li::marker { color: var(--poke-red); }
+      .reveal ul ul { font-size: 0.92em; color: var(--poke-muted); }
 
       .reveal blockquote {
         width: 92%;
         background: #fff8dc;
         border: 2px solid var(--poke-yellow);
         border-radius: 12px;
-        box-shadow: 0 4px 14px rgba(34, 40, 62, 0.08);
+        box-shadow: 0 4px 14px rgba(34,40,62,0.08);
         font-size: 0.64em;
         font-style: italic;
         padding: 0.6em 1em;
         margin-top: 0.9em;
       }
-
       .reveal blockquote .author {
         display: block;
         font-style: normal;
@@ -114,15 +89,8 @@
         font-size: 0.55em;
         text-align: left;
       }
-
-      .reveal .cards.four {
-        grid-template-columns: repeat(4, 1fr);
-        font-size: 0.5em;
-      }
-      .reveal .cards.two {
-        grid-template-columns: repeat(2, 1fr);
-        font-size: 0.62em;
-      }
+      .reveal .cards.four { grid-template-columns: repeat(4, 1fr); font-size: 0.5em; }
+      .reveal .cards.two  { grid-template-columns: repeat(2, 1fr); font-size: 0.62em; }
 
       .reveal .card {
         background: #fff;
@@ -130,69 +98,40 @@
         border-top: 6px solid var(--poke-red);
         border-radius: 12px;
         padding: 0.7em 0.8em;
-        box-shadow: 0 6px 18px rgba(34, 40, 62, 0.07);
+        box-shadow: 0 6px 18px rgba(34,40,62,0.07);
       }
+      .reveal .card.yellow { border-top-color: var(--poke-yellow); }
+      .reveal .card.blue   { border-top-color: var(--poke-blue); }
+      .reveal .card.green  { border-top-color: var(--poke-green); }
+      .reveal .card.violet { border-top-color: var(--poke-violet); }
 
-      .reveal .card.yellow {
-        border-top-color: var(--poke-yellow);
-      }
-      .reveal .card.blue {
-        border-top-color: var(--poke-blue);
-      }
-      .reveal .card.green {
-        border-top-color: var(--poke-green);
-      }
-      .reveal .card.violet {
-        border-top-color: var(--poke-violet);
-      }
-
-      .reveal .card h3 {
-        font-size: 1.05em;
-        margin: 0 0 0.5em;
-      }
-      .reveal .card ul {
-        font-size: 0.95em;
-        margin: 0 0 0 1.1em;
-      }
+      .reveal .card h3 { font-size: 1.05em; margin: 0 0 0.5em; }
+      .reveal .card ul { font-size: 0.95em; margin: 0 0 0 1.1em; }
 
       .reveal .stats {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 0.65em;
       }
-
       .reveal .stat {
         background: #fff;
         border: 1px solid #e1e3ec;
         border-radius: 12px;
         padding: 0.5em 0.4em;
         text-align: center;
-        box-shadow: 0 6px 18px rgba(34, 40, 62, 0.07);
+        box-shadow: 0 6px 18px rgba(34,40,62,0.07);
       }
-
       .reveal .stat .num {
         display: block;
         font-size: 1.35em;
         font-weight: 700;
         color: var(--poke-red);
       }
-
-      .reveal .stat .num.blue {
-        color: var(--poke-blue);
-      }
-      .reveal .stat .num.green {
-        color: var(--poke-green);
-      }
-      .reveal .stat .num.gold {
-        color: #c99a00;
-      }
-      .reveal .stat .num.violet {
-        color: var(--poke-violet);
-      }
-      .reveal .stat .num.pink {
-        color: var(--poke-pink);
-      }
-
+      .reveal .stat .num.blue   { color: var(--poke-blue); }
+      .reveal .stat .num.green  { color: var(--poke-green); }
+      .reveal .stat .num.gold   { color: #c99a00; }
+      .reveal .stat .num.violet { color: var(--poke-violet); }
+      .reveal .stat .num.pink   { color: var(--poke-pink); }
       .reveal .stat .label {
         display: block;
         font-size: 0.42em;
@@ -210,33 +149,18 @@
         border-radius: 12px;
         padding: 0.9em 1.2em;
         line-height: 1.7;
-        box-shadow: 0 6px 18px rgba(34, 40, 62, 0.25);
+        box-shadow: 0 6px 18px rgba(34,40,62,0.25);
       }
-
-      .reveal .commits .sha {
-        color: var(--poke-yellow);
-      }
-      .reveal .commits .note {
-        color: #8a8fa5;
-        font-style: italic;
-      }
+      .reveal .commits .sha   { color: var(--poke-yellow); }
+      .reveal .commits .note  { color: #8a8fa5; font-style: italic; }
 
       .reveal section.dark h1,
       .reveal section.dark h2,
       .reveal section.dark h3,
-      .reveal section.dark p {
-        color: #fff;
-      }
-      .reveal section.dark .accent {
-        color: var(--poke-yellow);
-      }
-      .reveal section.dark .muted {
-        color: #c9cdde;
-      }
-      .reveal section.dark .fine {
-        color: #8a8fa5;
-        font-size: 0.45em;
-      }
+      .reveal section.dark p { color: #fff; }
+      .reveal section.dark .accent { color: var(--poke-yellow); }
+      .reveal section.dark .muted  { color: #c9cdde; }
+      .reveal section.dark .fine   { color: #8a8fa5; font-size: 0.45em; }
 
       .reveal .pokeball {
         width: 110px;
@@ -244,99 +168,279 @@
         margin: 0 auto 0.5em;
         border-radius: 50%;
         border: 4px solid var(--poke-dark);
-        background: linear-gradient(
-          to bottom,
-          var(--poke-red) 0 46%,
-          var(--poke-dark) 46% 54%,
-          #fff 54% 100%
-        );
+        background: linear-gradient(to bottom, var(--poke-red) 0 46%, var(--poke-dark) 46% 54%, #fff 54% 100%);
         position: relative;
         animation: wiggle 3.5s ease-in-out infinite;
       }
-
       .reveal .pokeball::after {
         content: '';
         position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 30px;
-        height: 30px;
+        top: 50%; left: 50%;
+        width: 30px; height: 30px;
         transform: translate(-50%, -50%);
         background: #fff;
         border: 4px solid var(--poke-dark);
         border-radius: 50%;
       }
-
       @keyframes wiggle {
-        0%,
-        100% {
-          transform: rotate(0deg);
-        }
-        10% {
-          transform: rotate(-12deg);
-        }
-        20% {
-          transform: rotate(10deg);
-        }
-        30% {
-          transform: rotate(-6deg);
-        }
-        40% {
-          transform: rotate(0deg);
-        }
+        0%, 100% { transform: rotate(0deg); }
+        10%  { transform: rotate(-12deg); }
+        20%  { transform: rotate(10deg); }
+        30%  { transform: rotate(-6deg); }
+        40%  { transform: rotate(0deg); }
       }
 
-      .reveal .hint {
-        font-size: 0.5em;
-        color: var(--poke-muted);
-        font-style: italic;
-      }
+      .reveal .hint { font-size: 0.5em; color: var(--poke-muted); font-style: italic; }
 
-      #music-toggle {
+      #music-controls {
         position: fixed;
-        bottom: 18px;
-        left: 18px;
+        bottom: 18px; left: 18px;
         z-index: 50;
-        border: 2px solid var(--poke-yellow);
+        display: flex;
+        align-items: center;
+        gap: 8px;
         background: var(--poke-dark);
+        border: 2px solid var(--poke-yellow);
+        border-radius: 999px;
+        padding: 6px 14px;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+      }
+      #music-toggle {
+        background: none;
+        border: none;
         color: #fff;
         font-size: 15px;
         font-family: 'Segoe UI', sans-serif;
-        border-radius: 999px;
-        padding: 8px 16px;
         cursor: pointer;
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+        padding: 0;
+        line-height: 1;
+      }
+      #music-toggle:hover { color: var(--poke-yellow); }
+      #volume-slider {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 72px;
+        height: 4px;
+        border-radius: 2px;
+        background: #555e7a;
+        outline: none;
+        cursor: pointer;
+      }
+      #volume-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: var(--poke-yellow);
+        cursor: pointer;
+      }
+      #volume-slider::-moz-range-thumb {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: var(--poke-yellow);
+        cursor: pointer;
+        border: none;
       }
 
-      #music-toggle:hover {
-        background: #333b5e;
+      /* ── Screenshot grids ── */
+      .reveal .screenshots {
+        display: grid;
+        gap: 0.55em;
+        align-items: start;
+        margin-top: 0.55em;
       }
+      .reveal .screenshots.two   { grid-template-columns: 1fr 1fr; }
+      .reveal .screenshots.three { grid-template-columns: 1fr 1fr 1fr; }
+      .reveal .screenshots figure { margin: 0; text-align: center; }
+      .reveal .screenshots img {
+        max-width: 100%;
+        max-height: 360px;
+        object-fit: contain;
+        border-radius: 8px;
+        border: 1px solid #e1e3ec;
+        box-shadow: 0 4px 12px rgba(34,40,62,0.13);
+      }
+      .reveal .screenshots.tall img { max-height: 420px; }
+      .reveal .screenshots figcaption {
+        font-size: 0.37em;
+        color: var(--poke-muted);
+        margin-top: 0.3em;
+        font-style: italic;
+      }
+
+      /* ── Architecture diagram ── */
+      .reveal .arch-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.38em;
+        font-size: 0.5em;
+        margin-top: 0.5em;
+      }
+      .reveal .arch-client {
+        width: 82%;
+        background: #eef2ff;
+        border: 2.5px solid var(--poke-blue);
+        border-radius: 12px;
+        padding: 0.5em 1.2em;
+        text-align: center;
+      }
+      .reveal .arch-client strong { display: block; font-size: 1.1em; color: var(--poke-blue); }
+      .reveal .arch-client span   { font-size: 0.85em; color: var(--poke-muted); }
+      .reveal .arch-arrows {
+        display: flex;
+        gap: 5em;
+        color: var(--poke-muted);
+        font-size: 0.9em;
+      }
+      .reveal .arch-row { display: flex; gap: 1em; justify-content: center; }
+      .reveal .arch-box {
+        border-radius: 10px;
+        padding: 0.45em 0.9em;
+        text-align: center;
+        border: 2px solid #e1e3ec;
+        min-width: 130px;
+      }
+      .reveal .arch-box.api      { background: #fff3d6; border-color: var(--poke-yellow); }
+      .reveal .arch-box.backend  { background: #e8f6ec; border-color: var(--poke-green); }
+      .reveal .arch-box.realtime { background: #f3eaff; border-color: var(--poke-violet); }
+      .reveal .arch-box strong   { display: block; color: var(--poke-dark); }
+      .reveal .arch-box small    { font-size: 0.82em; color: var(--poke-muted); }
+      .reveal .arch-shared {
+        width: 52%;
+        background: #ffe9e2;
+        border: 2.5px solid var(--poke-red);
+        border-radius: 12px;
+        padding: 0.45em 1em;
+        text-align: center;
+        font-weight: 600;
+      }
+      .reveal .arch-shared small {
+        display: block;
+        font-weight: 400;
+        font-size: 0.85em;
+        color: var(--poke-muted);
+        margin-top: 0.15em;
+      }
+
+      /* ── Decision cards ── */
+      .reveal .vs-row {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        gap: 0.65em;
+        align-items: center;
+        font-size: 0.54em;
+        margin: 0.55em 0;
+      }
+      .reveal .vs-chose {
+        background: #e8f6ec;
+        border: 2px solid var(--poke-green);
+        border-radius: 10px;
+        padding: 0.6em 0.8em;
+      }
+      .reveal .vs-alt {
+        background: #f9f0ee;
+        border: 2px solid #deb8b0;
+        border-radius: 10px;
+        padding: 0.6em 0.8em;
+        opacity: 0.82;
+      }
+      .reveal .vs-label { text-align: center; font-size: 1.5em; color: var(--poke-muted); }
+      .reveal .vs-chose h4 {
+        color: var(--poke-green);
+        font-size: 0.82em;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin: 0 0 0.3em;
+      }
+      .reveal .vs-alt h4 {
+        color: #a05040;
+        font-size: 0.82em;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin: 0 0 0.3em;
+        opacity: 0.75;
+      }
+
+      /* ── Failure timeline ── */
+      .reveal .failure-timeline { font-size: 0.6em; margin-top: 0.4em; }
+      .reveal .failure-step {
+        display: grid;
+        grid-template-columns: 2em 1fr;
+        gap: 0.4em;
+        margin-bottom: 0.5em;
+        align-items: start;
+      }
+      .reveal .failure-step .ficon { font-size: 1.4em; line-height: 1.1; }
+      .reveal .failure-step .ftext strong {
+        display: block;
+        color: var(--poke-dark);
+        margin-bottom: 0.1em;
+      }
+
+      /* ── Lightbox ── */
+      #lightbox {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        background: rgba(0, 0, 0, 0.88);
+        align-items: center;
+        justify-content: center;
+        cursor: zoom-out;
+      }
+      #lightbox.open { display: flex; }
+      #lightbox img {
+        max-width: 92vw;
+        max-height: 92vh;
+        object-fit: contain;
+        border-radius: 6px;
+        box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+        cursor: default;
+      }
+      #lightbox-close {
+        position: fixed;
+        top: 18px;
+        right: 22px;
+        background: none;
+        border: none;
+        color: #fff;
+        font-size: 36px;
+        line-height: 1;
+        cursor: pointer;
+        opacity: 0.75;
+        z-index: 1001;
+      }
+      #lightbox-close:hover { opacity: 1; }
+      .reveal .screenshots img { cursor: zoom-in; }
     </style>
   </head>
   <body>
     <div class="reveal">
       <div class="slides">
-        <!-- 1. Титульный -->
-        <section
-          class="dark"
-          data-background-gradient="radial-gradient(circle at 30% 20%, #333b5e, #171c2e)"
-        >
+
+        <!-- ════════════════════════════════════════════════
+             1. TITLE
+        ════════════════════════════════════════════════ -->
+        <section class="dark" data-background-gradient="radial-gradient(circle at 30% 20%, #333b5e, #171c2e)">
           <div class="pokeball"></div>
           <h1 style="font-size: 1.9em">ngKittyDebugLeft</h1>
-          <p class="accent" style="font-size: 0.9em; font-weight: 700">
-            PokeDex, который мы заслужили
-          </p>
+          <p class="accent" style="font-size: 0.9em; font-weight: 700">PokeDex, который мы заслужили</p>
           <p class="muted" style="font-size: 0.55em; font-style: italic">
             Мы — команда ngKittyDebug: три разработчика, один ментор-мультикласс<br />
             и ноль шансов, что это будет скучно.
           </p>
-          <p style="font-size: 0.62em; font-weight: 600">603 коммита · 121 PR · 4 игры · 1 гимн</p>
+          <p style="font-size: 0.62em; font-weight: 600">658 коммитов · ~130 PR · 4 игры · 1 песня</p>
           <p class="accent" style="font-size: 0.5em; font-style: italic">
-            🎵 Кликните в любом месте — заиграет наш гимн. Да, у нас есть гимн.
+            🎵 Кликните в любом месте — заиграет песня про нашу команду. Да, у нас есть своя песня.
           </p>
         </section>
 
-        <!-- 2. Кто мы -->
+        <!-- ════════════════════════════════════════════════
+             2. КТО МЫ
+        ════════════════════════════════════════════════ -->
         <section data-background-gradient="linear-gradient(160deg, #ffffff, #eef2ff)">
           <h2 class="blue">Кто мы</h2>
           <p class="subtitle">коммиты посчитаны честно — без церемониальных мержей</p>
@@ -344,17 +448,17 @@
             <div class="card">
               <h3>Алексей 🧭</h3>
               <ul>
-                <li>Тимлид и человек-канбан</li>
-                <li>171 коммит при оперативке «на 512 МБ» (самодиагностика)</li>
+                <li>Тимлид, человек-канбан и автор 240 коммитов</li>
                 <li>Дневники пишет по 5 часов — дольше, чем некоторые фичи</li>
-                <li>Навайбил битву покемонов</li>
+                <li>Навайбил битву покемонов на Gemini CLI</li>
+                <li>Диагностировал оперативку у себя на 512 МБ (самодиагностика)</li>
               </ul>
             </div>
             <div class="card yellow">
               <h3>Оксана 🎨</h3>
               <ul>
                 <li>Дизайн, Figma AI и вся интернационализация</li>
-                <li>98 коммитов и директива, переписанная 3 (!) раза</li>
+                <li>146 коммитов и директива, переписанная 3 (!) раза</li>
                 <li>Хотела покемона, бегающего за курсором. Сделала</li>
                 <li>Забраковала первый же код от ИИ — и была права</li>
               </ul>
@@ -362,7 +466,7 @@
             <div class="card blue">
               <h3>Павел 🔧</h3>
               <ul>
-                <li>188 коммитов — больше всех в команде</li>
+                <li>Фронтенд-воин — 236 коммитов, рекорд команды</li>
                 <li>10+ часов на gif для 404. Перфекционизм не лечится</li>
                 <li>Кредо: «буду до последнего долбать идею»</li>
                 <li>Каждый дневник заканчивает словом «Победа»</li>
@@ -380,21 +484,56 @@
           </div>
         </section>
 
-        <!-- 3. Как выбирали проект -->
+        <!-- ════════════════════════════════════════════════
+             3. ВАЙБ КОМАНДЫ
+        ════════════════════════════════════════════════ -->
+        <section data-background-gradient="linear-gradient(160deg, #ffffff, #eef2ff)">
+          <h2 class="blue">Официальная документация вайба</h2>
+          <p class="subtitle">то, что не попало в коммиты, но попало в историю</p>
+          <div class="screenshots" style="grid-template-columns: repeat(4, 1fr)">
+            <figure>
+              <img src="images/деление на команды.png" alt="деление на команды" style="max-height: 200px" />
+              <figcaption>08.05.2026 · Степан шутит про деление команды. Девочки направо, мальчики налево</figcaption>
+            </figure>
+            <figure>
+              <img src="images/шутка рпо деда.png" alt="закодированный дед" style="max-height: 200px" />
+              <figcaption>05.05.2026 · Алексей нашёл идеальное описание себя до начала курса</figcaption>
+            </figure>
+            <figure>
+              <img src="images/шутка про тимлида.png" alt="шутка про тимлида" style="max-height: 200px" />
+              <figcaption>шутка про тимлида</figcaption>
+            </figure>
+            <figure>
+              <img src="images/момент из пиратов корибского моря, интересно, к чему это.png" alt="момент из пиратов карибского моря" style="max-height: 200px" />
+              <figcaption>момент из пиратов карибского моря, интересно, к чему это</figcaption>
+            </figure>
+          </div>
+          <div class="cards" style="margin-top: 0.5em; font-size: 0.44em">
+            <div class="card yellow" style="padding: 0.45em 0.65em">
+              <p style="margin:0; font-style: italic">«Хочется съесть Санчо Панчо, но придётся сначала его приготовить :(»</p>
+              <p style="margin: 0.25em 0 0; color: var(--poke-muted)">— Оксана, спринт 1</p>
+            </div>
+            <div class="card" style="padding: 0.45em 0.65em">
+              <p style="margin:0; font-style: italic">«Я с гордостью хотел писать бургер-меню, но мне сказали, что burger не в моде»</p>
+              <p style="margin: 0.25em 0 0; color: var(--poke-muted)">— Алексей, спринт 2</p>
+            </div>
+            <div class="card blue" style="padding: 0.45em 0.65em">
+              <p style="margin:0; font-style: italic">«В общем не важно, как это сделано. Результат есть.»</p>
+              <p style="margin: 0.25em 0 0; color: var(--poke-muted)">— Павел, спринт 2</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ════════════════════════════════════════════════
+             4. КАК ВЫБИРАЛИ ПРОЕКТ
+        ════════════════════════════════════════════════ -->
         <section data-background-gradient="linear-gradient(160deg, #ffffff, #fff3d6)">
           <h2 class="gold">Как мы выбирали проект</h2>
-          <p class="subtitle">
-            глава первая: «Скучаю по моменту, когда думал, что у меня есть выбор»
-          </p>
+          <p class="subtitle">глава первая: «Скучаю по моменту, когда думал, что у меня есть выбор»</p>
           <ul>
             <li>Мы попросили оставить нас в старом составе вшестером. Ответ судьбы: ( ͡° ͜ʖ ͡° )</li>
-            <li>
-              Все хотели тамагочи. Но SVG-тамагочи — скучно, а игровой движок — это уже не «изучаем
-              Angular»
-            </li>
-            <li>
-              И тут мы нашли PokeAPI: готовый каталог из 1300+ «тамагочи» и тонны данных для страниц
-            </li>
+            <li>Все хотели тамагочи. Но SVG-тамагочи — скучно, а игровой движок — это уже не «изучаем Angular»</li>
+            <li>И тут мы нашли PokeAPI: готовый каталог из 1300+ «тамагочи» и тонны данных для страниц</li>
             <li class="fragment">
               Составили план здорового человека — три уровня:
               <ul>
@@ -406,97 +545,97 @@
           </ul>
           <blockquote class="fragment">
             «Кто знает, может, и успеем.»
-            <span class="author"
-              >— наш тимлид, спринт 1. Спойлер: успели всё и ещё реалтайм-игру сверху</span
-            >
+            <span class="author">— наш тимлид, спринт 1. Спойлер: успели всё и ещё реалтайм-игру сверху</span>
           </blockquote>
         </section>
 
-        <!-- 4. Репозиторий в цифрах -->
+        <!-- ════════════════════════════════════════════════
+             5. РЕПОЗИТОРИЙ В ЦИФРАХ
+        ════════════════════════════════════════════════ -->
         <section data-background-gradient="linear-gradient(160deg, #ffffff, #ffe9e2)">
           <h2>Наш репозиторий в цифрах</h2>
           <p class="subtitle">10 недель. git не даст соврать, GitHub — тем более</p>
           <div class="stats">
             <div class="stat">
-              <span class="num">603</span>
-              <span class="label">коммита: 482 настоящих + 121 церемониальный мерж</span>
+              <span class="num">658</span>
+              <span class="label">коммита: реальные + церемониальные мержи в пропорции, которую лучше не знать</span>
             </div>
             <div class="stat">
-              <span class="num blue">64 из 71</span>
-              <span class="label">дней — с коммитами. Выходные? Не, не слышали</span>
+              <span class="num blue">68 из 73</span>
+              <span class="label">дней — с коммитами. Выходные? Нет, не слышали</span>
             </div>
             <div class="stat">
-              <span class="num violet">114</span>
-              <span class="label">коммитов между полуночью и 5 утра. Сон для слабых</span>
+              <span class="num violet">127</span>
+              <span class="label">коммитов между полуночью и 5 утра. Тёмная тема — не опция, а необходимость</span>
             </div>
             <div class="stat">
               <span class="num gold">29</span>
-              <span class="label"
-                >коммитов за день — 7 июня, накануне конца спринта. Совпадение? Не думаем</span
-              >
+              <span class="label">коммитов за день — 7 июня, накануне конца спринта. Совпадение? Не думаем</span>
             </div>
             <div class="stat">
-              <span class="num green">121</span>
-              <span class="label">PR: 117 доехали до develop, 4 пали смертью храбрых</span>
+              <span class="num green">~130</span>
+              <span class="label">PR: большинство доехали до develop, единицы пали смертью храбрых</span>
             </div>
             <div class="stat">
-              <span class="num">170</span>
-              <span class="label">issues. Из них 88 открыл Сасарик — сам себе</span>
+              <span class="num">170+</span>
+              <span class="label">issues. Из них 88 открыл Сасарик — сам себе. Без комментариев</span>
             </div>
             <div class="stat">
               <span class="num blue">56</span>
               <span class="label">веток в origin. Кладбище фич цветёт</span>
             </div>
             <div class="stat">
-              <span class="num pink">#307</span>
+              <span class="num pink">#330+</span>
               <span class="label">— до этого номера доросла сквозная нумерация issues и PR</span>
             </div>
           </div>
         </section>
 
-        <!-- 5. Кодовая база -->
+        <!-- ════════════════════════════════════════════════
+             6. КОДОВАЯ БАЗА
+        ════════════════════════════════════════════════ -->
         <section data-background-gradient="linear-gradient(160deg, #ffffff, #e8f6ec)">
           <h2 class="green">Наша кодовая база</h2>
           <p class="subtitle">строки посчитаны по-настоящему, без «примерно на глаз»</p>
           <div class="stats">
             <div class="stat">
-              <span class="num green">49 000</span>
-              <span class="label">строк приложения: TypeScript + шаблоны + стили</span>
+              <span class="num green">~50 000</span>
+              <span class="label">строк приложения: TypeScript 37 840 + шаблоны 3 457 + стили 8 442</span>
             </div>
             <div class="stat">
-              <span class="num blue">17 000</span>
-              <span class="label"
-                >строк тестов в 130 файлах. Мы их не читали — нам сказали не читать</span
-              >
+              <span class="num blue">17 498</span>
+              <span class="label">строк тестов в 145 файлах. Мы их не читали — нам сказали не читать</span>
             </div>
             <div class="stat">
-              <span class="num violet">6 249</span>
-              <span class="label">строк движка Frenzy — реалтайм-игра на PartyKit</span>
+              <span class="num violet">~6 400</span>
+              <span class="label">строк движка Frenzy: partykit-server + shared-game</span>
             </div>
             <div class="stat">
               <span class="num">69</span>
               <span class="label">компонентов — и все 69 на OnPush. 100%. ESLint не дремлет</span>
             </div>
             <div class="stat">
-              <span class="num gold">66</span>
+              <span class="num gold">65</span>
               <span class="label">сервисов. Почти по сервису на компонент — DI одобряет</span>
             </div>
             <div class="stat">
-              <span class="num green">566</span>
-              <span class="label">ключей перевода × 2 языка. Хардкода — ноль</span>
+              <span class="num green">583</span>
+              <span class="label">ключа перевода × 2 языка. Хардкода — ноль</span>
             </div>
             <div class="stat">
               <span class="num blue">6 + 6</span>
               <span class="label">директив и пайпов. Идеальный баланс, как у покемона</span>
             </div>
             <div class="stat">
-              <span class="num pink">9</span>
+              <span class="num pink">8</span>
               <span class="label">сторов — @ngrx/signals пустил корни</span>
             </div>
           </div>
         </section>
 
-        <!-- 6. Дневники в цифрах -->
+        <!-- ════════════════════════════════════════════════
+             7. ДНЕВНИКИ
+        ════════════════════════════════════════════════ -->
         <section data-background-gradient="linear-gradient(160deg, #ffffff, #fdeef7)">
           <h2 class="pink">Наши дневники в цифрах</h2>
           <p class="subtitle">жанр: техническая проза с элементами гика (самоопределение)</p>
@@ -519,9 +658,7 @@
             </div>
             <div class="stat">
               <span class="num violet">17 : 0</span>
-              <span class="label"
-                >счёт «обращения к Танди : её ответы». Рецептов «Картошки» — тоже 0</span
-              >
+              <span class="label">счёт «обращения к Танди : её ответы». Рецептов «Картошки» — тоже 0</span>
             </div>
             <div class="stat">
               <span class="num green">6 из 6</span>
@@ -529,113 +666,87 @@
             </div>
             <div class="stat">
               <span class="num blue">7</span>
-              <span class="label"
-                >упоминаний Клавдия — все со смесью благодарности и лёгкого страха</span
-              >
+              <span class="label">упоминаний Клавдия — все со смесью благодарности и лёгкого страха</span>
             </div>
             <div class="stat">
               <span class="num">2</span>
-              <span class="label"
-                >официальные жалобы на документацию Taiga UI. Поданы через Танди</span
-              >
+              <span class="label">официальные жалобы на документацию Taiga UI. Поданы через Танди</span>
             </div>
           </div>
         </section>
 
-        <!-- 7. Спринты (вертикальная стопка) -->
+        <!-- ════════════════════════════════════════════════
+             8. СПРИНТЫ (вертикальная стопка)
+        ════════════════════════════════════════════════ -->
         <section>
-          <section
-            class="dark"
-            data-background-gradient="radial-gradient(circle at 70% 30%, #333b5e, #171c2e)"
-          >
+          <section class="dark" data-background-gradient="radial-gradient(circle at 70% 30%, #333b5e, #171c2e)">
             <h2 style="border-color: #ffcb05; color: #fff">Четыре спринта — четыре главы</h2>
             <p class="muted" style="font-size: 0.6em">сетап → сигналы → бэкенд → нейросети</p>
             <p class="accent hint">Листайте вниз ↓ — как эволюционная цепочка, только про нас</p>
           </section>
 
+          <!-- Спринт 1 -->
           <section data-background-gradient="linear-gradient(160deg, #ffffff, #fff3d6)">
             <h2 class="gold">Спринт 1 · Сетап и каркас</h2>
             <p class="subtitle">жанр: драма с элементами безысходности (цитата, не оценка)</p>
             <ul>
               <li>Подняли репозитории, защиту веток, ESLint и CI с нотификациями в Телеграм</li>
-              <li>
-                Канбан: «всё ещё нет чёткого видения декомпозиции, но, думаю, я пойму. Может быть,
-                пойму»
-              </li>
               <li>Тему переписали на TUI_DARK_MODE — меньше кода, localStorage в подарок</li>
-              <li>
-                i18n: выбрали директиву вместо pipe — одна подписка и кеш вместо вызова на каждый
-                перевод
-              </li>
-              <li>
-                Страница 404: компонент — быстро, gif — 10+ часов. «Непростительно много. Зато
-                узнал»
-              </li>
+              <li>i18n: выбрали директиву вместо pipe — одна подписка и кеш вместо вызова на каждый перевод</li>
+              <li>Страница 404: компонент — быстро, gif — 10+ часов. «Непростительно много. Зато узнал»</li>
             </ul>
-            <blockquote>
-              «Хочется съесть Санчо Панчо, но придётся сначала его приготовить :(»
-              <span class="author">— Оксана, философия первого спринта</span>
-            </blockquote>
+            <div class="screenshots two" style="margin-top: 0.5em">
+              <figure>
+                <img src="images/покебот в ноге.png" alt="покебот в ноге" />
+                <figcaption>20.05.2026 · Знакомство с логотипом команды. Версии расходились</figcaption>
+              </figure>
+              <figure>
+                <img src="images/Леша неделал тасок.png" alt="Алексей и таски" />
+                <figcaption>19.05.2026 · «накинул 18 тасок, они пока в TODO» — тимлид в своей стихии</figcaption>
+              </figure>
+            </div>
           </section>
 
+          <!-- Спринт 2 -->
           <section data-background-gradient="linear-gradient(160deg, #ffffff, #eef2ff)">
             <h2 class="blue">Спринт 2 · «Добро пожаловать в Angular 22!»</h2>
             <p class="subtitle">кризис среднего возраста и другие миграции</p>
             <ul>
-              <li>
-                «Я с гордостью хотел писать бургер-меню, но мне сказали, что burger не в моде» →
-                кризис среднего возраста → TabBar
-              </li>
-              <li>
-                Написали свою структурную директиву + BreakpointObserver. Первая версия — через
-                костыльный effect, вторая — по-людски
-              </li>
-              <li>
-                Пагинация и поиск: resource + computed + debounce. 1300+ покемонов одним запросом —
-                «дёшево и сердито»
-              </li>
-              <li>
-                Профиль покемона: рекурсивная цепочка эволюции, ArcChart и карусель, которая
-                «НОООООООООО...» (6 часов)
-              </li>
-              <li>Гварды: «простые и тупые» (документация от автора)</li>
+              <li>«Я с гордостью хотел писать бургер-меню, но мне сказали, что burger не в моде» → TabBar</li>
+              <li>Написали свою структурную директиву + BreakpointObserver. Первая версия — через костыльный effect, вторая — по-людски</li>
+              <li>Пагинация: resource + computed + debounce. 1300+ покемонов одним запросом — «дёшево и сердито»</li>
               <li>Посреди проекта вышел Angular 22 — мигрировали сразу, не раздумывая</li>
             </ul>
-            <blockquote>
-              «Что за фигня? Я такое в первый раз вижу! — А я скажу: добро пожаловать в Angular 22!»
-              <span class="author">— наш тимлид отвечает на незаданные вопросы</span>
-            </blockquote>
+            <div class="screenshots tall" style="margin-top: 0.5em">
+              <figure>
+                <img src="images/обсуждение навигации.png" alt="обсуждение навигации" />
+                <figcaption>30.05.2026 01:26 · Оксана «почти воскресла» и сразу к делу — навигация, футер, z-index. Ночь — лучшее время для UX-решений</figcaption>
+              </figure>
+            </div>
           </section>
 
+          <!-- Спринт 3 -->
           <section data-background-gradient="linear-gradient(160deg, #ffffff, #e8f6ec)">
             <h2 class="green">Спринт 3 · Бэкенд, авторизация, state</h2>
             <p class="subtitle">PokeAPI: очень объёмная, очень интересная, очень неудобная 😤</p>
             <ul>
-              <li>
-                Переиспользовали NestJS-сервер с прошлого проекта. «Можно было написать новый, но
-                зачем?»
-              </li>
-              <li>
-                Авторизация: HttpClient + InjectionToken, интерцептор ошибок только на auth-роутах
-              </li>
-              <li>
-                Токен положили в память в сигнал, а не в localStorage. Безопасность, а не лень
-              </li>
-              <li>
-                Фильтры: у PokeAPI нет query-фильтров, так что пересечения массивов считаем сами на
-                фронте
-              </li>
-              <li>
-                @ngrx/signals: «документация — моё почтение» (редкий комплимент в наших дневниках)
-              </li>
-              <li>Навели UX-красоту: тосты, скелетоны, Loader, радар на ECharts</li>
+              <li>Авторизация: HttpClient + InjectionToken, токен в сигнале — не в localStorage. Безопасность, а не лень</li>
+              <li>@ngrx/signals: «документация — моё почтение» (редкий комплимент в наших дневниках)</li>
+              <li>Фильтры: у PokeAPI нет query-фильтров, пересечения считаем на фронте</li>
             </ul>
-            <blockquote>
-              «Мы не CI/CD-пайплайн и не можем деплоиться 24/7.»
-              <span class="author">— Оксана, про баланс работы и жизни</span>
-            </blockquote>
+            <div class="screenshots two" style="margin-top: 0.5em">
+              <figure>
+                <img src="images/смена логики сервиса по смене языка.png" alt="LanguageSwitcher" />
+                <figcaption>25.05.2026 · Алексей переписал LanguageSwitcherService. Показал код — Оксана попросила показать кнопку. Алексей: «(» «а я то думал»</figcaption>
+              </figure>
+              <figure>
+                <img src="images/дисскучия по типизации транслоко.png" alt="дискуссия транслоко" />
+                <figcaption>25.05.2026 · Типы в Transloco: string[] vs LangDefinition[]. Павел в конце: «ёб*** сейчас поменяю»</figcaption>
+              </figure>
+            </div>
           </section>
 
+          <!-- Спринт 4 -->
           <section data-background-gradient="linear-gradient(160deg, #ffffff, #f3eaff)">
             <h2 class="violet">Спринт 4 · Неделя нейросетей</h2>
             <p class="subtitle">требования закрыли досрочно, поэтому каждый пошёл вайбить своё</p>
@@ -652,7 +763,7 @@
                 <h3>Павел × Kiro + Cursor</h3>
                 <ul>
                   <li>Спецификация в Kiro, разработка в Cursor</li>
-                  <li>Итог: тамагочи. И вывод: «за агентом надо следить и следить»</li>
+                  <li>Итог: тамагочи. Вывод: «за агентом надо следить и следить»</li>
                   <li>«Тупой вайбкодинг умеют все» — а мы по спецификации</li>
                 </ul>
               </div>
@@ -660,96 +771,45 @@
                 <h3>Оксана × Claude Code</h3>
                 <ul>
                   <li>Доработка профиля тренера</li>
-                  <li>Первый вариант от ИИ — в корзину: лишние &#64;if и ng-container</li>
+                  <li>Первый вариант от ИИ — в корзину: лишние @if и ng-container</li>
                   <li>«Это помощник, а не тот, кто пишет код вместо меня»</li>
                 </ul>
               </div>
             </div>
-            <blockquote>
-              «Если через пару месяцев я начну говорить „это надо завернуть в computed" — значит,
-              обучение прошло успешно.»
-              <span class="author">— Оксана</span>
-            </blockquote>
+            <div class="screenshots" style="margin-top: 0.5em; grid-template-columns: 1fr">
+              <figure>
+                <img src="images/шутка про Сасарика и ИИ.png" alt="Сасарик обучает нейросасарика" style="max-height: 260px" />
+                <figcaption>22.05.2026 · «Сасарик обучает нейросасарика ревьюить. Извините, не сдержалась» — Оксана</figcaption>
+              </figure>
+            </div>
           </section>
         </section>
 
-        <!-- 8. Хроники коммитов -->
+        <!-- ════════════════════════════════════════════════
+             9. ХРОНИКИ КОММИТОВ
+        ════════════════════════════════════════════════ -->
         <section data-background-gradient="linear-gradient(160deg, #ffffff, #eceef5)">
           <h2 class="blue">Хроники наших коммитов</h2>
           <p class="subtitle">git log помнит всё. Особенно то, что мы хотели бы забыть</p>
           <div class="commits">
-            <div>
-              <span class="sha">fix:</span> fix prettier mistakes
-              <span class="note">// prettier исправляет нас, мы — его</span>
-            </div>
-            <div>
-              <span class="sha">fix(core):</span> fix bugs according ai
-              <span class="note">// краткость — сестра</span>
-            </div>
-            <div>
-              <span class="sha">fix:</span> fix mistake in to tamagotchi link. refactor if else in
-              pokemon in pokemon tamamgotchi page template
-              <span class="note">// покемонов много не бывает</span>
-            </div>
-            <div>
-              <span class="sha">refactor:</span> extract magic numbers to constants
-              <span class="note">// ×3 — магию изгоняли трижды, как в хорошем экзорцизме</span>
-            </div>
-            <div>
-              <span class="sha">fix:</span> fix mistakes in tests according code review
-              <span class="note">// ревью писал не человек. Мы знаем, кто</span>
-            </div>
+            <div><span class="sha">fix:</span> fix prettier mistakes <span class="note">// prettier исправляет нас, мы — его</span></div>
+            <div><span class="sha">fix(core):</span> fix bugs according ai <span class="note">// краткость — сестра таланта</span></div>
+            <div><span class="sha">fix:</span> fix mistake in to tamagotchi link. refactor if else in pokemon in pokemon tamamgotchi page template <span class="note">// покемонов много не бывает</span></div>
+            <div><span class="sha">refactor:</span> extract magic numbers to constants <span class="note">// ×3 — магию изгоняли трижды, как в хорошем экзорцизме</span></div>
+            <div><span class="sha">fix:</span> fix mistakes in tests according code review <span class="note">// ревью писал не человек. Мы знаем, кто</span></div>
           </div>
           <ul style="margin-top: 0.8em">
-            <li>
-              114 из этих коммитов сделаны между полуночью и 5 утра — тёмная тема была выбором, а не
-              опцией
-            </li>
-            <li>
-              Мержи пережиты, конфликты решены: «Алексей просто бог и мне помог» (настоящая цитата
-              из дневника)
-            </li>
+            <li>127 из этих коммитов сделаны между полуночью и 5 утра — тёмная тема была выбором, а не опцией</li>
+            <li>Мержи пережиты: «Алексей просто бог и мне помог» (настоящая цитата из дневника Оксаны)</li>
           </ul>
         </section>
 
-        <!-- 9. Битвы -->
-        <section data-background-gradient="linear-gradient(160deg, #ffffff, #ffe9e2)">
-          <h2>Битвы, которые мы не выбирали</h2>
-          <p class="subtitle">финальный босс оказался не покемоном, а документацией</p>
-          <ul>
-            <li>
-              tuiTextfield «не как в примере»: полдня поисков → удалили всё → переписали с нуля →
-              работает. Почему? Тайна
-            </li>
-            <li>Карусель Taiga: без tuiCardMedium «застревает». Где об этом написано? Нигде</li>
-            <li>
-              ProgressCircle оборачивает подпись в &lt;label&gt; — ESLint в ярости. Обошли, правила
-              не отключали (принципиально)
-            </li>
-            <li>
-              Signal Forms + Taiga UI = «не поддерживается»: валидацию «тронутых» полей собрали
-              руками через validate()
-            </li>
-            <li>
-              Наш вывод: «не используй новую фичу фреймворка, если её не поддерживает твоя
-              UI-библиотека»
-            </li>
-          </ul>
-          <blockquote>
-            «Tandi, если меня услышишь: документация Taiga UI — полная шляпа. А документация Angular
-            — топ.»
-            <span class="author"
-              >— Павел, обращение к высшим силам (дважды официально, в письменной форме)</span
-            >
-          </blockquote>
-        </section>
-
-        <!-- 10. Сасарик -->
+        <!-- ════════════════════════════════════════════════
+             10. САСАРИК
+        ════════════════════════════════════════════════ -->
         <section data-background-gradient="linear-gradient(160deg, #ffffff, #f3eaff)">
           <h2 class="violet">Сасарик: человек-оркестр</h2>
-          <p class="subtitle">
-            номинально в команде — фактически устроил себе отдельный проект внутри нашего
-          </p>
+          <p class="subtitle">номинально в команде — фактически устроил себе отдельный проект внутри нашего</p>
           <div class="cards">
             <div class="card violet">
               <h3>🧙 Сасарик — ментор</h3>
@@ -763,9 +823,7 @@
               <h3>🧐 Клавдий — его AI-ревьюер</h3>
               <ul>
                 <li>«Проверяет PR и тыкает носом в каки»</li>
-                <li>
-                  «Уровень просмотра у него намного шире. По крайней мере, чем мой — так точно»
-                </li>
+                <li>«Уровень просмотра у него намного шире. По крайней мере, чем мой — так точно»</li>
                 <li>Аудиты, чеклисты, «правило „один issue на класс"»</li>
               </ul>
             </div>
@@ -778,70 +836,29 @@
               </ul>
             </div>
           </div>
-          <blockquote>
-            «До мёржа остался ровно ОДИН хвост 🐾 [...] Один коммит с чисткой двух JSON — и жму
-            APPROVE.»
-            <span class="author"
-              >— Сасарик держит интригу в PR #238. Гимн, который сейчас играет, — тоже в его
-              честь</span
-            >
-          </blockquote>
+          <div class="screenshots two" style="margin-top: 0.55em">
+            <figure>
+              <img src="images/шизобот и директивы.png" alt="шизобот объясняет директивы" />
+              <figcaption>20.05.2026 · Сасарик спросил шизобота про директивы на пайпах. Шизобот ответил в своём стиле</figcaption>
+            </figure>
+            <figure>
+              <img src="images/отзыв на шизобота.png" alt="отзыв на шизобота" />
+              <figcaption>20.05.2026 · Оксана ознакомилась с шизоботом и высказалась. Ёмко</figcaption>
+            </figure>
+          </div>
         </section>
 
-        <!-- 11. Танди -->
-        <section data-background-gradient="linear-gradient(160deg, #ffffff, #e6faf3)">
-          <h2 class="green">Танди — наш самый преданный читатель</h2>
-          <p class="subtitle">в титрах не значится, но получила 17 персональных обращений</p>
-          <ul>
-            <li>
-              «Никто не будет читать это, кроме меня и Танди» — и мы честно писали дневники для неё
-            </li>
-            <li>
-              Она получала: жалобы на Taiga UI (2 официальные), просьбы о рекламе (2), вопросы о
-              смысле дневников (1)
-            </li>
-            <li>
-              «Танди, напиши рецепт пирожного „Картошка". Всё равно, кроме тебя, никто читать не
-              будет»
-            </li>
-            <li>Рецепт так и не прислала. Мы всё помним. Счёт: обращений — 17, ответов — 0</li>
-            <li>
-              «Недоволен работой Tandi. Почему её не запустили на прошлой неделе?» — даже у
-              невидимых сущностей бывают выходные
-            </li>
-          </ul>
-          <blockquote>
-            «Давай, Танди, прорекламируй меня, если тебе понравилось!»
-            <span class="author"
-              >— наш тимлид. Эта презентация — та самая реклама. Танди, можешь отдыхать</span
-            >
-          </blockquote>
-        </section>
-
-        <!-- 12. Процессы -->
+        <!-- ════════════════════════════════════════════════
+             11. ПРОЦЕССЫ
+        ════════════════════════════════════════════════ -->
         <section data-background-gradient="linear-gradient(160deg, #ffffff, #eef2ff)">
           <h2 class="blue">Процессы, которые реально сработали</h2>
           <ul>
-            <li>
-              Канбан всерьёз: приоритеты, effort, sub-issues. Наш тимлид написал об этом «Сказ» на 4
-              часа 15 минут — читается лучше документации GitHub
-            </li>
-            <li>
-              Подготовка к интервью как шоу: колесо вопросов + колесо студентов. Ответил — твой шанс
-              выпасть снова падает. «Максимально интересно, не стрессово, очень весело»
-            </li>
-            <li>
-              Неформальные созвоны в Discord: именно там родились TUI_DARK_MODE, финальная директива
-              и половина дизайна
-            </li>
-            <li>
-              AI-ревью на каждом из 121 PR — Сасарик не спит. Вообще никогда. Мы проверяли по
-              таймстемпам
-            </li>
-            <li>
-              Дневники каждый спринт: тренировка слепой печати, психотерапия и — внезапно — источник
-              этой презентации
-            </li>
+            <li>Канбан всерьёз: приоритеты, effort, sub-issues. Наш тимлид написал об этом «Сказ» на 4 часа 15 минут — читается лучше документации GitHub</li>
+            <li>Подготовка к интервью как шоу: колесо вопросов + колесо студентов. «Максимально интересно, не стрессово, очень весело»</li>
+            <li>Неформальные созвоны в Discord: именно там родились TUI_DARK_MODE, финальная директива и половина дизайна</li>
+            <li>AI-ревью на каждом PR — Сасарик не спит. Вообще никогда. Мы проверяли по таймстемпам</li>
+            <li>Дневники каждый спринт: тренировка слепой печати, психотерапия и — внезапно — источник этой презентации</li>
           </ul>
           <blockquote>
             «Такие нежданчики мне нравятся.»
@@ -849,65 +866,238 @@
           </blockquote>
         </section>
 
-        <!-- 13. Итоги -->
+        <!-- ════════════════════════════════════════════════
+             14–18. АРХИТЕКТУРА (вертикальная стопка)
+        ════════════════════════════════════════════════ -->
+        <section>
+
+          <!-- 14. Заголовок секции -->
+          <section class="dark" data-background-gradient="radial-gradient(circle at 30% 70%, #1a2040, #0c1018)">
+            <h2 style="border-color: var(--poke-violet); color: #fff; font-size: 1.6em">Архитектура — за 10 минут</h2>
+            <p class="muted" style="font-size: 0.6em">диаграмма системы · три решения · одна история провала</p>
+            <p style="font-size: 0.55em; color: #8a8fa5; font-style: italic; margin-top: 0.8em">
+              Потому что «мы написали 50 000 строк» — это хорошо,<br>
+              но «почему так, а не иначе» — интереснее
+            </p>
+            <p class="accent hint" style="margin-top: 1em">Листайте вниз ↓</p>
+          </section>
+
+          <!-- 15. Диаграмма системы -->
+          <section data-background-gradient="linear-gradient(160deg, #ffffff, #eef2ff)">
+            <h2 class="blue">Система одним взглядом</h2>
+            <p class="subtitle">всё честно — без микросервисов, которых нет</p>
+            <div class="arch-wrap">
+              <div class="arch-client">
+                <strong>Browser · Angular 22 SPA</strong>
+                <span>69 компонентов · Signals · @ngrx/signals · OnPush · Taiga UI v5 · Transloco (ru/en)</span>
+              </div>
+              <div class="arch-arrows">
+                <span>↓ HTTP / httpResource()</span>
+                <span>↓ HTTP + JWT</span>
+                <span>↓ WebSocket</span>
+              </div>
+              <div class="arch-row">
+                <div class="arch-box api">
+                  <strong>PokeAPI</strong>
+                  <small>1 300+ покемонов<br>read-only · external</small>
+                </div>
+                <div class="arch-box backend">
+                  <strong>NestJS API</strong>
+                  <small>JWT auth<br>Bearer token</small>
+                </div>
+                <div class="arch-box realtime">
+                  <strong>PartyKit</strong>
+                  <small>Rooms · Broadcast<br>WebSocket · Frenzy</small>
+                </div>
+              </div>
+              <div style="color: var(--poke-muted); font-size: 0.55em">↑ shared contract</div>
+              <div class="arch-shared">
+                shared-game/ · @game/*
+                <small>Types · Config · Engine — работает и на клиенте, и на сервере</small>
+              </div>
+            </div>
+            <p style="font-size: 0.45em; color: var(--poke-muted); font-style: italic; margin-top: 0.6em; text-align: left">
+              Итого: три внешних точки интеграции, один контракт, ноль магических констант, рассыпанных по коду
+            </p>
+          </section>
+
+          <!-- 16. Решение 1: Mixed Form Paradigms -->
+          <section data-background-gradient="linear-gradient(160deg, #ffffff, #e8f6ec)">
+            <h2 class="green">Решение 1 · Два подхода к формам</h2>
+            <p class="subtitle">осознанный выбор, задокументированный в AGENTS.md — чтобы AI не переписывал «как надо»</p>
+            <div class="vs-row">
+              <div class="vs-chose">
+                <h4>✅ Выбрали</h4>
+                <strong>Смешанная парадигма</strong>
+                <ul style="margin-top: 0.3em">
+                  <li>login-form → Reactive Forms</li>
+                  <li>signup-form → Signal Forms (Angular 22)</li>
+                  <li>Обе реализации живут рядом как учебный пример</li>
+                </ul>
+              </div>
+              <div class="vs-label">vs</div>
+              <div class="vs-alt">
+                <h4>❌ Альтернатива</h4>
+                <strong>Один API везде</strong>
+                <ul style="margin-top: 0.3em">
+                  <li>Только Reactive Forms — стабильно</li>
+                  <li>Или только Signal Forms — современно</li>
+                  <li>Меньше сюрпризов при поддержке</li>
+                </ul>
+              </div>
+            </div>
+            <blockquote>
+              Почему так: RS School task требует показать оба подхода. Trade-off задокументирован — иначе каждый следующий разработчик (и каждый AI-агент) будет «починять» это как баг.
+              <span class="author">— и да, Клавдий действительно пытался это «починить». Один раз</span>
+            </blockquote>
+          </section>
+
+          <!-- 17. Решение 2: Transloco directive -->
+          <section data-background-gradient="linear-gradient(160deg, #ffffff, #fff3d6)">
+            <h2 class="gold">Решение 2 · Transloco: директива, не пайп</h2>
+            <p class="subtitle">спойлер: пайп тоже работает, но хуже</p>
+            <div class="vs-row">
+              <div class="vs-chose">
+                <h4>✅ Выбрали</h4>
+                <strong>*transloco директива</strong>
+                <ul style="margin-top: 0.3em">
+                  <li>Одна подписка на компонент</li>
+                  <li>Встроенный кеш и ленивая загрузка по скоупу</li>
+                  <li>t('key', params) — явно, без pipe-chain</li>
+                </ul>
+              </div>
+              <div class="vs-label">vs</div>
+              <div class="vs-alt">
+                <h4>❌ Альтернатива</h4>
+                <strong>| transloco pipe</strong>
+                <ul style="margin-top: 0.3em">
+                  <li>Пере-вычисляется на каждый CD цикл</li>
+                  <li>Нет встроенного кеша</li>
+                  <li>Чуть понятнее для новичков — и только</li>
+                </ul>
+              </div>
+            </div>
+            <p style="font-size: 0.54em; margin-top: 0.5em">
+              <strong>Бонус-факт:</strong> 583 ключа перевода × 2 языка. Если бы мы выбрали pipe — Angular CD при смене языка прошёлся бы по всем 583 ключам на каждом цикле. Директива считает один раз. Математика на нашей стороне.
+            </p>
+          </section>
+
+          <!-- 18. Решение 3: PartyKit + shared-game -->
+          <section data-background-gradient="linear-gradient(160deg, #ffffff, #f3eaff)">
+            <h2 class="violet">Решение 3 · PartyKit + @game контракт</h2>
+            <p class="subtitle">или: как не превратить реалтайм-игру в распределённый хаос</p>
+            <div class="vs-row">
+              <div class="vs-chose">
+                <h4>✅ Выбрали</h4>
+                <strong>PartyKit + shared-game/</strong>
+                <ul style="margin-top: 0.3em">
+                  <li>Room lifecycle, broadcast и WS «из коробки»</li>
+                  <li>Shared-game (@game) — один контракт для клиента и сервера</li>
+                  <li>Детерминированный движок работает на обеих сторонах одинаково</li>
+                </ul>
+              </div>
+              <div class="vs-label">vs</div>
+              <div class="vs-alt">
+                <h4>❌ Альтернатива</h4>
+                <strong>WebSocket на NestJS</strong>
+                <ul style="margin-top: 0.3em">
+                  <li>Самописное управление комнатами и сессиями</li>
+                  <li>Типы дублируются или живут в одном месте неудобно</li>
+                  <li>Намного больше инфраструктурного кода до первого пикселя</li>
+                </ul>
+              </div>
+            </div>
+            <p style="font-size: 0.5em; margin-top: 0.5em; color: var(--poke-muted)">
+              shared-game/ содержит только то, что нужно ОБЕИМ сторонам. Клиентская логика тамагочи и батлов — в features/, не в shared-game/. Это правило написано в AGENTS.md заглавными буквами — мы учились на собственных ошибках.
+            </p>
+          </section>
+
+          <!-- 19. История провала -->
+          <section data-background-gradient="linear-gradient(160deg, #ffffff, #ffe9e2)">
+            <h2>История провала · Signal Forms + Taiga UI</h2>
+            <p class="subtitle">реальная, незалакированная, с хеппи-эндом средней степени счастья</p>
+            <div class="failure-timeline">
+              <div class="failure-step">
+                <span class="ficon">💥</span>
+                <div class="ftext">
+                  <strong>Что сломалось</strong>
+                  Форма регистрации — Signal Forms (Angular 22). Taiga UI читает <code>control.touched</code> для показа ошибок. Проблема: с Signal Forms <code>markAsTouched()</code> не распространяется правильно — ошибки валидации появлялись сразу при загрузке страницы, на пустых нетронутых полях.
+                </div>
+              </div>
+              <div class="failure-step">
+                <span class="ficon">🔧</span>
+                <div class="ftext">
+                  <strong>Что пробовали</strong>
+                  Стандартные touched/invalid-гарды на полях. Разные Taiga-валидаторы. Полдня чтения документации Taiga UI (спойлер: Signal Forms там не упоминаются вообще). Клавдий предлагал варианты, мы их отклоняли.
+                </div>
+              </div>
+              <div class="failure-step">
+                <span class="ficon">🏳️</span>
+                <div class="ftext">
+                  <strong>Чем закончилось</strong>
+                  Ручной флаг <code>firstSubmit</code> + вызов <code>validate()</code> в обработчике сабмита. Работает. Не элегантно. Но работает — и это задокументировано в AGENTS.md, чтобы следующий разработчик не прошёл тот же путь.
+                </div>
+              </div>
+            </div>
+            <blockquote style="margin-top: 0.5em">
+              «Не используй новую фичу фреймворка, если её не поддерживает твоя UI-библиотека.»
+              <span class="author">— наш вывод, выбитый в камне. Или хотя бы в AGENTS.md</span>
+            </blockquote>
+          </section>
+
+        </section>
+
+        <!-- ════════════════════════════════════════════════
+             20. ИТОГИ
+        ════════════════════════════════════════════════ -->
         <section data-background-gradient="linear-gradient(160deg, #ffffff, #fff3d6)">
           <h2 class="gold">Итоги: «Победа»</h2>
           <p class="subtitle">иногда — «Победа, но послевкусие не очень». Но всё равно победа</p>
           <ul>
-            <li>
-              Все обязательные требования мы закрыли досрочно — к 3-му спринту. «Нет смысла ждать
-              4-й спринт, чтобы подключить HttpClient»
-            </li>
-            <li>
-              PokeDex: 1300+ покемонов, фильтры, профили, авторизация, темы, 566 ключей перевода на
-              два языка
-            </li>
-            <li>
-              Сверх программы — четыре игры: битва покемонов, тамагочи, маскот и реалтайм-Frenzy на
-              PartyKit (6 249 строк движка)
-            </li>
-            <li>
-              Освоили: signals, resource, httpResource, Signal Forms, @ngrx/signals, интерцепторы,
-              ECharts и четыре AI-инструмента
-            </li>
+            <li>Все обязательные требования закрыли досрочно — к 3-му спринту. «Нет смысла ждать 4-й спринт, чтобы подключить HttpClient»</li>
+            <li>PokeDex: 1300+ покемонов, фильтры, профили, авторизация, темы, 583 ключа перевода на два языка</li>
+            <li>Сверх программы — четыре игры: битва покемонов, тамагочи, маскот и реалтайм-Frenzy на PartyKit (~6 400 строк движка)</li>
+            <li>Освоили: signals, resource, httpResource, Signal Forms, @ngrx/signals, интерцепторы, ECharts и четыре AI-инструмента</li>
             <li>И главное — научились не верить ИИ на слово и заворачивать всё в computed</li>
           </ul>
           <blockquote>
-            «В общем не важно, как это сделано. Результат есть.»
-            <span class="author">— Павел, инженерная мудрость спринта 2</span>
+            «Если через пару месяцев я начну говорить „это надо завернуть в computed" — значит, обучение прошло успешно.»
+            <span class="author">— Оксана. Прошло успешно</span>
           </blockquote>
         </section>
 
-        <!-- 14. Финал -->
-        <section
-          class="dark"
-          data-background-gradient="radial-gradient(circle at 50% 20%, #333b5e, #171c2e)"
-        >
+        <!-- ════════════════════════════════════════════════
+             21. ФИНАЛ
+        ════════════════════════════════════════════════ -->
+        <section class="dark" data-background-gradient="radial-gradient(circle at 50% 20%, #333b5e, #171c2e)">
           <div class="pokeball"></div>
           <h1 style="font-size: 1.5em">Спасибо! (и пока, дневники)</h1>
           <p class="accent" style="font-size: 0.6em; font-style: italic">
             «Наконец-то последний дневник — и далее полная свобода от них! Закрыт гештальт!»
           </p>
           <p class="muted" style="font-size: 0.55em">
-            603 коммита · 121 PR · 4 игры · 17 дневников · 1 Сасарик в трёх лицах · 0 рецептов
-            «Картошки»
+            658 коммитов · ~130 PR · 4 игры · 17 дневников · 1 Сасарик в трёх лицах · 0 рецептов «Картошки»
           </p>
           <p class="muted" style="font-size: 0.5em">
-            🎵 Сейчас звучит наш гимн «Нейросасарик». Если нет — кнопка внизу слева.
+            🎵 Сейчас звучит наша песня «Нейросасарик». Если нет — кнопка внизу слева.
           </p>
-          <p class="fine">
-            github.com/ngKittyDebug/angular-ngKittyDebugLeft · доска:
-            github.com/orgs/ngKittyDebug/projects/2
-          </p>
-          <p class="fine">
-            Рецепт пирожного «Картошка» — в приложении к презентации. Наверное. Танди, ход за тобой.
-          </p>
+          <p class="fine">github.com/ngKittyDebug/angular-ngKittyDebugLeft · доска: github.com/orgs/ngKittyDebug/projects/2</p>
+          <p class="fine">Рецепт пирожного «Картошка» — в приложении к презентации. Наверное. Танди, ход за тобой.</p>
         </section>
+
       </div>
     </div>
 
+    <div id="lightbox">
+      <button id="lightbox-close" title="Закрыть">×</button>
+      <img id="lightbox-img" src="" alt="" />
+    </div>
+
     <audio id="anthem" src="neurosasarik.mp3" loop preload="auto"></audio>
-    <button id="music-toggle" type="button" title="Гимн «Нейросасарик»">🔇 Гимн</button>
+    <div id="music-controls">
+      <button id="music-toggle" type="button" title="Песня «Нейросасарик»">🔇 Песня</button>
+      <input id="volume-slider" type="range" min="0" max="100" value="35" title="Громкость" />
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/reveal.js"></script>
     <script>
@@ -921,19 +1111,25 @@
 
       const anthem = document.getElementById('anthem');
       const toggle = document.getElementById('music-toggle');
+      const volumeSlider = document.getElementById('volume-slider');
       anthem.volume = 0.35;
 
       function refreshToggle() {
-        toggle.textContent = anthem.paused ? '🔇 Гимн' : '🎵 Гимн';
+        toggle.textContent = anthem.paused ? '🔇 Песня' : '🎵 Песня';
       }
 
       toggle.addEventListener('click', (event) => {
         event.stopPropagation();
-        if (anthem.paused) {
-          anthem.play().catch(() => {});
-        } else {
-          anthem.pause();
-        }
+        anthem.paused ? anthem.play().catch(() => {}) : anthem.pause();
+      });
+
+      volumeSlider.addEventListener('input', (event) => {
+        event.stopPropagation();
+        anthem.volume = volumeSlider.value / 100;
+      });
+
+      volumeSlider.addEventListener('click', (event) => {
+        event.stopPropagation();
       });
 
       anthem.addEventListener('play', refreshToggle);
@@ -949,6 +1145,41 @@
       document.addEventListener('click', autostart, { capture: true });
       document.addEventListener('keydown', autostart, { capture: true });
       document.addEventListener('touchstart', autostart, { capture: true });
+
+      // Lightbox
+      const lightbox    = document.getElementById('lightbox');
+      const lightboxImg = document.getElementById('lightbox-img');
+      const lightboxClose = document.getElementById('lightbox-close');
+
+      function openLightbox(src, alt) {
+        lightboxImg.src = src;
+        lightboxImg.alt = alt;
+        lightbox.classList.add('open');
+      }
+
+      function closeLightbox(event) {
+        event.stopPropagation();
+        lightbox.classList.remove('open');
+        lightboxImg.src = '';
+      }
+
+      document.querySelectorAll('.screenshots img').forEach((img) => {
+        img.addEventListener('click', (event) => {
+          event.stopPropagation();
+          openLightbox(img.src, img.alt);
+        });
+      });
+
+      lightbox.addEventListener('click', closeLightbox);
+      lightboxClose.addEventListener('click', closeLightbox);
+      lightboxImg.addEventListener('click', (event) => event.stopPropagation());
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && lightbox.classList.contains('open')) {
+          lightbox.classList.remove('open');
+          lightboxImg.src = '';
+        }
+      });
     </script>
   </body>
 </html>
