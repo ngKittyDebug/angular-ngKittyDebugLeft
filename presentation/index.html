@@ -1097,7 +1097,7 @@
     <audio id="anthem" src="neurosasarik.mp3" loop preload="auto"></audio>
     <div id="music-controls">
       <button id="music-toggle" type="button" title="Песня «Нейросасарик»">🔇 Песня</button>
-      <input id="volume-slider" type="range" min="0" max="100" value="35" title="Громкость" />
+      <input id="volume-slider" type="range" min="0" max="100" value="5" title="Громкость" />
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/reveal.js"></script>
@@ -1113,7 +1113,7 @@
       const anthem = document.getElementById('anthem');
       const toggle = document.getElementById('music-toggle');
       const volumeSlider = document.getElementById('volume-slider');
-      anthem.volume = 0.35;
+      anthem.volume = 0.05;
 
       function refreshToggle() {
         toggle.textContent = anthem.paused ? '🔇 Песня' : '🎵 Песня';
