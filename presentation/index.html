@@ -947,7 +947,7 @@
               </div>
             </div>
             <blockquote>
-              Почему так: RS School task требует показать оба подхода. Trade-off задокументирован — иначе каждый следующий разработчик (и каждый AI-агент) будет «починять» это как баг.
+              Почему так: намеренный выбор — учебный пример обоих API рядом. Задокументирован в AGENTS.md как accepted trade-off, не tech debt — иначе каждый следующий разработчик (и каждый AI-агент) будет «починять» это как баг.
               <span class="author">— и да, Клавдий действительно пытался это «починить». Один раз</span>
             </blockquote>
           </section>
@@ -982,34 +982,35 @@
             </p>
           </section>
 
-          <!-- 18. Решение 3: PartyKit + shared-game -->
-          <section data-background-gradient="linear-gradient(160deg, #ffffff, #f3eaff)">
-            <h2 class="violet">Решение 3 · PartyKit + @game контракт</h2>
-            <p class="subtitle">или: как не превратить реалтайм-игру в распределённый хаос</p>
+          <!-- 18. Решение 3: фильтры на фронте -->
+          <section data-background-gradient="linear-gradient(160deg, #ffffff, #e8f6ec)">
+            <h2 class="green">Решение 3 · Фильтры там, где данные</h2>
+            <p class="subtitle">или: что делать, когда API не умеет фильтровать</p>
             <div class="vs-row">
               <div class="vs-chose">
                 <h4>✅ Выбрали</h4>
-                <strong>PartyKit + shared-game/</strong>
+                <strong>Один запрос + computed() на фронте</strong>
                 <ul style="margin-top: 0.3em">
-                  <li>Room lifecycle, broadcast и WS «из коробки»</li>
-                  <li>Shared-game (@game) — один контракт для клиента и сервера</li>
-                  <li>Детерминированный движок работает на обеих сторонах одинаково</li>
+                  <li>Загружаем всех 1300+ покемонов один раз</li>
+                  <li>Фильтры — пересечения массивов через <code>computed()</code></li>
+                  <li>Debounce + resource(): UI отзывчивый, запросов минимум</li>
                 </ul>
               </div>
               <div class="vs-label">vs</div>
               <div class="vs-alt">
                 <h4>❌ Альтернатива</h4>
-                <strong>WebSocket на NestJS</strong>
+                <strong>Прокси-бэкенд с фильтрацией</strong>
                 <ul style="margin-top: 0.3em">
-                  <li>Самописное управление комнатами и сессиями</li>
-                  <li>Типы дублируются или живут в одном месте неудобно</li>
-                  <li>Намного больше инфраструктурного кода до первого пикселя</li>
+                  <li>Свой сервер, который проксирует и фильтрует PokeAPI</li>
+                  <li>N запросов при каждом изменении фильтра</li>
+                  <li>Сложность выросла бы раза в три — ради той же цели</li>
                 </ul>
               </div>
             </div>
-            <p style="font-size: 0.5em; margin-top: 0.5em; color: var(--poke-muted)">
-              shared-game/ содержит только то, что нужно ОБЕИМ сторонам. Клиентская логика тамагочи и батлов — в features/, не в shared-game/. Это правило написано в AGENTS.md заглавными буквами — мы учились на собственных ошибках.
-            </p>
+            <blockquote style="margin-top: 0.6em">
+              «Дёшево и сердито» — 1300+ покемонов влезают в память, пересечения считаются мгновенно, бэкенд не нужен. Алексей придумал, все согласились.
+              <span class="author">— спринт 2, раздел «пагинация и поиск»</span>
+            </blockquote>
           </section>
 
           <!-- 19. История провала -->
