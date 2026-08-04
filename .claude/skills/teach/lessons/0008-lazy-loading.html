@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Урок 8 — Lazy Loading</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<p class="subtitle">Урок 8 из серии «Angular Interview Prep»</p>
+<h1>Lazy Loading</h1>
+<p class="subtitle">loadComponent, loadChildren, preload strategies, отладка.</p>
+
+<hr class="divider" />
+
+<h2>1. Что такое Lazy Loading?</h2>
+<p>
+  Lazy Loading — загрузка JS-бандла только тогда, когда пользователь переходит на маршрут.
+  Без него весь код загружается при первом открытии приложения.
+</p>
+<div class="card green">
+  <p><strong>Цель:</strong> уменьшить initial bundle, ускорить первую загрузку (Time to Interactive).</p>
+</div>
+
+<h2>2. Преимущества</h2>
+<div class="card">
+  <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border); color:var(--text-muted);">
+        <th style="text-align:left; padding:6px 12px 6px 0;">Без lazy loading</th>
+        <th style="text-align:left; padding:6px 12px;">С lazy loading</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Один большой main.js</td>
+        <td style="padding:8px 12px;">Маленький main.js + отдельные чанки</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Медленная первая загрузка</td>
+        <td style="padding:8px 12px;">Быстрый старт, чанки грузятся по требованию</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px 8px 0;">Весь код у всех пользователей</td>
+        <td style="padding:8px 12px;">Код грузится только тем, кто заходит на маршрут</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>3. loadComponent vs loadChildren</h2>
+<pre><code>// loadComponent — для отдельного standalone компонента
+{
+  path: 'about',
+  loadComponent: () =>
+    import('./features/about/about.component')
+      .then(m => m.AboutComponent),
+}
+
+// loadChildren — для массива маршрутов (feature routes)
+{
+  path: 'games',
+  loadChildren: () =>
+    import('./features/games/games.routes')
+      .then(m => m.GAMES_ROUTES),
+}
+
+// games.routes.ts
+export const GAMES_ROUTES: Routes = [
+  { path: '', component: GamesHubComponent },
+  { path: 'frenzy', loadComponent: () => import('./frenzy') },
+];</code></pre>
+<div class="card accent">
+  <span class="tag accent">Формула ответа</span>
+  <p>
+    <code>loadComponent</code> — для одного компонента.
+    <code>loadChildren</code> — для группы маршрутов (feature module без NgModule).
+    В современном Angular (standalone) <code>loadChildren</code> возвращает массив Routes, не NgModule.
+  </p>
+</div>
+
+<h2>4. Preload Strategies</h2>
+<p>
+  Preloading — загрузка lazy-чанков в фоне после первоначальной загрузки приложения.
+</p>
+<pre><code>// NoPreloading (дефолт) — грузит только при навигации
+provideRouter(routes, withNoPreloading())
+
+// PreloadAllModules — грузит ВСЕ lazy-маршруты в фоне
+provideRouter(routes, withPreloading(PreloadAllModules))
+
+// Custom strategy
+export class SelectivePreloadStrategy implements PreloadingStrategy {
+  preload(route: Route, load: () => Observable&lt;unknown&gt;) {
+    return route.data?.['preload'] ? load() : EMPTY;
+  }
+}
+// { path: 'about', loadComponent: ..., data: { preload: true } }</code></pre>
+
+<h2>5. Отладка проблем с lazy loading</h2>
+<div class="card">
+  <p><strong>Chrome DevTools → Network вкладка:</strong> фильтр по JS — видны chunk-файлы при навигации.</p>
+  <p style="margin-top:8px;"><strong>Ошибка «Cannot load chunk»:</strong> обычно — неверный путь в import() или опечатка в имени экспорта.</p>
+  <p style="margin-top:8px;"><strong>Ошибка «No component factory found»:</strong> компонент не standalone и не объявлен в NgModule.</p>
+  <p style="margin-top:8px;"><strong>Bundle analyzer:</strong> <code>ng build --stats-json</code> + webpack-bundle-analyzer для визуализации размера чанков.</p>
+</div>
+<div class="card accent">
+  <span class="tag orange">Ловушка на интервью</span>
+  <p>
+    Если сервис помечен <code>providedIn: 'root'</code>, он НЕ войдёт в lazy-чанк —
+    он будет в main bundle. Для сервиса, который нужен только одному lazy-маршруту,
+    используй <code>providers</code> в объекте маршрута.
+  </p>
+</div>
+
+<hr class="divider" />
+
+<h2>Проверь себя</h2>
+<p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:24px;">
+  Retrieval practice — не подглядывай в текст выше. Выбери один вариант.
+</p>
+
+<div class="quiz" id="q1">
+  <p class="quiz-question">1. Какова главная цель lazy loading в Angular-приложении?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Уменьшить количество HTTP-запросов к API сервера</button>
+    <button class="quiz-option" onclick="answer(this,'q1',true)">Уменьшить initial bundle и ускорить первую загрузку страницы</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Ускорить change detection за счёт разделения компонентов</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Позволить Angular выполнять рендеринг на стороне сервера</button>
+  </div>
+  <div class="quiz-feedback" id="q1-fb"></div>
+</div>
+
+<div class="quiz" id="q2">
+  <p class="quiz-question">2. Какое свойство маршрута загружает группу дочерних маршрутов лениво?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q2',false)">lazyLoad — загружает NgModule с объявленными маршрутами</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">loadComponent — загружает массив Routes для feature-маршрутов</button>
+    <button class="quiz-option" onclick="answer(this,'q2',true)">loadChildren — возвращает массив Routes или NgModule</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">children — статически объявляет дочерние маршруты компонента</button>
+  </div>
+  <div class="quiz-feedback" id="q2-fb"></div>
+</div>
+
+<div class="quiz" id="q3">
+  <p class="quiz-question">3. Что делает стратегия PreloadAllModules?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Загружает все модули до первой навигации пользователя</button>
+    <button class="quiz-option" onclick="answer(this,'q3',true)">Загружает все lazy-чанки в фоне после первоначального старта</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Загружает только ближайшие по ссылкам маршруты фоном</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Отключает lazy loading для всех маршрутов приложения</button>
+  </div>
+  <div class="quiz-feedback" id="q3-fb"></div>
+</div>
+
+<div class="quiz" id="q4">
+  <p class="quiz-question">4. Сервис с providedIn: 'root' попадёт в lazy-чанк маршрута?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q4',false)">Да — Angular tree-shaking добавит его только в нужный чанк</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">Да — если сервис используется только в lazy-компоненте</button>
+    <button class="quiz-option" onclick="answer(this,'q4',true)">Нет — providedIn: 'root' всегда попадает в main bundle</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">Нет — providedIn: 'root' вообще не включается в бандл</button>
+  </div>
+  <div class="quiz-feedback" id="q4-fb"></div>
+</div>
+
+<hr class="divider" />
+
+<div class="source-link">
+  <strong>Первоисточник:</strong>
+  <a href="https://angular.dev/guide/routing/lazy-loading" target="_blank">angular.dev — Lazy loading</a>
+  — официальный гайд с примерами loadComponent, loadChildren, preloading strategies.
+</div>
+
+<div class="ask-teacher">
+  <strong>Есть вопрос?</strong> Спроси прямо здесь, в чате. Учитель рядом — объяснит, уточнит или покажет пример из твоего реального кода.
+</div>
+
+<div class="nav-links">
+  <a href="0007-routing.html">← Урок 7: Routing</a>
+  <span style="color:var(--text-muted); margin:0 8px;">·</span>
+  <a href="0009-signals-advanced.html">Урок 9: Signals — продвинутый →</a>
+</div>
+
+<script>
+  const feedback = {
+    q1: {
+      true: 'Верно. Главная цель — меньший initial bundle → быстрее Time to Interactive при первой загрузке.',
+      false: 'Нет. Lazy loading делит JS-бандл, не HTTP-запросы к API. Change detection и SSR — отдельные темы.'
+    },
+    q2: {
+      true: 'Верно. loadChildren — для группы маршрутов. В standalone-мире возвращает Routes[], не NgModule.',
+      false: 'Нет. loadComponent — для одного компонента. children — статические дочерние маршруты. lazyLoad — не существует.'
+    },
+    q3: {
+      true: 'Верно. PreloadAllModules грузит все lazy-чанки в фоне после старта приложения — компромисс между NoPreloading и eager loading.',
+      false: 'Нет. Загрузка до навигации — это eager loading, не preloading. PreloadAllModules работает в фоне после старта.'
+    },
+    q4: {
+      true: 'Верно. providedIn: "root" всегда попадает в main bundle. Для lazy-изоляции — providers в объекте маршрута или providedIn: "any".',
+      false: 'Нет. providedIn: "root" — это root injector, main bundle. Tree-shaking удаляет неиспользуемые сервисы, но не перемещает их в чанки.'
+    },
+  };
+
+  function answer(btn, qId, isCorrect) {
+    const container = document.getElementById(qId);
+    const allBtns = container.querySelectorAll('.quiz-option');
+    allBtns.forEach(b => { b.disabled = true; });
+    btn.classList.add(isCorrect ? 'correct' : 'wrong');
+    const fb = document.getElementById(qId + '-fb');
+    fb.textContent = feedback[qId][String(isCorrect)];
+    fb.className = 'quiz-feedback show ' + (isCorrect ? 'correct' : 'wrong');
+  }
+</script>
+
+</body>
+</html>

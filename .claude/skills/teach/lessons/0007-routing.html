@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Урок 7 — Routing</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<p class="subtitle">Урок 7 из серии «Angular Interview Prep»</p>
+<h1>Routing</h1>
+<p class="subtitle">Маршруты, параметры, child routes, guards, ActivatedRoute.</p>
+
+<hr class="divider" />
+
+<h2>1. Что такое Routing?</h2>
+<p>
+  Angular Router — встроенный механизм навигации. Сопоставляет URL с компонентами,
+  рендерит их в <code>&lt;router-outlet&gt;</code>, поддерживает историю браузера,
+  lazy loading и guards.
+</p>
+
+<h2>2. Базовая настройка</h2>
+<pre><code>// app.routes.ts
+export const routes: Routes = [
+  { path: '', component: HomeComponent },
+  { path: 'about', loadComponent: () =>
+      import('./features/about/about.component').then(m => m.AboutComponent) },
+  { path: '**', component: NotFoundComponent },
+];
+
+// app.config.ts
+export const appConfig: ApplicationConfig = {
+  providers: [provideRouter(routes)],
+};
+
+// app.component.html
+&lt;router-outlet /&gt;</code></pre>
+
+<h2>3. Route parameters и queryParams</h2>
+<pre><code>// routes
+{ path: 'pokemon/:id', component: PokemonProfileComponent }
+
+// навигация
+router.navigate(['/pokemon', 42]);
+router.navigate(['/pokemon', 42], { queryParams: { tab: 'stats' } });
+// URL: /pokemon/42?tab=stats
+
+// чтение в компоненте
+export class PokemonProfileComponent {
+  private route = inject(ActivatedRoute);
+
+  // Signal API (Angular 16+)
+  protected id = this.route.snapshot.params['id'];
+
+  // реактивно
+  protected id$ = this.route.paramMap.pipe(map(p => p.get('id')));
+}</code></pre>
+
+<h2>4. Child routes</h2>
+<pre><code>export const routes: Routes = [
+  {
+    path: 'games',
+    component: GamesHubComponent,
+    children: [
+      { path: 'frenzy', loadComponent: () => import('./frenzy') },
+      { path: 'tamagotchi', loadComponent: () => import('./tamagotchi') },
+    ],
+  },
+];
+
+// GamesHubComponent template:
+// &lt;router-outlet /&gt; — сюда рендерятся дочерние маршруты</code></pre>
+
+<h2>5. Route Guards</h2>
+<pre><code>// auth.guard.ts
+export const authGuard: CanActivateFn = (route, state) => {
+  const router = inject(Router);
+  const isLoggedIn = !!localStorage.getItem('loginFormData');
+
+  return isLoggedIn
+    ? true
+    : router.createUrlTree(['/auth/login'], {
+        queryParams: { returnUrl: state.url },
+      });
+};
+
+// routes
+{ path: 'profile', component: ProfileComponent, canActivate: [authGuard] }
+
+// CanDeactivate — предотвращает уход со страницы
+export const unsavedChangesGuard: CanDeactivateFn&lt;FormComponent&gt; =
+  (component) => component.hasUnsavedChanges()
+    ? confirm('Есть несохранённые изменения. Уйти?')
+    : true;</code></pre>
+
+<h2>6. Порядок выполнения guards</h2>
+<div class="card">
+  <p>
+    При нескольких guards на одном маршруте Angular выполняет их <strong>параллельно</strong>
+    (если все возвращают Observable/Promise) и ждёт всех. Если хотя бы один вернул <code>false</code>
+    или <code>UrlTree</code> — навигация блокируется.
+  </p>
+</div>
+<div class="card accent">
+  <span class="tag orange">Ловушка на интервью</span>
+  <p>
+    Порядок guards в массиве <code>canActivate: [guardA, guardB]</code> не гарантирует
+    последовательного выполнения. Для гарантированной последовательности — один guard,
+    который внутри вызывает логику по очереди.
+  </p>
+</div>
+
+<h2>7. ActivatedRoute</h2>
+<pre><code>export class DetailComponent {
+  private route = inject(ActivatedRoute);
+
+  // Snapshot — текущее состояние, не реактивно
+  protected id = this.route.snapshot.paramMap.get('id');
+  protected tab = this.route.snapshot.queryParamMap.get('tab');
+
+  // Observable — реактивно при навигации внутри одного компонента
+  protected id$ = this.route.paramMap.pipe(map(p => p.get('id')));
+
+  // Данные из resolve
+  protected data = this.route.snapshot.data['user'];
+}</code></pre>
+<div class="card accent">
+  <span class="tag accent">Snapshot vs Observable</span>
+  <p>
+    <code>snapshot</code> — используй, если компонент не переиспользуется при навигации
+    между параметрами одного маршрута (напр. <code>/pokemon/1</code> → <code>/pokemon/2</code>).
+    <code>paramMap$</code> — для реактивного обновления без пересоздания компонента.
+  </p>
+</div>
+
+<hr class="divider" />
+
+<h2>Проверь себя</h2>
+<p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:24px;">
+  Retrieval practice — не подглядывай в текст выше. Выбери один вариант.
+</p>
+
+<div class="quiz" id="q1">
+  <p class="quiz-question">1. Где Angular рендерит активный компонент маршрута?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q1',false)">&lt;ng-content&gt; — слот контента родительского компонента</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">&lt;app-root&gt; — корневой элемент приложения Angular</button>
+    <button class="quiz-option" onclick="answer(this,'q1',true)">&lt;router-outlet&gt; — placeholder для компонентов маршрутов</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">&lt;ng-template&gt; — шаблон для динамического рендеринга</button>
+  </div>
+  <div class="quiz-feedback" id="q1-fb"></div>
+</div>
+
+<div class="quiz" id="q2">
+  <p class="quiz-question">2. Как получить параметр :id из URL в компоненте?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q2',true)">inject(ActivatedRoute).snapshot.paramMap.get('id')</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">inject(Router).currentRoute.params['id']</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">inject(Location).path().split('/').pop()</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">inject(ActivatedRoute).url.segment[1].path</button>
+  </div>
+  <div class="quiz-feedback" id="q2-fb"></div>
+</div>
+
+<div class="quiz" id="q3">
+  <p class="quiz-question">3. CanActivate guard вернул UrlTree. Что произойдёт?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Навигация продолжится, UrlTree игнорируется как truthy</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Angular выбросит ошибку — guard должен возвращать boolean</button>
+    <button class="quiz-option" onclick="answer(this,'q3',true)">Текущая навигация отменится, Router перейдёт на UrlTree</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Навигация заблокируется, перехода никуда не произойдёт</button>
+  </div>
+  <div class="quiz-feedback" id="q3-fb"></div>
+</div>
+
+<div class="quiz" id="q4">
+  <p class="quiz-question">4. Когда использовать route.paramMap$ вместо snapshot?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q4',false)">Всегда — snapshot устарел и не рекомендуется Angular командой</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">Когда параметр содержит спецсимволы или кириллицу в URL</button>
+    <button class="quiz-option" onclick="answer(this,'q4',true)">Когда компонент не пересоздаётся при смене параметра маршрута</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">Когда маршрут содержит child routes с собственным outlet</button>
+  </div>
+  <div class="quiz-feedback" id="q4-fb"></div>
+</div>
+
+<div class="quiz" id="q5">
+  <p class="quiz-question">5. Как выполняются guards canActivate: [guardA, guardB]?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q5',false)">Последовательно: guardB запускается только после успеха guardA</button>
+    <button class="quiz-option" onclick="answer(this,'q5',true)">Параллельно: оба запускаются сразу, ждут всех результатов</button>
+    <button class="quiz-option" onclick="answer(this,'q5',false)">Только первый guard — второй выполняется при повторной навигации</button>
+    <button class="quiz-option" onclick="answer(this,'q5',false)">Случайно: порядок определяется скоростью ответа каждого guard</button>
+  </div>
+  <div class="quiz-feedback" id="q5-fb"></div>
+</div>
+
+<hr class="divider" />
+
+<div class="source-link">
+  <strong>Первоисточник:</strong>
+  <a href="https://angular.dev/guide/routing" target="_blank">angular.dev — Routing</a>
+  — полный гайд: lazy loading, guards, resolvers, redirects, hash strategy.
+</div>
+
+<div class="ask-teacher">
+  <strong>Есть вопрос?</strong> Спроси прямо здесь, в чате. Учитель рядом — объяснит, уточнит или покажет пример из твоего реального кода.
+</div>
+
+<div class="nav-links">
+  <a href="0006-lifecycle-hooks.html">← Урок 6: Lifecycle hooks</a>
+  <span style="color:var(--text-muted); margin:0 8px;">·</span>
+  <a href="0008-lazy-loading.html">Урок 8: Lazy Loading →</a>
+</div>
+
+<script>
+  const feedback = {
+    q1: {
+      true: 'Верно. <router-outlet> — placeholder: Angular вставляет туда компонент активного маршрута.',
+      false: 'Нет. ng-content — для контент-проекции, app-root — корень приложения, ng-template — не рендерится сам по себе.'
+    },
+    q2: {
+      true: 'Верно. inject(ActivatedRoute).snapshot.paramMap.get("id") — синхронное чтение параметра в момент создания компонента.',
+      false: 'Нет. Router.currentRoute не существует. Location.path() — для URL-строки. ActivatedRoute.url.segment — нестандартный API.'
+    },
+    q3: {
+      true: 'Верно. UrlTree — способ редиректа из guard: навигация отменяется, Router переходит на указанный URL.',
+      false: 'Нет. UrlTree не truthy и не ошибка. Это официальный способ сделать redirect из guard (вместо router.navigate внутри guard).'
+    },
+    q4: {
+      true: 'Верно. Если Angular повторно использует тот же компонент при /pokemon/1 → /pokemon/2, snapshot не обновляется — нужен paramMap$.',
+      false: 'Нет. snapshot актуален и рекомендован, когда компонент пересоздаётся. paramMap$ нужен при reuse компонента.'
+    },
+    q5: {
+      true: 'Верно. canActivate guards выполняются параллельно. Если любой вернёт false/UrlTree — навигация блокируется.',
+      false: 'Нет. Guards в массиве запускаются параллельно, не последовательно. Для последовательности — один guard с внутренней логикой.'
+    },
+  };
+
+  function answer(btn, qId, isCorrect) {
+    const container = document.getElementById(qId);
+    const allBtns = container.querySelectorAll('.quiz-option');
+    allBtns.forEach(b => { b.disabled = true; });
+    btn.classList.add(isCorrect ? 'correct' : 'wrong');
+    const fb = document.getElementById(qId + '-fb');
+    fb.textContent = feedback[qId][String(isCorrect)];
+    fb.className = 'quiz-feedback show ' + (isCorrect ? 'correct' : 'wrong');
+  }
+</script>
+
+</body>
+</html>

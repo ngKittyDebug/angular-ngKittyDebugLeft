@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Урок 11 — Change Detection</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<p class="subtitle">Урок 11 из серии «Angular Interview Prep»</p>
+<h1>Change Detection</h1>
+<p class="subtitle">Default vs OnPush, markForCheck vs detectChanges, Signals и CD.</p>
+
+<hr class="divider" />
+
+<h2>1. Что такое Change Detection?</h2>
+<p>
+  Change Detection (CD) — механизм Angular, который синхронизирует состояние компонентов с DOM.
+  После каждого browser event, HTTP-ответа, таймера Angular обходит дерево компонентов
+  и перерисовывает те, чьё состояние изменилось.
+</p>
+
+<h2>2. Стратегии: Default vs OnPush</h2>
+<div class="card">
+  <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border); color:var(--text-muted);">
+        <th style="text-align:left; padding:6px 12px 6px 0;">Default</th>
+        <th style="text-align:left; padding:6px 12px;">OnPush</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Проверяет при ЛЮБОМ событии</td>
+        <td style="padding:8px 12px;">Проверяет только при триггерах</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Просто, предсказуемо</td>
+        <td style="padding:8px 12px;">Производительнее для больших деревьев</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px 8px 0;">Подходит для простых приложений</td>
+        <td style="padding:8px 12px;">Обязателен в серьёзных проектах</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>3. Когда Angular проверяет OnPush компонент?</h2>
+<div class="card green">
+  <p>OnPush компонент перепроверяется при следующих условиях:</p>
+  <ol style="margin-top: 8px; padding-left: 20px; line-height: 2;">
+    <li>Изменилась <strong>ссылка</strong> на @Input() (не значение внутри объекта)</li>
+    <li>Произошло <strong>событие</strong> внутри компонента или его потомков (click, keyup...)</li>
+    <li>Сработал <strong>async pipe</strong> в шаблоне</li>
+    <li>Вручную вызван <strong>markForCheck()</strong> или <strong>detectChanges()</strong></li>
+    <li>Изменился <strong>Signal</strong>, читаемый в шаблоне</li>
+  </ol>
+</div>
+<div class="card accent">
+  <span class="tag orange">Ловушка на интервью</span>
+  <p>
+    При OnPush: <code>this.items.push(newItem)</code> — мутация массива — <strong>не триггерит CD</strong>,
+    потому что ссылка на массив не изменилась. Нужно: <code>this.items = [...this.items, newItem]</code>.
+  </p>
+</div>
+
+<h2>4. markForCheck() vs detectChanges()</h2>
+<div class="card">
+  <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border); color:var(--text-muted);">
+        <th style="text-align:left; padding:6px 12px 6px 0;">markForCheck()</th>
+        <th style="text-align:left; padding:6px 12px;">detectChanges()</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Помечает компонент и предков</td>
+        <td style="padding:8px 12px;">Запускает CD немедленно для поддерева</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Асинхронно — при следующем CD-цикле</td>
+        <td style="padding:8px 12px;">Синхронно — прямо сейчас</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px 8px 0;">Предпочтительно для большинства случаев</td>
+        <td style="padding:8px 12px;">Для критичных к времени UI-обновлений</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<pre><code>export class MyComponent {
+  private cdr = inject(ChangeDetectorRef);
+
+  // В callback из сторонней библиотеки (вне Zone.js):
+  onExternalUpdate() {
+    this.data = newData;
+    this.cdr.markForCheck(); // предпочтительно
+    // или
+    this.cdr.detectChanges(); // если нужно немедленно
+  }
+}</code></pre>
+
+<h2>5. Signals и Change Detection</h2>
+<p>
+  С Signals не нужны ни <code>markForCheck()</code>, ни <code>detectChanges()</code>.
+  Angular отслеживает, какие сигналы читаются в шаблоне, и при изменении сигнала
+  автоматически планирует обновление нужных компонентов — даже с OnPush.
+</p>
+<pre><code>@Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `&lt;p&gt;{{ count() }}&lt;/p&gt;`,
+})
+export class Counter {
+  count = signal(0);
+
+  // Сигнал изменился → Angular сам перерисует → markForCheck не нужен
+  increment() { this.count.update(n => n + 1); }
+}</code></pre>
+
+<hr class="divider" />
+
+<h2>Проверь себя</h2>
+<p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:24px;">
+  Retrieval practice — не подглядывай в текст выше. Выбери один вариант.
+</p>
+
+<div class="quiz" id="q1">
+  <p class="quiz-question">1. При стратегии OnPush какое изменение @Input() ТРИГГЕРИТ перепроверку?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Мутация свойства объекта: this.user.name = 'Oksana'</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Добавление элемента в массив через push() без замены ссылки</button>
+    <button class="quiz-option" onclick="answer(this,'q1',true)">Замена ссылки: передача нового объекта { ...user, name: 'Oksana' }</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Изменение вложенного объекта через JSON.parse(JSON.stringify(obj))</button>
+  </div>
+  <div class="quiz-feedback" id="q1-fb"></div>
+</div>
+
+<div class="quiz" id="q2">
+  <p class="quiz-question">2. Чем markForCheck() отличается от detectChanges()?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q2',false)">markForCheck() проверяет только дочерние компоненты текущего</button>
+    <button class="quiz-option" onclick="answer(this,'q2',true)">markForCheck() — асинхронно при следующем цикле, detectChanges() — немедленно</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">detectChanges() только помечает, markForCheck() запускает проверку</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">markForCheck() работает с Signals, detectChanges() только с Observable</button>
+  </div>
+  <div class="quiz-feedback" id="q2-fb"></div>
+</div>
+
+<div class="quiz" id="q3">
+  <p class="quiz-question">3. Компонент с OnPush: данные пришли через Observable в callback. Что нужно?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Ничего — Angular автоматически видит все изменения в приложении</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Переключить стратегию на Default для этого компонента</button>
+    <button class="quiz-option" onclick="answer(this,'q3',true)">Вызвать markForCheck() или detectChanges() из ChangeDetectorRef</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Использовать NgZone.run() — тогда CD сработает автоматически</button>
+  </div>
+  <div class="quiz-feedback" id="q3-fb"></div>
+</div>
+
+<div class="quiz" id="q4">
+  <p class="quiz-question">4. Нужен ли markForCheck() при использовании Signals в OnPush компоненте?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q4',false)">Да — Signals не интегрированы с OnPush change detection</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">Да — только при обновлении сигнала вне injection context</button>
+    <button class="quiz-option" onclick="answer(this,'q4',true)">Нет — Angular сам отслеживает сигналы и обновляет компонент</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">Нет — но нужен detectChanges() для немедленного обновления DOM</button>
+  </div>
+  <div class="quiz-feedback" id="q4-fb"></div>
+</div>
+
+<div class="quiz" id="q5">
+  <p class="quiz-question">5. async pipe в шаблоне OnPush компонента — триггерит ли CD?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q5',false)">Нет — async pipe не влияет на CD при стратегии OnPush</button>
+    <button class="quiz-option" onclick="answer(this,'q5',false)">Нет — нужно вручную вызвать markForCheck() в subscribe</button>
+    <button class="quiz-option" onclick="answer(this,'q5',true)">Да — async pipe вызывает markForCheck() автоматически при новом значении</button>
+    <button class="quiz-option" onclick="answer(this,'q5',false)">Да — но только если Observable создан через HttpClient Angular</button>
+  </div>
+  <div class="quiz-feedback" id="q5-fb"></div>
+</div>
+
+<hr class="divider" />
+
+<div class="source-link">
+  <strong>Первоисточник:</strong>
+  <a href="https://angular.dev/best-practices/skipping-subtrees" target="_blank">angular.dev — Optimizing with OnPush</a>
+  — официальное руководство по стратегиям CD и оптимизации производительности.
+</div>
+
+<div class="ask-teacher">
+  <strong>Есть вопрос?</strong> Спроси прямо здесь, в чате. Учитель рядом — объяснит, уточнит или покажет пример из твоего реального кода.
+</div>
+
+<div class="nav-links">
+  <a href="0010-directives-basics.html">← Урок 10: Directives — базовые</a>
+  <span style="color:var(--text-muted); margin:0 8px;">·</span>
+  <a href="0012-dependency-injection.html">Урок 12: Dependency Injection →</a>
+</div>
+
+<script>
+  const feedback = {
+    q1: {
+      true: 'Верно. OnPush сравнивает ссылки. Новый объект { ...user, name: "Oksana" } — новая ссылка → CD запускается.',
+      false: 'Нет. Мутация (user.name = "Oksana", push()) не меняет ссылку → OnPush не видит изменения. Нужна новая ссылка.'
+    },
+    q2: {
+      true: 'Верно. markForCheck() планирует проверку в следующем CD-цикле. detectChanges() запускает CD немедленно синхронно.',
+      false: 'Нет. markForCheck() помечает компонент И предков. detectChanges() — синхронный запуск. Они не связаны с Signals или Observable.'
+    },
+    q3: {
+      true: 'Верно. Observable callback может выполняться вне Zone.js. Angular не узнает об изменении без markForCheck() или detectChanges().',
+      false: 'Нет. Переключение на Default — плохое решение. NgZone.run() тоже вариант, но markForCheck() предпочтительнее.'
+    },
+    q4: {
+      true: 'Верно. Signals интегрированы с CD: Angular отслеживает зависимости в шаблоне и обновляет OnPush-компонент автоматически.',
+      false: 'Нет. Signals и OnPush работают в паре без ручных вызовов. Это одно из ключевых преимуществ Signal-based архитектуры.'
+    },
+    q5: {
+      true: 'Верно. async pipe вызывает markForCheck() при каждом новом значении из Observable/Promise — это часть его реализации.',
+      false: 'Нет. async pipe встроено вызывает markForCheck(). Это именно поэтому он так хорошо работает с OnPush.'
+    },
+  };
+
+  function answer(btn, qId, isCorrect) {
+    const container = document.getElementById(qId);
+    const allBtns = container.querySelectorAll('.quiz-option');
+    allBtns.forEach(b => { b.disabled = true; });
+    btn.classList.add(isCorrect ? 'correct' : 'wrong');
+    const fb = document.getElementById(qId + '-fb');
+    fb.textContent = feedback[qId][String(isCorrect)];
+    fb.className = 'quiz-feedback show ' + (isCorrect ? 'correct' : 'wrong');
+  }
+</script>
+
+</body>
+</html>

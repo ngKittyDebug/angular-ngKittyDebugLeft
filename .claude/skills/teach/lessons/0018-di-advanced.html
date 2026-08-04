@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Урок 18 — DI: продвинутый</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<p class="subtitle">Урок 18 из серии «Angular Interview Prep»</p>
+<h1>Dependency Injection — продвинутый</h1>
+<p class="subtitle">useClass/useValue/useFactory, InjectionToken, @Optional/@Self/@SkipSelf, multi, forwardRef.</p>
+
+<hr class="divider" />
+
+<h2>1. useClass, useValue, useFactory</h2>
+<pre><code>// useClass — подменить реализацию
+providers: [
+  { provide: LogService, useClass: ConsoleLogService },
+  // или для тестов:
+  { provide: LogService, useClass: MockLogService },
+]
+
+// useValue — конфигурация или константы
+providers: [
+  { provide: API_URL, useValue: 'https://api.example.com' },
+]
+
+// useFactory — динамическое создание (может инжектить зависимости)
+providers: [
+  {
+    provide: FeatureFlags,
+    useFactory: (http: HttpClient) => new FeatureFlags(http, environment.flagsUrl),
+    deps: [HttpClient],
+  },
+]</code></pre>
+
+<h2>2. InjectionToken</h2>
+<pre><code>// Токен для non-class значений:
+export const API_URL = new InjectionToken&lt;string&gt;('API_URL');
+
+// Регистрация:
+providers: [{ provide: API_URL, useValue: 'https://api.example.com' }]
+
+// Инжекция:
+export class ApiService {
+  private url = inject(API_URL);
+}</code></pre>
+<div class="card accent">
+  <span class="tag accent">Зачем InjectionToken?</span>
+  <p>
+    Классы сами служат токенами DI. Но для строк, чисел, объектов нужен токен.
+    <code>InjectionToken&lt;T&gt;</code> типизирован — TypeScript знает тип значения при inject().
+  </p>
+</div>
+
+<h2>3. @Optional, @Self, @SkipSelf</h2>
+<pre><code>export class MyComponent {
+  // @Optional — не выбросит ошибку если зависимость не найдена
+  private logger = inject(LogService, { optional: true });
+
+  // @Self — ищет только в injector текущего компонента
+  private service = inject(MyService, { self: true });
+
+  // @SkipSelf — пропускает injector текущего компонента
+  private parent = inject(MyService, { skipSelf: true });
+}</code></pre>
+<div class="card">
+  <p>
+    В современном Angular <code>inject(Token, { optional: true, self: true, skipSelf: true, host: true })</code>
+    заменяет декораторы <code>@Optional(), @Self(), @SkipSelf(), @Host()</code>.
+  </p>
+</div>
+
+<h2>4. multi-provider</h2>
+<pre><code>// Несколько провайдеров для одного токена
+export const HTTP_INTERCEPTORS = new InjectionToken&lt;HttpInterceptorFn[]&gt;('...');
+
+providers: [
+  { provide: HTTP_INTERCEPTORS, useValue: authInterceptor, multi: true },
+  { provide: HTTP_INTERCEPTORS, useValue: loggingInterceptor, multi: true },
+]
+
+// inject вернёт массив:
+const interceptors = inject(HTTP_INTERCEPTORS); // [authFn, loggingFn]</code></pre>
+<p>Angular использует multi для HTTP_INTERCEPTORS, APP_INITIALIZER, LOCALE_ID и других системных токенов.</p>
+
+<h2>5. forwardRef</h2>
+<pre><code>// Проблема: A зависит от B, B объявлен ниже A в файле
+@Component({
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: forwardRef(() => MyInputComponent), // компонент ещё не объявлен
+      multi: true,
+    },
+  ],
+})
+export class MyInputComponent { }</code></pre>
+<div class="card accent">
+  <span class="tag orange">Ловушка на интервью</span>
+  <p>
+    <code>forwardRef</code> нужен когда ссылаешься на класс, который ещё не объявлен
+    в JavaScript — обычно при circular dependency или когда компонент ссылается на себя в декораторе
+    (например, регистрируя себя как ControlValueAccessor через <code>useExisting</code>).
+  </p>
+</div>
+
+<h2>6. Иерархия инжекторов</h2>
+<pre><code>// Поиск зависимости идёт снизу вверх:
+// Element Injector (компонент) → Parent Element Injectors → Module Injector → Root Injector → Platform Injector → NULL
+
+// Пример: компонент имеет свой экземпляр MyService:
+@Component({
+  providers: [MyService], // свой injector
+})
+export class ChildComponent {
+  private s = inject(MyService); // найдёт в своём, не в root
+}</code></pre>
+
+<hr class="divider" />
+
+<h2>Проверь себя</h2>
+<p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:24px;">
+  Retrieval practice — не подглядывай в текст выше. Выбери один вариант.
+</p>
+
+<div class="quiz" id="q1">
+  <p class="quiz-question">1. Когда нужен InjectionToken вместо класса как токена?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Когда сервис должен быть синглтоном в масштабе приложения</button>
+    <button class="quiz-option" onclick="answer(this,'q1',true)">Когда значение — строка, число, объект конфигурации — не класс</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Когда сервис используется только в одном компоненте приложения</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Когда нужно ленивое создание зависимости при первом использовании</button>
+  </div>
+  <div class="quiz-feedback" id="q1-fb"></div>
+</div>
+
+<div class="quiz" id="q2">
+  <p class="quiz-question">2. Что возвращает inject(TOKEN) когда токен зарегистрирован с multi: true?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q2',false)">Последнее зарегистрированное значение — переопределяет предыдущие</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">Первое зарегистрированное значение — остальные игнорируются</button>
+    <button class="quiz-option" onclick="answer(this,'q2',true)">Массив всех зарегистрированных значений в порядке добавления</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">Observable поток значений при каждой регистрации нового провайдера</button>
+  </div>
+  <div class="quiz-feedback" id="q2-fb"></div>
+</div>
+
+<div class="quiz" id="q3">
+  <p class="quiz-question">3. Зачем нужен forwardRef()?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Для создания слабых ссылок — позволяет GC собрать зависимость</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Для ленивой инициализации — зависимость создаётся при первом inject</button>
+    <button class="quiz-option" onclick="answer(this,'q3',true)">Для ссылки на класс до его объявления в JavaScript-коде</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Для передачи зависимости через DI без регистрации в providers</button>
+  </div>
+  <div class="quiz-feedback" id="q3-fb"></div>
+</div>
+
+<div class="quiz" id="q4">
+  <p class="quiz-question">4. inject(Service, { self: true }) — что означает self?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q4',false)">Создать новый экземпляр сервиса только для этого компонента</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">Пропустить injector текущего компонента и искать у родителя</button>
+    <button class="quiz-option" onclick="answer(this,'q4',true)">Искать только в injector текущего компонента, не подниматься выше</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">Вернуть сервис синглтон из root injector без поиска ниже</button>
+  </div>
+  <div class="quiz-feedback" id="q4-fb"></div>
+</div>
+
+<hr class="divider" />
+
+<div class="source-link">
+  <strong>Первоисточник:</strong>
+  <a href="https://angular.dev/guide/di/dependency-injection-providers" target="_blank">angular.dev — DI Providers</a>
+  — useClass, useValue, useFactory, InjectionToken, multi, forwardRef.
+</div>
+
+<div class="ask-teacher">
+  <strong>Есть вопрос?</strong> Спроси прямо здесь, в чате. Учитель рядом — объяснит, уточнит или покажет пример из твоего реального кода.
+</div>
+
+<div class="nav-links">
+  <a href="0017-modules.html">← Урок 17: Modules</a>
+  <span style="color:var(--text-muted); margin:0 8px;">·</span>
+  <a href="0019-http.html">Урок 19: HTTP →</a>
+</div>
+
+<script>
+  const feedback = {
+    q1: {
+      true: 'Верно. Классы — естественные токены DI. Для строк, чисел, конфигурационных объектов нужен InjectionToken<T>.',
+      false: 'Нет. Синглтоны через providedIn: "root" не требуют InjectionToken. Токен нужен для non-class значений.'
+    },
+    q2: {
+      true: 'Верно. multi: true — Angular собирает все зарегистрированные значения в массив. inject() вернёт [val1, val2, ...].',
+      false: 'Нет. multi: true объединяет ВСЕ значения в массив, ничего не переопределяет и не игнорирует.'
+    },
+    q3: {
+      true: 'Верно. forwardRef(() => MyClass) — ленивое разрешение ссылки. Нужен когда класс объявлен ниже в файле или циклическая зависимость.',
+      false: 'Нет. forwardRef — про порядок объявления в JS, не про GC, ленивую инициализацию или обход providers.'
+    },
+    q4: {
+      true: 'Верно. { self: true } = ищи только в injector этого компонента. Если не найдено — ошибка (или null при optional: true).',
+      false: 'Нет. self — ограничивает поиск текущим injector. { skipSelf: true } — пропускает текущий injector.'
+    },
+  };
+
+  function answer(btn, qId, isCorrect) {
+    const container = document.getElementById(qId);
+    const allBtns = container.querySelectorAll('.quiz-option');
+    allBtns.forEach(b => { b.disabled = true; });
+    btn.classList.add(isCorrect ? 'correct' : 'wrong');
+    const fb = document.getElementById(qId + '-fb');
+    fb.textContent = feedback[qId][String(isCorrect)];
+    fb.className = 'quiz-feedback show ' + (isCorrect ? 'correct' : 'wrong');
+  }
+</script>
+
+</body>
+</html>

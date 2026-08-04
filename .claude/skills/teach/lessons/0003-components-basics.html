@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Урок 3 — Компоненты: базовые</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<p class="subtitle">Урок 3 из серии «Angular Interview Prep»</p>
+<h1>Компоненты: базовые</h1>
+<p class="subtitle">Standalone, @Component, data binding, control flow.</p>
+
+<hr class="divider" />
+
+<h2>1. Standalone-компоненты vs модульные</h2>
+<p>
+  <strong>Standalone-компоненты</strong> (Angular 14+, по умолчанию с Angular 17) — самодостаточные единицы:
+  импортируют зависимости напрямую в декораторе, не нуждаются в NgModule.
+</p>
+<div class="card">
+  <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border); color:var(--text-muted);">
+        <th style="text-align:left; padding:6px 12px 6px 0;">Standalone</th>
+        <th style="text-align:left; padding:6px 12px;">NgModule-based</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>standalone: true</code> (дефолт)</td>
+        <td style="padding:8px 12px;">Объявляется в <code>declarations</code> модуля</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Импорты прямо в <code>@Component</code></td>
+        <td style="padding:8px 12px;">Импорты в <code>@NgModule</code></td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px 8px 0;">Проще, меньше бойлерплейта</td>
+        <td style="padding:8px 12px;">Больше структуры, сложнее переиспользовать</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>2. Декоратор @Component</h2>
+<pre><code>@Component({
+  selector: 'left-paw-card',       // CSS-селектор для использования в шаблонах
+  templateUrl: './card.component.html', // или template: `...` инлайн
+  styleUrl: './card.component.scss',    // или styles: [`...`]
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [CommonModule, RouterLink],  // для standalone
+})
+export class CardComponent { }</code></pre>
+<div class="card accent">
+  <span class="tag accent">Формула ответа</span>
+  <p>
+    Три обязательных поля: <strong>selector</strong> (имя тега), <strong>template/templateUrl</strong> (HTML),
+    <strong>styleUrl/styles</strong> (стили). В проекте всегда добавляем <code>changeDetection: OnPush</code>.
+  </p>
+</div>
+
+<h2>3. Data Binding</h2>
+<div class="card">
+  <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border); color:var(--text-muted);">
+        <th style="text-align:left; padding:6px 12px 6px 0;">Тип</th>
+        <th style="text-align:left; padding:6px 12px;">Синтаксис</th>
+        <th style="text-align:left; padding:6px 12px;">Направление</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Interpolation</td>
+        <td style="padding:8px 12px;"><code>{{ value }}</code></td>
+        <td style="padding:8px 12px;">TS → DOM (текст)</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Property binding</td>
+        <td style="padding:8px 12px;"><code>[property]="expr"</code></td>
+        <td style="padding:8px 12px;">TS → DOM (свойство)</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Event binding</td>
+        <td style="padding:8px 12px;"><code>(event)="handler()"</code></td>
+        <td style="padding:8px 12px;">DOM → TS</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px 8px 0;">Two-way binding</td>
+        <td style="padding:8px 12px;"><code>[(ngModel)]="val"</code></td>
+        <td style="padding:8px 12px;">Оба направления</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<pre><code>&lt;h1&gt;{{ title }}&lt;/h1&gt;                     &lt;!-- interpolation --&gt;
+&lt;img [src]="imageUrl" /&gt;                 &lt;!-- property binding --&gt;
+&lt;button (click)="save()"&gt;Save&lt;/button&gt;  &lt;!-- event binding --&gt;
+&lt;input [(ngModel)]="name" /&gt;             &lt;!-- two-way --&gt;</code></pre>
+
+<h2>4. Односторонняя vs двусторонняя привязка</h2>
+<p>
+  <strong>Односторонняя</strong> — данные текут в одном направлении:
+  либо TS→DOM (<code>[prop]</code>, <code>{{ }}</code>), либо DOM→TS (<code>(event)</code>).
+</p>
+<p>
+  <strong>Двусторонняя</strong> — <code>[(ngModel)]</code> — синтаксический сахар над
+  <code>[ngModel]</code> + <code>(ngModelChange)</code>. Требует <code>FormsModule</code>.
+  В Reactive Forms двусторонней привязки нет — значение читается через <code>control.value</code>.
+</p>
+<div class="card accent">
+  <span class="tag orange">Ловушка на интервью</span>
+  <p>
+    <code>[(x)]</code> — «банан в коробке» — это shorthand для <code>[x]="v" (xChange)="v=$event"</code>.
+    Angular разворачивает его в пару property + event binding. Скажи это на интервью — впечатлит.
+  </p>
+</div>
+
+<h2>5. Angular Control Flow: @if, @for, @switch</h2>
+<p>
+  С Angular 17 встроенные структурные директивы заменены на блоки control flow прямо в шаблоне.
+  Они быстрее (нет нужды в NgIf/NgFor) и дают лучший тайп-чекинг.
+</p>
+<pre><code>@if (user) {
+  &lt;p&gt;{{ user.name }}&lt;/p&gt;
+} @else {
+  &lt;p&gt;Загрузка...&lt;/p&gt;
+}
+
+@for (item of items; track item.id) {
+  &lt;app-card [data]="item" /&gt;
+} @empty {
+  &lt;p&gt;Список пуст&lt;/p&gt;
+}
+
+@switch (status) {
+  @case ('active')  { &lt;span&gt;Активен&lt;/span&gt; }
+  @case ('banned')  { &lt;span&gt;Заблокирован&lt;/span&gt; }
+  @default          { &lt;span&gt;Неизвестно&lt;/span&gt; }
+}</code></pre>
+<div class="card accent">
+  <span class="tag orange">Ловушка на интервью</span>
+  <p>
+    <code>@for</code> требует обязательного <code>track</code>. Без него — ошибка компиляции.
+    <code>track item.id</code> аналогично <code>trackBy</code> в старом <code>*ngFor</code> — оптимизирует DOM-обновления.
+  </p>
+</div>
+
+<hr class="divider" />
+
+<h2>Проверь себя</h2>
+<p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:24px;">
+  Retrieval practice — не подглядывай в текст выше. Выбери один вариант.
+</p>
+
+<div class="quiz" id="q1">
+  <p class="quiz-question">1. В чём ключевое отличие standalone-компонента от модульного?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Standalone работает быстрее за счёт отдельного потока рендеринга</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Standalone не поддерживает Dependency Injection и сервисы</button>
+    <button class="quiz-option" onclick="answer(this,'q1',true)">Standalone импортирует зависимости в @Component, не нужен NgModule</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Standalone компилируется только в режиме production билда</button>
+  </div>
+  <div class="quiz-feedback" id="q1-fb"></div>
+</div>
+
+<div class="quiz" id="q2">
+  <p class="quiz-question">2. Какой синтаксис использовать для привязки к DOM-свойству?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q2',true)">[property]="expression" — property binding</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">(property)="expression" — event binding</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">{{property}} — interpolation строки шаблона</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">*property="expression" — структурная директива</button>
+  </div>
+  <div class="quiz-feedback" id="q2-fb"></div>
+</div>
+
+<div class="quiz" id="q3">
+  <p class="quiz-question">3. Что делает синтаксис [(x)]="value" в шаблоне?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Создаёт новый Observable для двусторонней синхронизации</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Биндит значение только из DOM в компонент (снизу вверх)</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Вызывает хук ngOnChanges при каждом изменении значения</button>
+    <button class="quiz-option" onclick="answer(this,'q3',true)">Разворачивается в [x]="value" плюс (xChange)="value=$event"</button>
+  </div>
+  <div class="quiz-feedback" id="q3-fb"></div>
+</div>
+
+<div class="quiz" id="q4">
+  <p class="quiz-question">4. Что обязательно указывать в @for в Angular 17+?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q4',false)">let $index для отслеживания позиции элемента в массиве</button>
+    <button class="quiz-option" onclick="answer(this,'q4',true)">track — выражение для идентификации элементов списка</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">@empty — блок для отображения при пустом массиве данных</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">async — модификатор для работы с Observable-коллекциями</button>
+  </div>
+  <div class="quiz-feedback" id="q4-fb"></div>
+</div>
+
+<div class="quiz" id="q5">
+  <p class="quiz-question">5. Какой блок control flow использовать для проверки нескольких значений?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q5',false)">@if / @else if / @else для множественных условий</button>
+    <button class="quiz-option" onclick="answer(this,'q5',false)">@for с условием внутри итерации по значениям</button>
+    <button class="quiz-option" onclick="answer(this,'q5',true)">@switch / @case / @default — аналог switch-case</button>
+    <button class="quiz-option" onclick="answer(this,'q5',false)">@match / @when / @otherwise — паттерн-матчинг Angular</button>
+  </div>
+  <div class="quiz-feedback" id="q5-fb"></div>
+</div>
+
+<hr class="divider" />
+
+<div class="source-link">
+  <strong>Первоисточник:</strong>
+  <a href="https://angular.dev/guide/components" target="_blank">angular.dev — Components</a>
+  — официальный гайд: template syntax, binding, standalone компоненты.
+</div>
+
+<div class="ask-teacher">
+  <strong>Есть вопрос?</strong> Спроси прямо здесь, в чате. Учитель рядом — объяснит, уточнит или покажет пример из твоего реального кода.
+</div>
+
+<div class="nav-links">
+  <a href="0002-angular-basics-and-cli.html">← Урок 2: Angular: основы и CLI</a>
+  <span style="color:var(--text-muted); margin:0 8px;">·</span>
+  <a href="0004-component-interaction.html">Урок 4: Взаимодействие компонентов →</a>
+</div>
+
+<script>
+  const feedback = {
+    q1: {
+      true: 'Верно. Standalone-компонент объявляет свои зависимости прямо в @Component({imports:[...]}), без NgModule.',
+      false: 'Нет. Standalone отличается именно способом объявления зависимостей — через imports в @Component, без NgModule. DI работает так же.'
+    },
+    q2: {
+      true: 'Верно. [property]="expr" — property binding, данные текут из TS в DOM.',
+      false: 'Нет. (event) — event binding (DOM→TS), {{}} — interpolation (только текст), *directive — структурная директива.'
+    },
+    q3: {
+      true: 'Верно. [(x)] — «банан в коробке» — синтаксический сахар, Angular разворачивает в [x] + (xChange).',
+      false: 'Нет. [(x)] разворачивается в пару: property binding [x] и event binding (xChange). Никаких Observable не создаётся.'
+    },
+    q4: {
+      true: 'Верно. track обязателен в @for — без него ошибка компиляции. Оптимизирует перерисовку DOM.',
+      false: 'Нет. track обязателен. $index, @empty — опциональны. async — для AsyncPipe, не для @for.'
+    },
+    q5: {
+      true: 'Верно. @switch/@case/@default — аналог JavaScript switch, проверяет одно выражение против нескольких значений.',
+      false: 'Нет. @if подходит для условий, но множество проверок одной переменной лучше выражает @switch. @match — не существует.'
+    },
+  };
+
+  function answer(btn, qId, isCorrect) {
+    const container = document.getElementById(qId);
+    const allBtns = container.querySelectorAll('.quiz-option');
+    allBtns.forEach(b => { b.disabled = true; });
+    btn.classList.add(isCorrect ? 'correct' : 'wrong');
+    const fb = document.getElementById(qId + '-fb');
+    fb.textContent = feedback[qId][String(isCorrect)];
+    fb.className = 'quiz-feedback show ' + (isCorrect ? 'correct' : 'wrong');
+  }
+</script>
+
+</body>
+</html>

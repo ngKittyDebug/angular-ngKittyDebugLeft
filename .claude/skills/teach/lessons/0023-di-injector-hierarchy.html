@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Урок 23 — DI: иерархия инжекторов</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<p class="subtitle">Урок 23 из серии «Angular Interview Prep»</p>
+<h1>DI — иерархия инжекторов</h1>
+<p class="subtitle">Injector Hierarchy, environment vs element injectors, tree-shaking.</p>
+
+<hr class="divider" />
+
+<h2>1. Как работает иерархия инжекторов</h2>
+<p>
+  Когда компонент запрашивает зависимость через <code>inject(Service)</code>,
+  Angular ищет её снизу вверх по цепочке инжекторов.
+</p>
+<div class="card">
+  <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0; color:var(--text-muted);">Поиск ↑</td>
+        <td style="padding:8px 12px;"></td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><strong>Element Injector</strong></td>
+        <td style="padding:8px 12px;">providers в @Component/@Directive текущего элемента</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><strong>Parent Element Injectors</strong></td>
+        <td style="padding:8px 12px;">providers предков по дереву компонентов</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><strong>Environment Injector</strong></td>
+        <td style="padding:8px 12px;">Lazy route providers, NgModule providers</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><strong>Root Injector</strong></td>
+        <td style="padding:8px 12px;">providedIn: 'root', app.config.ts providers</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px 8px 0;"><strong>Platform Injector</strong></td>
+        <td style="padding:8px 12px;">Общий для нескольких Angular-приложений на странице</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<p>Если не найдено ни на одном уровне — ошибка <code>NullInjectorError</code>.</p>
+
+<h2>2. Ограничение области сервиса — providers в компоненте</h2>
+<pre><code>@Component({
+  selector: 'left-paw-wizard',
+  providers: [WizardStateService], // свой экземпляр для этого компонента
+})
+export class WizardComponent {
+  private state = inject(WizardStateService); // получает изолированный экземпляр
+}
+
+@Component({ selector: 'left-paw-step-one' })
+export class StepOneComponent {
+  // Ищет у родителей → найдёт в WizardComponent
+  private state = inject(WizardStateService);
+}</code></pre>
+<div class="card accent">
+  <span class="tag accent">Паттерн изолированного состояния</span>
+  <p>
+    Регистрируй сервис в корневом компоненте фичи — все дочерние компоненты
+    получат тот же экземпляр, изолированный от остального приложения.
+    При уничтожении компонента сервис тоже уничтожается — нет утечек.
+  </p>
+</div>
+
+<h2>3. Environment vs Element Injectors</h2>
+<div class="card">
+  <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border); color:var(--text-muted);">
+        <th style="text-align:left; padding:6px 12px 6px 0;">Environment Injector</th>
+        <th style="text-align:left; padding:6px 12px;">Element Injector</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Root, Platform, Lazy route</td>
+        <td style="padding:8px 12px;">@Component providers, @Directive providers</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Не привязан к дереву компонентов</td>
+        <td style="padding:8px 12px;">Существует пока жив компонент</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px 8px 0;"><code>EnvironmentInjector</code> — инжектируемый</td>
+        <td style="padding:8px 12px;"><code>Injector</code> — текущий element injector</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>4. Tree-shaking: providedIn: 'root' vs providers: []</h2>
+<pre><code>// Tree-shakeable: если сервис не инжектируется — не попадёт в бандл
+@Injectable({ providedIn: 'root' })
+export class AnalyticsService { }
+
+// Не tree-shakeable: явная регистрация всегда включает в бандл
+@NgModule({
+  providers: [AnalyticsService], // всегда в бандле даже если не используется
+})
+</code></pre>
+<div class="card accent">
+  <span class="tag orange">Ловушка на интервью</span>
+  <p>
+    <code>providedIn: 'root'</code> — tree-shakeable: если ни один компонент не инжектирует
+    сервис, esbuild/webpack удаляет его из бандла. Регистрация в <code>providers: []</code> NgModule
+    — не tree-shakeable, включается всегда.
+  </p>
+</div>
+
+<hr class="divider" />
+
+<h2>Проверь себя</h2>
+<p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:24px;">
+  Retrieval practice — не подглядывай в текст выше. Выбери один вариант.
+</p>
+
+<div class="quiz" id="q1">
+  <p class="quiz-question">1. Компонент запрашивает MyService. Где Angular ищет его первым?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q1',false)">В root injector — providedIn: 'root' проверяется всегда первым</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">В platform injector — верхний уровень иерархии инжекторов Angular</button>
+    <button class="quiz-option" onclick="answer(this,'q1',true)">В element injector самого компонента — providers в @Component</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">В environment injector ближайшего lazy-загруженного маршрута</button>
+  </div>
+  <div class="quiz-feedback" id="q1-fb"></div>
+</div>
+
+<div class="quiz" id="q2">
+  <p class="quiz-question">2. Что происходит, если зависимость не найдена ни в одном инжекторе?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q2',false)">Angular создаёт пустой экземпляр класса и передаёт компоненту</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">inject() возвращает undefined без выброса исключения</button>
+    <button class="quiz-option" onclick="answer(this,'q2',true)">Выбрасывается NullInjectorError с указанием токена</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">Angular ищет дефолтный экспорт файла с именем сервиса</button>
+  </div>
+  <div class="quiz-feedback" id="q2-fb"></div>
+</div>
+
+<div class="quiz" id="q3">
+  <p class="quiz-question">3. Сервис в providers: [] компонента — получат ли его дочерние компоненты?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Нет — сервис доступен только самому компоненту, не потомкам</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Нет — нужно добавить экспорт сервиса в providers компонента</button>
+    <button class="quiz-option" onclick="answer(this,'q3',true)">Да — дочерние компоненты найдут его при поиске вверх по дереву</td>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Да — но только если дочерний компонент того же NgModule</button>
+  </div>
+  <div class="quiz-feedback" id="q3-fb"></div>
+</div>
+
+<div class="quiz" id="q4">
+  <p class="quiz-question">4. Почему providedIn: 'root' поддерживает tree-shaking, а NgModule.providers — нет?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q4',false)">Angular кеширует providedIn: 'root' сервисы и не включает их в бандл</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">NgModule.providers регистрирует сервисы глобально через Platform injector</button>
+    <button class="quiz-option" onclick="answer(this,'q4',true)">Бандлер видит связь «используется/нет» через import-граф; NgModule.providers — статический список без этой информации</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">providedIn: 'root' сервисы компилируются отдельно от основного бандла</button>
+  </div>
+  <div class="quiz-feedback" id="q4-fb"></div>
+</div>
+
+<hr class="divider" />
+
+<div class="source-link">
+  <strong>Первоисточник:</strong>
+  <a href="https://angular.dev/guide/di/hierarchical-dependency-injection" target="_blank">angular.dev — Hierarchical DI</a>
+  — environment vs element injectors, ModuleInjector, ElementInjector.
+</div>
+
+<div class="ask-teacher">
+  <strong>Есть вопрос?</strong> Спроси прямо здесь, в чате. Учитель рядом — объяснит, уточнит или покажет пример из твоего реального кода.
+</div>
+
+<div class="nav-links">
+  <a href="0022-testing.html">← Урок 22: Testing</a>
+  <span style="color:var(--text-muted); margin:0 8px;">·</span>
+  <a href="0024-signals-resource-api.html">Урок 24: Signals — Resource API →</a>
+</div>
+
+<script>
+  const feedback = {
+    q1: {
+      true: 'Верно. Поиск начинается снизу: element injector самого компонента → родителей → environment → root → platform.',
+      false: 'Нет. Root injector проверяется последним из обычных уровней. Element injector компонента — первый в очереди.'
+    },
+    q2: {
+      true: 'Верно. NullInjectorError: No provider for MyService! — стандартное сообщение Angular при отсутствии провайдера.',
+      false: 'Нет. Angular не создаёт пустой экземпляр и не возвращает undefined. inject() выбрасывает ошибку (если не { optional: true }).'
+    },
+    q3: {
+      true: 'Верно. Поиск идёт вверх по дереву. Дочерние компоненты найдут сервис в инжекторе родителя — получат тот же экземпляр.',
+      false: 'Нет. Дочерние компоненты находят сервис родителя при поиске вверх. Экспорт/NgModule не нужен для element injector.'
+    },
+    q4: {
+      true: 'Верно. providedIn: "root" — Angular добавляет в метаданные сервиса ссылку на root injector. Бандлер видит: не используется — удаляет. NgModule.providers — статический массив без этой связи.',
+      false: 'Нет. Tree-shaking работает через статический анализ import-графа. NgModule providers — статический список, бандлер не может определить «мёртвый» код.'
+    },
+  };
+
+  function answer(btn, qId, isCorrect) {
+    const container = document.getElementById(qId);
+    const allBtns = container.querySelectorAll('.quiz-option');
+    allBtns.forEach(b => { b.disabled = true; });
+    btn.classList.add(isCorrect ? 'correct' : 'wrong');
+    const fb = document.getElementById(qId + '-fb');
+    fb.textContent = feedback[qId][String(isCorrect)];
+    fb.className = 'quiz-feedback show ' + (isCorrect ? 'correct' : 'wrong');
+  }
+</script>
+
+</body>
+</html>

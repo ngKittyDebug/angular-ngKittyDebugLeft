@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Урок 14 — Pipes</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<p class="subtitle">Урок 14 из серии «Angular Interview Prep»</p>
+<h1>Pipes</h1>
+<p class="subtitle">Встроенные пайпы, pure vs impure, AsyncPipe, кастомные пайпы.</p>
+
+<hr class="divider" />
+
+<h2>1. Что такое Pipe?</h2>
+<p>
+  Pipe — функция-трансформер для шаблонов. Принимает значение, возвращает преобразованное.
+  Синтаксис: <code>{{ value | pipeName : param1 : param2 }}</code>.
+</p>
+
+<h2>2. Встроенные пайпы</h2>
+<pre><code>{{ date | date:'dd.MM.yyyy' }}         &lt;!-- '25.07.2026' --&gt;
+{{ name | uppercase }}                  &lt;!-- 'OKSANA' --&gt;
+{{ price | currency:'USD':'symbol' }}   &lt;!-- '$42.00' --&gt;
+{{ count | number:'1.0-2' }}            &lt;!-- '1,234.56' --&gt;
+{{ obj | json }}                        &lt;!-- JSON.stringify --&gt;
+{{ text | slice:0:50 }}                 &lt;!-- первые 50 символов --&gt;
+{{ obs$ | async }}                      &lt;!-- подписка + авторазотписка --&gt;</code></pre>
+
+<h2>3. Цепочка пайпов</h2>
+<pre><code>{{ name | uppercase | slice:0:3 }}   &lt;!-- 'OKS' --&gt;
+{{ date | date:'longDate' | uppercase }}</code></pre>
+
+<h2>4. Параметры пайпа</h2>
+<pre><code>{{ 3.14159 | number:'1.2-2' }}   &lt;!-- '3.14' — мин 1 цел., 2 дес. --&gt;
+{{ today | date:'dd MMM, yyyy' : 'UTC' : 'ru' }}</code></pre>
+
+<h2>5. Pure vs Impure пайпы</h2>
+<div class="card">
+  <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border); color:var(--text-muted);">
+        <th style="text-align:left; padding:6px 12px 6px 0;">Pure (default)</th>
+        <th style="text-align:left; padding:6px 12px;">Impure (pure: false)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Вызывается при изменении ссылки</td>
+        <td style="padding:8px 12px;">Вызывается при каждом CD-цикле</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Быстро — есть кеш</td>
+        <td style="padding:8px 12px;">Медленно — без кеша</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px 8px 0;">Не видит мутации массива/объекта</td>
+        <td style="padding:8px 12px;">Видит мутации внутри объектов</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<pre><code>@Pipe({ name: 'filterByStatus', pure: false }) // impure
+export class FilterByStatusPipe implements PipeTransform {
+  transform(items: Item[], status: string) {
+    return items.filter(i => i.status === status);
+  }
+}</code></pre>
+<div class="card accent">
+  <span class="tag orange">Ловушка на интервью</span>
+  <p>
+    Impure пайп вызывается на <em>каждом</em> цикле change detection — это дорого.
+    Предпочитай иммутабельные обновления массивов (spread, filter, map) — тогда
+    pure пайп сработает корректно при смене ссылки.
+  </p>
+</div>
+
+<h2>6. AsyncPipe</h2>
+<pre><code>// В компоненте — НЕ нужно вручную подписываться:
+export class UserComponent {
+  user$ = inject(UserService).getUser();
+}
+
+// В шаблоне:
+&lt;div *ngIf="user$ | async as user"&gt;
+  {{ user.name }}
+&lt;/div&gt;
+
+// Или с новым control flow:
+@if (user$ | async; as user) {
+  &lt;p&gt;{{ user.name }}&lt;/p&gt;
+}</code></pre>
+<div class="card green">
+  <p>
+    <strong>Преимущества AsyncPipe:</strong> автоматически подписывается, отписывается при destroy,
+    вызывает <code>markForCheck()</code> при новом значении (работает с OnPush).
+  </p>
+</div>
+
+<h2>7. Кастомный пайп</h2>
+<pre><code>@Pipe({ name: 'pokemonType', standalone: true })
+export class PokemonTypePipe implements PipeTransform {
+  transform(type: string, lang: 'ru' | 'en' = 'ru'): string {
+    const types: Record&lt;string, Record&lt;string, string&gt;&gt; = {
+      fire: { ru: 'Огонь', en: 'Fire' },
+      water: { ru: 'Вода', en: 'Water' },
+    };
+    return types[type]?.[lang] ?? type;
+  }
+}
+
+// Использование:
+{{ pokemon.type | pokemonType:'ru' }}</code></pre>
+
+<hr class="divider" />
+
+<h2>Проверь себя</h2>
+<p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:24px;">
+  Retrieval practice — не подглядывай в текст выше. Выбери один вариант.
+</p>
+
+<div class="quiz" id="q1">
+  <p class="quiz-question">1. Когда вызывается pure пайп?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q1',false)">При каждом цикле change detection независимо от значений</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">При каждом event в компоненте или его дочерних элементах</button>
+    <button class="quiz-option" onclick="answer(this,'q1',true)">При изменении ссылки входного значения — иначе возвращает кеш</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">При ручном вызове detectChanges() из ChangeDetectorRef</button>
+  </div>
+  <div class="quiz-feedback" id="q1-fb"></div>
+</div>
+
+<div class="quiz" id="q2">
+  <p class="quiz-question">2. Почему impure пайп для фильтрации массива — антипаттерн?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q2',false)">Impure пайп не видит мутации массива и работает как pure</button>
+    <button class="quiz-option" onclick="answer(this,'q2',true)">Вызывается на каждом CD-цикле — тяжёлая операция фильтрации каждый раз</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">Impure пайп нельзя использовать со standalone компонентами</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">Impure пайп не компилируется в production сборке Angular</button>
+  </div>
+  <div class="quiz-feedback" id="q2-fb"></div>
+</div>
+
+<div class="quiz" id="q3">
+  <p class="quiz-question">3. Что делает AsyncPipe при уничтожении компонента?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Ничего — отписка остаётся на ответственности разработчика</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Завершает Observable — вызывает complete() на источнике данных</button>
+    <button class="quiz-option" onclick="answer(this,'q3',true)">Автоматически отписывается — вызывает unsubscribe() при ngOnDestroy</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Кеширует последнее значение для повторного использования пайпа</button>
+  </div>
+  <div class="quiz-feedback" id="q3-fb"></div>
+</div>
+
+<div class="quiz" id="q4">
+  <p class="quiz-question">4. Как передать параметр в пайп?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q4',false)">{{ value | pipe(param) }} — через круглые скобки как функция</button>
+    <button class="quiz-option" onclick="answer(this,'q4',true)">{{ value | pipe:param }} — через двоеточие после имени пайпа</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">{{ value | pipe[param] }} — через квадратные скобки как свойство</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">{{ value | pipe={param} }} — через объект как именованный параметр</button>
+  </div>
+  <div class="quiz-feedback" id="q4-fb"></div>
+</div>
+
+<hr class="divider" />
+
+<div class="source-link">
+  <strong>Первоисточник:</strong>
+  <a href="https://angular.dev/guide/pipes" target="_blank">angular.dev — Pipes</a>
+  — встроенные пайпы, pure/impure, создание кастомных, AsyncPipe.
+</div>
+
+<div class="ask-teacher">
+  <strong>Есть вопрос?</strong> Спроси прямо здесь, в чате. Учитель рядом — объяснит, уточнит или покажет пример из твоего реального кода.
+</div>
+
+<div class="nav-links">
+  <a href="0013-directives-structural.html">← Урок 13: Directives — структурные</a>
+  <span style="color:var(--text-muted); margin:0 8px;">·</span>
+  <a href="0015-forms.html">Урок 15: Forms →</a>
+</div>
+
+<script>
+  const feedback = {
+    q1: {
+      true: 'Верно. Pure пайп кешируется: вызывается только когда входная ссылка (===) изменилась. Иначе возвращает прошлый результат.',
+      false: 'Нет. Вызов при каждом CD — это impure пайп (pure: false). Pure — кешируется по ссылке.'
+    },
+    q2: {
+      true: 'Верно. Impure вызывается при каждом CD-цикле. filter() на большом массиве — O(n) на каждый тик. Лучше: иммутабельные обновления + pure пайп.',
+      false: 'Нет. Impure как раз ВИДИТ мутации — в этом его смысл. Проблема — производительность.'
+    },
+    q3: {
+      true: 'Верно. AsyncPipe реализует OnDestroy и вызывает unsubscribe() при уничтожении компонента. Memory leak исключён.',
+      false: 'Нет. AsyncPipe автоматически отписывается. Не завершает Observable (complete) — только отписывается (unsubscribe).'
+    },
+    q4: {
+      true: 'Верно. {{ value | date:"dd.MM" }} — параметр через двоеточие. Несколько: {{ value | pipe:p1:p2 }}.',
+      false: 'Нет. Синтаксис — двоеточие. Круглые скобки, квадратные, фигурные — не работают в pipe-синтаксисе.'
+    },
+  };
+
+  function answer(btn, qId, isCorrect) {
+    const container = document.getElementById(qId);
+    const allBtns = container.querySelectorAll('.quiz-option');
+    allBtns.forEach(b => { b.disabled = true; });
+    btn.classList.add(isCorrect ? 'correct' : 'wrong');
+    const fb = document.getElementById(qId + '-fb');
+    fb.textContent = feedback[qId][String(isCorrect)];
+    fb.className = 'quiz-feedback show ' + (isCorrect ? 'correct' : 'wrong');
+  }
+</script>
+
+</body>
+</html>

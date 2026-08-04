@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Урок 6 — Lifecycle hooks</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<p class="subtitle">Урок 6 из серии «Angular Interview Prep»</p>
+<h1>Lifecycle Hooks</h1>
+<p class="subtitle">Порядок хуков, ngOnInit vs конструктор, ngOnDestroy, afterNextRender.</p>
+
+<hr class="divider" />
+
+<h2>1. Что такое lifecycle hooks?</h2>
+<p>
+  Angular вызывает хуки жизненного цикла в определённые моменты существования компонента —
+  создание, обновление входных данных, рендер, уничтожение.
+  Имплементируются через интерфейсы (<code>OnInit</code>, <code>OnDestroy</code> и др.).
+</p>
+
+<h2>2. Порядок вызова</h2>
+<div class="card">
+  <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border); color:var(--text-muted);">
+        <th style="text-align:left; padding:6px 0 6px 0; width:40%;">Хук</th>
+        <th style="text-align:left; padding:6px 12px;">Когда</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>constructor</code></td>
+        <td style="padding:8px 12px;">DI — до инициализации input-ов</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>ngOnChanges</code></td>
+        <td style="padding:8px 12px;">При каждом изменении @Input-ов (до OnInit при первом рендере)</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>ngOnInit</code></td>
+        <td style="padding:8px 12px;">После первой инициализации input-ов (1 раз)</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>ngDoCheck</code></td>
+        <td style="padding:8px 12px;">Каждый цикл change detection</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>ngAfterContentInit</code></td>
+        <td style="padding:8px 12px;">После проецирования ng-content (1 раз)</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>ngAfterContentChecked</code></td>
+        <td style="padding:8px 12px;">После каждой проверки projected content</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>ngAfterViewInit</code></td>
+        <td style="padding:8px 12px;">После первого рендера view + дочерних (1 раз)</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>ngAfterViewChecked</code></td>
+        <td style="padding:8px 12px;">После каждой проверки view</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px 8px 0;"><code>ngOnDestroy</code></td>
+        <td style="padding:8px 12px;">Перед удалением компонента из DOM</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>3. ngOnInit vs конструктор</h2>
+<div class="card">
+  <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border); color:var(--text-muted);">
+        <th style="text-align:left; padding:6px 12px 6px 0;">constructor</th>
+        <th style="text-align:left; padding:6px 12px;">ngOnInit</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Только DI — инжекция зависимостей</td>
+        <td style="padding:8px 12px;">Логика инициализации с данными</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Input-ы ещё не установлены</td>
+        <td style="padding:8px 12px;">Input-ы уже доступны</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px 8px 0;">Нельзя делать HTTP-запросы</td>
+        <td style="padding:8px 12px;">Можно подписываться, запрашивать данные</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<pre><code>export class UserComponent implements OnInit {
+  private userService = inject(UserService);
+  protected user = signal&lt;User | null&gt;(null);
+
+  // DI only
+  constructor() {}
+
+  // логика инициализации
+  ngOnInit() {
+    this.userService.getUser().subscribe(u => this.user.set(u));
+  }
+}</code></pre>
+
+<h2>4. ngOnDestroy — очистка ресурсов</h2>
+<pre><code>export class TimerComponent implements OnDestroy {
+  private subscription = Subscription.EMPTY;
+
+  ngOnInit() {
+    this.subscription = interval(1000).subscribe(tick => ...);
+  }
+
+  ngOnDestroy() {
+    this.subscription.unsubscribe(); // без этого — memory leak
+  }
+}</code></pre>
+<div class="card accent">
+  <span class="tag orange">Ловушка на интервью</span>
+  <p>
+    Незакрытые подписки — источник memory leak. В современном Angular используй
+    <code>takeUntilDestroyed()</code> — он автоматически отписывается в ngOnDestroy.
+    Или <code>DestroyRef</code> + <code>inject(DestroyRef).onDestroy()</code>.
+  </p>
+</div>
+
+<h2>5. ngOnChanges и SimpleChanges</h2>
+<pre><code>export class CardComponent implements OnChanges {
+  @Input() title = '';
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['title']) {
+      const { previousValue, currentValue, firstChange } = changes['title'];
+      console.log(`${previousValue} → ${currentValue}, first: ${firstChange}`);
+    }
+  }
+}</code></pre>
+<p>
+  <strong>Важно:</strong> <code>ngOnChanges</code> срабатывает только для <code>@Input()</code>
+  (decorator API), <strong>не</strong> для <code>input()</code> (signal API).
+  При первом рендере вызывается <em>до</em> <code>ngOnInit</code>.
+</p>
+
+<h2>6. afterNextRender и afterEveryRender</h2>
+<pre><code>export class ChartComponent {
+  constructor() {
+    // Выполнится один раз после первого рендера в браузере
+    afterNextRender(() => {
+      this.initChart(); // доступ к DOM безопасен
+    });
+
+    // Выполняется после каждого рендера
+    afterEveryRender(() => {
+      this.updateSize();
+    });
+  }
+}</code></pre>
+<div class="card accent">
+  <span class="tag accent">afterNextRender vs ngAfterViewInit</span>
+  <p>
+    <code>ngAfterViewInit</code> вызывается и на сервере (SSR) — там DOM нет.
+    <code>afterNextRender</code> — только в браузере, безопаснее для SSR-совместимых приложений.
+    Используй <code>afterNextRender</code> для инициализации DOM-зависимых библиотек.
+  </p>
+</div>
+
+<hr class="divider" />
+
+<h2>Проверь себя</h2>
+<p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:24px;">
+  Retrieval practice — не подглядывай в текст выше. Выбери один вариант.
+</p>
+
+<div class="quiz" id="q1">
+  <p class="quiz-question">1. Что делать в конструкторе компонента?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Читать @Input()-значения и выполнять HTTP-запросы</button>
+    <button class="quiz-option" onclick="answer(this,'q1',true)">Только инжектировать зависимости через inject() или параметры</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Подписываться на Observable и инициализировать данные</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Обращаться к ViewChild и DOM-элементам компонента</button>
+  </div>
+  <div class="quiz-feedback" id="q1-fb"></div>
+</div>
+
+<div class="quiz" id="q2">
+  <p class="quiz-question">2. В каком порядке вызываются хуки при первом рендере?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q2',false)">ngOnInit → ngOnChanges → ngAfterViewInit → constructor</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">constructor → ngOnInit → ngOnChanges → ngAfterViewInit</button>
+    <button class="quiz-option" onclick="answer(this,'q2',true)">constructor → ngOnChanges → ngOnInit → ngAfterViewInit</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">ngOnChanges → constructor → ngAfterViewInit → ngOnInit</button>
+  </div>
+  <div class="quiz-feedback" id="q2-fb"></div>
+</div>
+
+<div class="quiz" id="q3">
+  <p class="quiz-question">3. Зачем очищать ресурсы в ngOnDestroy?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Это требование линтера — без этого ESLint выдаёт ошибки</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Для сброса формы компонента перед повторным монтированием</button>
+    <button class="quiz-option" onclick="answer(this,'q3',true)">Незакрытые подписки и таймеры вызывают memory leak приложения</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Angular не удалит компонент из DOM без явной очистки</button>
+  </div>
+  <div class="quiz-feedback" id="q3-fb"></div>
+</div>
+
+<div class="quiz" id="q4">
+  <p class="quiz-question">4. Когда afterNextRender() безопаснее ngAfterViewInit?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q4',false)">Когда компонент использует OnPush change detection стратегию</button>
+    <button class="quiz-option" onclick="answer(this,'q4',true)">В SSR-приложениях: afterNextRender выполняется только в браузере</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">Когда нужно подождать загрузки асинхронных данных компонента</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">Когда дочерние компоненты содержат тяжёлую логику рендеринга</button>
+  </div>
+  <div class="quiz-feedback" id="q4-fb"></div>
+</div>
+
+<div class="quiz" id="q5">
+  <p class="quiz-question">5. Срабатывает ли ngOnChanges для input(), объявленного через signal API?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q5',false)">Да, ngOnChanges работает для любых input независимо от API</button>
+    <button class="quiz-option" onclick="answer(this,'q5',false)">Да, но только при firstChange — при первой установке значения</button>
+    <button class="quiz-option" onclick="answer(this,'q5',true)">Нет, ngOnChanges только для @Input() — для signal используй effect()</button>
+    <button class="quiz-option" onclick="answer(this,'q5',false)">Нет, для signal нужно имплементировать DoCheck интерфейс</button>
+  </div>
+  <div class="quiz-feedback" id="q5-fb"></div>
+</div>
+
+<hr class="divider" />
+
+<div class="source-link">
+  <strong>Первоисточник:</strong>
+  <a href="https://angular.dev/guide/components/lifecycle" target="_blank">angular.dev — Component lifecycle</a>
+  — полный список хуков, порядок вызовов, примеры с SSR.
+</div>
+
+<div class="ask-teacher">
+  <strong>Есть вопрос?</strong> Спроси прямо здесь, в чате. Учитель рядом — объяснит, уточнит или покажет пример из твоего реального кода.
+</div>
+
+<div class="nav-links">
+  <a href="0005-signals-basics.html">← Урок 5: Signals — базовый</a>
+  <span style="color:var(--text-muted); margin:0 8px;">·</span>
+  <a href="0007-routing.html">Урок 7: Routing →</a>
+</div>
+
+<script>
+  const feedback = {
+    q1: {
+      true: 'Верно. Конструктор — injection context: inject(), effect(), afterNextRender(), takeUntilDestroyed(). HTTP-запросы, подписки, @Input, ViewChild — в ngOnInit или позже.',
+      false: 'Нет. @Input() и HTTP-запросы, подписки, ViewChild — это ngOnInit или позже. В конструкторе — injection context: inject(), effect(), afterNextRender(), takeUntilDestroyed().'
+    },
+    q2: {
+      true: 'Верно. constructor → ngOnChanges (при наличии @Input) → ngOnInit → ngAfterContentInit → ngAfterViewInit.',
+      false: 'Нет. Правильный порядок: constructor → ngOnChanges → ngOnInit → ngAfterViewInit. ngOnChanges идёт до ngOnInit.'
+    },
+    q3: {
+      true: 'Верно. Незакрытые Observable-подписки, setInterval, WebSocket-соединения живут вечно и накапливают память.',
+      false: 'Нет. Причина — memory leak. Если не отписаться, обработчики продолжают работать даже после удаления компонента.'
+    },
+    q4: {
+      true: 'Верно. ngAfterViewInit вызывается и на сервере (SSR), где DOM нет. afterNextRender — только в браузере.',
+      false: 'Нет. Причина — SSR. afterNextRender гарантирует, что код выполнится только в браузерной среде с реальным DOM.'
+    },
+    q5: {
+      true: 'Верно. ngOnChanges реагирует только на @Input() (decorator API). Для signal input — используй effect() или computed().',
+      false: 'Нет. ngOnChanges — только для @Input(). Для input() (signal API) нужен effect() или computed() для реакции на изменения.'
+    },
+  };
+
+  function answer(btn, qId, isCorrect) {
+    const container = document.getElementById(qId);
+    const allBtns = container.querySelectorAll('.quiz-option');
+    allBtns.forEach(b => { b.disabled = true; });
+    btn.classList.add(isCorrect ? 'correct' : 'wrong');
+    const fb = document.getElementById(qId + '-fb');
+    fb.textContent = feedback[qId][String(isCorrect)];
+    fb.className = 'quiz-feedback show ' + (isCorrect ? 'correct' : 'wrong');
+  }
+</script>
+
+</body>
+</html>

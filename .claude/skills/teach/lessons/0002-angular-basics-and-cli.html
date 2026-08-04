@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Урок 2 — Angular: основы и CLI</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<p class="subtitle">Урок 2 из серии «Angular Interview Prep»</p>
+<h1>Angular: основы и CLI</h1>
+<p class="subtitle">Блок «Общие вопросы» + «Angular CLI» — 6 вопросов из списка интервью.</p>
+
+<hr class="divider" />
+
+<h2>1. Что такое Angular?</h2>
+<div class="card accent">
+  <span class="tag accent">Формула ответа</span>
+  <p>
+    Angular — это <strong>фреймворк</strong> (не библиотека) от Google для создания
+    Single Page Applications на TypeScript. В отличие от React, он opinionated:
+    <strong>маршрутизация, DI, HTTP-клиент, формы</strong> — всё встроено, а не подбирается самостоятельно.
+  </p>
+</div>
+
+<div class="card">
+  <span class="tag orange">Ловушка на интервью</span>
+  <p>
+    Если спросят «чем Angular отличается от React» — не останавливайтесь на «один фреймворк,
+    другой библиотека». Добавьте: Angular навязывает структуру (Dependency Injection,
+    декораторы, NgModule/standalone), React даёт только UI-слой и оставляет выбор архитектуры.
+  </p>
+</div>
+
+<h2>2. Что такое Angular CLI?</h2>
+<p>
+  Angular CLI — инструмент командной строки, который автоматизирует рутину:
+  создание проекта, генерацию кода, сборку, запуск тестов, линтинг.
+</p>
+<div class="card">
+  <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border); color:var(--text-muted);">
+        <th style="text-align:left; padding:6px 12px 6px 0;">Команда</th>
+        <th style="text-align:left; padding:6px 12px;">Что делает</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>ng new my-app</code></td>
+        <td style="padding:8px 12px;">Создаёт проект: tsconfig, angular.json, src/, git init</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>ng serve</code></td>
+        <td style="padding:8px 12px;">Dev-сервер с hot reload на :4200</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>ng build</code></td>
+        <td style="padding:8px 12px;">Продакшн-сборка в dist/ (esbuild)</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>ng generate / ng g</code></td>
+        <td style="padding:8px 12px;">Генерация компонентов, сервисов, директив…</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px 8px 0;"><code>ng test / ng lint</code></td>
+        <td style="padding:8px 12px;">Запуск тестов и линтера</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h3>Полезные флаги ng new</h3>
+<pre><code>ng new my-app \
+  --routing          # сразу создаёт RouterModule/app.routes.ts
+  --style=scss       # SCSS вместо CSS
+  --standalone       # standalone-компоненты (по умолчанию с Angular 17)
+  --ssr              # серверный рендеринг (SSR)</code></pre>
+
+<h2>3. Генерация компонента</h2>
+<pre><code>ng generate component features/my-feature/my-widget
+# или коротко:
+ng g c features/my-feature/my-widget</code></pre>
+<p>
+  CLI создаёт <code>.ts</code>, <code>.html</code>, <code>.scss</code>, <code>.spec.ts</code>
+  и обновляет импорты (в standalone-проекте — ничего не трогает в модуле, потому что модулей нет).
+  Другие шорт-коды: <code>ng g s</code> (service), <code>ng g d</code> (directive), <code>ng g p</code> (pipe).
+</p>
+
+<h2>4. Структура проекта: angular.json и app.config.ts</h2>
+<div class="card">
+  <p>
+    <strong>angular.json</strong> — конфигурация воркспейса. Описывает projects, build targets,
+    пути к assets и styles, параметры компилятора. Именно здесь указывается,
+    какой сборщик использовать (esbuild / webpack) и где лежат тесты.
+  </p>
+</div>
+<div class="card">
+  <p>
+    <strong>app.config.ts</strong> — точка конфигурации приложения в standalone-режиме
+    (заменяет NgModule). Здесь регистрируются глобальные провайдеры:
+    <code>provideRouter(routes)</code>, <code>provideHttpClient()</code>,
+    <code>provideTaiga()</code>, <code>provideTransloco()</code> и т.д.
+  </p>
+</div>
+<pre><code>// src/app/app.config.ts
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideRouter(routes),
+    provideHttpClient(),
+    provideTransloco({ ... }),
+  ],
+};</code></pre>
+<p>
+  Точка входа — <code>src/main.ts</code>: <code>bootstrapApplication(AppComponent, appConfig)</code>.
+</p>
+
+<h2>5. Взаимодействие компонентов</h2>
+<p>Шесть способов — важно знать все, чтобы выбрать подходящий для сценария:</p>
+<div class="card">
+  <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border); color:var(--text-muted);">
+        <th style="text-align:left; padding:6px 12px 6px 0;">Способ</th>
+        <th style="text-align:left; padding:6px 12px;">Когда использовать</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>input() / output()</code></td>
+        <td style="padding:8px 12px;">Родитель → дочерний (input), дочерний → родитель (output)</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">Shared service</td>
+        <td style="padding:8px 12px;">Несвязанные компоненты (sibling, далёкие узлы дерева)</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>viewChild()</code></td>
+        <td style="padding:8px 12px;">Родитель вызывает метод/читает свойство дочернего</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>model()</code></td>
+        <td style="padding:8px 12px;">Двусторонняя привязка ([(ngModel)]-аналог для сигналов)</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;">RxJS Subject в сервисе</td>
+        <td style="padding:8px 12px;">Реактивный поток событий между несвязанными компонентами</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px 8px 0;">NgRx / SignalStore</td>
+        <td style="padding:8px 12px;">Глобальное состояние, сложные flows, dev tools нужны</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<hr class="divider" />
+
+<h2>Проверь себя</h2>
+<p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:24px;">
+  Retrieval practice — не подглядывай в текст выше. Выбери один вариант.
+</p>
+
+<div class="quiz" id="q1">
+  <p class="quiz-question">1. Angular — это фреймворк или библиотека? В чём главное отличие?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q1',false)">
+      Библиотека — реализует только UI-слой, остальное добавляется отдельно
+    </button>
+    <button class="quiz-option" onclick="answer(this,'q1',true)">
+      Фреймворк — маршрутизация, DI, HTTP, формы встроены с нуля
+    </button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">
+      Платформа — набор независимых пакетов, собираемых по задаче
+    </button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">
+      Среда выполнения — управляет рендерингом и реактивностью компонентов
+    </button>
+  </div>
+  <div class="quiz-feedback" id="q1-fb"></div>
+</div>
+
+<div class="quiz" id="q2">
+  <p class="quiz-question">2. За что отвечает файл <code>angular.json</code>?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q2',false)">
+      Точка входа приложения: вызов bootstrapApplication и корневой компонент
+    </button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">
+      Провайдеры и DI-граф приложения для standalone-режима проекта
+    </button>
+    <button class="quiz-option" onclick="answer(this,'q2',true)">
+      Конфигурация воркспейса: projects, build targets, assets, styles
+    </button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">
+      Конфигурация TypeScript: strict, paths, lib, target компилятора
+    </button>
+  </div>
+  <div class="quiz-feedback" id="q2-fb"></div>
+</div>
+
+<div class="quiz" id="q3">
+  <p class="quiz-question">3. Где регистрируются глобальные провайдеры в standalone-приложении?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q3',false)">
+      В <code>src/main.ts</code> — там вызывается bootstrapApplication
+    </button>
+    <button class="quiz-option" onclick="answer(this,'q3',true)">
+      В <code>app.config.ts</code> — объект ApplicationConfig передаётся в bootstrap
+    </button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">
+      В <code>AppComponent</code> — в декораторе @Component в поле providers
+    </button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">
+      В <code>angular.json</code> — секция globalProviders глобальных зависимостей
+    </button>
+  </div>
+  <div class="quiz-feedback" id="q3-fb"></div>
+</div>
+
+<div class="quiz" id="q4">
+  <p class="quiz-question">4. Два несвязанных sibling-компонента должны обмениваться данными. Лучший способ?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q4',false)">
+      input() / output() — прямая привязка между родителем и ребёнком
+    </button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">
+      viewChild() — родитель читает свойство дочернего компонента напрямую
+    </button>
+    <button class="quiz-option" onclick="answer(this,'q4',true)">
+      Shared service — синглтон держит состояние, оба компонента его инжектят
+    </button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">
+      model() — двусторонняя сигнальная привязка между родителем и ребёнком
+    </button>
+  </div>
+  <div class="quiz-feedback" id="q4-fb"></div>
+</div>
+
+<div class="quiz" id="q5">
+  <p class="quiz-question">5. Какой флаг ng new создаёт конфигурацию для серверного рендеринга?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q5',false)">
+      <code>--universal</code>
+    </button>
+    <button class="quiz-option" onclick="answer(this,'q5',true)">
+      <code>--ssr</code>
+    </button>
+    <button class="quiz-option" onclick="answer(this,'q5',false)">
+      <code>--server</code>
+    </button>
+    <button class="quiz-option" onclick="answer(this,'q5',false)">
+      <code>--prerender</code>
+    </button>
+  </div>
+  <div class="quiz-feedback" id="q5-fb"></div>
+</div>
+
+<hr class="divider" />
+
+<div class="source-link">
+  <strong>Первоисточник:</strong>
+  <a href="https://angular.dev/overview" target="_blank">angular.dev — Overview</a>
+  — официальная документация. Рекомендую прочитать раздел «What is Angular?» целиком — там есть сравнение с другими фреймворками и архитектурные принципы.
+</div>
+
+<div class="ask-teacher">
+  <strong>Есть вопрос?</strong> Спроси прямо здесь, в чате. Учитель рядом — объяснит, уточнит или покажет пример из твоего реального кода.
+</div>
+
+<div class="nav-links">
+  <a href="0001-exhaustmap-vs-concatmap.html">← Урок 1: exhaustMap vs concatMap</a>
+  <span style="color:var(--text-muted); margin:0 8px;">·</span>
+  <a href="0003-components-basics.html">Урок 3: Компоненты — базовые →</a>
+</div>
+
+<script>
+  const feedback = {
+    q1: {
+      true:  'Верно. Angular — полный фреймворк: навязывает структуру и включает всё нужное. React — библиотека: только UI, архитектуру выбираешь сам.',
+      false: 'Не совсем. Angular называют фреймворком (а не библиотекой, платформой или средой выполнения) именно потому, что он включает routing, DI, HttpClient, Forms — «батарейки в комплекте».'
+    },
+    q2: {
+      true:  'Верно. angular.json — конфигурация воркспейса: откуда брать assets, какие styles глобальные, build targets (production / development), тест-раннер.',
+      false: 'Нет. Это не angular.json. Для точки входа — main.ts, для провайдеров — app.config.ts, для TypeScript — tsconfig.json.'
+    },
+    q3: {
+      true:  'Верно. app.config.ts экспортирует ApplicationConfig и передаётся вторым аргументом в bootstrapApplication(AppComponent, appConfig).',
+      false: 'Не совсем. main.ts вызывает bootstrap, но объект с провайдерами описывается в app.config.ts. Так удобнее: конфиги реинжектируются для тестов.'
+    },
+    q4: {
+      true:  'Верно. Shared service — классический паттерн для sibling-компонентов: синглтон хранит состояние или эмитит события, оба подписываются.',
+      false: 'Нет. input()/output() и viewChild() работают только по иерархии родитель–дочерний. model() — тоже родитель–дочерний (двусторонний). Для sibling нужен сервис.'
+    },
+    q5: {
+      true:  'Верно. ng new my-app --ssr добавляет серверный рендеринг: создаёт server.ts, настраивает Angular Universal / SSR builder.',
+      false: 'Нет. До Angular 17 флаг назывался --universal (отдельный пакет). Сейчас — --ssr, он встроен в Angular CLI напрямую.'
+    },
+  };
+
+  function answer(btn, qId, isCorrect) {
+    const container = document.getElementById(qId);
+    const allBtns = container.querySelectorAll('.quiz-option');
+    allBtns.forEach(b => { b.disabled = true; });
+    btn.classList.add(isCorrect ? 'correct' : 'wrong');
+
+    const fb = document.getElementById(qId + '-fb');
+    fb.textContent = feedback[qId][String(isCorrect)];
+    fb.className = 'quiz-feedback show ' + (isCorrect ? 'correct' : 'wrong');
+  }
+</script>
+
+</body>
+</html>

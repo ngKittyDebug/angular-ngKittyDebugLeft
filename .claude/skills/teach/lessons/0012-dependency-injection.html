@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Урок 12 — Dependency Injection</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+<p class="subtitle">Урок 12 из серии «Angular Interview Prep»</p>
+<h1>Dependency Injection — базовый</h1>
+<p class="subtitle">inject(), providedIn, standalone DI, ViewChild.</p>
+
+<hr class="divider" />
+
+<h2>1. Что такое Dependency Injection?</h2>
+<p>
+  DI — паттерн, при котором объект получает свои зависимости извне, а не создаёт их сам.
+  Angular-инжектор хранит экземпляры сервисов и передаёт их компонентам при запросе.
+</p>
+<div class="card accent">
+  <span class="tag accent">Зачем DI?</span>
+  <p>
+    Тестируемость (можно подменить зависимость моком), переиспользование (сервис создаётся один раз),
+    слабая связанность (компонент не знает, как создаётся сервис).
+  </p>
+</div>
+
+<h2>2. Создание сервиса и inject()</h2>
+<pre><code>@Injectable({ providedIn: 'root' })
+export class UserService {
+  private http = inject(HttpClient);
+
+  getUser(id: string) {
+    return this.http.get&lt;User&gt;(`/api/users/${id}`);
+  }
+}
+
+// В компоненте:
+export class ProfileComponent {
+  private userService = inject(UserService); // modern API
+  // или через конструктор (устаревший способ, но валиден):
+  // constructor(private userService: UserService) {}
+}</code></pre>
+
+<h2>3. providedIn: 'root' vs 'any' vs providers в компоненте</h2>
+<div class="card">
+  <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border); color:var(--text-muted);">
+        <th style="text-align:left; padding:6px 12px 6px 0;">Способ</th>
+        <th style="text-align:left; padding:6px 12px;">Область действия</th>
+        <th style="text-align:left; padding:6px 12px;">Когда</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>providedIn: 'root'</code></td>
+        <td style="padding:8px 12px;">Всё приложение, синглтон</td>
+        <td style="padding:8px 12px;">Глобальные сервисы (AuthService, ThemeService)</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 12px 8px 0;"><code>providedIn: 'any'</code></td>
+        <td style="padding:8px 12px;">Каждый lazy-модуль свой экземпляр</td>
+        <td style="padding:8px 12px;">Сервис с состоянием для lazy-feature</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px 8px 0;"><code>providers: []</code> в @Component</td>
+        <td style="padding:8px 12px;">Только этот компонент + потомки</td>
+        <td style="padding:8px 12px;">Изолировать сервис для одной части UI</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<div class="card accent">
+  <span class="tag orange">Ловушка на интервью</span>
+  <p>
+    Сервис в <code>providers: []</code> компонента — <strong>новый экземпляр</strong> для каждого
+    экземпляра компонента, не синглтон. При уничтожении компонента — сервис тоже уничтожается.
+  </p>
+</div>
+
+<h2>4. DI в standalone компонентах</h2>
+<pre><code>// В маршруте — для lazy feature:
+{
+  path: 'profile',
+  providers: [ProfileService], // доступен только этой фиче
+  loadComponent: () => import('./profile.component'),
+}
+
+// В компоненте:
+@Component({
+  providers: [LocalDialogService], // только для этого компонента
+})
+export class ProfileComponent {
+  private dialog = inject(LocalDialogService);
+}</code></pre>
+
+<h2>5. ViewChild и ViewChildren</h2>
+<pre><code>@Component({
+  template: `
+    &lt;input #nameInput /&gt;
+    &lt;app-card #card /&gt;
+  `,
+})
+export class FormComponent {
+  // Ссылка на DOM-элемент
+  nameInput = viewChild&lt;ElementRef&gt;('nameInput');
+
+  // Ссылка на дочерний компонент
+  card = viewChild(CardComponent);
+
+  // Несколько элементов
+  items = viewChildren(ItemComponent);
+
+  ngAfterViewInit() {
+    this.nameInput()?.nativeElement.focus();
+  }
+}</code></pre>
+<div class="card accent">
+  <span class="tag accent">Формула ответа</span>
+  <p>
+    <code>viewChild()</code> — Signal API (Angular 17+), доступен сразу как signal.
+    Старый <code>@ViewChild()</code> — доступен только после <code>ngAfterViewInit</code>.
+    <code>viewChildren()</code> возвращает <code>Signal&lt;ReadonlyArray&lt;T&gt;&gt;</code>.
+  </p>
+</div>
+
+<hr class="divider" />
+
+<h2>Проверь себя</h2>
+<p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:24px;">
+  Retrieval practice — не подглядывай в текст выше. Выбери один вариант.
+</p>
+
+<div class="quiz" id="q1">
+  <p class="quiz-question">1. Какова основная цель Dependency Injection?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Ускорить загрузку приложения за счёт отложенного создания сервисов</button>
+    <button class="quiz-option" onclick="answer(this,'q1',true)">Слабая связанность, переиспользование, тестируемость через подмену зависимостей</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Гарантировать один экземпляр каждого класса во всём приложении</button>
+    <button class="quiz-option" onclick="answer(this,'q1',false)">Автоматически создавать сервисы по имени класса в шаблонах</button>
+  </div>
+  <div class="quiz-feedback" id="q1-fb"></div>
+</div>
+
+<div class="quiz" id="q2">
+  <p class="quiz-question">2. Сколько экземпляров создаст сервис с providedIn: 'root'?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q2',false)">По одному на каждый компонент, использующий сервис</button>
+    <button class="quiz-option" onclick="answer(this,'q2',true)">Один на всё приложение — синглтон в root injector</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">По одному на каждый lazy-loaded модуль или маршрут</button>
+    <button class="quiz-option" onclick="answer(this,'q2',false)">По одному на каждое дерево компонентов с OnPush стратегией</button>
+  </div>
+  <div class="quiz-feedback" id="q2-fb"></div>
+</div>
+
+<div class="quiz" id="q3">
+  <p class="quiz-question">3. Сервис объявлен в providers: [] компонента. Что это означает?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Сервис станет синглтоном в масштабе всего приложения</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Сервис будет доступен только самому компоненту, не потомкам</button>
+    <button class="quiz-option" onclick="answer(this,'q3',true)">Новый экземпляр для этого компонента и потомков, уничтожается с компонентом</button>
+    <button class="quiz-option" onclick="answer(this,'q3',false)">Сервис будет создан при старте приложения и никогда не уничтожен</button>
+  </div>
+  <div class="quiz-feedback" id="q3-fb"></div>
+</div>
+
+<div class="quiz" id="q4">
+  <p class="quiz-question">4. Когда доступен ViewChild через @ViewChild() — в конструкторе или ngAfterViewInit?</p>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(this,'q4',false)">В конструкторе — Angular инициализирует его до DI</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">В ngOnInit — после установки Input-ов и перед рендером</button>
+    <button class="quiz-option" onclick="answer(this,'q4',true)">В ngAfterViewInit — после первого рендера шаблона компонента</button>
+    <button class="quiz-option" onclick="answer(this,'q4',false)">В ngOnChanges — при изменении любого Input-свойства</button>
+  </div>
+  <div class="quiz-feedback" id="q4-fb"></div>
+</div>
+
+<hr class="divider" />
+
+<div class="source-link">
+  <strong>Первоисточник:</strong>
+  <a href="https://angular.dev/guide/di" target="_blank">angular.dev — Dependency Injection</a>
+  — inject(), иерархия инжекторов, токены, провайдеры.
+</div>
+
+<div class="ask-teacher">
+  <strong>Есть вопрос?</strong> Спроси прямо здесь, в чате. Учитель рядом — объяснит, уточнит или покажет пример из твоего реального кода.
+</div>
+
+<div class="nav-links">
+  <a href="0011-change-detection.html">← Урок 11: Change Detection</a>
+  <span style="color:var(--text-muted); margin:0 8px;">·</span>
+  <a href="0013-directives-structural.html">Урок 13: Directives — структурные →</a>
+</div>
+
+<script>
+  const feedback = {
+    q1: {
+      true: 'Верно. DI — паттерн слабой связанности. Главные выгоды: тестируемость (мок зависимостей), переиспользование, разделение ответственности.',
+      false: 'Нет. DI — про архитектуру, не оптимизацию загрузки и не про синглтоны (они следствие, не цель).'
+    },
+    q2: {
+      true: 'Верно. providedIn: "root" регистрирует сервис в root injector — один синглтон для всего приложения.',
+      false: 'Нет. Один на всё приложение. Для per-component — providers в @Component. Для per-lazy-module — providedIn: "any".'
+    },
+    q3: {
+      true: 'Верно. providers в @Component создаёт новый экземпляр для данного поддерева. Потомки получают тот же экземпляр. При destroy компонента — сервис тоже.',
+      false: 'Нет. providers в компоненте — это component-level injector. Сервис доступен компоненту И его потомкам, не только самому компоненту.'
+    },
+    q4: {
+      true: 'Верно. @ViewChild() заполняется после рендера шаблона — в ngAfterViewInit. В конструкторе и ngOnInit — undefined.',
+      false: 'Нет. Шаблон рендерится позже. @ViewChild доступен в ngAfterViewInit. Signal-based viewChild() доступен раньше.'
+    },
+  };
+
+  function answer(btn, qId, isCorrect) {
+    const container = document.getElementById(qId);
+    const allBtns = container.querySelectorAll('.quiz-option');
+    allBtns.forEach(b => { b.disabled = true; });
+    btn.classList.add(isCorrect ? 'correct' : 'wrong');
+    const fb = document.getElementById(qId + '-fb');
+    fb.textContent = feedback[qId][String(isCorrect)];
+    fb.className = 'quiz-feedback show ' + (isCorrect ? 'correct' : 'wrong');
+  }
+</script>
+
+</body>
+</html>
