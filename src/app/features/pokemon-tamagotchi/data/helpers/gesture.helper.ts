@@ -1,4 +1,4 @@
-import { BOND_LEVEL, GESTURE_CONFIGS, GESTURE_THRESHOLDS } from '../constants/gesture.constants';
+import { GESTURE_CONFIGS, GESTURE_THRESHOLDS } from '../constants/gesture.constants';
 import type {
   GestureConfigModel,
   InteractionEventModel,
@@ -43,20 +43,6 @@ export function buildGestureResult(type: InteractionType, intensity: number): Ge
     animationTrigger: config.animationTrigger,
     event: createInteractionEvent(type, intensity),
   };
-}
-
-export function calculateBondLevel(
-  history: InteractionEventModel[],
-  now: number = Date.now(),
-): number {
-  const recent = history.filter((event) => now - event.timestamp <= BOND_LEVEL.WINDOW_MS);
-  const score = recent.reduce((total, event) => {
-    const weight = BOND_LEVEL.TYPE_WEIGHT[event.type];
-
-    return total + event.intensity * weight * 10;
-  }, 0);
-
-  return Math.min(BOND_LEVEL.MAX, Math.round(score));
 }
 
 export function classifyPointerGesture(

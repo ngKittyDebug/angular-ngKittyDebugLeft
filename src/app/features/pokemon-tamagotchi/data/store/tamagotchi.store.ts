@@ -1,9 +1,16 @@
-import { computed, inject } from '@angular/core';
-import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
+import { computed, DestroyRef, inject } from '@angular/core';
+import {
+  patchState,
+  signalStore,
+  withComputed,
+  withHooks,
+  withMethods,
+  withState,
+} from '@ngrx/signals';
+import { rxMethod } from '@ngrx/signals/rxjs-interop';
+import { debounceTime, pipe, tap } from 'rxjs';
 import { TAMAGOTCHI_SYSTEM_ERRORS } from '../constants/system-errors.constants';
-import { calculateBondLevel } from '../helpers/gesture.helper';
-import { sortNotificationsByPriority } from '../helpers/notification-factory.helper';
-import { TamagotchiErrorRecoveryService } from '../services/tamagotchi-error-recovery.service';
+import { TamagotchiLoggerService } from '../services/tamagotchi-logger.service';
 import { TamagotchiPersistenceService } from '../services/tamagotchi-persistence.service';
 import type { InteractionEventModel } from '../models/interaction.model';
 import type { NotificationModel } from '../models/notification.model';
@@ -16,16 +23,19 @@ import {
   careForPokemonState,
   checkEvolutionState,
   clearErrorState,
-  clearPokemonState,
+  clearEvolutionReadyNotifiedState,
   completeEvolutionState,
   completeTrainingState,
   feedPokemonState,
+  healSelectionOriginIdState,
   initializeTamagotchiState,
   interactWithPokemonState,
   loadStateSuccessState,
+  markEvolutionReadyNotifiedState,
   playWithPokemonState,
   putToSleepState,
   resetStateTransition,
+  restartTrainingTimerState,
   saveStateSuccessState,
   selectPokemonState,
   setErrorState,
@@ -39,13 +49,13 @@ import { initialTamagotchiState } from './tamagotchi-initial';
 
 const SAVE_DEBOUNCE_MS = 300;
 
-export function snapshotState(store: {
+function snapshotState(store: {
   achievementList: () => TamagotchiStateModel['achievementList'];
   dailyRoutine: () => TamagotchiStateModel['dailyRoutine'];
   error: () => TamagotchiStateModel['error'];
   evolutionProgress: () => TamagotchiStateModel['evolutionProgress'];
   initialized: () => boolean;
-  interactionHistory: () => TamagotchiStateModel['interactionHistory'];
+  interactionHistoryList: () => TamagotchiStateModel['interactionHistoryList'];
   isEvolving: () => boolean;
   isSleeping: () => boolean;
   lastActionTime: () => TamagotchiStateModel['lastActionTime'];
@@ -53,6 +63,7 @@ export function snapshotState(store: {
   lastSaveTime: () => TamagotchiStateModel['lastSaveTime'];
   notificationList: () => TamagotchiStateModel['notificationList'];
   pokemon: () => TamagotchiStateModel['pokemon'];
+  selectionOriginId: () => TamagotchiStateModel['selectionOriginId'];
   status: () => TamagotchiStateModel['status'];
   trainingExperienceReward: () => TamagotchiStateModel['trainingExperienceReward'];
   trainingStartedAt: () => TamagotchiStateModel['trainingStartedAt'];
@@ -63,7 +74,7 @@ export function snapshotState(store: {
     error: store.error(),
     evolutionProgress: store.evolutionProgress(),
     initialized: store.initialized(),
-    interactionHistory: store.interactionHistory(),
+    interactionHistoryList: store.interactionHistoryList(),
     isEvolving: store.isEvolving(),
     isSleeping: store.isSleeping(),
     lastActionTime: store.lastActionTime(),
@@ -71,6 +82,7 @@ export function snapshotState(store: {
     lastSaveTime: store.lastSaveTime(),
     notificationList: store.notificationList(),
     pokemon: store.pokemon(),
+    selectionOriginId: store.selectionOriginId(),
     status: store.status(),
     trainingExperienceReward: store.trainingExperienceReward(),
     trainingStartedAt: store.trainingStartedAt(),
@@ -78,27 +90,19 @@ export function snapshotState(store: {
 }
 
 export const TamagotchiStore = signalStore(
-  { providedIn: 'root' },
   withState(initialTamagotchiState),
   withComputed((store) => ({
     hasPokemon: computed(() => store.pokemon() !== null),
     isTraining: computed(() => store.trainingStartedAt() !== null),
     canEvolve: computed(() => store.evolutionProgress().isReady && !store.isEvolving()),
-    snapshot: computed(() => snapshotState(store)),
-    unreadNotifications: computed(() =>
-      sortNotificationsByPriority(
-        store.notificationList().filter((notification) => !notification.read),
-      ),
-    ),
-    bondLevel: computed(() => calculateBondLevel(store.interactionHistory())),
   })),
   withMethods(
     (
       store,
-      errorRecovery = inject(TamagotchiErrorRecoveryService),
+      logger = inject(TamagotchiLoggerService),
       persistence = inject(TamagotchiPersistenceService),
     ) => {
-      let saveTimer: ReturnType<typeof setTimeout> | null = null;
+      let pendingSave = false;
 
       const performSave = (): void => {
         if (!store.initialized()) {
@@ -113,26 +117,34 @@ export const TamagotchiStore = signalStore(
 
           patchState(store, (current) => saveStateSuccessState(current, savedAt));
         } catch (error) {
-          errorRecovery.logError('saveState', error);
+          logger.logError('saveState', error);
           patchState(store, (current) =>
             setErrorState(current, TAMAGOTCHI_SYSTEM_ERRORS.SAVE_FAILED),
           );
         }
       };
 
+      const saveStateDebounced = rxMethod<void>(
+        pipe(
+          debounceTime(SAVE_DEBOUNCE_MS),
+          tap(() => {
+            if (!pendingSave) {
+              return;
+            }
+
+            pendingSave = false;
+            performSave();
+          }),
+        ),
+      );
+
       const scheduleSave = (): void => {
         if (!store.initialized()) {
           return;
         }
 
-        if (saveTimer !== null) {
-          clearTimeout(saveTimer);
-        }
-
-        saveTimer = setTimeout(() => {
-          saveTimer = null;
-          performSave();
-        }, SAVE_DEBOUNCE_MS);
+        pendingSave = true;
+        saveStateDebounced();
       };
 
       const mutateAndSave = (
@@ -143,6 +155,15 @@ export const TamagotchiStore = signalStore(
       };
 
       return {
+        flushSave(): void {
+          if (!pendingSave) {
+            return;
+          }
+
+          pendingSave = false;
+          performSave();
+        },
+
         loadFromPersistence(): void {
           try {
             const loaded = persistence.load();
@@ -162,7 +183,7 @@ export const TamagotchiStore = signalStore(
               }),
             );
           } catch (error) {
-            errorRecovery.logError('loadFromPersistence', error);
+            logger.logError('loadFromPersistence', error);
             patchState(store, (current) =>
               initializeTamagotchiState(
                 setErrorState(current, TAMAGOTCHI_SYSTEM_ERRORS.LOAD_FAILED),
@@ -175,10 +196,8 @@ export const TamagotchiStore = signalStore(
           mutateAndSave((state) => selectPokemonState(state, pokemon));
         },
 
-        clearPokemon(): void {
-          persistence.clear();
-          patchState(store, clearPokemonState);
-          scheduleSave();
+        healSelectionOriginId(selectionOriginId: string): void {
+          mutateAndSave((state) => healSelectionOriginIdState(state, selectionOriginId));
         },
 
         feed(now: number): void {
@@ -205,16 +224,20 @@ export const TamagotchiStore = signalStore(
           mutateAndSave((state) => completeTrainingState(state, now, experienceGain));
         },
 
+        restartTrainingTimer(now: number): void {
+          mutateAndSave((state) => restartTrainingTimerState(state, now));
+        },
+
         putToSleep(now: number): void {
           mutateAndSave((state) => putToSleepState(state, now));
         },
 
-        wakeUp(now: number): void {
-          mutateAndSave((state) => wakeUpState(state, now));
+        wakeUp(now: number, bonusEnergy = 0): void {
+          mutateAndSave((state) => wakeUpState(state, now, bonusEnergy));
         },
 
-        interactWithPokemon(interaction: InteractionEventModel, now: number): void {
-          mutateAndSave((state) => interactWithPokemonState(state, interaction, now));
+        interactWithPokemon(interaction: InteractionEventModel): void {
+          mutateAndSave((state) => interactWithPokemonState(state, interaction));
         },
 
         updateStatus(statusUpdate: StatusUpdateModel): void {
@@ -231,6 +254,14 @@ export const TamagotchiStore = signalStore(
 
         checkEvolution(): void {
           mutateAndSave(checkEvolutionState);
+        },
+
+        markEvolutionReadyNotified(notifiedAt: number): void {
+          mutateAndSave((state) => markEvolutionReadyNotifiedState(state, notifiedAt));
+        },
+
+        clearEvolutionReadyNotified(): void {
+          mutateAndSave(clearEvolutionReadyNotifiedState);
         },
 
         startEvolution(): void {
@@ -261,4 +292,37 @@ export const TamagotchiStore = signalStore(
       };
     },
   ),
+  withHooks({
+    onInit(store) {
+      const destroyReference = inject(DestroyRef);
+      const flushSave = (): void => {
+        store.flushSave();
+      };
+      const flushOnHidden = (): void => {
+        if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+          flushSave();
+        }
+      };
+
+      if (typeof document !== 'undefined') {
+        document.addEventListener('visibilitychange', flushOnHidden);
+      }
+
+      if (typeof window !== 'undefined') {
+        window.addEventListener('pagehide', flushSave);
+      }
+
+      destroyReference.onDestroy(() => {
+        flushSave();
+
+        if (typeof document !== 'undefined') {
+          document.removeEventListener('visibilitychange', flushOnHidden);
+        }
+
+        if (typeof window !== 'undefined') {
+          window.removeEventListener('pagehide', flushSave);
+        }
+      });
+    },
+  }),
 );

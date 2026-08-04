@@ -1,6 +1,4 @@
-export type PerformanceMode = 'auto' | 'balanced' | 'high' | 'low';
-
-export type EffectivePerformanceMode = 'balanced' | 'high' | 'low';
+export type PerformanceMode = 'balanced' | 'high' | 'low';
 
 export interface PerformanceProfileModel {
   complexAnimations: boolean;

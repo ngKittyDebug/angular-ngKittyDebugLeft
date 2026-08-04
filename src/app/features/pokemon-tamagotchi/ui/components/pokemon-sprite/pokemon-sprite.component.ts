@@ -1,22 +1,24 @@
 import type { ElementRef } from '@angular/core';
 import {
-  afterNextRender,
+  afterRenderEffect,
   ChangeDetectionStrategy,
   Component,
   computed,
-  DestroyRef,
   inject,
   input,
   output,
   signal,
   viewChild,
 } from '@angular/core';
-import { ANIMATION_PERFORMANCE } from '../../../data/constants/animation-performance.constants';
+import { TranslocoDirective } from '@jsverse/transloco';
 import {
   resolveSpriteUrl,
   resolveStatusSpriteKey,
 } from '../../../data/helpers/sprite-variation.helper';
-import type { InteractionEventModel } from '../../../data/models/interaction.model';
+import type {
+  InteractionEventModel,
+  InteractionType,
+} from '../../../data/models/interaction.model';
 import type { PokemonModel } from '../../../data/models/pokemon.model';
 import type { PokemonStatusModel } from '../../../data/models/pokemon-status.model';
 import { AnimationService } from '../../services/animation.service';
@@ -24,7 +26,7 @@ import { GestureService } from '../../services/gesture.service';
 
 @Component({
   selector: 'left-paw-pokemon-sprite',
-  imports: [],
+  imports: [TranslocoDirective],
   providers: [GestureService],
   templateUrl: './pokemon-sprite.component.html',
   styleUrl: './pokemon-sprite.component.scss',
@@ -32,10 +34,8 @@ import { GestureService } from '../../services/gesture.service';
 })
 export class PokemonSpriteComponent {
   private readonly animationService = inject(AnimationService);
-  private readonly destroyRef = inject(DestroyRef);
   private readonly gestureService = inject(GestureService);
   private readonly spriteImage = viewChild<ElementRef<HTMLImageElement>>('spriteImage');
-  private feedbackTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private pointerHandledInteraction = false;
 
   public readonly interacted = output<InteractionEventModel>();
@@ -45,6 +45,7 @@ export class PokemonSpriteComponent {
   public readonly pokemon = input.required<PokemonModel>();
   public readonly status = input.required<PokemonStatusModel>();
 
+  protected readonly canInteract = computed(() => !this.isSleeping() && !this.isEvolving());
   protected readonly feedbackAnimation = signal<string | null>(null);
   protected readonly useComplexAnimations = computed(() =>
     this.animationService.shouldUseComplexAnimations(),
@@ -86,18 +87,26 @@ export class PokemonSpriteComponent {
   });
 
   public constructor() {
-    afterNextRender(() => {
-      const image = this.spriteImage()?.nativeElement;
+    afterRenderEffect({
+      write: (onCleanup) => {
+        const image = this.spriteImage()?.nativeElement;
 
-      if (!image || !this.useComplexAnimations()) {
-        return;
-      }
+        if (!image) {
+          return;
+        }
 
-      this.animationService.enableGpuCompositing(image);
+        if (!this.useComplexAnimations()) {
+          this.animationService.releaseGpuCompositing(image);
 
-      this.destroyRef.onDestroy(() => {
-        this.animationService.releaseGpuCompositing(image);
-      });
+          return;
+        }
+
+        this.animationService.enableGpuCompositing(image);
+
+        onCleanup(() => {
+          this.animationService.releaseGpuCompositing(image);
+        });
+      },
     });
   }
 
@@ -108,7 +117,26 @@ export class PokemonSpriteComponent {
       return;
     }
 
-    this.applyGestureResult(this.gestureService.handleKeyboardActivate());
+    this.applyGestureResult(this.gestureService.handleKeyboardActivate('click'));
+  }
+
+  protected onKeydown(event: KeyboardEvent): void {
+    if (!this.canInteract()) {
+      return;
+    }
+
+    if (event.key !== 'Enter' && event.key !== ' ') {
+      return;
+    }
+
+    const gestureType = this.resolveKeyboardGesture(event);
+
+    if (!gestureType) {
+      return;
+    }
+
+    event.preventDefault();
+    this.applyGestureResult(this.gestureService.handleKeyboardActivate(gestureType));
   }
 
   protected onPointerDown(event: PointerEvent): void {
@@ -132,24 +160,42 @@ export class PokemonSpriteComponent {
   }
 
   protected onPointerUp(event: PointerEvent): void {
-    if (!this.canInteract()) {
+    const result = this.gestureService.handlePointerUp(event);
+
+    if (!this.canInteract() || !result) {
       return;
     }
 
-    const result = this.gestureService.handlePointerUp(event);
-
-    if (result) {
-      this.pointerHandledInteraction = true;
-      this.applyGestureResult(result);
-    }
+    this.pointerHandledInteraction = true;
+    this.applyGestureResult(result);
   }
 
   protected onPointerCancel(event: PointerEvent): void {
     this.gestureService.handlePointerCancel(event);
   }
 
-  private canInteract(): boolean {
-    return !this.isSleeping() && !this.isEvolving() && !this.isTraining();
+  protected onFeedbackAnimationEnd(event: AnimationEvent): void {
+    if (event.animationName !== this.feedbackAnimation()) {
+      return;
+    }
+
+    this.feedbackAnimation.set(null);
+  }
+
+  private resolveKeyboardGesture(event: KeyboardEvent): InteractionType | null {
+    if (event.ctrlKey || event.metaKey) {
+      return 'multiTouch';
+    }
+
+    if (event.altKey) {
+      return 'drag';
+    }
+
+    if (event.shiftKey) {
+      return 'pet';
+    }
+
+    return null;
   }
 
   private applyGestureResult(result: {
@@ -165,15 +211,12 @@ export class PokemonSpriteComponent {
   }
 
   private triggerFeedbackAnimation(animationClass: string): void {
-    this.feedbackAnimation.set(animationClass);
+    if (!this.useComplexAnimations()) {
+      this.feedbackAnimation.set(null);
 
-    if (this.feedbackTimeoutId !== null) {
-      clearTimeout(this.feedbackTimeoutId);
+      return;
     }
 
-    this.feedbackTimeoutId = setTimeout(() => {
-      this.feedbackAnimation.set(null);
-      this.feedbackTimeoutId = null;
-    }, ANIMATION_PERFORMANCE.FEEDBACK_ANIMATION_MS);
+    this.feedbackAnimation.set(animationClass);
   }
 }

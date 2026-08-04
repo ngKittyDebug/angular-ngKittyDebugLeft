@@ -2,7 +2,7 @@ import { EVOLUTION_REQUIREMENTS } from '../constants/evolution-criteria.constant
 import { GAME_BALANCE } from '../constants/game-balance.constants';
 import type { EvolutionProgressModel } from '../models/evolution.model';
 import type { PokemonStatusModel } from '../models/pokemon-status.model';
-import type { DailyRoutine, TamagotchiStateModel } from '../models/tamagotchi-state.model';
+import type { DailyRoutineModel, TamagotchiStateModel } from '../models/tamagotchi-state.model';
 
 export function createInitialPokemonStatus(): PokemonStatusModel {
   return {
@@ -13,7 +13,9 @@ export function createInitialPokemonStatus(): PokemonStatusModel {
     hydration: GAME_BALANCE.THRESHOLDS.MAXIMUM,
     experience: 0,
     level: 1,
+    lastCareTime: null,
     lastFeedTime: null,
+    lastTrainTime: null,
     lastPlayTime: null,
     lastSleepTime: null,
     lastHydrationTime: null,
@@ -32,10 +34,11 @@ export function createInitialEvolutionProgress(): EvolutionProgressModel {
     requirements: [...EVOLUTION_REQUIREMENTS],
     currentProgress,
     isReady: false,
+    readyNotifiedAt: null,
   };
 }
 
-export function createInitialDailyRoutine(): DailyRoutine {
+export function createInitialDailyRoutine(): DailyRoutineModel {
   return {
     activityCounts: {},
     bonusAppliedDate: null,
@@ -48,13 +51,14 @@ export function createInitialDailyRoutine(): DailyRoutine {
 export function createInitialTamagotchiState(): TamagotchiStateModel {
   return {
     pokemon: null,
+    selectionOriginId: null,
     status: createInitialPokemonStatus(),
     achievementList: [],
     evolutionProgress: createInitialEvolutionProgress(),
     lastActionTime: null,
     lastDecayTime: null,
     dailyRoutine: createInitialDailyRoutine(),
-    interactionHistory: [],
+    interactionHistoryList: [],
     isSleeping: false,
     isEvolving: false,
     trainingStartedAt: null,

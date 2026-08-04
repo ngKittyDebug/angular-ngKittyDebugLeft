@@ -1,0 +1,26 @@
+<div *transloco="let t; prefix: 'pokemonProfile.tamagotchiSelection'" class="tamagotchi-selection">
+  <button
+    class="tamagotchi-selection__button"
+    appearance="brand-accent"
+    size="m"
+    tuiButton
+    type="button"
+    [disabled]="loading() || isCurrentSelection()"
+    (click)="onSelectClick()"
+  >
+    {{ isCurrentSelection() ? t('alreadySelected') : t('selectButton') }}
+  </button>
+
+  @if (isCurrentSelection()) {
+    <a
+      [routerLink]="tamagotchiRoute()"
+      class="tamagotchi-selection__button"
+      size="m"
+      appearance="outline"
+      tuiButton
+      type="button"
+    >
+      {{ t('openTamagotchi') }}
+    </a>
+  }
+</div>

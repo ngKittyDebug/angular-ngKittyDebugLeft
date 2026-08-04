@@ -86,8 +86,8 @@ export class PerfMetricsService {
   }
 
   private countRestructures(now: number): void {
-    const itemsReference = this.facade.renderedItems();
-    const playersReference = this.facade.renderedPlayers();
+    const itemsReference = this.facade.renderedItemList();
+    const playersReference = this.facade.renderedPlayerList();
     let times = this.restructureTimes;
 
     if (itemsReference !== this.lastItemsRef) {

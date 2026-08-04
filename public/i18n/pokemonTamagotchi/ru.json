@@ -10,6 +10,7 @@
     "loading": "Загрузка тамагочи…",
     "saveFailedError": "Не удалось сохранить прогресс. Сессия всё ещё активна.",
     "stateLoadFailedError": "Не удалось загрузить сохранённый прогресс. Начинаем заново.",
+    "evolutionPrepareFailedError": "Не удалось загрузить форму эволюции. Закройте сообщение — попытка повторится.",
     "stateRecoveredWarning": "Прогресс восстановлен из резервной копии.",
     "dismissNotice": "Закрыть",
     "resetProgress": "Сбросить прогресс",
@@ -17,9 +18,7 @@
     "ariaLabel": "Экран ухода за покемоном-тамагочи",
     "performanceLabel": "Производительность",
     "performanceAria": "Режим производительности",
-    "performanceEffective": "Используется профиль «{{mode}}»",
     "performanceModes": {
-      "auto": "Авто",
       "high": "Высокая",
       "balanced": "Сбалансированная",
       "low": "Экономия"
@@ -33,7 +32,11 @@
     "hydration": "Гидратация",
     "experience": "Опыт",
     "tooltip": "{{label}}: {{value}} / {{max}}",
-    "levelTooltip": "Уровень {{level}} · {{experience}} опыта"
+    "levelTooltip": "Уровень {{level}} · {{experience}} опыта",
+    "warningBadge": "Предупреждение",
+    "criticalBadge": "Критично",
+    "alertWarning": "{{label}}: {{value}} / {{max}} — предупреждение",
+    "alertCritical": "{{label}}: {{value}} / {{max}} — критично"
   },
   "actions": {
     "feed": "Кормить",
@@ -44,10 +47,14 @@
     "sleep": "Спать",
     "wakeUp": "Разбудить",
     "cooldown": "Доступно через {{seconds}}с",
-    "disabledSleeping": "Покемон спит",
+    "cooldownAria": "{{action}} — доступно через {{seconds}}с",
+    "disabledAria": "{{action}} — недоступно: {{reason}}",
     "disabledLowEnergy": "Мало энергии",
     "disabledCooldown": "Перезарядка",
     "disabledTraining": "Идёт тренировка"
+  },
+  "sprite": {
+    "petAria": "Погладить {{name}}. Enter: касание, Shift+Enter: поглаживание, Alt+Enter: перетаскивание, Control+Enter: мультитач"
   },
   "notifications": {
     "empty": "Уведомлений пока нет",
@@ -85,10 +92,6 @@
       "energyCritical": {
         "title": "Истощён!",
         "message": "У покемона почти не осталось энергии."
-      },
-      "evolutionReady": {
-        "title": "Готов к эволюции!",
-        "message": "Все условия эволюции выполнены."
       }
     },
     "evolution": {

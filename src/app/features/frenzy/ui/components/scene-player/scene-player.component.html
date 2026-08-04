@@ -11,7 +11,7 @@
     aria-hidden="true"
   ></span>
 
-  @for (aura of player().effectAuras; track aura.className) {
+  @for (aura of player().effectAuraList; track aura.className) {
     @switch (aura.render) {
       @case ('shield') {
         <!-- shield ward: the glassy bubble + a one-shot ward-flash when a hit is deflected. -->
@@ -33,11 +33,11 @@
     }
   }
 
-  @if (player().effectBadges.length) {
+  @if (player().effectBadgeList.length) {
     <!-- Active buff/debuff badges, top-left over the sprite. Decorative overlay (pointer-events: none) so it never
          intercepts the poke; each icon carries its own aria-label from the frenzy.effects namespace. -->
     <span class="scene__badges" *transloco="let tEffects; prefix: 'frenzy.effects'">
-      @for (badge of player().effectBadges; track badge.kind) {
+      @for (badge of player().effectBadgeList; track badge.kind) {
         <tui-icon
           class="scene__effect-badge"
           [class.scene__effect-badge--warning]="badge.tone === 'warning'"

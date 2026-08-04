@@ -15,3 +15,11 @@ export function easeInOut(u: number): number {
 export function lerp(from: number, to: number, t: number): number {
   return from + (to - from) * t;
 }
+
+// Eased there-and-back over a cycle: 0 at phase 0 and 1, 1 at phase 0.5 — the shape the 0%/50%/100% keyframes use
+// (item breathe/sway, shadow breathe) and the `alternate` sway keyframe traces, ease-in-out both ways.
+export function pingPong(phase: number): number {
+  const t = fractional(phase);
+
+  return t < 0.5 ? easeInOut(t / 0.5) : easeInOut((1 - t) / 0.5);
+}

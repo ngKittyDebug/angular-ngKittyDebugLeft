@@ -1,4 +1,9 @@
-export const accordionData = [
+export interface AccordionItem {
+  title: string;
+  value: string;
+}
+
+export const ACCORDION_LIST: AccordionItem[] = [
   {
     title: `about.accordion.technologies.title`,
     value: `about.accordion.technologies.value`,

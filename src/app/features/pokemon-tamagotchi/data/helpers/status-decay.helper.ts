@@ -103,10 +103,6 @@ const STAT_ALERT_CONFIG: StatAlertConfig[] = [
   },
 ];
 
-function decreasedByWholeUnit(before: number, after: number): boolean {
-  return Math.floor(before) - Math.floor(after) === 1;
-}
-
 function detectStatAlerts(
   before: number,
   after: number,
@@ -114,17 +110,14 @@ function detectStatAlerts(
   lowType: StatusAlertType,
   criticalType: StatusAlertType,
 ): StatusAlertType[] {
-  if (!decreasedByWholeUnit(before, after)) {
-    return [];
-  }
-
+  const beforeLevel = getStatusIndicatorLevel(before, thresholds.warning, thresholds.critical);
   const afterLevel = getStatusIndicatorLevel(after, thresholds.warning, thresholds.critical);
 
-  if (afterLevel === 'critical') {
+  if (beforeLevel !== 'critical' && afterLevel === 'critical') {
     return [criticalType];
   }
 
-  if (afterLevel === 'warning') {
+  if (beforeLevel === 'normal' && afterLevel === 'warning') {
     return [lowType];
   }
 

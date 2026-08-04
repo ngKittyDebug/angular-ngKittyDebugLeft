@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, input, signal } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { TuiHint } from '@taiga-ui/core';
 import { TuiBadge, TuiProgress, TuiStatus } from '@taiga-ui/kit';
@@ -7,6 +7,7 @@ import {
   getStatusIndicatorLevel,
   getThresholdsForStatusType,
   resolveStatusIndicatorColor,
+  type StatusIndicatorLevel,
 } from '../../../data/helpers/status-indicator.helper';
 import type { StatusThresholdsModel, StatusType } from '../../../data/models/pokemon-status.model';
 
@@ -18,6 +19,8 @@ import type { StatusThresholdsModel, StatusType } from '../../../data/models/pok
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StatusIndicatorComponent {
+  private previousAlertLevel: StatusIndicatorLevel | null | undefined = undefined;
+
   public readonly currentValue = input.required<number>();
   public readonly maxValue = input<number>(100);
   public readonly statusType = input.required<StatusType>();
@@ -25,6 +28,7 @@ export class StatusIndicatorComponent {
   public readonly level = input<number | null>(null);
 
   protected readonly displayValue = computed(() => Math.round(this.currentValue()));
+  protected readonly liveAnnounceLevel = signal<'warning' | 'critical' | null>(null);
 
   protected readonly progressColor = computed(() =>
     resolveStatusIndicatorColor(this.statusType(), this.displayValue(), this.thresholds()),
@@ -39,4 +43,27 @@ export class StatusIndicatorComponent {
 
     return getStatusIndicatorLevel(this.displayValue(), bounds.warning, bounds.critical);
   });
+
+  public constructor() {
+    effect(() => {
+      const nextLevel = this.alertLevel();
+      const previousLevel = this.previousAlertLevel;
+
+      this.previousAlertLevel = nextLevel;
+
+      if (previousLevel === undefined) {
+        return;
+      }
+
+      if (nextLevel === 'critical' && previousLevel !== 'critical') {
+        this.liveAnnounceLevel.set('critical');
+
+        return;
+      }
+
+      if (nextLevel === 'warning' && previousLevel !== 'warning' && previousLevel !== 'critical') {
+        this.liveAnnounceLevel.set('warning');
+      }
+    });
+  }
 }

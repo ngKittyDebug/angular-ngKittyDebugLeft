@@ -1,17 +1,17 @@
 <main class="frenzy-page" [class.frenzy-page--mobile]="isMobile()">
   <left-paw-scene
     class="frenzy-page__scene"
-    [players]="players()"
-    [items]="items()"
+    [playerList]="playerList()"
+    [itemList]="itemList()"
     [myId]="myId()"
     [crownId]="crownId()"
     [evolvingPlayers]="evolvingPlayers()"
-    [ownedFloats]="ownedFloats()"
-    [orphanFloats]="orphanFloats()"
-    [blasts]="blasts()"
-    [hitBursts]="hitBursts()"
-    [ownedSparks]="ownedSparks()"
-    [ownedShieldBlocks]="ownedShieldBlocks()"
+    [ownedFloatList]="ownedFloatList()"
+    [orphanFloatList]="orphanFloatList()"
+    [blastList]="blastList()"
+    [hitBurstList]="hitBurstList()"
+    [ownedSparkList]="ownedSparkList()"
+    [ownedShieldBlockList]="ownedShieldBlockList()"
     (itemClick)="onItemClick($event)"
     (selfPoke)="onSelfPoke()"
     (pokeNpc)="onPokeNpc($event)"
@@ -36,13 +36,13 @@
         [hp]="myself.hp"
         [stage]="myself.stage"
         [body]="myself.body"
-        [effects]="activeEffects()"
+        [effectList]="activeEffectList()"
         [reaction]="reactionFace()"
         [compact]="isMobile()"
       />
       <left-paw-minimap
-        [players]="players()"
-        [items]="items()"
+        [playerList]="playerList()"
+        [itemList]="itemList()"
         [myId]="myId()"
         [leader]="leader()"
         [crownId]="crownId()"
@@ -59,7 +59,7 @@
     </div>
     <left-paw-item-legend [compact]="isMobile()" />
     @if (!isMobile()) {
-      <left-paw-leaderboard [entries]="leaderboard()" [myId]="myId()" [crownId]="crownId()" />
+      <left-paw-leaderboard [entryList]="leaderboardList()" [myId]="myId()" [crownId]="crownId()" />
     }
   </div>
 

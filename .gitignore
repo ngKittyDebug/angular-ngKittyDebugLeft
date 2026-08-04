@@ -52,14 +52,9 @@ Thumbs.db
 # Local markdown issue tracker for agent skills (see docs/agents/issue-tracker.md)
 .scratch/
 
-# Per-developer agent-skills config (issue tracker, triage labels, domain docs)
-docs/agents/
-
-# Local domain glossary for grill-with-docs (per-developer, not for merge)
-CONTEXT.md
-
-# Local architecture decision records (per-developer, not for merge)
-docs/adr/
+# docs/agents/, CONTEXT.md and docs/adr/ are COMMITTED — the skills are shared, so the
+# config they read, the ubiquitous language they speak and the decisions that bind them
+# are shared too. Only the skills' per-developer OUTPUT stays local (.scratch/, .planning/).
 
 # Claude Code — local config / sessions stay local; committed: .claude/commands/,
 # .claude/skills/, CLAUDE.md and .mcp.json — cloud routines only see what's in the repo.

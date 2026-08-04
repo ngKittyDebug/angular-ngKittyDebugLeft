@@ -28,6 +28,10 @@ function createFixture(
                 experience: 'Experience',
                 tooltip: '{{label}}: {{value}} / {{max}}',
                 levelTooltip: 'Level {{level}} · {{experience}} XP',
+                warningBadge: 'Warning',
+                criticalBadge: 'Critical',
+                alertWarning: '{{label}}: {{value}} / {{max}} — warning',
+                alertCritical: '{{label}}: {{value}} / {{max}} — critical',
               },
             },
           },
@@ -103,10 +107,32 @@ describe('StatusIndicatorComponent', () => {
         statusType: 'hunger',
       });
       const root = indicatorRoot(fixture);
+      const badge = root.querySelector('.status-indicator__badge') as HTMLElement;
 
       expect(root.classList.contains('status-indicator--warning')).toBe(true);
       expect(root.classList.contains('status-indicator--critical')).toBe(false);
-      expect(root.querySelector('.status-indicator__badge')?.textContent?.trim()).toBe('!');
+      expect(badge.textContent?.trim()).toBe('!');
+      expect(badge.getAttribute('aria-label')).toBe('Warning');
+      expect(root.getAttribute('aria-label')).toBe(
+        `Hunger: ${STATUS_THRESHOLDS.hungerWarning} / 100 — warning`,
+      );
+    });
+
+    it('должен анонсировать переход в warning через live-region', () => {
+      const fixture = createFixture({
+        currentValue: STATUS_THRESHOLDS.hungerWarning + 1,
+        statusType: 'hunger',
+      });
+
+      fixture.componentRef.setInput('currentValue', STATUS_THRESHOLDS.hungerWarning);
+      fixture.detectChanges();
+
+      const live = indicatorRoot(fixture).querySelector('.status-indicator__live') as HTMLElement;
+
+      expect(live.getAttribute('aria-live')).toBe('polite');
+      expect(live.textContent?.trim()).toBe(
+        `Hunger: ${STATUS_THRESHOLDS.hungerWarning} / 100 — warning`,
+      );
     });
 
     it('должен применять critical-стили, когда значение достигает порога critical', () => {
@@ -115,10 +141,32 @@ describe('StatusIndicatorComponent', () => {
         statusType: 'energy',
       });
       const root = indicatorRoot(fixture);
+      const badge = root.querySelector('.status-indicator__badge') as HTMLElement;
 
       expect(root.classList.contains('status-indicator--critical')).toBe(true);
       expect(root.classList.contains('status-indicator--warning')).toBe(false);
-      expect(root.querySelector('.status-indicator__badge')?.textContent?.trim()).toBe('!!');
+      expect(badge.textContent?.trim()).toBe('!!');
+      expect(badge.getAttribute('aria-label')).toBe('Critical');
+      expect(root.getAttribute('aria-label')).toBe(
+        `Energy: ${STATUS_THRESHOLDS.energyCritical} / 100 — critical`,
+      );
+    });
+
+    it('должен анонсировать переход в critical через assertive live-region', () => {
+      const fixture = createFixture({
+        currentValue: STATUS_THRESHOLDS.energyCritical + 1,
+        statusType: 'energy',
+      });
+
+      fixture.componentRef.setInput('currentValue', STATUS_THRESHOLDS.energyCritical);
+      fixture.detectChanges();
+
+      const live = indicatorRoot(fixture).querySelector('.status-indicator__live') as HTMLElement;
+
+      expect(live.getAttribute('aria-live')).toBe('assertive');
+      expect(live.textContent?.trim()).toBe(
+        `Energy: ${STATUS_THRESHOLDS.energyCritical} / 100 — critical`,
+      );
     });
   });
 });

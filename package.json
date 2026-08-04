@@ -18,6 +18,8 @@
     "deploy:party": "pnpm --filter @ng-kitty/partykit-server run deploy",
     "test:party": "pnpm --filter @ng-kitty/partykit-server test",
     "preflight": "pnpm typecheck && pnpm lint && pnpm format && pnpm test",
+    "skills:sync": "node scripts/sync-agent-skills.mjs",
+    "skills:update": "npx -y skills@latest update -p -y && pnpm skills:sync",
     "prepare": "husky"
   },
   "private": true,

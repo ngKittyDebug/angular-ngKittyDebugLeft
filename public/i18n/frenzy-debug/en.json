@@ -1,4 +1,49 @@
 {
+  "panelTitle": "readout",
+  "fpsLabel": "FPS",
+  "configurator": {
+    "header": "config",
+    "sections": {
+      "render": "render",
+      "players": "players",
+      "decor": "decor",
+      "canvasDpr": "canvas dpr",
+      "frameCap": "frame cap",
+      "sprites": "sprites",
+      "sceneLayers": "scene layers",
+      "decorProbe": "decor probe"
+    },
+    "freezeStatic": "freeze (static)"
+  },
+  "perfLog": {
+    "header": "perf-log",
+    "fields": {
+      "label": "label",
+      "mode": "mode",
+      "everySeconds": "every (s)",
+      "format": "format",
+      "to": "to"
+    },
+    "options": {
+      "manual": "manual",
+      "auto": "auto",
+      "clipboard": "clipboard",
+      "textarea": "textarea",
+      "download": "download"
+    },
+    "actions": {
+      "capture": "capture",
+      "export": "export",
+      "clear": "clear"
+    },
+    "table": {
+      "label": "label",
+      "fps": "fps",
+      "p1": "p1",
+      "jank": "jank",
+      "loop": "loop"
+    }
+  },
   "infoAriaLabel": "Details: {{metric}}",
   "sections": {
     "what": "What it tracks",

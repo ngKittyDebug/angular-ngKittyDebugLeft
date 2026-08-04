@@ -1,4 +1,6 @@
-import { Injectable, signal } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
+
+import { FrenzyStorageService } from '../frenzy-storage.service';
 
 const ENABLED_KEY = 'left-paw-frenzy-sound-enabled';
 const VOLUME_KEY = 'left-paw-frenzy-sound-volume';
@@ -6,6 +8,7 @@ const DEFAULT_VOLUME = 1;
 
 @Injectable()
 export class SoundSettingsService {
+  private readonly storage = inject(FrenzyStorageService);
   private readonly _enabled = signal(this.readEnabled());
   private readonly _volume = signal(this.readVolume());
 
@@ -14,40 +17,26 @@ export class SoundSettingsService {
 
   public setEnabled(value: boolean): void {
     this._enabled.set(value);
-    this.persist(ENABLED_KEY, String(value));
+    this.storage.setString(ENABLED_KEY, String(value));
   }
 
   public setVolume(value: number): void {
     const clamped = Math.min(1, Math.max(0, value));
 
     this._volume.set(clamped);
-    this.persist(VOLUME_KEY, String(clamped));
+    this.storage.setString(VOLUME_KEY, String(clamped));
   }
 
   public toggle(): void {
     this.setEnabled(!this._enabled());
   }
 
-  private persist(key: string, value: string): void {
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(key, value);
-    }
-  }
-
   private readEnabled(): boolean {
-    if (typeof localStorage === 'undefined') {
-      return true;
-    }
-
-    return localStorage.getItem(ENABLED_KEY) !== 'false';
+    return this.storage.getString(ENABLED_KEY) !== 'false';
   }
 
   private readVolume(): number {
-    if (typeof localStorage === 'undefined') {
-      return DEFAULT_VOLUME;
-    }
-
-    const stored = Number.parseFloat(localStorage.getItem(VOLUME_KEY) ?? '');
+    const stored = Number.parseFloat(this.storage.getString(VOLUME_KEY) ?? '');
 
     if (Number.isNaN(stored)) {
       return DEFAULT_VOLUME;

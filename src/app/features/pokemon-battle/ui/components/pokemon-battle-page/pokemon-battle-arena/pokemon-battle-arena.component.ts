@@ -1,21 +1,29 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, inject, viewChild } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { UpperCasePipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslocoDirective } from '@jsverse/transloco';
-import type { BattleEvent, BattlePokemon, PokemonMove } from '@game/pokemon-battle/types';
+import { TuiButton, TuiScrollbar } from '@taiga-ui/core';
+import { TuiBadge } from '@taiga-ui/kit';
+import type { BattleEvent, BattlePokemon, PokemonMove } from '../../../../data/models/battle.model';
 import { CanvasRendererComponent } from '../canvas-renderer/canvas-renderer.component';
 import { PokemonBattleArenaFacade } from '../../../../data/facades/pokemon-battle-arena.facade';
 
 @Component({
   selector: 'left-paw-pokemon-battle-arena',
-  imports: [CommonModule, TranslocoDirective, CanvasRendererComponent],
+  imports: [
+    UpperCasePipe,
+    TranslocoDirective,
+    CanvasRendererComponent,
+    TuiButton,
+    TuiBadge,
+    TuiScrollbar,
+  ],
   providers: [PokemonBattleArenaFacade],
   templateUrl: './pokemon-battle-arena.component.html',
   styleUrl: './pokemon-battle-arena.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PokemonBattleArenaComponent {
-  // View child for the canvas renderer to play events (private field before public fields)
   private readonly canvasRenderer = viewChild(CanvasRendererComponent);
 
   public readonly facade = inject(PokemonBattleArenaFacade);
@@ -32,13 +40,12 @@ export class PokemonBattleArenaComponent {
     this.canvasRenderer()?.playEvents(events);
   }
 
-  // Event handlers starting with "on" as per styleguide
   public onSelectMove(move: PokemonMove): void {
-    this.facade.onSelectMove(move);
+    this.facade.selectMove(move);
   }
 
   public onSelectTarget(target: BattlePokemon): void {
-    this.facade.onSelectTarget(target);
+    this.facade.selectTarget(target);
   }
 
   public onCancelMoveSelection(): void {
@@ -50,18 +57,20 @@ export class PokemonBattleArenaComponent {
   }
 
   public onResetBattle(): void {
+    this.canvasRenderer()?.reset();
     this.facade.resetBattle();
   }
 
   public onGoBackToSelection(): void {
+    this.canvasRenderer()?.reset();
     this.facade.goBackToSelection();
   }
 
   public onEventTriggered(event: BattleEvent): void {
-    this.facade.onEventTriggered(event);
+    this.facade.triggerEvent(event);
   }
 
   public onAnimationFinished(): void {
-    this.facade.onAnimationFinished();
+    this.facade.finishAnimation();
   }
 }

@@ -1,40 +1,49 @@
 <section
   *transloco="let t; prefix: 'pokemonTamagotchi.notifications'"
   class="tamagotchi-notifications"
-  aria-live="polite"
 >
   @if (hasHistory()) {
     <div class="tamagotchi-notifications__history">
-      <button appearance="flat" size="s" tuiButton type="button" (click)="toggleHistory()">
+      <button
+        appearance="flat"
+        size="s"
+        tuiButton
+        type="button"
+        [attr.aria-controls]="historyListId"
+        [attr.aria-expanded]="historyOpen()"
+        (click)="onHistoryToggle()"
+      >
         {{ historyOpen() ? t('hideHistory') : t('showHistory') }}
-        ({{ historyNotifications().length }})
+        ({{ historyNotificationList().length }})
       </button>
 
-      @if (historyOpen()) {
-        <ul class="tamagotchi-notifications__history-list">
-          @for (notification of historyNotifications(); track notification.id) {
-            <li
-              class="tamagotchi-notifications__history-item"
-              [class.tamagotchi-notifications__history-item--unread]="!notification.read"
-            >
-              <span class="tamagotchi-notifications__history-title">
-                @if (isTranslationKey(notification.title)) {
-                  {{ t(notification.title) }}
-                } @else {
-                  {{ notification.title }}
-                }
-              </span>
-              <span class="tamagotchi-notifications__history-message">
-                @if (isTranslationKey(notification.message)) {
-                  {{ t(notification.message) }}
-                } @else {
-                  {{ notification.message }}
-                }
-              </span>
-            </li>
-          }
-        </ul>
-      }
+      <ul
+        [id]="historyListId"
+        class="tamagotchi-notifications__history-list"
+        [hidden]="!historyOpen()"
+      >
+        @for (notification of historyNotificationList(); track notification.id) {
+          <li
+            class="tamagotchi-notifications__history-item"
+            [class.tamagotchi-notifications__history-item--unread]="!notification.read"
+          >
+            <span class="tamagotchi-notifications__history-title">
+              @if (notification.title.kind === 'translationKey') {
+                {{ t(notification.title.key) }}
+              } @else {
+                {{ notification.title.text }}
+              }
+            </span>
+            <span class="tamagotchi-notifications__history-message">
+              @if (notification.message.kind === 'translationKey') {
+                {{ t(notification.message.key) }}
+              } @else {
+                {{ notification.message.text }}
+              }
+            </span>
+          </li>
+        }
+      </ul>
     </div>
   } @else {
     <p class="tamagotchi-notifications__empty">{{ t('empty') }}</p>

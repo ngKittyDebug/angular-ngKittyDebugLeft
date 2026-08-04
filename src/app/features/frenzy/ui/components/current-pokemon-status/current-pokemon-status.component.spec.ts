@@ -4,7 +4,7 @@ import { TranslocoTestingModule } from '@jsverse/transloco';
 import type { Stage } from '@game/frenzy/types';
 import { describe, expect, it } from 'vitest';
 
-import { bodyForAppearance } from '../../constants/pokemon-registry';
+import { bodyForAppearance } from '../../../data/constants/pokemon-body';
 import { CurrentPokemonStatusComponent } from './current-pokemon-status.component';
 
 function createFixture(
@@ -108,7 +108,7 @@ describe('CurrentPokemonStatusComponent', () => {
   it('renders a buff chip per active effect, labelled from frenzy.effects', () => {
     const fixture = createFixture();
 
-    fixture.componentRef.setInput('effects', [
+    fixture.componentRef.setInput('effectList', [
       { kind: 'shield', expiresAt: 0 },
       { kind: 'pooping', expiresAt: 0 },
     ]);

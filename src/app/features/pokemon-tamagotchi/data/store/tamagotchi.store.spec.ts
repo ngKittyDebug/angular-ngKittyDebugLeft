@@ -1,38 +1,20 @@
 import { TestBed } from '@angular/core/testing';
-import { describe, expect, it, type MockedObject, vi } from 'vitest';
-import { GAME_BALANCE } from '../constants/game-balance.constants';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { EVOLUTION_REQUIREMENTS } from '../constants/evolution-criteria.constants';
+import { GAME_BALANCE } from '../constants/game-balance.constants';
 import { TAMAGOTCHI_SYSTEM_ERRORS } from '../constants/system-errors.constants';
-import { TamagotchiErrorRecoveryService } from '../services/tamagotchi-error-recovery.service';
-import { TamagotchiPersistenceService } from '../services/tamagotchi-persistence.service';
 import { TEST_POKEMON } from '../fixtures/tamagotchi-arbitraries';
 import type { PokemonModel } from '../models/pokemon.model';
-import { selectPokemonState, startTrainingState } from './tamagotchi-state-transitions';
-import { createInitialTamagotchiState, initialTamagotchiState } from './tamagotchi-initial';
+import { createTamagotchiLoggerMock } from '../services/tamagotchi-logger.service.mock';
+import { TamagotchiLoggerService } from '../services/tamagotchi-logger.service';
+import {
+  createTamagotchiPersistenceMock,
+  type TamagotchiPersistenceMock,
+} from '../services/tamagotchi-persistence.service.mock';
+import { TamagotchiPersistenceService } from '../services/tamagotchi-persistence.service';
+import { createInitialTamagotchiState } from './tamagotchi-initial';
+import { selectPokemonState } from './tamagotchi-state-transitions';
 import { TamagotchiStore } from './tamagotchi.store';
-
-type TamagotchiPersistenceMock = MockedObject<
-  Pick<TamagotchiPersistenceService, 'clear' | 'load' | 'save'>
->;
-
-type TamagotchiErrorRecoveryMock = MockedObject<Pick<TamagotchiErrorRecoveryService, 'logError'>>;
-
-function createPersistenceMock(
-  overrides: Partial<TamagotchiPersistenceMock> = {},
-): TamagotchiPersistenceMock {
-  return {
-    clear: vi.fn(),
-    load: vi.fn(() => null),
-    save: vi.fn(),
-    ...overrides,
-  } as const satisfies TamagotchiPersistenceMock;
-}
-
-function createErrorRecoveryMock(): TamagotchiErrorRecoveryMock {
-  return {
-    logError: vi.fn(),
-  } as const satisfies TamagotchiErrorRecoveryMock;
-}
 
 const EVOLVABLE_TEST_POKEMON: PokemonModel = {
   ...TEST_POKEMON,
@@ -46,90 +28,118 @@ const EVOLVABLE_TEST_POKEMON: PokemonModel = {
   },
 };
 
-function createStoreTestBed(): InstanceType<typeof TamagotchiStore> {
+function createStoreTestBedWithMocks(
+  persistence: TamagotchiPersistenceMock = createTamagotchiPersistenceMock(),
+): {
+  persistence: TamagotchiPersistenceMock;
+  store: InstanceType<typeof TamagotchiStore>;
+} {
   TestBed.configureTestingModule({
     providers: [
       TamagotchiStore,
-      { provide: TamagotchiPersistenceService, useValue: createPersistenceMock() },
-      { provide: TamagotchiErrorRecoveryService, useValue: createErrorRecoveryMock() },
+      { provide: TamagotchiPersistenceService, useValue: persistence },
+      { provide: TamagotchiLoggerService, useValue: createTamagotchiLoggerMock() },
     ],
   });
 
-  return TestBed.inject(TamagotchiStore);
+  return { persistence, store: TestBed.inject(TamagotchiStore) };
+}
+
+function createStoreTestBed(): InstanceType<typeof TamagotchiStore> {
+  return createStoreTestBedWithMocks().store;
 }
 
 describe('TamagotchiStore', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   describe('loadFromPersistence', () => {
     describe('Negative Cases', () => {
       it('должен установить ошибку и остаться инициализированным, когда загрузка persistence бросает исключение', () => {
-        let shouldThrow = true;
-        const persistence = createPersistenceMock({
+        const persistence = createTamagotchiPersistenceMock({
           load: vi.fn(() => {
-            if (shouldThrow) {
-              throw new Error('storage corrupted');
-            }
-
-            return null;
+            throw new Error('storage corrupted');
           }),
         });
-
-        TestBed.configureTestingModule({
-          providers: [
-            TamagotchiStore,
-            { provide: TamagotchiPersistenceService, useValue: persistence },
-            { provide: TamagotchiErrorRecoveryService, useValue: createErrorRecoveryMock() },
-          ],
-        });
-
-        const store = TestBed.inject(TamagotchiStore);
+        const { store } = createStoreTestBedWithMocks(persistence);
 
         store.loadFromPersistence();
+
         expect(store.error()).toBe(TAMAGOTCHI_SYSTEM_ERRORS.LOAD_FAILED);
         expect(store.initialized()).toBe(true);
-
-        shouldThrow = false;
-        store.loadFromPersistence();
-
-        expect(store.initialized()).toBe(true);
-        expect(persistence.load).toHaveBeenCalledTimes(2);
+        expect(persistence.load).toHaveBeenCalledTimes(1);
       });
     });
 
     describe('Happy Path', () => {
-      it('должен загрузить сохранённое состояние при последующем успешном вызове', () => {
+      it('должен загрузить сохранённое состояние из persistence', () => {
         const persisted = selectPokemonState(createInitialTamagotchiState(), TEST_POKEMON);
-        const persistence = createPersistenceMock({
-          load: vi
-            .fn()
-            .mockImplementationOnce(() => {
-              throw new Error('storage corrupted');
-            })
-            .mockImplementationOnce(() => ({
-              recoveredFromBackup: false,
-              state: persisted,
-            })),
+        const persistence = createTamagotchiPersistenceMock({
+          load: vi.fn(() => ({
+            recoveredFromBackup: false,
+            state: persisted,
+          })),
         });
+        const { store } = createStoreTestBedWithMocks(persistence);
 
-        TestBed.configureTestingModule({
-          providers: [
-            TamagotchiStore,
-            { provide: TamagotchiPersistenceService, useValue: persistence },
-            { provide: TamagotchiErrorRecoveryService, useValue: createErrorRecoveryMock() },
-          ],
-        });
-
-        const store = TestBed.inject(TamagotchiStore);
-
-        store.loadFromPersistence();
         store.loadFromPersistence();
 
         expect(store.pokemon()?.id).toBe(TEST_POKEMON.id);
-        expect(persistence.load).toHaveBeenCalledTimes(2);
+        expect(store.initialized()).toBe(true);
+        expect(persistence.load).toHaveBeenCalledTimes(1);
       });
     });
   });
 
   describe('Happy Path', () => {
+    describe('сохранение состояния', () => {
+      it('должен схлопывать несколько изменений в один debounced save', () => {
+        vi.useFakeTimers();
+        const { persistence, store } = createStoreTestBedWithMocks();
+        const fixedNow = 1_700_000_000_000;
+
+        store.selectPokemon(TEST_POKEMON);
+        store.feed(fixedNow);
+
+        vi.advanceTimersByTime(299);
+        expect(persistence.save).toHaveBeenCalledTimes(0);
+
+        vi.advanceTimersByTime(1);
+
+        expect(persistence.save).toHaveBeenCalledTimes(1);
+      });
+
+      it('должен сохранять pending state при flushSave', () => {
+        vi.useFakeTimers();
+        const { persistence, store } = createStoreTestBedWithMocks();
+
+        store.selectPokemon(TEST_POKEMON);
+        store.flushSave();
+        vi.advanceTimersByTime(300);
+
+        expect(persistence.save).toHaveBeenCalledTimes(1);
+        expect(persistence.save).toHaveBeenNthCalledWith(
+          1,
+          expect.objectContaining({ pokemon: TEST_POKEMON }),
+        );
+      });
+
+      it('не должен записывать пустой payload после resetState', () => {
+        vi.useFakeTimers();
+        const { persistence, store } = createStoreTestBedWithMocks();
+
+        store.selectPokemon(TEST_POKEMON);
+        persistence.save.mockClear();
+        store.resetState();
+        store.flushSave();
+        vi.advanceTimersByTime(300);
+
+        expect(persistence.clear).toHaveBeenCalledTimes(1);
+        expect(persistence.save).toHaveBeenCalledTimes(0);
+      });
+    });
+
     describe('интеграция эволюции', () => {
       const fixedNow = 1_700_000_000_000;
       const experienceGain = GAME_BALANCE.EVOLUTION.MIN_EXPERIENCE;
@@ -166,25 +176,6 @@ describe('TamagotchiStore', () => {
         store.startEvolution();
 
         expect(store.isEvolving()).toBe(true);
-      });
-    });
-  });
-});
-
-describe('tamagotchiStateTransitions', () => {
-  describe('Happy Path', () => {
-    describe('детерминизм тренировки', () => {
-      const fixedNow = 1_700_000_000_000;
-      const fixedReward = 42;
-
-      it('должен давать идентичное состояние тренировки для одинаковых входных данных', () => {
-        const selected = selectPokemonState(initialTamagotchiState, TEST_POKEMON);
-        const first = startTrainingState(selected, fixedNow, fixedReward);
-        const second = startTrainingState(selected, fixedNow, fixedReward);
-
-        expect(first).toEqual(second);
-        expect(first.trainingExperienceReward).toBe(fixedReward);
-        expect(first.trainingStartedAt).toBe(fixedNow);
       });
     });
   });

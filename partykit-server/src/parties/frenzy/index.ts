@@ -13,6 +13,7 @@ import type {
 } from '@game/frenzy/types';
 
 import { projectTimeAlive } from '../../engine/core/apply-scores';
+import { checkClickRate } from './check-click-rate';
 import { accrueAnger } from './slices/angry-bomb/anger';
 import { createNpc } from './slices/angry-bomb/create-npc';
 import { frenzyEngine } from './game';
@@ -60,6 +61,10 @@ export default class FeedingRoom implements Party.Server {
   private readonly npcPokeTimestamps = new Map<string, number[]>();
   // Accepted connection ids — bounds total connections (incl. idle/not-yet-joined) beyond the player cap.
   private readonly connections = new Set<string>();
+  // Per-connection identify/join budget (issue #323/#324): the click-rate window applied to control-plane messages
+  // so one socket can't loop identify(fresh token)+join to churn sessions/players. Keyed per CONNECTION, not per
+  // token, so rotating the token can't reset it; a lone reconnect (one identify) stays far under the budget.
+  private readonly connectionActionTimestamps = new Map<string, number[]>();
   private items: Item[] = [];
   private players: Player[] = [];
   private loopHandle: ReturnType<typeof setInterval> | null = null;
@@ -138,6 +143,7 @@ export default class FeedingRoom implements Party.Server {
 
   public onClose(conn: Party.Connection): void {
     this.connections.delete(conn.id);
+    this.connectionActionTimestamps.delete(conn.id);
 
     // Liveness heartbeat outlives the game loop (it covers idle/lobby connections too) — stop it only once the
     // room has no connections left at all, regardless of which onClose branch we return through below.
@@ -223,6 +229,17 @@ export default class FeedingRoom implements Party.Server {
 
     for (const event of result.events) {
       this.broadcast(event);
+
+      // Reap-on-faint (issue #323/#324): a disconnected seat can faint (decay/blast) before its grace timer fires;
+      // the moment its player leaves the roster, drop the session that mapped to it IF no connection still holds it,
+      // so a session can't outlive its player. A still-connected session (a spectator who just fainted) is kept.
+      if (event.type === 'fainted') {
+        const orphan = this.sessionForPlayer(event.playerId);
+
+        if (orphan !== undefined) {
+          this.evictIfOrphaned(orphan);
+        }
+      }
     }
 
     // Last human can leave via death (decay/fatal land), not only via leave/grace-purge — stop the loop here too.
@@ -411,6 +428,31 @@ export default class FeedingRoom implements Party.Server {
   // tears the old socket down before dialing, so in practice the close lands first, and the client recovers from
   // a stray rejection by rotating to a fresh token (playing on as a new Pokémon rather than being locked out).
   private handleIdentify(conn: Party.Connection, sessionToken: string): void {
+    // Control-plane rate limit (issue #323/#324): identify shares the per-connection budget so a socket can't loop
+    // identify(fresh token) to churn sessions. Silent drop mirrors the click limiter; a lone reconnect is one call.
+    if (!this.recordConnectionAction(conn.id)) {
+      return;
+    }
+
+    // Re-key guard (issue #323/#324): a connection that already owns a session with a LIVE player may not identify
+    // onto a DIFFERENT token. Re-keying would abandon that player as a connection-less phantom (alive, no grace
+    // timer), letting one socket loop identify(fresh)+join to stack seats past the cap. Reject — the client must
+    // `leave` first. Reconnect is unaffected: it dials a FRESH connection, which owns no prior session here.
+    const priorSession = this.sessionForConnection(conn.id);
+    const priorPlayerId = priorSession?.playerId ?? null;
+
+    if (
+      priorSession !== undefined &&
+      priorSession.token !== sessionToken &&
+      priorPlayerId !== null &&
+      this.players.some((player) => player.id === priorPlayerId)
+    ) {
+      this.sendTo(conn, { type: 'identifyRejected' });
+      this.log(`[party] identify rejected: ${conn.id} (still owns a live player)`);
+
+      return;
+    }
+
     // First-bind-guard: a token already held by another live connection is refused (rebinding is only legal in the
     // grace-window reconnect, where no live connection holds it). All of a token's bindings live on its one session.
     const existingSession = this.sessions.get(sessionToken);
@@ -456,6 +498,12 @@ export default class FeedingRoom implements Party.Server {
     appearance: string,
     body: PlayerBody,
   ): void {
+    // Control-plane rate limit (issue #323/#324): join shares the per-connection budget with identify so a socket
+    // can't loop identify+join to grow the roster; a legitimate single join is one call, far under the budget.
+    if (!this.recordConnectionAction(conn.id)) {
+      return;
+    }
+
     const session = this.sessionForConnection(conn.id);
 
     if (session === undefined) {
@@ -474,6 +522,15 @@ export default class FeedingRoom implements Party.Server {
 
     if (reason !== null) {
       this.sendTo(conn, { type: 'joinRejected', reason });
+
+      return;
+    }
+
+    // Capacity guard (issue #323/#324): the authoritative roster is only ever grown here, so the player cap has to
+    // be enforced here too — onConnect's spectator check can't stop an already-identified socket from looping join
+    // past it. Reuse the existing roomFull signal (no new wire shape); the connection may keep spectating and retry.
+    if (this.players.length >= FRENZY.maxPlayers) {
+      this.sendTo(conn, { type: 'roomFull' });
 
       return;
     }
@@ -592,6 +649,18 @@ export default class FeedingRoom implements Party.Server {
     return undefined;
   }
 
+  // Finds the session mapped to a public player id (≤ maxConnections sessions, so a scan is negligible), or
+  // undefined when none owns it (e.g. an NPC, which never has a session). Backs reaping a session on its player's faint.
+  private sessionForPlayer(playerId: string): RoomSession | undefined {
+    for (const session of this.sessions.values()) {
+      if (session.playerId === playerId) {
+        return session;
+      }
+    }
+
+    return undefined;
+  }
+
   // Binds a connection to its session token, creating the session on first identify. A connection re-identifying
   // with a different token is moved off any prior session first (mirrors the old `connectionToSession.set` overwrite).
   private bindConnectionToSession(connectionId: string, token: string): RoomSession {
@@ -599,6 +668,7 @@ export default class FeedingRoom implements Party.Server {
 
     if (prior !== undefined && prior.token !== token) {
       prior.unbindConnection(connectionId);
+      this.evictIfOrphaned(prior);
     }
 
     let session = this.sessions.get(token);
@@ -611,6 +681,39 @@ export default class FeedingRoom implements Party.Server {
     session.bindConnection(connectionId);
 
     return session;
+  }
+
+  // Records an identify/join against this connection's control-plane budget (the click-rate window reused) and
+  // reports whether it is allowed. Per connection, not per session/token: rotating the token cannot reset it.
+  private recordConnectionAction(connectionId: string): boolean {
+    const rate = checkClickRate(
+      this.connectionActionTimestamps.get(connectionId) ?? [],
+      Date.now(),
+    );
+
+    this.connectionActionTimestamps.set(connectionId, rate.timestamps);
+
+    return rate.allowed;
+  }
+
+  // Drops a session that has no bound connection AND no live player it could restore — the orphan an
+  // identify-with-fresh-token leaves behind when it re-keys a connection off its prior session. A session still
+  // holding an alive or disconnected-grace player is KEPT: that player must survive to be reconnected (see
+  // restore-connected / mark-disconnected). Mirrors onClose's own "no active player" purge condition.
+  private evictIfOrphaned(session: RoomSession): void {
+    if (session.hasConnections()) {
+      return;
+    }
+
+    const playerId = session.playerId;
+
+    if (playerId !== null && this.players.some((player) => player.id === playerId)) {
+      return;
+    }
+
+    session.clearGrace();
+    session.clearClicks();
+    this.sessions.delete(session.token);
   }
 
   // Random delay (ms) in `npc.spawnDelayMsRange` (inclusive) before the NPC appears after the first human joins.

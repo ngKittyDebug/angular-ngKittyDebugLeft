@@ -5,7 +5,8 @@ import { EMPTY, pipe } from 'rxjs';
 import { catchError, switchMap, tap } from 'rxjs/operators';
 import { PokemonBattleApiService } from '../api/pokemon/services/pokemon-battle-api.service';
 import { convertPokemonDetailApiDataToBattlePokemon } from '../api/pokemon/helpers/pokemon-converter';
-import type { BattlePokemon } from '@game/pokemon-battle/types';
+import type { BattlePokemon } from '../models/battle.model';
+import { POKEMON_PAGE_LIMIT } from '../constants/pokemon-battle.constants';
 
 export interface PokemonBattleStoreState {
   pokemonList: BattlePokemon[];
@@ -23,7 +24,7 @@ const initialState: PokemonBattleStoreState = {
   pokemonList: [],
   totalCount: 0,
   currentPage: 0,
-  limit: 10,
+  limit: POKEMON_PAGE_LIMIT,
   isLoading: false,
   error: null,
   selectedTeam: [],
@@ -32,10 +33,9 @@ const initialState: PokemonBattleStoreState = {
 };
 
 export const PokemonBattleStore = signalStore(
-  { providedIn: 'root' },
   withState(initialState),
   withMethods((store, api = inject(PokemonBattleApiService)) => ({
-    loadPokemons: rxMethod<{ page: number; limit: number }>(
+    loadPokemonList: rxMethod<{ page: number; limit: number }>(
       pipe(
         tap(({ page, limit }) =>
           patchState(store, { isLoading: true, error: null, currentPage: page, limit }),
@@ -45,22 +45,19 @@ export const PokemonBattleStore = signalStore(
 
           return api.getPokemonList(limit, offset).pipe(
             tap((data) => {
-              const mapped = data.results.map((raw) =>
+              const mapped = data.pokemonList.map((raw) =>
                 convertPokemonDetailApiDataToBattlePokemon(raw),
               );
 
               patchState(store, {
                 pokemonList: mapped,
-                totalCount: data.total,
+                totalCount: data.totalCount,
                 isLoading: false,
               });
             }),
-            catchError((error: unknown) => {
-              const errorMessage =
-                error instanceof Error ? error.message : 'Failed to load pokemons';
-
+            catchError(() => {
               patchState(store, {
-                error: errorMessage,
+                error: 'loadFailed',
                 isLoading: false,
               });
 
@@ -99,12 +96,6 @@ export const PokemonBattleStore = signalStore(
       patchState(store, {
         opponentTeam: opponents,
         battleStarted: true,
-      });
-    },
-
-    endBattle(): void {
-      patchState(store, {
-        battleStarted: false,
       });
     },
   })),

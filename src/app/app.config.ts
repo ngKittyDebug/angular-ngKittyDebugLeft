@@ -8,15 +8,16 @@ import {
 } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideSignalFormsConfig } from '@angular/forms/signals';
-import { routes } from './app.routes';
 import { provideStore } from '@ngrx/store';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import { TranslocoHttpLoader } from './transloco-loader';
 import { provideTransloco } from '@jsverse/transloco';
 import { provideTranslocoPersistLang } from '@jsverse/transloco-persist-lang';
 import { authBearerInterceptor } from '@core/interceptors/auth-bearer.interceptor';
 import { authRefreshInterceptor } from '@core/interceptors/auth-refresh.interceptor';
 import { authInitializer } from '@core/initializers/auth-initializer';
+import { provideTamagotchiSelectionPort } from '@features/pokemon-tamagotchi/provide-tamagotchi-selection-port';
+import { routes } from './app.routes';
+import { TranslocoHttpLoader } from './transloco-loader';
 
 export const appConfig = {
   providers: [
@@ -49,5 +50,6 @@ export const appConfig = {
         'ng-dirty': (field) => field.state().dirty(),
       },
     }),
+    provideTamagotchiSelectionPort(),
   ],
 } satisfies ApplicationConfig;

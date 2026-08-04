@@ -10,7 +10,7 @@ describe('StatusDecayService', () => {
   let service: StatusDecayService;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({ providers: [StatusDecayService] });
     service = TestBed.inject(StatusDecayService);
   });
 
@@ -37,31 +37,26 @@ describe('StatusDecayService', () => {
       });
     });
 
-    describe('detectCriticalAlerts', () => {
-      it('должен алертить, когда голод пересекает warning-порог', () => {
-        const before = {
-          ...createInitialPokemonStatus(),
-          hunger: STATUS_THRESHOLDS.hungerWarning + 1,
-        };
-        const after = {
-          ...before,
-          hunger: STATUS_THRESHOLDS.hungerWarning,
-        };
+    describe('processDecayTick', () => {
+      it('должен алертить при offline decay, который пересекает warning-порог за один тик', () => {
+        const fixedNow = 1_700_000_000_000;
+        const beforeHunger = STATUS_THRESHOLDS.hungerWarning + 5;
+        const targetHunger = STATUS_THRESHOLDS.hungerWarning - 1;
+        const elapsedMs =
+          ((beforeHunger - targetHunger) / GAME_BALANCE.STATUS_DECAY.HUNGER) * ONE_HOUR_MS;
 
-        expect(service.detectCriticalAlerts(before, after)).toContain('hungerLow');
-      });
+        const result = service.processDecayTick({
+          isSleeping: false,
+          lastActionTime: null,
+          lastDecayTime: fixedNow - elapsedMs,
+          now: fixedNow,
+          status: {
+            ...createInitialPokemonStatus(),
+            hunger: beforeHunger,
+          },
+        });
 
-      it('должен алертить, когда гидратация пересекает critical-порог', () => {
-        const before = {
-          ...createInitialPokemonStatus(),
-          hydration: STATUS_THRESHOLDS.hydrationCritical + 1,
-        };
-        const after = {
-          ...before,
-          hydration: STATUS_THRESHOLDS.hydrationCritical,
-        };
-
-        expect(service.detectCriticalAlerts(before, after)).toContain('hydrationCritical');
+        expect(result.alerts).toContain('hungerLow');
       });
     });
   });

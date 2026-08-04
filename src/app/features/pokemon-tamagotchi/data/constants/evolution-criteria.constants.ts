@@ -2,6 +2,8 @@ import type { EvolutionRequirementModel } from '../models/evolution.model';
 import { GAME_BALANCE } from './game-balance.constants';
 
 export const EVOLUTION_ANIMATION_DURATION_MS = 3000;
+export const EVOLUTION_REVEAL_DURATION_MS = 500;
+export const EVOLUTION_REDUCED_ANIMATION_DURATION_MS = 300;
 
 export const EVOLUTION_REQUIREMENTS: EvolutionRequirementModel[] = [
   {

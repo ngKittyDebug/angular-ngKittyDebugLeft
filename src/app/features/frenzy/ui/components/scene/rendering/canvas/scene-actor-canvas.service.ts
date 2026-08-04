@@ -57,6 +57,16 @@ const HOVER_FILTER =
 const BURIED_SINK = 0.16;
 // The bomb sprite renders 1.6× the item size (mirrors `.scene__item-sprite--bomb` in scene-item.component.scss).
 const BOMB_SPRITE_SCALE = 1.6;
+// The grounding shadow under a landed ITEM (mirrors the `.scene__item-shadow` radial gradient) — deliberately its
+// own set of constants, NOT the player shadow's (player-shadow.ts tunes a different, larger shadow).
+// Shadow ellipse width relative to the item size.
+const ITEM_SHADOW_WIDTH_SCALE = 1.5;
+// The shadow centre sits this fraction of the item size below the item centre (the sprite's foot).
+const ITEM_SHADOW_FOOT_OFFSET = 0.42;
+// Vertical squash of the ellipse (width:height ≈ 1.5 : 0.48 → a wide, short contact shadow).
+const ITEM_SHADOW_SQUASH = 0.32;
+// Gradient stop where the shadow colour starts fading to transparent.
+const ITEM_SHADOW_FADE_STOP = 0.8;
 
 // A frozen tumble frame captured when an item lands, so a rested item holds its last angle/scale (the DOM renderer
 // bakes the live transform on landing; here we just stop advancing the phase).
@@ -485,16 +495,16 @@ export class SceneActorCanvasService {
     centerY: number,
     size: number,
   ): void {
-    const radius = (size * 1.5) / 2;
-    const footY = centerY + size * 0.42;
+    const radius = (size * ITEM_SHADOW_WIDTH_SCALE) / 2;
+    const footY = centerY + size * ITEM_SHADOW_FOOT_OFFSET;
 
     context.save();
     context.translate(centerX, footY);
-    context.scale(1, 0.32); // width:height ≈ 1.5 : 0.48 → flat ellipse
+    context.scale(1, ITEM_SHADOW_SQUASH);
     const gradient = context.createRadialGradient(0, 0, 0, 0, 0, radius);
 
     gradient.addColorStop(0, this.shadowColor);
-    gradient.addColorStop(0.8, 'transparent');
+    gradient.addColorStop(ITEM_SHADOW_FADE_STOP, 'transparent');
     context.fillStyle = gradient;
     context.beginPath();
     context.arc(0, 0, radius, 0, Math.PI * 2);

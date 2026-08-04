@@ -22,7 +22,7 @@ function createFakeFacade(): {
   publishDebugFrame: ReturnType<typeof vi.fn>;
   updateCamera: ReturnType<typeof vi.fn>;
   cameraSnapshot: ReturnType<typeof vi.fn>;
-  renderedPlayers: ReturnType<typeof vi.fn>;
+  renderedPlayerList: ReturnType<typeof vi.fn>;
 } {
   const calls: string[] = [];
 
@@ -38,7 +38,7 @@ function createFakeFacade(): {
 
       return SNAPSHOT;
     }),
-    renderedPlayers: vi.fn(() => RENDERED),
+    renderedPlayerList: vi.fn(() => RENDERED),
   };
 }
 
@@ -120,7 +120,7 @@ describe('SceneRenderLoopService', () => {
     runOneFrame();
 
     expect(facade.calls).toEqual(['tickItems', 'tickPlayers', 'updateCamera', 'cameraSnapshot']);
-    expect(offscreen.frame).toHaveBeenCalledWith(SNAPSHOT, expect.any(Number), RENDERED);
+    expect(offscreen.frame).toHaveBeenNthCalledWith(1, SNAPSHOT, expect.any(Number), RENDERED);
   });
 
   it('ticks the decor canvas only when the decor mode is canvas', () => {
@@ -199,8 +199,8 @@ describe('SceneRenderLoopService', () => {
     service.start(makeContext({ world: () => undefined, offscreenIndicators: () => offscreen }));
     runOneFrame();
 
-    expect(facade.tickItems).toHaveBeenCalled();
-    expect(facade.tickPlayers).toHaveBeenCalled();
+    expect(facade.tickItems).toHaveBeenCalledTimes(1);
+    expect(facade.tickPlayers).toHaveBeenCalledTimes(1);
     expect(facade.updateCamera).not.toHaveBeenCalled();
     expect(offscreen.frame).not.toHaveBeenCalled();
   });
@@ -250,6 +250,6 @@ describe('SceneRenderLoopService', () => {
     service.start(makeContext());
     injector.destroy();
 
-    expect(cancelSpy).toHaveBeenCalledWith(7);
+    expect(cancelSpy).toHaveBeenNthCalledWith(1, 7);
   });
 });

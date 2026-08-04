@@ -1,6 +1,7 @@
 import type {
   NotificationModel,
   NotificationPriority,
+  NotificationText,
   StatusAlertType,
 } from '../models/notification.model';
 
@@ -20,11 +21,6 @@ const ALERT_TEMPLATES: Record<StatusAlertType, AlertNotificationTemplate> = {
     messageKey: 'alerts.energyLow.message',
     priority: 'warning',
     titleKey: 'alerts.energyLow.title',
-  },
-  evolutionReady: {
-    messageKey: 'alerts.evolutionReady.message',
-    priority: 'achievement',
-    titleKey: 'alerts.evolutionReady.title',
   },
   hungerCritical: {
     messageKey: 'alerts.hungerCritical.message',
@@ -58,28 +54,16 @@ const ALERT_TEMPLATES: Record<StatusAlertType, AlertNotificationTemplate> = {
   },
 };
 
-const PRIORITY_RANK: Record<NotificationPriority, number> = {
-  achievement: 2,
-  critical: 0,
-  info: 3,
-  warning: 1,
-};
-
-export function createNotificationId(): string {
+function createNotificationId(): string {
   return `notification-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-export function compareNotificationsByPriority(
-  left: NotificationModel,
-  right: NotificationModel,
-): number {
-  const priorityDelta = PRIORITY_RANK[left.priority] - PRIORITY_RANK[right.priority];
+function notificationPlainText(text: string): NotificationText {
+  return { kind: 'plainText', text };
+}
 
-  if (priorityDelta !== 0) {
-    return priorityDelta;
-  }
-
-  return right.timestamp - left.timestamp;
+function notificationTranslationKey(key: string): NotificationText {
+  return { key, kind: 'translationKey' };
 }
 
 export function notificationFromStatusAlert(
@@ -90,11 +74,11 @@ export function notificationFromStatusAlert(
 
   return {
     id: createNotificationId(),
-    message: template.messageKey,
+    message: notificationTranslationKey(template.messageKey),
     priority: template.priority,
     read: false,
     timestamp,
-    title: template.titleKey,
+    title: notificationTranslationKey(template.titleKey),
   };
 }
 
@@ -104,16 +88,10 @@ export function notificationFromEvolutionReady(
 ): NotificationModel {
   return {
     id: createNotificationId(),
-    message: pokemonName,
+    message: notificationPlainText(pokemonName),
     priority: 'achievement',
     read: false,
     timestamp,
-    title: 'evolution.readyTitle',
+    title: notificationTranslationKey('evolution.readyTitle'),
   };
-}
-
-export function sortNotificationsByPriority(
-  notifications: NotificationModel[],
-): NotificationModel[] {
-  return [...notifications].sort(compareNotificationsByPriority);
 }

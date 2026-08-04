@@ -9,6 +9,26 @@ import { TamagotchiPersistenceService } from './tamagotchi-persistence.service';
 
 const PROPERTY_RUNS = 100;
 
+function normalizeJsonValue(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((item) => normalizeJsonValue(item));
+  }
+
+  if (!value || typeof value !== 'object') {
+    return value;
+  }
+
+  return Object.fromEntries(
+    Object.entries(value)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([key, nested]) => [key, normalizeJsonValue(nested)]),
+  );
+}
+
+function areEquivalentJsonValues(left: unknown, right: unknown): boolean {
+  return JSON.stringify(normalizeJsonValue(left)) === JSON.stringify(normalizeJsonValue(right));
+}
+
 function statusWithoutSaveTimestamp(
   status: PokemonStatusModel,
 ): Omit<PokemonStatusModel, 'lastSaveTime'> {
@@ -33,30 +53,29 @@ function assertPersistedEquivalence(
   original: TamagotchiStateModel,
   loaded: TamagotchiStateModel,
 ): boolean {
-  if (JSON.stringify(loaded.pokemon) !== JSON.stringify(original.pokemon)) {
+  if (!areEquivalentJsonValues(loaded.pokemon, original.pokemon)) {
     return false;
   }
 
-  if (JSON.stringify(loaded.achievementList) !== JSON.stringify(original.achievementList)) {
+  if (!areEquivalentJsonValues(loaded.achievementList, original.achievementList)) {
     return false;
   }
 
   if (
-    JSON.stringify(loaded.evolutionProgress) !==
-    JSON.stringify(expectedEvolutionProgressAfterLoad(original))
+    !areEquivalentJsonValues(loaded.evolutionProgress, expectedEvolutionProgressAfterLoad(original))
   ) {
     return false;
   }
 
-  if (JSON.stringify(loaded.dailyRoutine) !== JSON.stringify(original.dailyRoutine)) {
+  if (!areEquivalentJsonValues(loaded.dailyRoutine, original.dailyRoutine)) {
     return false;
   }
 
-  if (JSON.stringify(loaded.interactionHistory) !== JSON.stringify(original.interactionHistory)) {
+  if (!areEquivalentJsonValues(loaded.interactionHistoryList, original.interactionHistoryList)) {
     return false;
   }
 
-  if (JSON.stringify(loaded.notificationList) !== JSON.stringify(original.notificationList)) {
+  if (!areEquivalentJsonValues(loaded.notificationList, original.notificationList)) {
     return false;
   }
 
@@ -81,8 +100,10 @@ function assertPersistedEquivalence(
   }
 
   if (
-    JSON.stringify(statusWithoutSaveTimestamp(loaded.status)) !==
-    JSON.stringify(statusWithoutSaveTimestamp(original.status))
+    !areEquivalentJsonValues(
+      statusWithoutSaveTimestamp(loaded.status),
+      statusWithoutSaveTimestamp(original.status),
+    )
   ) {
     return false;
   }
@@ -113,7 +134,7 @@ describe('TamagotchiPersistenceService', () => {
 
     beforeEach(() => {
       localStorage.clear();
-      TestBed.configureTestingModule({});
+      TestBed.configureTestingModule({ providers: [TamagotchiPersistenceService] });
       service = TestBed.inject(TamagotchiPersistenceService);
     });
 
@@ -149,9 +170,11 @@ describe('TamagotchiPersistenceService', () => {
             return (
               loaded.state.status.experience === state.status.experience &&
               loaded.state.status.level === state.status.level &&
+              loaded.state.status.lastCareTime === state.status.lastCareTime &&
               loaded.state.status.lastFeedTime === state.status.lastFeedTime &&
               loaded.state.status.lastPlayTime === state.status.lastPlayTime &&
               loaded.state.status.lastSleepTime === state.status.lastSleepTime &&
+              loaded.state.status.lastTrainTime === state.status.lastTrainTime &&
               loaded.state.status.lastHydrationTime === state.status.lastHydrationTime &&
               loaded.state.lastSaveTime === loaded.state.status.lastSaveTime
             );

@@ -76,6 +76,10 @@ const ITEM_HIT_HALF_X = (FRENZY.physicalSizePx.item / 2 + ITEM_TAP_PADDING_PX) /
 const ITEM_HIT_HALF_Y =
   (FRENZY.physicalSizePx.item / 2 + ITEM_TAP_PADDING_PX) / FRENZY.world.height;
 
+// Blast visual size from the contract's radius (a fraction of the world width): ×2 turns the radius into a
+// diameter, ×100 turns the fraction into a CSS percentage.
+const BLAST_RADIUS_TO_WIDTH_PERCENT = 200;
+
 @Component({
   selector: 'left-paw-scene',
   imports: [
@@ -152,17 +156,17 @@ export class SceneComponent {
   // The hybrid-canvas decor layer's element — present only while the decor mode is 'canvas' (the template @if).
   private readonly decorCanvasRef = viewChild<ElementRef<HTMLCanvasElement>>('decorCanvas');
 
-  public readonly blasts = input<readonly Blast[]>([]);
-  public readonly hitBursts = input<readonly HitBurst[]>([]);
-  public readonly ownedSparks = input<readonly OwnedSpark[]>([]);
-  public readonly ownedShieldBlocks = input<readonly OwnedShieldBlock[]>([]);
+  public readonly blastList = input<readonly Blast[]>([]);
+  public readonly hitBurstList = input<readonly HitBurst[]>([]);
+  public readonly ownedSparkList = input<readonly OwnedSpark[]>([]);
+  public readonly ownedShieldBlockList = input<readonly OwnedShieldBlock[]>([]);
   public readonly evolvingPlayers = input<ReadonlyMap<string, number>>(new Map());
-  public readonly orphanFloats = input<readonly OrphanFloat[]>([]);
-  public readonly ownedFloats = input<readonly OwnedFloat[]>([]);
+  public readonly orphanFloatList = input<readonly OrphanFloat[]>([]);
+  public readonly ownedFloatList = input<readonly OwnedFloat[]>([]);
   public readonly itemClick = output<ItemClick>();
-  public readonly items = input.required<readonly Item[]>();
+  public readonly itemList = input.required<readonly Item[]>();
   public readonly myId = input<string | null>(null);
-  public readonly players = input.required<readonly Player[]>();
+  public readonly playerList = input.required<readonly Player[]>();
   // The crowned player id (alive hp-leader; null when there's no meaningful leader, e.g. a lone survivor). Gated
   // and resolved upstream via the shared `crownIdOf`, so the scene marker matches the pill and minimap exactly.
   public readonly crownId = input<string | null>(null);
@@ -170,13 +174,13 @@ export class SceneComponent {
   public readonly pokeNpc = output<string>();
   public readonly steer = output<{ x: number; y: number }>();
 
-  protected readonly renderedItems = this.facade.renderedItems;
+  protected readonly renderedItemList = this.facade.renderedItemList;
   // Depth order for the seabed perspective (see `sortByDepth`). track-by-id in the template means a reorder just
   // moves the existing nodes — no re-create, no animation reset.
   // Empty in canvas item mode (the items are drawn on the actors-canvas, not as DOM nodes) so the template `@for`
   // renders nothing without needing its own `@if` guard — keeping the template's cyclomatic complexity down.
-  protected readonly renderedItemsByDepth = computed(() => {
-    return this.renderMode() === 'canvas' ? [] : sortByDepth(this.renderedItems());
+  protected readonly renderedItemListByDepth = computed(() => {
+    return this.renderMode() === 'canvas' ? [] : sortByDepth(this.renderedItemList());
   });
   // The item render backend, reactive so the template @if (and the render loop) pick it up the instant the toggle
   // flips. Reads the debug store only when it exists (under `?debug=perf`); a real player is always 'dom'.
@@ -214,9 +218,9 @@ export class SceneComponent {
   // normal play (no debug store) — the template reads `?.<probe> === true`, so every probe stays inactive.
   protected readonly decorProbe = computed(() => this.debugSettings?.decorProbe());
 
-  protected readonly renderedPlayers = this.facade.renderedPlayers;
-  protected readonly bursts = this.facade.bursts;
-  protected readonly sandPuffs = this.facade.sandPuffs;
+  protected readonly renderedPlayerList = this.facade.renderedPlayerList;
+  protected readonly burstList = this.facade.burstList;
+  protected readonly sandPuffList = this.facade.sandPuffList;
   protected readonly maxHp = MAX_VISUAL_HP;
   protected readonly worldWidth = FRENZY.world.width;
   protected readonly worldHeight = FRENZY.world.height;
@@ -224,6 +228,8 @@ export class SceneComponent {
   protected readonly itemSize = `${FRENZY.physicalSizePx.item}px`;
   // The bomb's larger collidable size (sensor-horn reach) — for the `?debug` box so it frames the real trigger area.
   protected readonly bombSize = `${FRENZY.physicalSizePx.bomb}px`;
+  // Radius→CSS-width factor for the blast ring (see the module constant).
+  protected readonly blastRadiusToWidthPercent = BLAST_RADIUS_TO_WIDTH_PERCENT;
   // Per-category `?debug` overlay toggles parsed from the query param (`?debug` = all; `?debug=pokemon-borders`,
   // `item-borders`, `speed` = pick) — lets a session draw just the boxes it needs against the sprite silhouette.
   // Snapshot read; no reactivity.
@@ -240,22 +246,24 @@ export class SceneComponent {
     () => this.perfMetrics?.snapshot() ?? null,
   );
   // Owned floats grouped by their player, so the owned-float overlay renders each sprite's quips on its body point.
-  protected readonly floatsByOwner = computed(() => groupByOwner(this.ownedFloats()));
+  protected readonly floatsByOwner = computed(() => groupByOwner(this.ownedFloatList()));
   // Rock/brick impact sparks grouped by the struck player, so each `.scene__player` renders (and carries) its own.
-  protected readonly sparksByOwner = computed(() => groupByOwner(this.ownedSparks()));
+  protected readonly sparksByOwner = computed(() => groupByOwner(this.ownedSparkList()));
   // Shield-ward cues grouped by the warded player, so each `.scene__player` pulses its bubble + clinks in place.
-  protected readonly shieldBlocksByOwner = computed(() => groupByOwner(this.ownedShieldBlocks()));
+  protected readonly shieldBlocksByOwner = computed(() =>
+    groupByOwner(this.ownedShieldBlockList()),
+  );
 
   public constructor() {
     // Re-anchor item/player baselines from each snapshot and paint immediately (before the rAF loop starts).
     // Reading evolving/myId here too keeps the first paint consistent with them.
     effect(() => {
-      this.facade.ingestItems(this.items(), performance.now());
+      this.facade.ingestItems(this.itemList(), performance.now());
     });
 
     effect(() => {
       this.facade.ingestPlayers(
-        this.players(),
+        this.playerList(),
         this.myId(),
         this.evolvingPlayers(),
         performance.now(),
@@ -301,8 +309,8 @@ export class SceneComponent {
     // facade sequence; this shell only supplies the live inputs and DOM refs it reads each frame (see ADR 0004 §4).
     afterNextRender(() => {
       this.loop.start({
-        items: () => this.items(),
-        players: () => this.players(),
+        items: () => this.itemList(),
+        players: () => this.playerList(),
         myId: () => this.myId(),
         evolving: () => this.evolvingPlayers(),
         renderMode: () => this.renderMode(),
@@ -371,12 +379,12 @@ export class SceneComponent {
     // items first; a hit eats that item (or shoves the bomb) and suppresses the miss-bubble + steer, exactly like a
     // DOM item tap. A press on a poke button (still DOM) sets steer=false, so it is left to its own handler.
     if (this.renderMode() === 'canvas' && intent.steer) {
-      const items = this.canvasHitItems();
-      const hitId = hitTestItem(items, intent.x, intent.y, ITEM_HIT_HALF_X, ITEM_HIT_HALF_Y);
+      const itemList = this.canvasHitItems();
+      const hitId = hitTestItem(itemList, intent.x, intent.y, ITEM_HIT_HALF_X, ITEM_HIT_HALF_Y);
 
       if (hitId !== null) {
         // The bomb has no DOM rect on canvas, so its shove is measured from the tap to its world centre.
-        const hit = items.find((item) => item.id === hitId);
+        const hit = itemList.find((item) => item.id === hitId);
         const shove =
           hit?.type === 'bomb' ? resolveNudgeFromCenter(hit, intent.x, intent.y) : undefined;
 
@@ -434,6 +442,6 @@ export class SceneComponent {
   // canvas draw order. Uses the live frame (not the throttled structure signal) so a fast faller is hit where it's
   // actually drawn. The bomb is included now (drawn on canvas), so a tap on it shoves it instead of steering past.
   private canvasHitItems(): readonly RenderedItem[] {
-    return [...this.facade.itemFrame()].sort((first, second) => first.y - second.y);
+    return sortByDepth(this.facade.itemFrame());
   }
 }

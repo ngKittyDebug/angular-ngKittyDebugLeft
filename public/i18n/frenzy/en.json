@@ -195,6 +195,7 @@
     "volumeAriaLabel": "Sound volume"
   },
   "scene": {
+    "ariaLabel": "Feeding frenzy scene",
     "pokeAriaLabel": "Poke your Pokémon",
     "pokeNpcAriaLabel": "Poke the angry bomb",
     "floorLabel": "Seabed",

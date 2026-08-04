@@ -6,7 +6,7 @@
   [attr.aria-busy]="facade.isLoading()"
 >
   <div class="tamagotchi-page__header">
-    <h1 class="tamagotchi-page__title">{{ t('title') }}</h1>
+    <h1 #pageTitle class="tamagotchi-page__title" tabindex="-1">{{ t('title') }}</h1>
     <div class="tamagotchi-page__header-controls">
       @if (facade.pokemon(); as species) {
         <span appearance="primary" size="m" tuiBadge class="tamagotchi-page__level">
@@ -24,19 +24,10 @@
           [activeItemIndex]="facade.performanceModeIndex()"
           (activeItemIndexChange)="facade.onPerformanceModeIndexChange($event)"
         >
-          @for (mode of facade.performanceModes; track mode) {
+          @for (mode of facade.performanceModeList; track mode) {
             <button type="button">{{ t('performanceModes.' + mode) }}</button>
           }
         </tui-segmented>
-        @if (facade.performanceMode() === 'auto') {
-          <span class="tamagotchi-page__performance-effective">
-            {{
-              t('performanceEffective', {
-                mode: t('performanceModes.' + facade.effectivePerformanceMode()),
-              })
-            }}
-          </span>
-        }
       </div>
     </div>
   </div>
@@ -47,55 +38,63 @@
       <p class="tamagotchi-page__loading-text">{{ t('loading') }}</p>
     </section>
   } @else if (facade.selectionBlocked()) {
-    <section class="tamagotchi-page__empty" role="status">
+    <tui-block-status class="tamagotchi-page__empty" role="status" size="m">
       @if (facade.error() === 'noSelection') {
-        <h2 class="tamagotchi-page__empty-title">{{ t('noSelectionTitle') }}</h2>
-        <p class="tamagotchi-page__empty-hint">{{ t('noSelectionHint') }}</p>
-        <a appearance="primary" routerLink="/profile" tuiButton type="button">
-          {{ t('goToProfile') }}
-        </a>
+        <ng-container>
+          <h2 class="tamagotchi-page__empty-title">{{ t('noSelectionTitle') }}</h2>
+          <p class="tamagotchi-page__empty-hint">{{ t('noSelectionHint') }}</p>
+          <a appearance="primary" routerLink="/profile" tuiButton type="button">
+            {{ t('goToProfile') }}
+          </a>
+        </ng-container>
       } @else if (facade.error() === 'evolvedPokemon') {
         <p class="tamagotchi-page__error">{{ t('evolvedPokemonError') }}</p>
       } @else if (facade.error() === 'loadFailed') {
         <p class="tamagotchi-page__error">{{ t('loadFailedError') }}</p>
       }
-    </section>
+    </tui-block-status>
   } @else if (facade.pokemon(); as species) {
     @if (facade.systemErrorMessageKey(); as messageKey) {
       <div
+        #systemNotice
         class="tamagotchi-page__system-notice"
         role="alert"
-        [class.tamagotchi-page__system-notice--warning]="messageKey === 'stateRecoveredWarning'"
+        tabindex="-1"
+        tuiNotification
+        size="m"
+        [appearance]="messageKey === 'stateRecoveredWarning' ? 'warning' : 'negative'"
       >
-        <p>{{ t(messageKey) }}</p>
-        <div class="tamagotchi-page__system-notice-actions">
-          @if (facade.showRecoveryActions()) {
+        <div tuiTitle>
+          <p>{{ t(messageKey) }}</p>
+          <footer class="tamagotchi-page__system-notice-actions">
+            @if (facade.showRecoveryActions()) {
+              <button
+                appearance="outline"
+                size="s"
+                tuiButton
+                type="button"
+                (click)="facade.onResetProgress()"
+              >
+                {{ t('resetProgress') }}
+              </button>
+            }
             <button
-              appearance="outline"
+              appearance="flat"
               size="s"
               tuiButton
               type="button"
-              (click)="facade.onResetProgress()"
+              (click)="facade.onSystemErrorDismiss()"
             >
-              {{ t('resetProgress') }}
+              {{ t('dismissNotice') }}
             </button>
-          }
-          <button
-            appearance="flat"
-            size="s"
-            tuiButton
-            type="button"
-            (click)="facade.onSystemErrorDismiss()"
-          >
-            {{ t('dismissNotice') }}
-          </button>
+          </footer>
         </div>
       </div>
     }
 
     <div class="tamagotchi-page__layout">
       <aside class="tamagotchi-page__status-panel" [attr.aria-label]="t('statusPanelAria')">
-        @for (statusType of facade.displayedStatusTypes; track statusType) {
+        @for (statusType of facade.displayedStatusTypeList; track statusType) {
           <left-paw-status-indicator
             [currentValue]="facade.statusValueFor(statusType)"
             [level]="statusType === 'experience' ? facade.status().level : null"
@@ -141,7 +140,7 @@
     />
     <left-paw-tamagotchi-notifications
       class="tamagotchi-page__notifications"
-      [notifications]="facade.notifications()"
+      [notificationList]="facade.notificationList()"
     />
   }
 </main>

@@ -1,7 +1,7 @@
 import { httpResource } from '@angular/common/http';
 import { inject, Service } from '@angular/core';
+import { rxResource } from '@angular/core/rxjs-interop';
 import { PokemonApiService } from '@core/api/pokemon-api.service';
-import type { PokemonDetailApiData } from '@shared/models/pokemon-detail-api-data-interface';
 import type { PokemonSpeciesApiData } from '@shared/models/pokemon-species-api-data-interface';
 import type { EvolutionChainApiResponse } from '@shared/models/pokemon-evolution-chain-api-data-interface';
 
@@ -16,9 +16,10 @@ export class PokemonDataService {
   private readonly pokemonApiService = inject(PokemonApiService);
 
   public createPokemonProfileData(pokemonEndpoint: () => string) {
-    const pokemonDataResource = httpResource<PokemonDetailApiData>(() =>
-      this.pokemonApiService.getPokemonData(pokemonEndpoint()),
-    );
+    const pokemonDataResource = rxResource({
+      params: pokemonEndpoint,
+      stream: ({ params }) => this.pokemonApiService.getPokemonDetail(params),
+    });
     const pokemonSpeciesResource = httpResource<PokemonSpeciesApiData>(() =>
       this.pokemonApiService.getPokemonSpecies(pokemonEndpoint()),
     );
@@ -47,9 +48,10 @@ export class PokemonDataService {
   }
 
   public createPokemonCardData(pokemonEndpoint: () => string) {
-    const pokemonDataResource = httpResource<PokemonDetailApiData>(() =>
-      this.pokemonApiService.getPokemonData(pokemonEndpoint()),
-    );
+    const pokemonDataResource = rxResource({
+      params: pokemonEndpoint,
+      stream: ({ params }) => this.pokemonApiService.getPokemonDetail(params),
+    });
 
     const result = {
       cardData: pokemonDataResource.value,

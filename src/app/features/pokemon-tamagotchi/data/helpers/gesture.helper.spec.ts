@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildGestureResult,
-  calculateBondLevel,
   calculateMoodIncrease,
   classifyPointerGesture,
   createInteractionEvent,
@@ -18,6 +17,13 @@ describe('gesture.helper', () => {
       expect(event.moodIncrease).toBeLessThanOrEqual(10);
     });
 
+    it('должен увеличивать настроение пропорционально интенсивности', () => {
+      const low = createInteractionEvent('click', 0.2);
+      const high = createInteractionEvent('click', 0.9);
+
+      expect(high.moodIncrease).toBeGreaterThanOrEqual(low.moodIncrease);
+    });
+
     it('должен собирать результат жеста с триггером анимации', () => {
       const result = buildGestureResult('multiTouch', 1);
 
@@ -26,17 +32,6 @@ describe('gesture.helper', () => {
       expect(calculateMoodIncrease('multiTouch', 1)).toBeGreaterThan(
         calculateMoodIncrease('click', 0.5),
       );
-    });
-
-    it('должен вычислять уровень привязанности по недавним взаимодействиям', () => {
-      const now = Date.now();
-      const history = [
-        createInteractionEvent('click', 0.5, now - 1000),
-        createInteractionEvent('multiTouch', 1, now - 2000),
-      ];
-
-      expect(calculateBondLevel(history, now)).toBeGreaterThan(0);
-      expect(calculateBondLevel([], now)).toBe(0);
     });
   });
 

@@ -1,12 +1,14 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { UpperCasePipe } from '@angular/common';
 import { TranslocoDirective } from '@jsverse/transloco';
-import type { BattlePokemon } from '@game/pokemon-battle/types';
+import { TuiButton, TuiCheckbox, TuiLoader } from '@taiga-ui/core';
+import { TuiPagination } from '@taiga-ui/kit';
+import type { BattlePokemon } from '../../../../data/models/battle.model';
 import { PokemonTeamSelectionFacade } from '../../../../data/facades/pokemon-team-selection.facade';
 
 @Component({
   selector: 'left-paw-pokemon-team-selection',
-  imports: [CommonModule, TranslocoDirective],
+  imports: [UpperCasePipe, TranslocoDirective, TuiButton, TuiCheckbox, TuiLoader, TuiPagination],
   providers: [PokemonTeamSelectionFacade],
   templateUrl: './pokemon-team-selection.component.html',
   styleUrl: './pokemon-team-selection.component.scss',
@@ -15,20 +17,27 @@ import { PokemonTeamSelectionFacade } from '../../../../data/facades/pokemon-tea
 export class PokemonTeamSelectionComponent {
   public readonly facade = inject(PokemonTeamSelectionFacade);
 
-  // Event handlers starting with "on" as per styleguide
   public onPokemonClick(pokemon: BattlePokemon): void {
-    this.facade.onSelectPokemon(pokemon);
+    this.facade.selectPokemon(pokemon);
+  }
+
+  public onRetryClick(): void {
+    this.facade.retry();
   }
 
   public onPrevClick(): void {
-    this.facade.onPrevPage();
+    this.facade.prevPage();
   }
 
   public onNextClick(): void {
-    this.facade.onNextPage();
+    this.facade.nextPage();
+  }
+
+  public onPageChange(index: number): void {
+    this.facade.setPage(index);
   }
 
   public onStartBattleClick(): void {
-    this.facade.onStartBattleClick();
+    this.facade.startBattle();
   }
 }

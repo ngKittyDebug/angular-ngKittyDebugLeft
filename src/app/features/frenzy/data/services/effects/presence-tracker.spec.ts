@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Player, ServerMessage } from '@game/frenzy/types';
 
-import { bodyForAppearance } from '../../../ui/constants/pokemon-registry';
+import { bodyForAppearance } from '../../constants/pokemon-body';
 import { effectContext } from './effect-context.mock';
 import { FloatingMessagesStore } from './floating-messages.store';
 import { PresenceTracker } from './presence-tracker.service';
@@ -89,7 +89,7 @@ describe('PresenceTracker', () => {
   it('emits no quips for the first snapshot it sees', () => {
     tracker.handle(snapshot([player('me', 'Me'), player('other', 'Ash')]), context);
 
-    expect(floats.ownedMessages()).toHaveLength(0);
+    expect(floats.ownedMessageList()).toHaveLength(0);
   });
 
   it('announces a newly appeared other player, not myself', () => {
@@ -99,7 +99,7 @@ describe('PresenceTracker', () => {
       context,
     );
 
-    const messages = floats.ownedMessages();
+    const messages = floats.ownedMessageList();
 
     expect(messages).toHaveLength(1);
     expect(messages[0].ownerId).toBe('p3');
@@ -111,7 +111,7 @@ describe('PresenceTracker', () => {
     tracker.handle(snapshot([player('me', 'Me')]), context);
     tracker.handle(snapshot([player('me', 'Me'), npcPlayer('npc-1')]), context);
 
-    const messages = floats.ownedMessages();
+    const messages = floats.ownedMessageList();
 
     expect(messages).toHaveLength(1);
     expect(messages[0].ownerId).toBe('npc-1');
@@ -123,7 +123,7 @@ describe('PresenceTracker', () => {
     tracker.handle(snapshot([npcPlayer('npc-1', 0.3, 0.7)]), context);
     tracker.handle({ type: 'fainted', playerId: 'npc-1' }, context);
 
-    const messages = floats.orphanMessages();
+    const messages = floats.orphanMessageList();
     const died = messages[messages.length - 1];
 
     expect(died.textKey).toContain('statusMessage.npcDied');
@@ -136,7 +136,7 @@ describe('PresenceTracker', () => {
     tracker.handle(snapshot([player('other', 'Ash', 0.4, 0.6)]), context);
     tracker.handle({ type: 'fainted', playerId: 'other' }, context);
 
-    const messages = floats.orphanMessages();
+    const messages = floats.orphanMessageList();
     const died = messages[messages.length - 1];
 
     expect(died.textKey).toContain('statusMessage.died');
@@ -151,7 +151,7 @@ describe('PresenceTracker', () => {
     tracker.handle(slimSnapshot([player('other', 'Ash', 0.8, 0.3)]), context);
     tracker.handle({ type: 'fainted', playerId: 'other' }, context);
 
-    const messages = floats.orphanMessages();
+    const messages = floats.orphanMessageList();
     const died = messages[messages.length - 1];
 
     expect(died.textKey).toContain('statusMessage.died');
@@ -164,7 +164,7 @@ describe('PresenceTracker', () => {
     tracker.handle(snapshot([player('me', 'Me')]), context);
     tracker.handle(slimSnapshot([player('me', 'Me'), player('ghost', 'Ghost')]), context);
 
-    expect(floats.ownedMessages()).toHaveLength(0);
+    expect(floats.ownedMessageList()).toHaveLength(0);
   });
 
   it('prunes a player dropped from a slim snapshot, so a later faint stamps no quip', () => {
@@ -172,13 +172,13 @@ describe('PresenceTracker', () => {
     tracker.handle(slimSnapshot([]), context);
     tracker.handle({ type: 'fainted', playerId: 'other' }, context);
 
-    expect(floats.orphanMessages()).toHaveLength(0);
+    expect(floats.orphanMessageList()).toHaveLength(0);
   });
 
   it('stays silent when my own Pokémon faints', () => {
     tracker.handle(snapshot([player('me', 'Me')]), context);
     tracker.handle({ type: 'fainted', playerId: 'me' }, context);
 
-    expect(floats.orphanMessages()).toHaveLength(0);
+    expect(floats.orphanMessageList()).toHaveLength(0);
   });
 });

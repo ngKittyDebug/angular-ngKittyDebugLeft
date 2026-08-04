@@ -43,14 +43,14 @@ interface ArrowVm {
  * Mirrors the scene's "render once from signals, animate via Renderer2" split (the project is zone.js, so a
  * per-frame `signal.set()` would drag change detection back into the rAF loop):
  * - STRUCTURE (which badges, name-vs-count, cluster membership) is recomputed at a low rate and pushed to the
- *   `indicators` signal — the only Angular work. `@for` adds/removes nodes by stable membership key.
+ *   `indicatorList` signal — the only Angular work. `@for` adds/removes nodes by stable membership key.
  * - POSITION (the edge slide) is written EVERY frame by `frame()` via Renderer2, off the live camera snapshot, so
  *   it tracks the smoothly-eased pan 1:1 with no CSS transition (which would rubber-band) and no CD.
  *
  * Positions are passed into `frame()` by the scene's render loop — the same rendered player VMs the sprites use,
  * glided through reconciliation — NOT injected from the scene's extrapolator (no sibling-into-guts, ADR 0004 §5)
  * and NOT the raw server snapshot (which steps at the tick rate and made the arrows jump). Player names are read
- * from the raw `players` input (the rendered VM carries only the species label), keyed by id. `frame()` runs from
+ * from the raw `playerList` input (the rendered VM carries only the species label), keyed by id. `frame()` runs from
  * the scene's single rAF loop right after the camera and the player tick, so both read the same frame. Decorative
  * real-time aid → `aria-hidden`: the authoritative roster/leaderboard already exposes presence to AT, and arrows
  * mutating ~8×/s would be screen-reader noise.
@@ -69,16 +69,16 @@ export class OffscreenIndicatorsComponent {
 
   // Raw roster — used only for id→name (the rendered VM carries the species label, not the player's chosen name).
   // Smooth positions come from the rendered VMs the loop passes into `frame()`, not from here.
-  public readonly players = input.required<readonly Player[]>();
+  public readonly playerList = input.required<readonly Player[]>();
 
-  protected readonly indicators = signal<readonly ArrowVm[]>([]);
+  protected readonly indicatorList = signal<readonly ArrowVm[]>([]);
 
   // Called once per frame by the scene rAF loop after the camera writes its transform, with the loop's current
   // rendered player VMs. Repositions every existing arrow off them, then re-derives membership at the throttled rate.
   public frame(camera: CameraSnapshot, now: number, rendered: readonly RenderedPlayer[]): void {
     if (!camera.ready || camera.viewportWidth === 0 || camera.viewportHeight === 0) {
-      if (this.indicators().length > 0) {
-        this.indicators.set([]);
+      if (this.indicatorList().length > 0) {
+        this.indicatorList.set([]);
       }
 
       return;
@@ -95,7 +95,7 @@ export class OffscreenIndicatorsComponent {
   // Re-derive which arrows exist and their clustering from the current (extrapolated) positions. Sets the signal
   // only when the membership keys actually change — names/counts are fully determined by membership.
   private restructure(camera: CameraSnapshot, rendered: readonly RenderedPlayer[]): void {
-    const nameById = new Map(this.players().map((player) => [player.id, player.name]));
+    const nameById = new Map(this.playerList().map((player) => [player.id, player.name]));
     const inputs: EdgeArrowInput[] = [];
 
     for (const player of rendered) {
@@ -134,7 +134,7 @@ export class OffscreenIndicatorsComponent {
       return;
     }
 
-    this.indicators.set(groups.map(toVm));
+    this.indicatorList.set(groups.map(toVm));
   }
 
   // Per-frame DOM write: slide each arrow to its members' (averaged) edge point and rotate the glyph to their mean
@@ -149,7 +149,7 @@ export class OffscreenIndicatorsComponent {
 
     const renderedById = new Map(rendered.map((player) => [player.id, player]));
 
-    for (const vm of this.indicators()) {
+    for (const vm of this.indicatorList()) {
       const element = elements.get(vm.key);
 
       if (element === undefined) {
@@ -227,7 +227,7 @@ export class OffscreenIndicatorsComponent {
   }
 
   private sameMembership(groups: readonly EdgeArrowGroup[]): boolean {
-    const current = this.indicators();
+    const current = this.indicatorList();
 
     if (current.length !== groups.length) {
       return false;

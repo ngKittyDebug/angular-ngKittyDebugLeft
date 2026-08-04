@@ -1,3 +1,5 @@
+@use 'utility/tamagotchi-sprite' as sprite;
+
 .pokemon-sprite {
   display: flex;
   align-items: center;
@@ -11,39 +13,15 @@
 }
 
 .pokemon-sprite__image {
-  inline-size: min(16rem, 40vw);
-  block-size: min(16rem, 40vw);
-  object-fit: contain;
-  image-rendering: pixelated;
-  contain: layout style paint;
-  backface-visibility: hidden;
+  @include sprite.pixel_sprite(16rem, 40vw);
 }
 
 .pokemon-sprite__image.tamagotchi-gpu-layer {
-  will-change: transform;
-  transform: translate3d(0, 0, 0);
+  @include sprite.gpu_layer;
 }
 
 .pokemon-sprite__image--reduced {
-  animation: none !important;
-  filter: none;
-  opacity: 1;
-}
-
-.pokemon-sprite__image--variation-default {
-  filter: none;
-}
-
-.pokemon-sprite__image--variation-shiny:not(.pokemon-sprite__image--reduced):not(
-    .pokemon-sprite__image--evolving
-  ) {
-  filter: saturate(1.45) brightness(1.14) hue-rotate(-12deg)
-    drop-shadow(0 0 0.45rem color-mix(in srgb, gold 55%, transparent));
-}
-
-.pokemon-sprite__image--variation-retro:not(.pokemon-sprite__image--reduced) {
-  image-rendering: pixelated;
-  filter: contrast(1.12) saturate(0.82);
+  @include sprite.reduced_motion_reset;
 }
 
 .pokemon-sprite__image--idle {
@@ -99,9 +77,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .pokemon-sprite__image {
-    animation: none !important;
-    filter: none;
-    opacity: 1;
+    @include sprite.reduced_motion_reset;
   }
 }
 

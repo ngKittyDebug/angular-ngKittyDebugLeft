@@ -8,3 +8,7 @@
 .action-buttons__btn {
   min-inline-size: 7rem;
 }
+
+.action-buttons__btn--unavailable {
+  opacity: 0.56;
+}

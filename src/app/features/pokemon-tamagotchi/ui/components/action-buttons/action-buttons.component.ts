@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { TuiButton, TuiHint } from '@taiga-ui/core';
-import type { ActionCooldowns, ActionType } from '../../../data/models/tamagotchi-state.model';
+import type { ActionCooldownsModel, ActionType } from '../../../data/models/tamagotchi-state.model';
 
 export interface ActionButtonViewModel {
   action: ActionType;
@@ -62,16 +62,16 @@ export class ActionButtonsComponent {
   public readonly canPlay = input<boolean>(true);
   public readonly canTrain = input<boolean>(true);
   public readonly canWater = input<boolean>(true);
-  public readonly cooldowns = input.required<ActionCooldowns>();
+  public readonly cooldowns = input.required<ActionCooldownsModel>();
   public readonly isSleeping = input<boolean>(false);
 
   public readonly actionSelected = output<ActionType>();
 
-  protected readonly buttons = computed<ActionButtonViewModel[]>(() => {
+  protected readonly buttonList = computed<ActionButtonViewModel[]>(() => {
     const sleeping = this.isSleeping();
     const locked = this.actionsLocked();
     const cooldowns = this.cooldowns();
-    const awakeActions: ActionType[] = ['feed', 'water', 'care', 'play', 'train'];
+    const awakeActionList: ActionType[] = ['feed', 'water', 'care', 'play', 'train'];
 
     if (sleeping) {
       return [
@@ -86,7 +86,7 @@ export class ActionButtonsComponent {
     }
 
     return [
-      ...awakeActions.map((action) => this.buildAwakeButton(action, cooldowns, locked)),
+      ...awakeActionList.map((action) => this.buildAwakeButton(action, cooldowns, locked)),
       this.buildButton(
         'sleep',
         cooldowns.sleep,
@@ -97,24 +97,29 @@ export class ActionButtonsComponent {
     ];
   });
 
-  protected onAction(action: ActionType): void {
+  protected onAction(action: ActionType, unavailable = false): void {
+    if (unavailable) {
+      return;
+    }
+
     this.actionSelected.emit(action);
   }
 
   private buildAwakeButton(
     action: ActionType,
-    cooldowns: ActionCooldowns,
+    cooldowns: ActionCooldownsModel,
     actionsLocked: boolean,
   ): ActionButtonViewModel {
     const meta = this.actionMeta[action];
     const cooldownMs = cooldowns[action];
     const cooldownSeconds = cooldownMs ? Math.ceil(cooldownMs / 1000) : null;
     const onCooldown = cooldownSeconds !== null && cooldownSeconds > 0;
-    const allowed = meta.canInput() && !onCooldown && !actionsLocked;
+    const blockedByTraining = actionsLocked && action !== 'play';
+    const allowed = meta.canInput() && !onCooldown && !blockedByTraining;
 
     let disabledReasonKey: string | null = null;
 
-    if (actionsLocked) {
+    if (blockedByTraining) {
       disabledReasonKey = 'disabledTraining';
     } else if (onCooldown) {
       disabledReasonKey = 'disabledCooldown';

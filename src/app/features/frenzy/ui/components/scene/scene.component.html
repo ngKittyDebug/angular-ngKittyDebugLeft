@@ -1,7 +1,7 @@
 <section
   *transloco="let t; prefix: 'frenzy.scene'"
   class="scene"
-  [class.scene--shaking]="blasts().length > 0"
+  [class.scene--shaking]="blastList().length > 0"
   [class.scene--hide-decor]="sceneLayers()?.decor === false"
   [class.scene--hide-kelp]="sceneLayers()?.kelp === false"
   [class.scene--hide-parallax]="sceneLayers()?.parallax === false"
@@ -12,7 +12,7 @@
   [class.scene--decor-no-rays]="decorProbe()?.noRays === true"
   [class.scene--decor-flat-rays]="decorProbe()?.flatRays === true"
   [class.scene--canvas-decor]="decorMode() === 'canvas'"
-  aria-label="Feeding frenzy scene"
+  [attr.aria-label]="t('ariaLabel')"
   (pointerdown)="onScenePointerDown($event)"
   (pointermove)="onScenePointerMove($event)"
   (pointerleave)="onScenePointerLeave()"
@@ -46,9 +46,9 @@
       <canvas class="scene__item-canvas" #actorCanvas aria-hidden="true"></canvas>
     }
 
-    <!-- DOM item layer (renderMode 'dom'): `renderedItemsByDepth()` is empty in canvas mode, so this `@for` renders
+    <!-- DOM item layer (renderMode 'dom'): `renderedItemListByDepth()` is empty in canvas mode, so this `@for` renders
          nothing then without a guarding `@if` (keeps the template's cyclomatic complexity down). -->
-    @for (item of renderedItemsByDepth(); track item.id) {
+    @for (item of renderedItemListByDepth(); track item.id) {
       <left-paw-scene-item
         leftPawActorHost="item"
         [actorId]="item.id"
@@ -57,7 +57,7 @@
       />
     }
 
-    @for (puff of sandPuffs(); track puff.id) {
+    @for (puff of sandPuffList(); track puff.id) {
       <left-paw-sand-puff
         [leftPawScenePosition]="{ x: puff.x, y: puff.y }"
         [weight]="puff.weight"
@@ -65,7 +65,7 @@
       />
     }
 
-    @for (float of orphanFloats(); track float.id) {
+    @for (float of orphanFloatList(); track float.id) {
       <left-paw-floating-text
         [leftPawScenePosition]="{ x: float.x, y: float.y }"
         [scenePositionClampX]="true"
@@ -80,9 +80,9 @@
 
     <!-- Owned floats (live-sprite quips): direct world children at the floating-text z-index (so they clear the
          kelp, unlike if nested in the player), each column riding its sprite's drift. See OwnedFloatsComponent. -->
-    <left-paw-owned-floats [players]="renderedPlayers()" [floatsByOwner]="floatsByOwner()" />
+    <left-paw-owned-floats [playerList]="renderedPlayerList()" [floatsByOwner]="floatsByOwner()" />
 
-    @for (player of renderedPlayers(); track player.id) {
+    @for (player of renderedPlayerList(); track player.id) {
       <left-paw-scene-player
         leftPawActorHost="player"
         [actorId]="player.id"
@@ -101,8 +101,8 @@
     <!-- Debug overlay (?debug) — all box/readout rendering lives in the debug feature; see DebugOverlayComponent. -->
     <left-paw-debug-overlay
       [flags]="debug"
-      [players]="renderedPlayers()"
-      [items]="renderedItems()"
+      [playerList]="renderedPlayerList()"
+      [itemList]="renderedItemList()"
       [itemSize]="itemSize"
       [bombSize]="bombSize"
     />
@@ -110,11 +110,11 @@
     <!-- In-world near kelp drawn IN FRONT of the actors (its own z-index), so the Pokémon can duck behind it. -->
     <left-paw-midground-kelp />
 
-    @for (burst of bursts(); track burst.id) {
+    @for (burst of burstList(); track burst.id) {
       <left-paw-bubble-burst [leftPawScenePosition]="{ x: burst.x, y: burst.y }" />
     }
 
-    @for (hit of hitBursts(); track hit.id) {
+    @for (hit of hitBurstList(); track hit.id) {
       <left-paw-bubble-burst
         [leftPawScenePosition]="{ x: hit.x, y: hit.y }"
         [variant]="hit.mode"
@@ -122,12 +122,12 @@
       />
     }
 
-    @for (blast of blasts(); track blast.id) {
+    @for (blast of blastList(); track blast.id) {
       <div
         class="scene__blast"
         aria-hidden="true"
         [leftPawScenePosition]="{ x: blast.x, y: blast.y }"
-        [style.width.%]="blast.radius * 200"
+        [style.width.%]="blast.radius * blastRadiusToWidthPercent"
       >
         <span class="scene__blast-ring"></span>
         <span class="scene__blast-ring scene__blast-ring--secondary"></span>
@@ -157,7 +157,7 @@
   <!-- Off-screen player indicators: edge arrows pointing at active players outside the viewport (sliding/clustering),
        a screen-space sibling of the world (NOT inside it — the world is camera-transformed). Driven imperatively by
        the scene's rAF loop via its `frame()`; aria-hidden as a real-time visual-only aid. -->
-  <left-paw-offscreen-indicators [players]="players()" aria-hidden="true" />
+  <left-paw-offscreen-indicators [playerList]="playerList()" aria-hidden="true" />
 
   @if (debug.perf) {
     <!-- ?debug=perf panels: the metric readout (consumes the PerfMetricsService snapshot) + the runtime metric

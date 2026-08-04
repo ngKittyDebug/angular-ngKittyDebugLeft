@@ -1,17 +1,11 @@
-import { Injectable } from '@angular/core';
+import { Service } from '@angular/core';
 import { STATUS_THRESHOLDS } from '../constants/status-thresholds.constants';
-import { rollTrainingExperienceGain } from '../helpers/training-reward.helper';
-import {
-  calculateStatusUpdate,
-  getActionCooldownMs,
-  getActionEnergyCost,
-} from '../helpers/status-calculator.helper';
-import type { PokemonStatusModel, StatusUpdateModel } from '../models/pokemon-status.model';
+import { getActionCooldownMs, getActionEnergyCost } from '../helpers/status-calculator.helper';
+import type { PokemonStatusModel } from '../models/pokemon-status.model';
 import type {
-  ActionCooldowns,
+  ActionCooldownsModel,
   ActionType,
-  TamagotchiStateModel,
-  ValidationResult,
+  ValidationResultModel,
 } from '../models/tamagotchi-state.model';
 
 export interface TamagotchiActionContext {
@@ -26,21 +20,17 @@ export interface TamagotchiActionContext {
 const AWAKE_ONLY_ACTIONS = new Set<ActionType>(['feed', 'play', 'train']);
 const GAME_ACTIONS = new Set<ActionType>(['play', 'train']);
 
-@Injectable({ providedIn: 'root' })
+@Service({ autoProvided: false })
 export class TamagotchiService {
-  public calculateStatusUpdate(
-    currentStatus: PokemonStatusModel,
+  public validateAction(
+    context: TamagotchiActionContext,
     action: ActionType,
-  ): StatusUpdateModel {
-    return calculateStatusUpdate(currentStatus, action);
-  }
-
-  public validateAction(context: TamagotchiActionContext, action: ActionType): ValidationResult {
+  ): ValidationResultModel {
     if (!context.hasPokemon) {
       return { allowed: false, reason: 'noPokemon' };
     }
 
-    if (context.isTraining) {
+    if (context.isTraining && action !== 'play') {
       return { allowed: false, reason: 'training' };
     }
 
@@ -75,23 +65,7 @@ export class TamagotchiService {
     return { allowed: true };
   }
 
-  public validateActionFromState(
-    state: TamagotchiStateModel,
-    action: ActionType,
-  ): ValidationResult {
-    return this.validateAction(
-      {
-        hasPokemon: state.pokemon !== null,
-        isSleeping: state.isSleeping,
-        isTraining: state.trainingStartedAt !== null,
-        lastActionTime: state.lastActionTime,
-        status: state.status,
-      },
-      action,
-    );
-  }
-
-  public getActionCooldowns(context: TamagotchiActionContext): ActionCooldowns {
+  public getActionCooldowns(context: TamagotchiActionContext): ActionCooldownsModel {
     return {
       care: this.getCooldownRemaining(context, 'care') || null,
       feed: this.getCooldownRemaining(context, 'feed') || null,
@@ -100,10 +74,6 @@ export class TamagotchiService {
       train: this.getCooldownRemaining(context, 'train') || null,
       water: this.getCooldownRemaining(context, 'water') || null,
     };
-  }
-
-  public rollTrainingExperienceGain(random?: number): number {
-    return rollTrainingExperienceGain(random);
   }
 
   private getCooldownRemaining(context: TamagotchiActionContext, action: ActionType): number {
@@ -123,7 +93,7 @@ export class TamagotchiService {
     context: TamagotchiActionContext,
     action: ActionType,
   ): number | null {
-    const { lastActionTime, status } = context;
+    const { status } = context;
 
     switch (action) {
       case 'feed':
@@ -139,10 +109,10 @@ export class TamagotchiService {
         return status.lastSleepTime;
 
       case 'care':
-        return lastActionTime;
+        return status.lastCareTime;
 
       case 'train':
-        return lastActionTime;
+        return status.lastTrainTime;
     }
   }
 }

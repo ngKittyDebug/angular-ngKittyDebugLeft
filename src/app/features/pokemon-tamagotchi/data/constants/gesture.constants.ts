@@ -38,14 +38,3 @@ export const GESTURE_THRESHOLDS = {
   PET_MIN_DISTANCE_PX: 8,
   PET_MIN_DURATION_MS: 200,
 } as const;
-
-export const BOND_LEVEL = {
-  MAX: 100,
-  WINDOW_MS: 24 * 60 * 60 * 1000,
-  TYPE_WEIGHT: {
-    click: 1,
-    drag: 1.2,
-    multiTouch: 2,
-    pet: 1.5,
-  } satisfies Record<InteractionType, number>,
-} as const;

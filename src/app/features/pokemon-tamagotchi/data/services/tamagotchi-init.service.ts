@@ -1,11 +1,11 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Service } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { defer, filter, map, type Observable, of, switchMap, take } from 'rxjs';
 import type { PokemonSelectionValidation as FeaturePokemonSelectionValidation } from '../models/pokemon-selection.model';
 import { TamagotchiStore } from '../store/tamagotchi.store';
 import { TamagotchiSelectionService } from './tamagotchi-selection.service';
 
-@Injectable({ providedIn: 'root' })
+@Service({ autoProvided: false })
 export class TamagotchiInitService {
   private readonly selection = inject(TamagotchiSelectionService);
   private readonly store = inject(TamagotchiStore);
@@ -13,7 +13,9 @@ export class TamagotchiInitService {
 
   public bootstrapFromProfile(): Observable<void> {
     return defer(() => {
-      this.store.loadFromPersistence();
+      if (!this.store.initialized()) {
+        this.store.loadFromPersistence();
+      }
 
       if (this.store.initialized()) {
         return of(this.store.hasPokemon());
@@ -49,9 +51,18 @@ export class TamagotchiInitService {
     }
 
     const selectedReference = this.selection.getSelectedPokemonReference();
-    const persistedPokemon = this.store.pokemon();
+    let selectionOriginId = this.store.selectionOriginId();
 
-    if (selectedReference && persistedPokemon && selectedReference.id !== persistedPokemon.id) {
+    if (selectedReference && selectionOriginId === null) {
+      this.store.healSelectionOriginId(selectedReference.id);
+      selectionOriginId = selectedReference.id;
+    }
+
+    if (
+      selectedReference &&
+      selectionOriginId !== null &&
+      selectedReference.id !== selectionOriginId
+    ) {
       this.store.resetState();
 
       return this.selection.validateSelectedPokemon();

@@ -1,10 +1,6 @@
 import { EVOLUTION_REQUIREMENTS } from '../constants/evolution-criteria.constants';
 import type { AchievementModel } from '../models/achievement.model';
-import type {
-  EvolutionCheckResultModel,
-  EvolutionProgressModel,
-  EvolutionRequirementModel,
-} from '../models/evolution.model';
+import type { EvolutionProgressModel, EvolutionRequirementModel } from '../models/evolution.model';
 import type { PokemonModel } from '../models/pokemon.model';
 import type { PokemonStatusModel } from '../models/pokemon-status.model';
 
@@ -62,7 +58,7 @@ export function buildEvolutionProgressForPokemon(
   pokemon: PokemonModel | null,
 ): EvolutionProgressModel {
   if (!pokemon?.evolutionChain.nextEvolution) {
-    return { requirements: [], currentProgress: {}, isReady: false };
+    return { requirements: [], currentProgress: {}, isReady: false, readyNotifiedAt: null };
   }
 
   const requirements = getEvolutionRequirementsForPokemon(pokemon);
@@ -76,64 +72,6 @@ export function buildEvolutionProgressForPokemon(
     requirements,
     currentProgress,
     isReady: false,
-  };
-}
-
-export function checkEvolutionCriteria(
-  requirements: EvolutionRequirementModel[],
-  status: PokemonStatusModel,
-  achievementList: AchievementModel[],
-  consecutiveDays: number,
-): EvolutionCheckResultModel {
-  const currentProgress = buildEvolutionProgressValues(status, achievementList, consecutiveDays);
-  const { isReady, missingRequirements } = evaluateEvolutionRequirements(
-    requirements,
-    currentProgress,
-  );
-
-  const progress: EvolutionProgressModel = {
-    currentProgress,
-    isReady,
-    requirements,
-  };
-
-  return {
-    isReady,
-    missingRequirements,
-    progress,
-  };
-}
-
-export function getRequirementCompletionRatio(
-  requirement: EvolutionRequirementModel,
-  currentProgress: Record<string, number>,
-): number {
-  if (requirement.value <= 0) {
-    return 1;
-  }
-
-  const current = currentProgress[requirement.type] ?? 0;
-
-  return Math.min(1, current / requirement.value);
-}
-
-export function buildEvolvedPokemon(pokemon: PokemonModel): PokemonModel | null {
-  const nextEvolution = pokemon.evolutionChain.nextEvolution;
-
-  if (!nextEvolution) {
-    return null;
-  }
-
-  const nextStage = pokemon.evolutionChain.currentStage + 1;
-
-  return {
-    ...pokemon,
-    evolutionChain: {
-      currentStage: nextStage,
-      nextEvolution: nextEvolution.childNextEvolution,
-      totalStages: pokemon.evolutionChain.totalStages,
-    },
-    id: nextEvolution.pokemonId,
-    isFirstStage: false,
+    readyNotifiedAt: null,
   };
 }

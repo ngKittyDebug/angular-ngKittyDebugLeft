@@ -1,18 +1,20 @@
-import { computed, DestroyRef, effect, inject, Service, signal } from '@angular/core';
+import { computed, DestroyRef, effect, inject, Service, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { GAME_BALANCE } from '../constants/game-balance.constants';
 import { isTamagotchiSelectionError } from '../constants/selection-errors.constants';
 import { TAMAGOTCHI_SYSTEM_ERRORS } from '../constants/system-errors.constants';
 import {
-  DISPLAYED_STATUS_TYPES,
+  DISPLAYED_STATUS_TYPE_LIST,
   maxValueForStatusType,
   statusValueForType,
 } from '../helpers/status-indicator-sync.helper';
+import { calculateSleepRestorationBonus } from '../helpers/sleep-restoration.helper';
 import { rollTrainingExperienceGain } from '../helpers/training-reward.helper';
 import { EvolutionService } from '../services/evolution.service';
 import { PerformanceService } from '../services/performance.service';
 import { TamagotchiInitService } from '../services/tamagotchi-init.service';
-import { TamagotchiService } from '../services/tamagotchi.service';
+import { TamagotchiNotificationService } from '../services/tamagotchi-notification.service';
+import { type TamagotchiActionContext, TamagotchiService } from '../services/tamagotchi.service';
 import {
   type TamagotchiTimerContext,
   TimerService,
@@ -23,8 +25,10 @@ import type { InteractionEventModel } from '../models/interaction.model';
 import type { PerformanceMode } from '../models/performance-mode.model';
 import type { PokemonModel } from '../models/pokemon.model';
 import type { StatusType } from '../models/pokemon-status.model';
-import type { ActionType, TamagotchiStateModel } from '../models/tamagotchi-state.model';
-import { TamagotchiNotificationService } from '../../ui/services/notification.service';
+import type { ActionCooldownsModel, ActionType } from '../models/tamagotchi-state.model';
+
+const COOLDOWN_ACTIONS: ActionType[] = ['feed', 'water', 'care', 'play', 'train', 'sleep'];
+const COOLDOWN_REFRESH_INTERVAL_MS = 1_000;
 
 @Service({ autoProvided: false })
 export class TamagotchiFacade {
@@ -36,11 +40,13 @@ export class TamagotchiFacade {
   private readonly store = inject(TamagotchiStore);
   private readonly tamagotchiService = inject(TamagotchiService);
   private readonly timerService = inject(TimerService);
-  private readonly wasEvolutionReady = signal(false);
   private readonly isInitialized = computed(() => this.store.initialized());
-  private readonly state = this.store.snapshot;
+  private readonly now = signal(Date.now());
+  private readonly pendingEvolvedPokemon = signal<PokemonModel | null>(null);
+  private readonly evolutionPrepareInFlight = signal(false);
+  private readonly actionContext = computed(() => this.buildActionContext(this.now()));
 
-  public readonly displayedStatusTypes = DISPLAYED_STATUS_TYPES;
+  public readonly displayedStatusTypeList = DISPLAYED_STATUS_TYPE_LIST;
 
   public readonly trainingStartedAt = this.store.trainingStartedAt;
   public readonly isTraining = this.store.isTraining;
@@ -49,11 +55,11 @@ export class TamagotchiFacade {
   public readonly hasPokemon = this.store.hasPokemon;
   public readonly isEvolving = this.store.isEvolving;
   public readonly isSleeping = this.store.isSleeping;
-  public readonly notifications = this.store.notificationList;
+  public readonly notificationList = this.store.notificationList;
   public readonly pokemon = this.store.pokemon;
   public readonly status = this.store.status;
 
-  public readonly evolvedPokemon = computed(() => this.resolveEvolvedPokemon(this.pokemon()));
+  public readonly evolvedPokemon = this.pendingEvolvedPokemon.asReadonly();
 
   public readonly isLoading = computed(() => !this.isInitialized());
 
@@ -76,6 +82,10 @@ export class TamagotchiFacade {
       return 'saveFailedError';
     }
 
+    if (currentError === TAMAGOTCHI_SYSTEM_ERRORS.EVOLUTION_PREPARE_FAILED) {
+      return 'evolutionPrepareFailedError';
+    }
+
     if (currentError === TAMAGOTCHI_SYSTEM_ERRORS.RECOVERED_FROM_BACKUP) {
       return 'stateRecoveredWarning';
     }
@@ -84,9 +94,7 @@ export class TamagotchiFacade {
   });
 
   public readonly cooldowns = computed(() => {
-    const current = this.state();
-
-    return this.tamagotchiService.getActionCooldowns(this.toActionContext(current));
+    return this.tamagotchiService.getActionCooldowns(this.actionContext());
   });
 
   public readonly canCare = computed(() => this.isActionAllowed('care'));
@@ -100,25 +108,18 @@ export class TamagotchiFacade {
   );
 
   public readonly performanceMode = this.performanceService.mode;
-  public readonly effectivePerformanceMode = computed(() =>
-    this.performanceService.resolveEffectiveMode(),
-  );
-  public readonly performanceModes: PerformanceMode[] = ['auto', 'high', 'balanced', 'low'];
+  public readonly performanceModeList: PerformanceMode[] = ['high', 'balanced', 'low'];
   public readonly performanceModeIndex = computed(() =>
-    this.performanceModes.indexOf(this.performanceMode()),
+    this.performanceModeList.indexOf(this.performanceMode()),
   );
 
   public constructor() {
-    this.initService.bootstrapFromProfile().pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
-
     effect((onCleanup) => {
       if (!this.isInitialized() || !this.hasPokemon()) {
         return;
       }
 
-      this.performanceService.mode();
-
-      const profile = this.performanceService.getProfile();
+      const profile = this.performanceService.profile();
       const handle = this.timerService.startTimer(
         () => this.buildTimerContext(),
         (result) => this.handleTimerTick(result),
@@ -133,16 +134,40 @@ export class TamagotchiFacade {
       });
     });
 
-    effect(() => {
+    effect((onCleanup) => {
       const ready = this.canEvolve();
       const species = this.pokemon();
+      const readyNotifiedAt = untracked(() => this.store.evolutionProgress().readyNotifiedAt);
+      const prepareInFlight = untracked(() => this.evolutionPrepareInFlight());
 
-      if (ready && !this.wasEvolutionReady() && species) {
-        this.notificationService.notifyEvolutionReady(species.name);
-        this.store.startEvolution();
+      if (!ready || readyNotifiedAt !== null || !species || prepareInFlight) {
+        return;
       }
 
-      this.wasEvolutionReady.set(ready);
+      const subscription = untracked(() => {
+        this.evolutionPrepareInFlight.set(true);
+        this.notificationService.notifyEvolutionReady(species.name);
+        this.store.markEvolutionReadyNotified(Date.now());
+
+        return this.evolutionService.prepareEvolution(species).subscribe((result) => {
+          this.evolutionPrepareInFlight.set(false);
+
+          if (!result) {
+            this.pendingEvolvedPokemon.set(null);
+            this.store.setError(TAMAGOTCHI_SYSTEM_ERRORS.EVOLUTION_PREPARE_FAILED);
+
+            return;
+          }
+
+          this.store.startEvolution();
+          this.pendingEvolvedPokemon.set(result.evolvedPokemon);
+        });
+      });
+
+      onCleanup(() => {
+        subscription.unsubscribe();
+        this.evolutionPrepareInFlight.set(false);
+      });
     });
 
     effect((onCleanup) => {
@@ -154,7 +179,8 @@ export class TamagotchiFacade {
 
       const remaining = GAME_BALANCE.ACTION_EFFECTS.TRAIN.durationMs - (Date.now() - startedAt);
       const delay = Math.max(0, remaining);
-      const experienceGain = this.store.trainingExperienceReward() ?? rollTrainingExperienceGain();
+      const experienceGain =
+        untracked(() => this.store.trainingExperienceReward()) ?? rollTrainingExperienceGain();
 
       const timeoutId = setTimeout(() => {
         this.store.completeTraining(Date.now(), experienceGain);
@@ -165,23 +191,60 @@ export class TamagotchiFacade {
         clearTimeout(timeoutId);
       });
     });
+
+    effect((onCleanup) => {
+      if (!this.hasActiveCooldown(this.cooldowns())) {
+        return;
+      }
+
+      const intervalId = setInterval(() => {
+        this.now.set(Date.now());
+      }, COOLDOWN_REFRESH_INTERVAL_MS);
+
+      onCleanup(() => {
+        clearInterval(intervalId);
+      });
+    });
+  }
+
+  public bootstrapFromProfile(): void {
+    this.initService.bootstrapFromProfile().pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
   }
 
   public onAction(action: ActionType): void {
-    if (this.isTraining()) {
-      return;
-    }
-
     const now = Date.now();
+    const actionContext = this.buildActionContext(now);
+
+    this.now.set(now);
 
     if (this.isSleeping() && action === 'sleep') {
-      this.store.wakeUp(now);
+      const bonusEnergy = calculateSleepRestorationBonus(this.status().lastSleepTime, now);
+
+      this.store.wakeUp(now, bonusEnergy);
       this.store.checkEvolution();
 
       return;
     }
 
-    const validation = this.tamagotchiService.validateActionFromState(this.state(), action);
+    if (this.isTraining()) {
+      if (action !== 'play') {
+        return;
+      }
+
+      const validation = this.tamagotchiService.validateAction(actionContext, action);
+
+      if (!validation.allowed) {
+        return;
+      }
+
+      this.store.play(now);
+      this.store.restartTrainingTimer(now);
+      this.store.checkEvolution();
+
+      return;
+    }
+
+    const validation = this.tamagotchiService.validateAction(actionContext, action);
 
     if (!validation.allowed) {
       return;
@@ -218,19 +281,19 @@ export class TamagotchiFacade {
 
   public onEvolutionComplete(evolvedPokemon: PokemonModel): void {
     this.store.completeEvolution(evolvedPokemon);
-    this.wasEvolutionReady.set(false);
+    this.pendingEvolvedPokemon.set(null);
   }
 
   public onInteraction(interaction: InteractionEventModel): void {
-    if (this.isTraining()) {
-      return;
-    }
-
-    this.store.interactWithPokemon(interaction, Date.now());
+    this.store.interactWithPokemon(interaction);
     this.store.checkEvolution();
   }
 
   public onSystemErrorDismiss(): void {
+    if (this.error() === TAMAGOTCHI_SYSTEM_ERRORS.EVOLUTION_PREPARE_FAILED) {
+      this.store.clearEvolutionReadyNotified();
+    }
+
     this.store.clearError();
   }
 
@@ -239,7 +302,7 @@ export class TamagotchiFacade {
   }
 
   public onPerformanceModeIndexChange(index: number): void {
-    const mode = this.performanceModes[index];
+    const mode = this.performanceModeList[index];
 
     if (mode) {
       this.onPerformanceModeChange(mode);
@@ -261,15 +324,12 @@ export class TamagotchiFacade {
   }
 
   private buildTimerContext(): TamagotchiTimerContext {
-    const current = this.state();
-
     return {
-      dailyRoutine: current.dailyRoutine,
-      isSleeping: current.isSleeping,
-      lastActionTime: current.lastActionTime,
-      lastDecayTime: current.lastDecayTime,
-      sleepStartedAt: current.isSleeping ? current.status.lastSleepTime : null,
-      status: current.status,
+      dailyRoutine: this.store.dailyRoutine(),
+      isSleeping: this.isSleeping(),
+      lastActionTime: this.store.lastActionTime(),
+      lastDecayTime: this.store.lastDecayTime(),
+      status: this.status(),
     };
   }
 
@@ -290,30 +350,25 @@ export class TamagotchiFacade {
   }
 
   private isActionAllowed(action: ActionType): boolean {
-    return this.tamagotchiService.validateActionFromState(this.state(), action).allowed;
+    return this.tamagotchiService.validateAction(this.actionContext(), action).allowed;
   }
 
-  private resolveEvolvedPokemon(species: PokemonModel | null): PokemonModel | null {
-    if (!species) {
-      return null;
-    }
-
-    const evolutionData = this.evolutionService.buildEvolutionData(species);
-
-    if (!evolutionData) {
-      return null;
-    }
-
-    return this.evolutionService.triggerEvolution(species, evolutionData)?.evolvedPokemon ?? null;
-  }
-
-  private toActionContext(state: TamagotchiStateModel) {
+  private buildActionContext(now: number): TamagotchiActionContext {
     return {
-      hasPokemon: state.pokemon !== null,
-      isSleeping: state.isSleeping,
-      isTraining: state.trainingStartedAt !== null,
-      lastActionTime: state.lastActionTime,
-      status: state.status,
+      hasPokemon: this.hasPokemon(),
+      isSleeping: this.isSleeping(),
+      isTraining: this.trainingStartedAt() !== null,
+      lastActionTime: this.store.lastActionTime(),
+      now,
+      status: this.status(),
     };
+  }
+
+  private hasActiveCooldown(cooldowns: ActionCooldownsModel): boolean {
+    return COOLDOWN_ACTIONS.some((action) => {
+      const remaining = cooldowns[action];
+
+      return remaining !== null && remaining > 0;
+    });
   }
 }

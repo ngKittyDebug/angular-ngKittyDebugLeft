@@ -34,10 +34,11 @@ export interface UserState {
   isAccountDeleted: boolean;
 }
 
-export interface UpdateAvatar {
+export interface UpdateAvatarModel {
   avatar: string;
 }
 
-export interface PokemonFavoriteResponse {
-  pokemonNameFavoriteList: string[];
+export interface PokemonFavoriteApiResponse {
+  pokemonNameFavorite?: string[];
+  pokemonNameFavoriteList?: string[];
 }

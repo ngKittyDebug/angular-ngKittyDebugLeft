@@ -1,25 +1,23 @@
 import { Injectable } from '@angular/core';
-import type { BattleCommand, BattleState } from '@game/pokemon-battle/types';
+import type { BattleCommand, BattleState } from '../models/battle.model';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable()
 export class BotPlayerService {
   /**
    * Generates random valid commands for all alive active bot pokemons.
    */
-  public getCommands(state: BattleState): BattleCommand[] {
-    const commands: BattleCommand[] = [];
+  public getCommandList(state: BattleState): BattleCommand[] {
+    const commandList: BattleCommand[] = [];
 
     // Get alive active player pokemon IDs as potential targets
-    const alivePlayerTargets = state.playerSide.activePokemonIds.filter((id) => {
+    const alivePlayerTargetList = state.playerSide.activePokemonIds.filter((id) => {
       const p = state.playerSide.pokemons.find((poke) => poke.id === id);
 
       return p && p.hp > 0;
     });
 
-    if (alivePlayerTargets.length === 0) {
-      return commands;
+    if (alivePlayerTargetList.length === 0) {
+      return commandList;
     }
 
     // Generate command for each active opponent (bot) pokemon
@@ -37,16 +35,16 @@ export class BotPlayerService {
       const randomMoveIndex = Math.floor(Math.random() * pokemon.moves.length);
       const move = pokemon.moves[randomMoveIndex];
 
-      const randomTargetIndex = Math.floor(Math.random() * alivePlayerTargets.length);
-      const targetId = alivePlayerTargets[randomTargetIndex];
+      const randomTargetIndex = Math.floor(Math.random() * alivePlayerTargetList.length);
+      const targetId = alivePlayerTargetList[randomTargetIndex];
 
-      commands.push({
+      commandList.push({
         pokemonId: id,
         moveName: move.name,
         targetId,
       });
     }
 
-    return commands;
+    return commandList;
   }
 }

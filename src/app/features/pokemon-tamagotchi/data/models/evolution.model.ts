@@ -22,6 +22,7 @@ export interface EvolutionProgressModel {
   requirements: EvolutionRequirementModel[];
   currentProgress: Record<string, number>;
   isReady: boolean;
+  readyNotifiedAt: number | null;
 }
 
 export interface EvolutionDataModel {
@@ -29,12 +30,6 @@ export interface EvolutionDataModel {
   toPokemonId: string;
   animationDuration: number;
   requirements: EvolutionRequirementModel[];
-}
-
-export interface EvolutionCheckResultModel {
-  isReady: boolean;
-  progress: EvolutionProgressModel;
-  missingRequirements: EvolutionRequirementModel[];
 }
 
 export interface EvolutionResultModel {

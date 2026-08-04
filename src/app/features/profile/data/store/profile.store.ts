@@ -1,14 +1,15 @@
 import { inject } from '@angular/core';
 import type {
   ChangePasswordModel,
-  UpdateAvatar,
+  UpdateAvatarModel,
   UpdateUserModel,
   UserState,
 } from '../models/profile.model';
 import { patchState, signalStore, withMethods, withState } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
-import { concatMap, pipe, switchMap, tap } from 'rxjs';
-import { ProfileService } from '../services/profile.service';
+import { concatMap, exhaustMap, pipe, switchMap, tap } from 'rxjs';
+import { UserApiService } from '../services/user-api.service';
+import { extractFavoritePokemonList } from '../helpers/extract-favorite-pokemon-list';
 import { handleStoreError } from '../helpers/handle-store-error';
 
 const initialState: UserState = {
@@ -23,14 +24,18 @@ const initialState: UserState = {
 export const UserProfileStore = signalStore(
   { providedIn: 'root' },
   withState(initialState),
-  withMethods((store, api = inject(ProfileService)) => ({
+  withMethods((store, api = inject(UserApiService)) => ({
     loadProfile: rxMethod<void>(
       pipe(
         tap(() => patchState(store, { isLoading: true, error: null, isAccountDeleted: false })),
         switchMap(() =>
           api.getUser().pipe(
             tap((profile) => {
-              patchState(store, { profile: profile, isLoading: false });
+              patchState(store, {
+                profile: profile,
+                favoritePokemonList: profile.pokemonNameFavoriteList,
+                isLoading: false,
+              });
             }),
             handleStoreError(store),
           ),
@@ -40,7 +45,7 @@ export const UserProfileStore = signalStore(
     updateProfile: rxMethod<UpdateUserModel>(
       pipe(
         tap(() => patchState(store, { isLoading: true, error: null })),
-        switchMap((dto) =>
+        exhaustMap((dto) =>
           api.updateUser(dto).pipe(
             tap((updatedProfile) => {
               const current = store.profile();
@@ -60,7 +65,7 @@ export const UserProfileStore = signalStore(
         tap(() =>
           patchState(store, { isLoading: true, error: null, isPasswordChangedSuccess: false }),
         ),
-        switchMap((dto) =>
+        exhaustMap((dto) =>
           api.changePassword(dto).pipe(
             tap(() => {
               patchState(store, { isLoading: false, isPasswordChangedSuccess: true });
@@ -73,7 +78,7 @@ export const UserProfileStore = signalStore(
     deleteAccount: rxMethod<void>(
       pipe(
         tap(() => patchState(store, { isLoading: true, error: null })),
-        switchMap(() =>
+        exhaustMap(() =>
           api.deleteAccount().pipe(
             tap(() => patchState(store, { ...initialState, isAccountDeleted: true })),
             handleStoreError(store),
@@ -81,10 +86,10 @@ export const UserProfileStore = signalStore(
         ),
       ),
     ),
-    updateAvatar: rxMethod<UpdateAvatar>(
+    updateAvatar: rxMethod<UpdateAvatarModel>(
       pipe(
         tap(() => patchState(store, { isLoading: true, error: null })),
-        switchMap((dto) =>
+        exhaustMap((dto) =>
           api.updateAvatar(dto).pipe(
             tap((resource) => {
               const currentProfile = store.profile();
@@ -120,11 +125,15 @@ export const UserProfileStore = signalStore(
         tap(() => patchState(store, { isLoading: true, error: null })),
         concatMap((pokemonName) =>
           api.addFavorite(pokemonName).pipe(
-            tap(() => {
-              const current = store.favoritePokemonList();
+            tap((response) => {
+              const favorites = extractFavoritePokemonList(response);
+              const currentProfile = store.profile();
 
               patchState(store, {
-                favoritePokemonList: [...current, pokemonName],
+                favoritePokemonList: favorites,
+                profile: currentProfile
+                  ? { ...currentProfile, pokemonNameFavoriteList: favorites }
+                  : currentProfile,
                 isLoading: false,
               });
             }),
@@ -139,11 +148,17 @@ export const UserProfileStore = signalStore(
         tap(() => patchState(store, { isLoading: true, error: null })),
         concatMap((pokemonName) =>
           api.removeFavorite(pokemonName).pipe(
-            tap(() => {
-              const current = store.favoritePokemonList();
-              const updated = current.filter((name) => name !== pokemonName);
+            tap((response) => {
+              const favorites = extractFavoritePokemonList(response);
+              const currentProfile = store.profile();
 
-              patchState(store, { favoritePokemonList: updated, isLoading: false });
+              patchState(store, {
+                favoritePokemonList: favorites,
+                profile: currentProfile
+                  ? { ...currentProfile, pokemonNameFavoriteList: favorites }
+                  : currentProfile,
+                isLoading: false,
+              });
             }),
             handleStoreError(store),
           ),

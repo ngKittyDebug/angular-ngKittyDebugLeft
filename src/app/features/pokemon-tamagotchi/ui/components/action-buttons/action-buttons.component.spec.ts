@@ -2,10 +2,10 @@ import { TestBed } from '@angular/core/testing';
 import type { ComponentFixture } from '@angular/core/testing';
 import { TranslocoTestingModule } from '@jsverse/transloco';
 import { describe, expect, it, vi } from 'vitest';
-import type { ActionCooldowns, ActionType } from '../../../data/models/tamagotchi-state.model';
+import type { ActionCooldownsModel, ActionType } from '../../../data/models/tamagotchi-state.model';
 import { ActionButtonsComponent } from './action-buttons.component';
 
-const EMPTY_COOLDOWNS: ActionCooldowns = {
+const EMPTY_COOLDOWNS: ActionCooldownsModel = {
   care: null,
   feed: null,
   play: null,
@@ -21,7 +21,7 @@ function createFixture(
     canTrain?: boolean;
     canWater?: boolean;
     canCare?: boolean;
-    cooldowns?: ActionCooldowns;
+    cooldowns?: ActionCooldownsModel;
     isSleeping?: boolean;
   } = {},
 ): ComponentFixture<ActionButtonsComponent> {
@@ -41,8 +41,11 @@ function createFixture(
                 sleep: 'Sleep',
                 wakeUp: 'Wake up',
                 cooldown: 'Available in {{seconds}}s',
+                cooldownAria: '{{action}} — available in {{seconds}}s',
+                disabledAria: '{{action}} — unavailable: {{reason}}',
                 disabledLowEnergy: 'Not enough energy',
                 disabledCooldown: 'On cooldown',
+                disabledTraining: 'Training in progress',
               },
             },
           },
@@ -113,7 +116,55 @@ describe('ActionButtonsComponent', () => {
         (node) => node.textContent?.trim() === 'Feed',
       ) as HTMLButtonElement;
 
-      expect(feedButton.disabled).toBe(true);
+      expect(feedButton.disabled).toBe(false);
+      expect(feedButton.getAttribute('aria-disabled')).toBe('true');
+      expect(feedButton.getAttribute('aria-label')).toBe('Feed — available in 45s');
+    });
+
+    it('должен озвучивать причину блокировки тренировки в aria-label', () => {
+      const fixture = createFixture();
+
+      fixture.componentRef.setInput('actionsLocked', true);
+      fixture.detectChanges();
+
+      const feedButton = [
+        ...(fixture.nativeElement as HTMLElement).querySelectorAll('.action-buttons__btn'),
+      ].find((node) => node.textContent?.trim() === 'Feed') as HTMLButtonElement;
+
+      expect(feedButton.getAttribute('aria-label')).toBe(
+        'Feed — unavailable: Training in progress',
+      );
+    });
+
+    it('должен оставлять недоступную кнопку в tab order и не эмитить клик', () => {
+      const fixture = createFixture({
+        cooldowns: { ...EMPTY_COOLDOWNS, feed: 45_000 },
+      });
+      const emitSpy = vi.spyOn(fixture.componentInstance.actionSelected, 'emit');
+      const feedButton = [
+        ...(fixture.nativeElement as HTMLElement).querySelectorAll('.action-buttons__btn'),
+      ].find((node) => node.textContent?.trim() === 'Feed') as HTMLButtonElement;
+
+      feedButton.focus();
+      feedButton.click();
+      fixture.detectChanges();
+
+      expect(document.activeElement).toBe(feedButton);
+      expect(emitSpy).toHaveBeenCalledTimes(0);
+    });
+
+    it('должен включать кнопку, когда cooldown input очищается без перезагрузки', () => {
+      const fixture = createFixture({
+        cooldowns: { ...EMPTY_COOLDOWNS, feed: 45_000 },
+      });
+      const feedButton = [
+        ...(fixture.nativeElement as HTMLElement).querySelectorAll('button'),
+      ].find((node) => node.textContent?.trim() === 'Feed') as HTMLButtonElement;
+
+      fixture.componentRef.setInput('cooldowns', EMPTY_COOLDOWNS);
+      fixture.detectChanges();
+
+      expect(feedButton.hasAttribute('aria-disabled')).toBe(false);
     });
 
     it('должен отключать тренировку при низкой энергии', () => {
@@ -122,7 +173,24 @@ describe('ActionButtonsComponent', () => {
         (node) => node.textContent?.trim() === 'Train',
       ) as HTMLButtonElement;
 
-      expect(trainButton.disabled).toBe(true);
+      expect(trainButton.getAttribute('aria-disabled')).toBe('true');
+    });
+
+    it('должен оставлять play доступным во время блокировки тренировки', () => {
+      const fixture = createFixture();
+
+      fixture.componentRef.setInput('actionsLocked', true);
+      fixture.detectChanges();
+
+      const playButton = [
+        ...(fixture.nativeElement as HTMLElement).querySelectorAll('.action-buttons__btn'),
+      ].find((node) => node.textContent?.trim() === 'Play') as HTMLButtonElement;
+      const feedButton = [
+        ...(fixture.nativeElement as HTMLElement).querySelectorAll('.action-buttons__btn'),
+      ].find((node) => node.textContent?.trim() === 'Feed') as HTMLButtonElement;
+
+      expect(playButton.hasAttribute('aria-disabled')).toBe(false);
+      expect(feedButton.getAttribute('aria-disabled')).toBe('true');
     });
 
     it('должен эмитить sleep при клике по Wake up во время сна', () => {

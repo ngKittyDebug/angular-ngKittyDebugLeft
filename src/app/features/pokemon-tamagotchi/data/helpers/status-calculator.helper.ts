@@ -7,60 +7,6 @@ export function computeLevelFromExperience(experience: number): number {
   return 1 + Math.floor(experience / GAME_BALANCE.EXPERIENCE_PER_LEVEL);
 }
 
-export function calculateStatusUpdate(
-  currentStatus: PokemonStatusModel,
-  action: ActionType,
-): StatusUpdateModel {
-  switch (action) {
-    case 'feed': {
-      const { energyCost, hungerIncrease, moodIncrease } = GAME_BALANCE.ACTION_EFFECTS.FEED;
-
-      return {
-        energy: -energyCost,
-        hunger: hungerIncrease,
-        mood: moodIncrease,
-      };
-    }
-
-    case 'water': {
-      const { energyCost, hydrationIncrease } = GAME_BALANCE.ACTION_EFFECTS.WATER;
-
-      return {
-        energy: -energyCost,
-        hydration: hydrationIncrease,
-      };
-    }
-
-    case 'care': {
-      const { energyCost, healthIncrease, moodIncrease } = GAME_BALANCE.ACTION_EFFECTS.CARE;
-
-      return {
-        energy: -energyCost,
-        health: healthIncrease,
-        mood: moodIncrease,
-      };
-    }
-
-    case 'play': {
-      const { energyCost, moodIncrease } = GAME_BALANCE.ACTION_EFFECTS.PLAY;
-
-      return {
-        energy: -energyCost,
-        mood: moodIncrease,
-      };
-    }
-
-    case 'train': {
-      const { energyCost } = GAME_BALANCE.ACTION_EFFECTS.TRAIN;
-
-      return { energy: -energyCost };
-    }
-
-    case 'sleep':
-      return {};
-  }
-}
-
 export function applyStatusUpdate(
   currentStatus: PokemonStatusModel,
   statusUpdate: StatusUpdateModel,

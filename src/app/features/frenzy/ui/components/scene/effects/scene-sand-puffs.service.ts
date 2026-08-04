@@ -26,13 +26,13 @@ const ITEM_HALF_NORM = FRENZY.physicalSizePx.item / 2 / FRENZY.world.height;
 @Injectable()
 export class SceneSandPuffsService {
   private readonly destroyRef = inject(DestroyRef);
-  private readonly _puffs = signal<readonly SandPuff[]>([]);
+  private readonly _puffList = signal<readonly SandPuff[]>([]);
   private readonly timers = new Set<ReturnType<typeof setTimeout>>();
   // Last seen `landed` per item id, so we can detect the false→true transition (the actual touchdown frame).
   private readonly landedById = new Map<string, boolean>();
   private counter = 0;
 
-  public readonly puffs = this._puffs.asReadonly();
+  public readonly puffList = this._puffList.asReadonly();
 
   public constructor() {
     this.destroyRef.onDestroy(() => {
@@ -76,11 +76,14 @@ export class SceneSandPuffsService {
 
     const id = ++this.counter;
 
-    this._puffs.update((puffs) => [...puffs, { id, type, x, y: y + ITEM_HALF_NORM, weight }]);
+    this._puffList.update((puffList) => [
+      ...puffList,
+      { id, type, x, y: y + ITEM_HALF_NORM, weight },
+    ]);
 
     const timer = setTimeout(() => {
       this.timers.delete(timer);
-      this._puffs.update((puffs) => puffs.filter((puff) => puff.id !== id));
+      this._puffList.update((puffList) => puffList.filter((puff) => puff.id !== id));
     }, PUFF_LIFETIME_MS);
 
     this.timers.add(timer);

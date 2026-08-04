@@ -51,8 +51,9 @@ enumerate theme entities (the pokemon roster, "evolve at 200/500"). Everything a
 appearance, physical size, speed, stage thresholds — arrives from the client on `join` as opaque
 values; the server only stores them on `Player` and applies them. Implemented today:
 
-- `Player.appearance` — an opaque string (validated only as non-empty, ≤32 chars). The client
-  resolves it to a `Line`/sprite with an unknown-fallback in `ui/constants/pokemon-registry.ts`.
+- `Player.appearance` — an opaque lowercase slug (1–32 chars, and never an
+  `Object.prototype` member). The client resolves it to a `Line`/sprite with an
+  unknown-fallback in `ui/constants/pokemon-registry.ts`.
 - `Player.body: PlayerBody` (per-stage `{ width, height, speed, maxSpeed, hp }`) — size,
   cruise/cap speed and the stage HP gates travel on `join`; `calculateStage(hp, body)` reads the
   player's gates (there is no `FRENZY.thresholds` anymore). AABB collision
@@ -77,7 +78,9 @@ Separate `package.json` (partykit, vitest, typescript). **Multi-party:** each ac
 party in `partykit.json` + a folder `partykit-server/src/parties/<game>/`:
 
 - `index.ts` — thin `Party.Server` adapter: transport + lifecycle, stores `players`/`items` as
-  arrays, calls only the BOUND engine.
+  arrays, calls only the BOUND engine. Also owns the session/abuse guards (#323/#324): a
+  per-connection `identify`/`join` rate budget, the join cap (→ `roomFull`), the identify
+  re-key guard and orphan-session eviction — a session never outlives its player.
 - `game.ts` — composition root: `createEngine(definition, npcRegistry)`; exports `frenzyEngine`,
   `FRENZY_NPC_REGISTRY`, `frenzyNpcHooks` (for specs).
 - `slices/<kind>/` — NPC runtime code (see below).
@@ -222,5 +225,5 @@ calls only the bound `frenzyEngine.*`. Extract logic into small named functions 
   `NpcQuipEffect`, `EmissionSoundEffect`, `PlayerEffectsTracker`. Queue/lifetime helpers:
   `transient-list.ts`, `owner-release-queue.ts`. All push into `FloatingMessagesStore`
   (`pushOwned*` / `pushOrphan*`); `FrenzyEffectsService` is a thin orchestrator that fans
-  `messages$` out to handlers and re-exposes `ownedFloats` / `orphanFloats`. A new producer =
-  a new file in `effects/` following the same template — don't bloat existing ones.
+  `messages$` out to handlers and re-exposes `ownedFloatList` / `orphanFloatList`. A new
+  producer = a new file in `effects/` following the same template — don't bloat existing ones.

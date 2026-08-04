@@ -14,11 +14,35 @@ import type {
   SpriteVariation,
 } from '../../../models/pokemon.model';
 
+const POKEMON_SPRITE_FALLBACK_URL = '/images/svg/pokeball.svg';
+
+/**
+ * First playable tamagotchi stage = first non-baby species on the primary
+ * linear path (root → evolves_to[0] → …). Baby forms are not selectable.
+ */
 export function isFirstStageInEvolutionChain(
   speciesName: string,
   chainRoot: EvolutionChainItemApiData,
 ): boolean {
-  return chainRoot.species.name.toLowerCase() === speciesName.toLowerCase();
+  const firstPlayable = findFirstNonBabySpeciesName(chainRoot);
+
+  return firstPlayable.toLowerCase() === speciesName.toLowerCase();
+}
+
+function findFirstNonBabySpeciesName(node: EvolutionChainItemApiData): string {
+  let current: EvolutionChainItemApiData = node;
+
+  while (current.is_baby) {
+    const next = current.evolves_to?.[0];
+
+    if (!next) {
+      return current.species.name;
+    }
+
+    current = next;
+  }
+
+  return current.species.name;
 }
 
 function findEvolutionChainNode(
@@ -79,19 +103,54 @@ function buildSpriteSet(primary: string): PokemonSpriteUrlsModel {
   };
 }
 
+function firstNonEmptySprite(...candidates: (string | null | undefined)[]): string {
+  for (const candidate of candidates) {
+    if (candidate) {
+      return candidate;
+    }
+  }
+
+  return POKEMON_SPRITE_FALLBACK_URL;
+}
+
+function resolveDefaultSpriteUrl(sprites: PokemonSpritesApiData): string {
+  return firstNonEmptySprite(
+    sprites.other?.showdown?.front_default,
+    sprites.other?.['official-artwork']?.front_default,
+    sprites.front_default,
+  );
+}
+
+function resolveShinySpriteUrl(sprites: PokemonSpritesApiData, fallback: string): string {
+  return firstNonEmptySprite(
+    sprites.other?.showdown?.front_shiny,
+    sprites.other?.['official-artwork']?.front_shiny,
+    sprites.front_shiny,
+    fallback,
+  );
+}
+
+function resolveRetroSpriteUrl(
+  sprites: PokemonSpritesApiData,
+  primary: string,
+  pixelFront: string,
+  artwork: string | null | undefined,
+): string {
+  if (pixelFront && pixelFront !== primary) {
+    return pixelFront;
+  }
+
+  return firstNonEmptySprite(sprites.back_default, artwork, pixelFront, primary);
+}
+
 function convertApiSpritesToSpriteVariations(
   sprites: PokemonSpritesApiData,
 ): Record<SpriteVariation, PokemonSpriteUrlsModel> {
   const pixelFront = sprites.front_default ?? '';
   const artwork = sprites.other?.['official-artwork']?.front_default;
-  const primary = artwork ?? pixelFront;
-  const shinyArtwork = sprites.other?.['official-artwork']?.front_shiny;
-  const shinyPixel = sprites.front_shiny ?? '';
-  const shinyPrimary = shinyArtwork ?? (shinyPixel || primary);
-  const retroPrimary =
-    artwork && pixelFront && pixelFront !== artwork
-      ? pixelFront
-      : (sprites.back_default ?? (pixelFront || primary));
+  const primary = resolveDefaultSpriteUrl(sprites);
+  const shinyPrimary = resolveShinySpriteUrl(sprites, primary);
+  const retroPrimary = resolveRetroSpriteUrl(sprites, primary, pixelFront, artwork);
 
   return {
     default: buildSpriteSet(primary),
@@ -100,6 +159,10 @@ function convertApiSpritesToSpriteVariations(
   };
 }
 
+/**
+ * Tamagotchi uses only the primary API branch (`evolves_to[0]`).
+ * Other branches (Eevee, Wurmple, …) are an accepted trade-off — see #255.
+ */
 export function buildNextEvolutionStep(
   chainNode: EvolutionChainItemApiData,
   fromStage = 1,
@@ -127,7 +190,7 @@ function buildEvolutionChain(
 
   return {
     currentStage,
-    nextEvolution: buildNextEvolutionStep(chainNode),
+    nextEvolution: buildNextEvolutionStep(chainNode, currentStage),
     totalStages: countEvolutionStages(evolutionResponse.chain),
   };
 }
@@ -143,12 +206,6 @@ export function convertPokemonDetailApiDataToTamagotchiPokemon(
   const spriteVariations = convertApiSpritesToSpriteVariations(detail.sprites);
 
   return {
-    baseStats: {
-      energyRestorationRate: 1,
-      experienceMultiplier: 1,
-      hungerDecayRate: 1,
-      moodDecayRate: 1,
-    },
     evolutionChain: buildEvolutionChain(detail, evolutionResponse, chainNode),
     id: String(detail.id),
     isFirstStage: isFirstStageInEvolutionChain(speciesName, evolutionResponse.chain),

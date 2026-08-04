@@ -8,14 +8,8 @@ import type { Player, PlayerEffectKind } from '@game/frenzy/types';
 import { isSad } from '../../../../data/logic/is-sad';
 import { EFFECT_BADGE } from '../../../../data/models/effect-badge';
 import { spriteRenderFor } from '../../../constants/pokemon-registry';
-import {
-  clamp,
-  decayedOffset,
-  frameAwareTau,
-  OFFSET_DECAY_TAU_MS,
-  reflect,
-  reflectDirection,
-} from './drift-math';
+import { clamp, decayedOffset, reflect, reflectDirection } from './drift-math';
+import { FrameTauTracker } from './frame-tau';
 import type { RenderedAura, RenderedPlayer } from '../scene-view-models';
 
 // Aura descriptor per active effect kind: the CSS class plus the render mode the template branches on (so the
@@ -41,14 +35,6 @@ const SHADOW_TINT_PRECEDENCE: readonly PlayerEffectKind[] = [
   'shield',
   'wellFed',
 ];
-
-// EMA weight for the frame-interval estimate that feeds the frame-aware reconciliation τ (higher = adapts faster
-// to an FPS change, noisier). Light smoothing so a single hitched frame doesn't spike τ.
-const FRAME_EMA_WEIGHT = 0.2;
-
-// Frame deltas above this (ms, ~4fps) are treated as a stall/hitch and skipped, so a backgrounded tab or GC pause
-// can't bloat the average and freeze the glide. Genuine low-end frames (down to ~4fps) still update it.
-const FRAME_DT_CAP_MS = 250;
 
 interface PlayerBaseline {
   x0: number;
@@ -76,26 +62,23 @@ interface PlayerBaseline {
 @Injectable()
 export class PlayerExtrapolatorService {
   private readonly baselines = new Map<string, PlayerBaseline>();
-  private readonly _rendered = signal<readonly RenderedPlayer[]>([]);
+  private readonly _renderedList = signal<readonly RenderedPlayer[]>([]);
   // The live per-frame view models. `tick` refreshes this (read by the imperative position writer, the `?debug=perf`
-  // gap and consumers that must see this frame) WITHOUT touching the `rendered` signal — players have no structural
+  // gap and consumers that must see this frame) WITHOUT touching the `renderedList` signal — players have no structural
   // field that changes mid-extrapolation (facing is a flag written imperatively; hp/stage/effects come from a
   // snapshot), so per-frame motion never triggers change detection. See ADR 0001.
-  private _frame: readonly RenderedPlayer[] = [];
-  // Smoothed frame interval (ms), measured in `tick`; 0 until the first interval is seen. Feeds the frame-aware
-  // reconciliation τ so a slow tablet stretches the correction glide across enough frames instead of snapping it.
-  private smoothedFrameMs = 0;
-  private lastTickNow = 0;
-  // Current reconciliation τ: the base on a fast client, raised on a slow one (frame-aware). Read by
-  // compute/sync/predictSteer so every reconciliation read this frame agrees. See ADR 0003.
-  private tauMs = OFFSET_DECAY_TAU_MS;
+  private _frameList: readonly RenderedPlayer[] = [];
+  // Frame-aware reconciliation τ, measured from the `tick` cadence (never `ingest` — the ~300ms snapshot cadence
+  // isn't a frame) so a slow tablet stretches the correction glide across enough frames instead of snapping it.
+  // Read by compute/sync/predictSteer so every reconciliation read this frame agrees. See ADR 0003.
+  private readonly frameTau = new FrameTauTracker();
 
   // Structure signal: changes only on `ingest` (a server snapshot). Drives the `@for` and the `?debug` box overlay.
-  public readonly rendered = this._rendered.asReadonly();
+  public readonly renderedList = this._renderedList.asReadonly();
 
   // The latest per-frame view models (positions + facing), live every tick. Not a signal — read imperatively.
   public frame(): readonly RenderedPlayer[] {
-    return this._frame;
+    return this._frameList;
   }
 
   // Re-anchor baselines from a fresh snapshot, then publish the extrapolated positions (structure + frame).
@@ -106,26 +89,26 @@ export class PlayerExtrapolatorService {
     now: number,
   ): void {
     this.sync(players, now);
-    this._frame = this.compute(players, myId, evolving, now);
-    this._rendered.set(this._frame);
+    this._frameList = this.compute(players, myId, evolving, now);
+    this._renderedList.set(this._frameList);
   }
 
   // Per-frame recompute (rAF loop): advance along existing baselines without re-anchoring. Updates only the live
-  // `frame` — never the `rendered` signal — so moving sprites costs no change detection.
+  // `frame` — never the `renderedList` signal — so moving sprites costs no change detection.
   public tick(
     players: readonly Player[],
     myId: string | null,
     evolving: ReadonlyMap<string, number>,
     now: number,
   ): void {
-    this.measureFrame(now);
-    this._frame = this.compute(players, myId, evolving, now);
+    this.frameTau.measure(now);
+    this._frameList = this.compute(players, myId, evolving, now);
   }
 
   // Mirror the current frame into the structure signal. Used only by the `?debug` box overlay, which needs the
   // boxes to track the sprites every frame (a dev tool — the per-frame change detection it reintroduces is fine).
   public publishFrame(): void {
-    this._rendered.set(this._frame);
+    this._renderedList.set(this._frameList);
   }
 
   // Client-side prediction for the local Pokémon only: re-anchor my baseline at its current rendered position and
@@ -144,15 +127,22 @@ export class PlayerExtrapolatorService {
 
     const zone = FRENZY.playerDriftZone;
     const elapsed = (now - baseline.clientStartTime) / 1000;
-    const renderedX = clamp(
-      reflect(baseline.x0, baseline.vx, elapsed, zone.minX, zone.maxX) +
-        decayedOffset(baseline.offsetX, now - baseline.offsetStamp, this.tauMs),
+    const offsetAge = now - baseline.offsetStamp;
+    const renderedX = this.renderedAxis(
+      baseline.x0,
+      baseline.vx,
+      elapsed,
+      baseline.offsetX,
+      offsetAge,
       zone.minX,
       zone.maxX,
     );
-    const renderedY = clamp(
-      reflect(baseline.y0, baseline.vy, elapsed, zone.minY, zone.maxY) +
-        decayedOffset(baseline.offsetY, now - baseline.offsetStamp, this.tauMs),
+    const renderedY = this.renderedAxis(
+      baseline.y0,
+      baseline.vy,
+      elapsed,
+      baseline.offsetY,
+      offsetAge,
       zone.minY,
       zone.maxY,
     );
@@ -170,26 +160,6 @@ export class PlayerExtrapolatorService {
       offsetY: 0,
       offsetStamp: now,
     });
-  }
-
-  // Track the smoothed frame interval from the rAF cadence and derive the frame-aware reconciliation τ. Only `tick`
-  // calls this (one per animation frame); `ingest` runs on the ~300ms snapshot cadence and must not be mistaken for
-  // a frame. Non-positive deltas and long stalls (backgrounded tab, GC pause) are skipped so they can't bloat the
-  // estimate and freeze the glide.
-  private measureFrame(now: number): void {
-    if (this.lastTickNow !== 0) {
-      const dt = now - this.lastTickNow;
-
-      if (dt > 0 && dt <= FRAME_DT_CAP_MS) {
-        this.smoothedFrameMs =
-          this.smoothedFrameMs === 0
-            ? dt
-            : this.smoothedFrameMs * (1 - FRAME_EMA_WEIGHT) + dt * FRAME_EMA_WEIGHT;
-        this.tauMs = frameAwareTau(OFFSET_DECAY_TAU_MS, this.smoothedFrameMs);
-      }
-    }
-
-    this.lastTickNow = now;
   }
 
   // Reset a player's baseline only when the server actually moved it (new snapshot position/velocity).
@@ -222,17 +192,24 @@ export class PlayerExtrapolatorService {
 
       if (prior !== undefined) {
         const elapsed = (now - prior.clientStartTime) / 1000;
+        const offsetAge = now - prior.offsetStamp;
         // Carry forward the ACTUALLY-rendered (clamped) gap — same clamp `compute` applies — so a snapshot taken
         // while the sprite was pinned at a wall can't capture an out-of-zone overshoot and keep gliding from it.
-        const renderedX = clamp(
-          reflect(prior.x0, prior.vx, elapsed, zone.minX, zone.maxX) +
-            decayedOffset(prior.offsetX, now - prior.offsetStamp, this.tauMs),
+        const renderedX = this.renderedAxis(
+          prior.x0,
+          prior.vx,
+          elapsed,
+          prior.offsetX,
+          offsetAge,
           zone.minX,
           zone.maxX,
         );
-        const renderedY = clamp(
-          reflect(prior.y0, prior.vy, elapsed, zone.minY, zone.maxY) +
-            decayedOffset(prior.offsetY, now - prior.offsetStamp, this.tauMs),
+        const renderedY = this.renderedAxis(
+          prior.y0,
+          prior.vy,
+          elapsed,
+          prior.offsetY,
+          offsetAge,
           zone.minY,
           zone.maxY,
         );
@@ -279,29 +256,25 @@ export class PlayerExtrapolatorService {
       const y0 = baseline?.y0 ?? player.y;
       const vx = baseline?.vx ?? player.vx;
       const vy = baseline?.vy ?? player.vy;
-      // Decaying reconciliation nudge layered on top of the authoritative drift — facing is read from the bare
-      // `reflect` direction below, so a correction never flips the sprite.
-      const decayX =
-        baseline === undefined
-          ? 0
-          : decayedOffset(baseline.offsetX, now - baseline.offsetStamp, this.tauMs);
-      const decayY =
-        baseline === undefined
-          ? 0
-          : decayedOffset(baseline.offsetY, now - baseline.offsetStamp, this.tauMs);
-      const liveEffects = player.effects.filter((effect) => effect.expiresAt > wallNow);
-      const effectAuras = liveEffects
+      // Decaying reconciliation nudge layered on top of the authoritative drift (no baseline → zero offset, which
+      // `renderedAxis` decays to exactly 0) — facing is read from the bare `reflect` direction below, so a
+      // correction never flips the sprite.
+      const offsetX = baseline?.offsetX ?? 0;
+      const offsetY = baseline?.offsetY ?? 0;
+      const offsetAge = baseline === undefined ? 0 : now - baseline.offsetStamp;
+      const liveEffectList = player.effects.filter((effect) => effect.expiresAt > wallNow);
+      const effectAuraList = liveEffectList
         .map((effect) => EFFECT_AURA[effect.kind])
         .filter((aura): aura is RenderedAura => aura !== null);
       // Single dominant effect tinting the grounding shadow — first match by precedence; none → neutral base.
       const dominantEffect = SHADOW_TINT_PRECEDENCE.find((kind) =>
-        liveEffects.some((effect) => effect.kind === kind),
+        liveEffectList.some((effect) => effect.kind === kind),
       );
       const shadowEffectClass =
         dominantEffect === undefined ? null : `scene__shadow--${dominantEffect}`;
       // Overhead buff badges track the same live effects as the auras — including the NPC, which CAN pick up an
       // effect by colliding with an item (e.g. shield), so its badge must match the aura ring it already shows.
-      const effectBadges = liveEffects.map((effect) => ({
+      const effectBadgeList = liveEffectList.map((effect) => ({
         kind: effect.kind,
         ...EFFECT_BADGE[effect.kind],
       }));
@@ -312,9 +285,9 @@ export class PlayerExtrapolatorService {
 
       return {
         appearance: player.appearance,
-        effectAuras,
+        effectAuraList,
         shadowEffectClass,
-        effectBadges,
+        effectBadgeList,
         facingRight: reflectDirection(x0, vx, elapsed, zone.minX, zone.maxX) > 0,
         id: player.id,
         isDisconnected: player.status === 'disconnected',
@@ -340,11 +313,29 @@ export class PlayerExtrapolatorService {
         debugReadoutOffsetX: `${-render.offsetX - render.width / 2}px`,
         debugReadoutOffsetY: `${-render.offsetY - render.height / 2}px`,
         stage: player.stage,
-        // Clamp the offset-adjusted position to the drift zone: a large reconciliation gap (bomb knockback,
-        // reconnect snap) must glide the sprite back from the wall, never render it outside the scene.
-        x: clamp(reflect(x0, vx, elapsed, zone.minX, zone.maxX) + decayX, zone.minX, zone.maxX),
-        y: clamp(reflect(y0, vy, elapsed, zone.minY, zone.maxY) + decayY, zone.minY, zone.maxY),
+        x: this.renderedAxis(x0, vx, elapsed, offsetX, offsetAge, zone.minX, zone.maxX),
+        y: this.renderedAxis(y0, vy, elapsed, offsetY, offsetAge, zone.minY, zone.maxY),
       };
     });
+  }
+
+  // One axis of the rendered position: the reflective drift plus the decaying reconciliation offset (evaluated at
+  // the current frame-aware τ), clamped to the drift zone — a large reconciliation gap (bomb knockback, reconnect
+  // snap) must glide the sprite back from the wall, never render it outside the scene.
+  private renderedAxis(
+    anchor: number,
+    velocity: number,
+    elapsedSeconds: number,
+    offset: number,
+    offsetAgeMs: number,
+    min: number,
+    max: number,
+  ): number {
+    return clamp(
+      reflect(anchor, velocity, elapsedSeconds, min, max) +
+        decayedOffset(offset, offsetAgeMs, this.frameTau.tauMs),
+      min,
+      max,
+    );
   }
 }

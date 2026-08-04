@@ -9,6 +9,8 @@ export const FLOATS = {
     died: 100,
     dying: 90,
     detonated: 80,
+    // Client-only spawn-cheer quips — lead the column over evolved/mood tiers.
+    intro: 75,
     evolved: 70,
     effectGranted: 60,
     shield: 60,
